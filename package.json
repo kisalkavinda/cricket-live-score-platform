@@ -1,0 +1,8 @@
+{
+  "name": "cricket-platform",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ]
+}
