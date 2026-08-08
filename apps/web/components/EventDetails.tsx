@@ -14,15 +14,21 @@ const cards = [
   {
     title: 'Venue',
     icon: '📍',
-    value: (
-      <a 
-        href={tournamentConfig.venueMapUrl} 
-        target="_blank" 
-        rel="noopener noreferrer"
-        className="text-blue-400 hover:text-blue-300 underline underline-offset-4 decoration-blue-500/30 hover:decoration-blue-400 transition-all"
-      >
-        {tournamentConfig.venue}
-      </a>
+    value: tournamentConfig.venue ? (
+      tournamentConfig.venueMapUrl ? (
+        <a 
+          href={tournamentConfig.venueMapUrl} 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="text-[var(--color-primary-red)] hover:text-[var(--color-accent-gold)] underline underline-offset-4 transition-all"
+        >
+          {tournamentConfig.venue}
+        </a>
+      ) : (
+        <span>{tournamentConfig.venue}</span>
+      )
+    ) : (
+      <span className="text-[var(--color-foreground)]/60 italic">Venue — coming soon</span>
     ),
   },
   {
@@ -46,30 +52,30 @@ const cards = [
 
 export default function EventDetails() {
   return (
-    <section id="details" className="py-24 bg-slate-900 relative">
+    <section id="details" className="py-24 bg-[var(--color-background)] relative">
       <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.03] pointer-events-none mix-blend-overlay"></div>
       
       <div className="max-w-6xl mx-auto px-4 relative z-10">
         <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-5xl font-bold text-white mb-4 tracking-tight">Event Details</h2>
-          <div className="h-1 w-20 bg-blue-600 mx-auto rounded-full"></div>
+          <h2 className="text-3xl md:text-5xl font-extrabold text-[var(--color-foreground)] mb-4 tracking-tight uppercase">Event Details</h2>
+          <div className="h-2 w-24 bg-[var(--color-primary-red)] mx-auto skew-x-[-10deg]"></div>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {cards.map((card, idx) => (
             <div 
               key={idx} 
-              className="group relative p-1 rounded-2xl bg-gradient-to-b from-slate-800 to-slate-900 hover:from-blue-600/50 hover:to-emerald-600/50 transition-all duration-500 ease-in-out"
+              className="group relative p-1 bg-[var(--color-foreground)] hover:bg-[var(--color-primary-red)] transition-colors duration-300 ease-in-out shadow-[4px_4px_0px_var(--color-foreground)] hover:translate-y-1 hover:shadow-[2px_2px_0px_var(--color-foreground)]"
             >
-              <div className="h-full bg-slate-900/90 backdrop-blur-xl p-8 rounded-xl border border-slate-800/50 flex flex-col items-start gap-4">
-                <div className="text-4xl bg-slate-800/50 p-4 rounded-xl group-hover:scale-110 transition-transform duration-300 shadow-inner">
+              <div className="h-full bg-[var(--color-background)] p-8 flex flex-col items-start gap-4">
+                <div className="text-4xl bg-[var(--color-foreground)]/5 p-4 group-hover:scale-110 transition-transform duration-300">
                   {card.icon}
                 </div>
                 <div>
-                  <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                  <h3 className="text-sm font-bold text-[var(--color-foreground)]/60 uppercase tracking-wider mb-2">
                     {card.title}
                   </h3>
-                  <div className="text-lg text-slate-100 font-medium">
+                  <div className="text-lg text-[var(--color-foreground)] font-bold">
                     {card.value}
                   </div>
                 </div>

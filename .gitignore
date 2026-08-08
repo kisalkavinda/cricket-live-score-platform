@@ -5,3 +5,16 @@ node_modules
 .DS_Store
 dist
 coverage
+
+# IDE agent skill caches (not application code)
+.claude
+.windsurf
+.agents
+skills-lock.json
+
+# Prisma query engine binary (generated, platform-specific)
+**/.prisma/
+
+# Scratch / test scripts
+test-pg.js
+test-pooler.js

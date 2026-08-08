@@ -1,0 +1,150 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  SUPER_ADMIN
+  TOURNAMENT_ADMIN
+  SCORER
+  VIEWER
+}
+
+enum PlayerRole {
+  BATTER
+  BOWLER
+  ALL_ROUNDER
+  WICKET_KEEPER
+}
+
+enum TournamentStatus {
+  DRAFT
+  REGISTRATION
+  SCHEDULED
+  LIVE
+  KNOCKOUT
+  COMPLETED
+  CANCELLED
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  role      Role     @default(VIEWER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Venue {
+  id        String   @id @default(uuid())
+  name      String
+  city      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Team {
+  id              String            @id @default(uuid())
+  name            String
+  shortName       String
+  logoUrl         String?
+  city            String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  teamPlayers     TeamPlayer[]
+  tournamentTeams TournamentTeam[]
+  tournamentSquads TournamentSquad[]
+}
+
+model Player {
+  id              String            @id @default(uuid())
+  name            String
+  profileImageUrl String?
+  dateOfBirth     DateTime?
+  role            PlayerRole
+  battingStyle    String?
+  bowlingStyle    String?
+  jerseyNumber    Int?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  teamPlayers     TeamPlayer[]
+  tournamentSquads TournamentSquad[]
+}
+
+model TeamPlayer {
+  id        String   @id @default(uuid())
+  teamId    String
+  playerId  String
+  joinedAt  DateTime @default(now())
+  team      Team     @relation(fields: [teamId], references: [id])
+  player    Player   @relation(fields: [playerId], references: [id])
+
+  @@unique([teamId, playerId])
+}
+
+model Tournament {
+  id               String            @id @default(uuid())
+  name             String
+  season           String
+  format           String
+  status           TournamentStatus  @default(DRAFT)
+  startDate        DateTime?
+  endDate          DateTime?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  stages           TournamentStage[]
+  tournamentTeams  TournamentTeam[]
+  tournamentSquads TournamentSquad[]
+}
+
+model TournamentStage {
+  id                String     @id @default(uuid())
+  tournamentId      String
+  name              String
+  stageOrder        Int
+  oversPerInnings   Int
+  ballsPerOver      Int        @default(6)
+  pointsForWin      Int        @default(2)
+  pointsForTie      Int        @default(1)
+  pointsForNoResult Int        @default(1)
+  pointsForLoss     Int        @default(0)
+  qualificationCount Int?
+  tournament        Tournament @relation(fields: [tournamentId], references: [id])
+}
+
+model TournamentTeam {
+  id               String     @id @default(uuid())
+  tournamentId     String
+  teamId           String
+  matchesPlayed    Int        @default(0)
+  wins             Int        @default(0)
+  losses           Int        @default(0)
+  ties             Int        @default(0)
+  noResults        Int        @default(0)
+  points           Int        @default(0)
+  runsFor          Int        @default(0)
+  legalBallsFaced  Int        @default(0)
+  runsAgainst      Int        @default(0)
+  legalBallsBowled Int        @default(0)
+  tournament       Tournament @relation(fields: [tournamentId], references: [id])
+  team             Team       @relation(fields: [teamId], references: [id])
+
+  @@unique([tournamentId, teamId])
+}
+
+model TournamentSquad {
+  id           String     @id @default(uuid())
+  tournamentId String
+  teamId       String
+  playerId     String
+  tournament   Tournament @relation(fields: [tournamentId], references: [id])
+  team         Team       @relation(fields: [teamId], references: [id])
+  player       Player     @relation(fields: [playerId], references: [id])
+
+  @@unique([tournamentId, teamId, playerId])
+}

@@ -1,55 +1,173 @@
 import Link from 'next/link';
+import SeamArc from './SeamArc';
 import { tournamentConfig } from '../config/tournament';
 
 export default function Hero() {
+  const regOpen = !!tournamentConfig.registrationFormUrl;
+
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-slate-950 text-white">
-      {/* Dynamic Background Elements */}
-      <div className="absolute inset-0 w-full h-full bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-blue-900/40 via-slate-950/80 to-slate-950 z-0" />
-      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl mix-blend-screen animate-pulse" />
-      <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-emerald-500/10 rounded-full blur-3xl mix-blend-screen animate-pulse" style={{ animationDelay: '2s' }} />
-      
-      {/* Content */}
-      <div className="relative z-10 flex flex-col items-center text-center px-4 max-w-5xl mx-auto">
-        <div className="inline-block px-4 py-1.5 mb-6 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-300 font-medium tracking-wide text-sm backdrop-blur-sm">
-          🏆 Registrations Now Open
+    <section
+      className="relative min-h-screen flex flex-col justify-center overflow-hidden"
+      style={{ background: 'var(--stadium-black)' }}
+      aria-label="CPL Tournament Hero"
+    >
+      {/*
+        ── SEAM ARC — bottom-left anchor ──────────────────────────────────
+        Rendered at 30% on Stadium Black. The SVG is 480×288px by default.
+        We position it bottom-left, partially clipped by overflow:hidden.
+      */}
+      <div className="absolute bottom-0 left-0 pointer-events-none select-none" aria-hidden="true">
+        <SeamArc surface="dark" size={560} />
+      </div>
+
+      {/*
+        ── EMBER RED hard vertical accent bar ─────────────────────────────
+        A 4px column on the far left — the first thing the eye meets.
+        This is the "broadcast lower-third" feel from the design plan.
+      */}
+      <div
+        className="absolute top-0 left-0 w-1 h-full"
+        style={{ background: 'var(--ember-red)' }}
+        aria-hidden="true"
+      />
+
+      {/*
+        ── GOLD horizontal rule at the very top ───────────────────────────
+        Trophy-moment gold, used nowhere else except awards — one subtle use
+        here marks this as a high-status section.
+      */}
+      <div
+        className="absolute top-0 left-0 w-full h-px"
+        style={{ background: 'var(--boundary-gold)', opacity: 0.6 }}
+        aria-hidden="true"
+      />
+
+      {/* ── MAIN CONTENT ───────────────────────────────────────────────── */}
+      <div className="relative z-10 px-6 sm:px-10 md:px-16 max-w-screen-xl mx-auto w-full pt-24 pb-32">
+
+        {/* Status pill */}
+        <div className="mb-8">
+          <span
+            className="inline-flex items-center gap-2 px-3 py-1"
+            style={{
+              fontFamily: 'var(--font-body)',
+              fontSize: '0.75rem',
+              fontWeight: 600,
+              letterSpacing: '0.1em',
+              textTransform: 'uppercase',
+              color: regOpen ? 'var(--strip-white)' : 'var(--crease-ash)',
+              background: regOpen ? 'var(--ember-red)' : 'transparent',
+              border: regOpen ? 'none' : '1px solid rgba(240,237,234,0.3)',
+            }}
+          >
+            {regOpen && (
+              <span
+                className="w-1.5 h-1.5 rounded-full"
+                style={{ background: 'var(--strip-white)' }}
+              />
+            )}
+            {regOpen ? 'Registrations Open' : 'Registrations Opening Soon'}
+          </span>
         </div>
-        
-        <h1 className="text-5xl md:text-7xl lg:text-8xl font-extrabold tracking-tight mb-6 bg-clip-text text-transparent bg-gradient-to-r from-white via-blue-100 to-blue-300 leading-tight">
-          {tournamentConfig.name}
-        </h1>
-        
-        <p className="text-lg md:text-2xl text-slate-300 mb-10 max-w-2xl font-light">
+
+        {/* Tournament name — Barlow Condensed Black, enormous */}
+        <div className="mb-6">
+          <h1
+            className="text-display"
+            style={{
+              fontSize: 'clamp(5rem, 18vw, 14rem)',
+              color: 'var(--crease-ash)',
+              lineHeight: 0.88,
+            }}
+          >
+            {tournamentConfig.name}
+          </h1>
+        </div>
+
+        {/* Tagline — left-bordered, Inter */}
+        <p
+          className="mb-12 max-w-xl"
+          style={{
+            fontFamily: 'var(--font-body)',
+            fontSize: 'clamp(0.95rem, 2vw, 1.125rem)',
+            fontWeight: 500,
+            color: 'rgba(240,237,234,0.7)',
+            borderLeft: '3px solid var(--ember-red)',
+            paddingLeft: '1rem',
+            lineHeight: 1.55,
+          }}
+        >
           {tournamentConfig.tagline}
         </p>
-        
-        <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
-          <Link 
-            href={tournamentConfig.registrationFormUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="group relative inline-flex items-center justify-center px-8 py-4 text-lg font-semibold text-white transition-all duration-300 ease-in-out bg-blue-600 rounded-xl hover:bg-blue-500 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-slate-900 shadow-[0_0_40px_-10px_rgba(37,99,235,0.5)]"
-          >
-            <span>Register Your Team</span>
-            <svg className="w-5 h-5 ml-2 transition-transform duration-300 group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-            </svg>
-          </Link>
-          
-          <a 
-            href="#details"
-            className="inline-flex items-center justify-center px-8 py-4 text-lg font-medium transition-all duration-300 ease-in-out border border-slate-700 bg-slate-800/50 backdrop-blur-md rounded-xl hover:bg-slate-800 hover:border-slate-600 text-slate-300 hover:text-white"
-          >
-            View Details
+
+        {/* Date block — scoreboard treatment */}
+        {tournamentConfig.date && (
+          <div className="mb-12">
+            <p className="text-label" style={{ color: 'rgba(240,237,234,0.45)', marginBottom: '0.25rem' }}>
+              Date
+            </p>
+            <p
+              className="text-scoreboard"
+              style={{
+                fontSize: 'clamp(1.5rem, 4vw, 2.5rem)',
+                color: 'var(--boundary-gold)',
+              }}
+            >
+              {tournamentConfig.date}
+            </p>
+          </div>
+        )}
+
+        {/* CTA row */}
+        <div className="flex flex-wrap gap-4 items-center">
+          {regOpen ? (
+            <Link
+              href={tournamentConfig.registrationFormUrl!}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-primary"
+            >
+              Register your team
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+                <path d="M5 12h14M12 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </Link>
+          ) : (
+            <button
+              disabled
+              className="btn-primary"
+              aria-label="Registration is not yet open"
+            >
+              Registration opening soon
+            </button>
+          )}
+
+          <a href="#details" className="btn-ghost">
+            View details
           </a>
         </div>
       </div>
 
-      {/* Scroll indicator */}
-      <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center opacity-70 animate-bounce">
-        <span className="text-xs text-slate-400 mb-2 uppercase tracking-widest">Scroll to explore</span>
-        <svg className="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+      {/* ── HARD BOTTOM EDGE — no waves, no curves ─────────────────────── */}
+      <div
+        className="absolute bottom-0 left-0 w-full"
+        style={{
+          height: '4px',
+          background: `linear-gradient(90deg, var(--ember-red) 0%, var(--boundary-gold) 40%, var(--ember-red) 100%)`,
+        }}
+        aria-hidden="true"
+      />
+
+      {/* ── SCROLL INDICATOR ───────────────────────────────────────────── */}
+      <div
+        className="absolute bottom-8 right-8 flex flex-col items-center gap-1.5 motion-safe:animate-bounce"
+        aria-hidden="true"
+      >
+        <span className="text-label" style={{ color: 'rgba(240,237,234,0.35)', fontSize: '0.625rem' }}>
+          Scroll
+        </span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--ember-red)" strokeWidth="2.5">
+          <path d="M12 5v14M5 12l7 7 7-7" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       </div>
     </section>
