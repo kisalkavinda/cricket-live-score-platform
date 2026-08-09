@@ -292,7 +292,7 @@ export default async function Registration() {
                 rel="noopener noreferrer"
                 className="btn-hallmark-primary"
                 id="reg-cta-button"
-                style={{ height: '44px', padding: '0 28px' }}
+                style={{ height: '44px', padding: '0 20px', maxWidth: '100%' }}
               >
                 Complete Registration Form
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -304,7 +304,16 @@ export default async function Registration() {
                 disabled
                 className="btn-hallmark-primary"
                 id="reg-cta-disabled"
-                style={{ height: '44px', padding: '0 24px' }}
+                style={{
+                  height: 'auto',
+                  minHeight: '44px',
+                  padding: '8px 16px',
+                  maxWidth: '100%',
+                  whiteSpace: 'normal',
+                  fontSize: '0.85rem',
+                  lineHeight: 1.2,
+                  textAlign: 'center',
+                }}
               >
                 Registrations Not Currently Open
               </button>

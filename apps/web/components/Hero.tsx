@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { tournamentConfig } from '../config/tournament';
+import LottieAnimation from './LottieAnimation';
 
 export default function Hero() {
   const regOpen = !!tournamentConfig.registrationFormUrl;
@@ -122,7 +123,7 @@ export default function Hero() {
           <h1
             style={{
               fontFamily: 'var(--font-display)',
-              fontSize: 'clamp(4.5rem, 12vw, 9.5rem)',
+              fontSize: 'clamp(2.75rem, 10vw, 9.5rem)',
               fontWeight: 900,
               textTransform: 'uppercase',
               lineHeight: 0.9,
@@ -271,7 +272,7 @@ export default function Hero() {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="btn-hallmark-primary"
-                style={{ padding: '0 32px', height: '48px' }}
+                style={{ padding: '0 24px', height: '48px', maxWidth: '100%' }}
               >
                 Register Your Team
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -282,7 +283,15 @@ export default function Hero() {
               <button
                 disabled
                 className="btn-hallmark-primary"
-                style={{ height: '48px', padding: '0 32px' }}
+                style={{
+                  height: 'auto',
+                  minHeight: '48px',
+                  padding: '8px 20px',
+                  maxWidth: '100%',
+                  whiteSpace: 'normal',
+                  fontSize: '0.85rem',
+                  textAlign: 'center',
+                }}
               >
                 Registration Opening Soon
               </button>
@@ -306,48 +315,25 @@ export default function Hero() {
         </div>
       </div>
 
-      {/* Floating Cricket Ball Illustration (Right Anchored) */}
+      {/* Floating Bat & Ball DotLottie Animation (Right Anchored - Hero Scale) */}
       <div
         aria-hidden="true"
         className="hidden lg:block animate-float-ball"
         style={{
           position: 'absolute',
-          top: '38%',
-          right: '8%',
+          top: '18%',
+          right: '2%',
           transform: 'translateY(-50%)',
+          width: '580px',
+          height: '580px',
           pointerEvents: 'none',
+          filter: 'drop-shadow(0 25px 50px rgba(192, 39, 45, 0.4))',
         }}
       >
-        <div
-          style={{
-            width: '220px',
-            height: '220px',
-            borderRadius: '50%',
-            background: 'radial-gradient(circle at 35% 35%, #E8192C 0%, #9B0000 60%, #4A0000 100%)',
-            boxShadow: '0 30px 90px rgba(192, 39, 45, 0.5), inset -8px -8px 24px rgba(0, 0, 0, 0.6)',
-            position: 'relative',
-          }}
-        >
-          {/* Authentic Seam Lines */}
-          <svg viewBox="0 0 220 220" fill="none" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}>
-            <path d="M55 110 C65 70, 95 45, 110 45 C125 45, 155 70, 165 110" stroke="rgba(255,255,255,0.7)" strokeWidth="3.5" strokeLinecap="round" />
-            <path d="M55 110 C65 150, 95 175, 110 175 C125 175, 155 150, 165 110" stroke="rgba(255,255,255,0.7)" strokeWidth="3.5" strokeLinecap="round" />
-            <line x1="110" y1="20" x2="110" y2="200" stroke="rgba(255,255,255,0.25)" strokeWidth="2" strokeDasharray="4 4" />
-          </svg>
-          {/* Specular Light Highlight */}
-          <div
-            style={{
-              position: 'absolute',
-              top: '15%',
-              left: '20%',
-              width: '45px',
-              height: '45px',
-              borderRadius: '50%',
-              background: 'rgba(255, 255, 255, 0.25)',
-              filter: 'blur(10px)',
-            }}
-          />
-        </div>
+        <LottieAnimation
+          src="/animations/bat-ball.lottie"
+          style={{ width: '100%', height: '100%' }}
+        />
       </div>
 
       {/* Marquee Ticker Bar (Bottom Anchored) */}

@@ -17,10 +17,10 @@ export default function Navbar() {
   }, []);
 
   const navLinks = [
+    { label: '🔴 Live Scores', href: '#live-scores', id: 'nav-scores' },
     { label: 'Overview', href: '/', id: 'nav-overview' },
     { label: 'Tournament Info', href: '#details', id: 'nav-details' },
     { label: 'Register Squad', href: '#register', id: 'nav-register' },
-    { label: 'Admin', href: '/admin', id: 'nav-admin' },
   ];
 
   return (
@@ -226,14 +226,16 @@ export default function Navbar() {
             left: '16px',
             right: '16px',
             pointerEvents: 'auto',
-            background: 'var(--color-paper-dark)',
+            background: 'rgba(15, 12, 12, 0.98)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
             border: '1px solid var(--color-border-dark)',
-            borderRadius: '16px',
+            borderRadius: '20px',
             padding: '16px',
             display: 'flex',
             flexDirection: 'column',
             gap: '8px',
-            boxShadow: '0 20px 40px rgba(0, 0, 0, 0.4)',
+            boxShadow: '0 20px 50px rgba(0, 0, 0, 0.6)',
           }}
         >
           {navLinks.map((link) => (
@@ -242,14 +244,18 @@ export default function Navbar() {
               href={link.href}
               onClick={() => setMobileOpen(false)}
               style={{
-                padding: '12px 16px',
-                borderRadius: '8px',
-                color: 'var(--color-paper)',
+                minHeight: '48px',
+                display: 'flex',
+                alignItems: 'center',
+                padding: '0 18px',
+                borderRadius: '12px',
+                color: link.id === 'nav-scores' ? 'var(--color-accent-bright)' : 'var(--color-paper)',
                 fontFamily: 'var(--font-body)',
-                fontWeight: 600,
+                fontWeight: 700,
                 fontSize: '0.95rem',
                 textDecoration: 'none',
-                background: 'rgba(255, 255, 255, 0.05)',
+                background: link.id === 'nav-scores' ? 'rgba(192, 39, 45, 0.2)' : 'rgba(255, 255, 255, 0.05)',
+                border: link.id === 'nav-scores' ? '1px solid var(--color-accent)' : '1px solid transparent',
               }}
             >
               {link.label}

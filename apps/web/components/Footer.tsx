@@ -117,19 +117,6 @@ export default function Footer() {
                   Team Registration Portal
                 </Link>
               </li>
-              <li>
-                <Link
-                  href="/admin"
-                  style={{
-                    color: 'var(--color-accent-bright)',
-                    textDecoration: 'none',
-                    fontFamily: 'var(--font-body)',
-                    fontWeight: 600,
-                  }}
-                >
-                  Admin Control Panel →
-                </Link>
-              </li>
             </ul>
           </div>
 
