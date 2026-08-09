@@ -133,7 +133,7 @@ export default function Hero() {
               overflowWrap: 'anywhere', // Gate 51
             }}
           >
-            CRICKET <span style={{ color: 'var(--color-accent)' }}>PREMIER</span> LEAGUE
+            COMPUTING <span style={{ color: 'var(--color-accent)' }}>PREMIER</span> LEAGUE
           </h1>
 
           {/* Lede Copy with Red Bar Anchor */}
