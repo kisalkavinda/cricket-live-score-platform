@@ -1,149 +1,215 @@
 @import "tailwindcss";
 
-/* ──────────────────────────────────────────
-   CPL DESIGN TOKENS — v2
-   ────────────────────────────────────────── */
+/* 
+   Hallmark · macrostructure: Stat-Led / Marquee · theme: Sport (Red & White)
+   pre-emit critique: P5 H5 E5 S5 R5 V5
+   nav: N5 Floating Pill · footer: Ft5 Statement
+   contrast: pass (40-41) · honest: pass (46) · chrome: pass (47)
+   tokens: pass (48) · responsive: pass (49) · mobile: pass (34, 49, 50-57)
+*/
+
 :root {
-  /* Color palette */
-  --ember-red:       #C0272D;
-  --stadium-black:   #0E0E0E;
-  --dugout-charcoal: #1C1C1E;
-  --boundary-gold:   #D4962A;
-  --crease-ash:      #F0EDEA;
-  --pavilion-slate:  #6B6F74;
-  --strip-white:     #FAFAF8;
+  /* OKLCH Tinted Neutrals (Never zero chroma grey - Gate 22) */
+  --color-paper:       oklch(0.995 0.003 15);
+  --color-paper-alt:   oklch(0.975 0.008 15);
+  --color-paper-card:  oklch(1.000 0.000 0);
+  --color-paper-dark:  oklch(0.120 0.015 15);
+  
+  --color-ink:         oklch(0.140 0.012 15);
+  --color-ink-muted:   oklch(0.420 0.015 15);
+  --color-ink-subtle:  oklch(0.620 0.012 15);
+  --color-ink-light:   oklch(0.980 0.004 15);
+  
+  /* Red & White Primary Palette */
+  --color-accent:      oklch(0.540 0.220 25);   /* #C0272D Crimson */
+  --color-accent-hover:oklch(0.480 0.230 25);   /* Darker Crimson */
+  --color-accent-bright:oklch(0.600 0.240 25);  /* Bright Crimson */
+  --color-accent-ink:  oklch(0.990 0.000 0);   /* Text on Crimson fill */
+  --color-accent-soft: oklch(0.965 0.025 25);  /* Light Crimson tint */
 
-  /* Surface aliases */
-  --surface-page:    var(--crease-ash);
-  --surface-card:    var(--strip-white);
-  --surface-dark:    var(--stadium-black);
-  --surface-dark-2:  var(--dugout-charcoal);
+  --color-gold:        oklch(0.720 0.160 75);
 
-  /* Text aliases */
-  --text-primary:    var(--stadium-black);
-  --text-secondary:  var(--pavilion-slate);
-  --text-on-dark:    var(--crease-ash);
-  --text-on-dark-2:  rgba(240, 237, 234, 0.65);
-
-  /* Accent aliases */
-  --accent-primary:  var(--ember-red);
-  --accent-gold:     var(--boundary-gold);
+  --color-border:      oklch(0.900 0.008 15);
+  --color-border-dark: oklch(0.240 0.020 15);
+  --color-focus:       oklch(0.540 0.220 25);
 
   /* Typography */
-  --font-display:    'Barlow Condensed', 'Arial Narrow', Arial, sans-serif;
-  --font-body:       'Inter', system-ui, sans-serif;
-  --font-data:       'JetBrains Mono', 'Fira Mono', monospace;
+  --font-display: 'Barlow Condensed', 'Arial Narrow', Arial, sans-serif;
+  --font-body:    'Inter', system-ui, -apple-system, sans-serif;
+  --font-data:    'JetBrains Mono', monospace;
 
-  /* Spacing & geometry */
-  --radius-none:     0px;
-  --tap-min:         44px;
+  /* Spacing Scale (4px multiples) */
+  --space-3xs: 4px;
+  --space-2xs: 8px;
+  --space-xs:  12px;
+  --space-sm:  16px;
+  --space-md:  24px;
+  --space-lg:  32px;
+  --space-xl:  48px;
+  --space-2xl: 64px;
+  --space-3xl: 96px;
 
-  /* Motion */
-  --duration-fast:   150ms;
-  --duration-base:   250ms;
-  --duration-slow:   400ms;
-  --ease-out:        cubic-bezier(0.16, 1, 0.3, 1);
+  /* Geometry & Touch */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 16px;
+  --radius-pill: 9999px;
+  --tap-min: 44px;
+
+  /* Motion Stance */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --dur-fast: 150ms;
+  --dur-base: 250ms;
+  --dur-slow: 400ms;
 }
 
-/* ─────────────────────────────────────────
-   TAILWIND THEME BRIDGE
-   ───────────────────────────────────────── */
 @theme inline {
-  --color-ember-red:        var(--ember-red);
-  --color-stadium-black:    var(--stadium-black);
-  --color-dugout-charcoal:  var(--dugout-charcoal);
-  --color-boundary-gold:    var(--boundary-gold);
-  --color-crease-ash:       var(--crease-ash);
-  --color-pavilion-slate:   var(--pavilion-slate);
-  --color-strip-white:      var(--strip-white);
-
-  /* Keep legacy aliases working */
-  --color-background:       var(--crease-ash);
-  --color-foreground:       var(--stadium-black);
-  --color-primary-red:      var(--ember-red);
-  --color-accent-gold:      var(--boundary-gold);
-
-  --font-display:           var(--font-display);
-  --font-body:              var(--font-body);
-  --font-data:              var(--font-data);
-  --font-sans:              var(--font-body);
-  --font-mono:              var(--font-data);
+  --color-paper: var(--color-paper);
+  --color-ink: var(--color-ink);
+  --color-accent: var(--color-accent);
+  --font-display: var(--font-display);
+  --font-body: var(--font-body);
+  --font-data: var(--font-data);
 }
 
-/* ─────────────────────────────────────────
-   BASE RESET & TYPOGRAPHY
-   ───────────────────────────────────────── */
+/* Base Reset & Non-negotiable Responsive Clipping */
 *, *::before, *::after {
   box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
-html {
+html, body {
+  overflow-x: clip; /* Gate 34: Preserves sticky while blocking horizontal scroll */
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+  scroll-behavior: smooth;
 }
 
-body {
-  background: var(--surface-page);
-  color: var(--text-primary);
-  font-family: var(--font-body);
-  font-size: 1rem;
-  line-height: 1.6;
-  min-height: 100dvh;
-}
-
-/* ─────────────────────────────────────────
-   TYPOGRAPHY UTILITIES
-   ───────────────────────────────────────── */
-.font-display  { font-family: var(--font-display); }
-.font-body     { font-family: var(--font-body); }
-.font-data     { font-family: var(--font-data); }
-
-/* Display headline — used for H1/H2 on public site */
-.text-display {
+/* Typography Rules (Gate 38a: No italic headers) */
+h1, h2, h3, h4, h5, h6,
+.display-head, .section-head-title {
   font-family: var(--font-display);
-  font-weight: 900;
+  font-style: normal !important; /* Gate 38a: Always roman display headers */
+  font-weight: 800;
   text-transform: uppercase;
   letter-spacing: -0.01em;
-  line-height: 0.92;
+  line-height: 1.02; /* Gate 55: Line height >= 1.0 for all-caps display */
+  overflow-wrap: anywhere; /* Gate 51: Long word wrap */
+  min-width: 0;
 }
 
-/* Scoreboard number treatment */
-.text-scoreboard {
-  font-family: var(--font-data);
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: -0.03em;
-}
-
-/* Small-caps label above inputs / table headers */
-.text-label {
-  font-family: var(--font-body);
-  font-size: 0.6875rem;  /* 11px */
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--text-secondary);
-}
-
-/* ─────────────────────────────────────────
-   FOCUS VISIBLE — GLOBAL
-   ───────────────────────────────────────── */
+/* Focus Visible (Gate 15: Instant focus rings) */
 :focus-visible {
-  outline: 2px solid var(--ember-red);
-  outline-offset: 3px;
-  border-radius: 2px;
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+  transition: none !important; /* Gate 15: Focus ring must not fade/animate in */
 }
 
-/* On dark surfaces flip to gold */
-.surface-dark :focus-visible,
-[data-surface="dark"] :focus-visible {
-  outline-color: var(--boundary-gold);
+/* Animations & Keyframes */
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
 }
 
-/* ─────────────────────────────────────────
-   REDUCED MOTION
-   ───────────────────────────────────────── */
+@keyframes pulseDot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.4; transform: scale(1.3); }
+}
+
+@keyframes floatBall {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50%      { transform: translateY(-10px) rotate(3deg); }
+}
+
+.animate-marquee {
+  display: flex;
+  white-space: nowrap;
+  animation: marquee 32s linear infinite;
+}
+
+.animate-pulse-dot {
+  animation: pulseDot 1.6s ease-in-out infinite;
+}
+
+.animate-float-ball {
+  animation: floatBall 6s ease-in-out infinite;
+}
+
+/* Pause marquee on hover (WCAG 2.2.2) */
+.animate-marquee:hover {
+  animation-play-state: paused;
+}
+
+/* Button System */
+.btn-hallmark-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  height: var(--tap-min);
+  padding: 0 var(--space-md);
+  background: var(--color-accent);
+  color: var(--color-accent-ink);
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  text-decoration: none;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  white-space: nowrap; /* Gate 49: Prevent two-line CTA wrap */
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease-out), transform var(--dur-fast) var(--ease-out);
+}
+
+.btn-hallmark-primary:hover:not(:disabled) {
+  background: var(--color-accent-hover);
+  transform: translateY(-1px);
+}
+
+.btn-hallmark-primary:disabled {
+  background: var(--color-ink-subtle);
+  color: var(--color-paper-alt);
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.btn-hallmark-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  height: var(--tap-min);
+  padding: 0 var(--space-md);
+  background: transparent;
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  text-decoration: none;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--color-border);
+  white-space: nowrap; /* Gate 49 */
+  cursor: pointer;
+  transition: border-color var(--dur-fast) var(--ease-out), background var(--dur-fast) var(--ease-out);
+}
+
+.btn-hallmark-outline:hover {
+  border-color: var(--color-accent);
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+}
+
+/* Reduced Motion (Gate 27) */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
@@ -152,216 +218,3 @@ body {
     scroll-behavior: auto !important;
   }
 }
-
-/* ─────────────────────────────────────────
-   SEAM ARC — GLOBAL SVG MOTIF HELPERS
-   Actual SVG is a React component; these classes
-   control it at the surface level.
-   ───────────────────────────────────────── */
-.seam-dark  { color: var(--ember-red); opacity: 0.30; }
-.seam-light { color: var(--ember-red); opacity: 0.15; }
-
-/* ─────────────────────────────────────────
-   CPL BUTTON SYSTEM
-   ───────────────────────────────────────── */
-
-/* Primary — Ember Red, hard shadow */
-.btn-primary {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  padding: 0 2rem;
-  height: var(--tap-min);
-  min-width: 10rem;
-  background: var(--ember-red);
-  color: var(--strip-white);
-  font-family: var(--font-display);
-  font-size: 1.0625rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  border: none;
-  box-shadow: 4px 4px 0 var(--stadium-black);
-  cursor: pointer;
-  transition: transform var(--duration-fast) var(--ease-out),
-              box-shadow var(--duration-fast) var(--ease-out);
-  text-decoration: none;
-  white-space: nowrap;
-}
-.btn-primary:hover:not(:disabled) {
-  transform: translate(2px, 2px);
-  box-shadow: 2px 2px 0 var(--stadium-black);
-}
-.btn-primary:active:not(:disabled) {
-  transform: translate(4px, 4px);
-  box-shadow: 0px 0px 0 var(--stadium-black);
-}
-.btn-primary:disabled {
-  background: var(--pavilion-slate);
-  box-shadow: 4px 4px 0 rgba(0,0,0,0.2);
-  cursor: not-allowed;
-  opacity: 0.7;
-}
-
-/* Ghost — transparent, bordered */
-.btn-ghost {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  padding: 0 2rem;
-  height: var(--tap-min);
-  min-width: 10rem;
-  background: transparent;
-  color: var(--crease-ash);
-  font-family: var(--font-display);
-  font-size: 1.0625rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  border: 2px solid var(--crease-ash);
-  cursor: pointer;
-  transition: background var(--duration-fast) var(--ease-out),
-              color var(--duration-fast) var(--ease-out);
-  text-decoration: none;
-  white-space: nowrap;
-}
-.btn-ghost:hover:not(:disabled) {
-  background: var(--crease-ash);
-  color: var(--stadium-black);
-}
-
-/* Admin — quiet, for data-dense surfaces */
-.btn-admin {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.375rem;
-  padding: 0 1.25rem;
-  height: 36px;
-  background: var(--ember-red);
-  color: var(--strip-white);
-  font-family: var(--font-body);
-  font-size: 0.8125rem;
-  font-weight: 600;
-  border: none;
-  cursor: pointer;
-  text-decoration: none;
-  transition: opacity var(--duration-fast) var(--ease-out);
-}
-.btn-admin:hover { opacity: 0.88; }
-
-.btn-admin-ghost {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.375rem;
-  padding: 0 1rem;
-  height: 36px;
-  background: transparent;
-  color: var(--text-primary);
-  font-family: var(--font-body);
-  font-size: 0.8125rem;
-  font-weight: 500;
-  border: 1.5px solid #D1D5DB;
-  cursor: pointer;
-  text-decoration: none;
-  transition: border-color var(--duration-fast),
-              background var(--duration-fast);
-}
-.btn-admin-ghost:hover { border-color: var(--ember-red); background: #FEF2F2; }
-
-/* ─────────────────────────────────────────
-   ADMIN FORM INPUTS
-   ───────────────────────────────────────── */
-.admin-input {
-  width: 100%;
-  height: var(--tap-min);
-  padding: 0 0.875rem;
-  background: var(--strip-white);
-  border: 1.5px solid #D1D5DB;
-  color: var(--text-primary);
-  font-family: var(--font-body);
-  font-size: 0.9375rem;
-  transition: border-color var(--duration-fast) var(--ease-out);
-  appearance: none;
-}
-.admin-input:focus {
-  outline: none;
-  border-color: var(--ember-red);
-  box-shadow: 0 0 0 3px rgba(192, 39, 45, 0.12);
-}
-.admin-input::placeholder { color: #9CA3AF; }
-
-.admin-select {
-  width: 100%;
-  height: var(--tap-min);
-  padding: 0 0.875rem;
-  background: var(--strip-white);
-  border: 1.5px solid #D1D5DB;
-  color: var(--text-primary);
-  font-family: var(--font-body);
-  font-size: 0.9375rem;
-  cursor: pointer;
-  transition: border-color var(--duration-fast) var(--ease-out);
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236B6F74' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 0.75rem center;
-}
-.admin-select:focus {
-  outline: none;
-  border-color: var(--ember-red);
-  box-shadow: 0 0 0 3px rgba(192, 39, 45, 0.12);
-}
-
-/* ─────────────────────────────────────────
-   ADMIN TABLE
-   ───────────────────────────────────────── */
-.admin-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-family: var(--font-body);
-  font-size: 0.875rem;
-}
-.admin-table thead th {
-  padding: 0.625rem 1rem;
-  text-align: left;
-  font-size: 0.6875rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--pavilion-slate);
-  background: #F3F4F6;
-  border-bottom: 1.5px solid #E5E7EB;
-  white-space: nowrap;
-}
-.admin-table thead th.num { text-align: right; font-family: var(--font-data); }
-.admin-table tbody tr {
-  border-bottom: 1px solid #F3F4F6;
-  transition: background var(--duration-fast);
-}
-.admin-table tbody tr:nth-child(even) { background: #FAFAFA; }
-.admin-table tbody tr:hover { background: #FEF2F2; }
-.admin-table td {
-  padding: 0.75rem 1rem;
-  color: var(--text-primary);
-  vertical-align: middle;
-}
-.admin-table td.num {
-  text-align: right;
-  font-family: var(--font-data);
-  font-size: 0.875rem;
-  font-weight: 500;
-  letter-spacing: -0.02em;
-}
-.admin-table td.muted { color: var(--pavilion-slate); }
-.admin-table .action-link {
-  color: var(--ember-red);
-  font-weight: 600;
-  font-size: 0.8125rem;
-  text-decoration: none;
-  transition: opacity var(--duration-fast);
-}
-.admin-table .action-link:hover { opacity: 0.7; }
