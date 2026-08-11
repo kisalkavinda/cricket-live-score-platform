@@ -1,17 +1,22 @@
 import { prisma } from 'database';
 import Link from 'next/link';
 
+const getPlayers = () => prisma.player.findMany({
+  orderBy: { name: 'asc' },
+  include: {
+    teamPlayers: {
+      include: { team: true }
+    }
+  }
+});
+
+type PlayerRow = Awaited<ReturnType<typeof getPlayers>>[number];
+type TeamPlayerRow = PlayerRow['teamPlayers'][number];
+
 export const dynamic = 'force-dynamic';
 
 export default async function AdminPlayersPage() {
-  const players = await prisma.player.findMany({
-    orderBy: { name: 'asc' },
-    include: {
-      teamPlayers: {
-        include: { team: true }
-      }
-    }
-  });
+  const players = await getPlayers();
 
   return (
     <div>
@@ -41,7 +46,7 @@ export default async function AdminPlayersPage() {
                 </td>
               </tr>
             ) : (
-              players.map((player) => (
+              players.map((player: PlayerRow) => (
                 <tr key={player.id} className="hover:bg-slate-50">
                   <td className="px-6 py-4 whitespace-nowrap font-medium text-slate-900">{player.name}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-slate-500">{player.role}</td>
@@ -51,7 +56,7 @@ export default async function AdminPlayersPage() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-slate-500">
                     {player.teamPlayers.length > 0 
-                      ? player.teamPlayers.map(tp => tp.team.shortName).join(', ')
+                      ? player.teamPlayers.map((tp: TeamPlayerRow) => tp.team.shortName).join(', ')
                       : <span className="text-slate-400 italic">Unassigned</span>}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -66,3 +71,4 @@ export default async function AdminPlayersPage() {
     </div>
   );
 }
+
