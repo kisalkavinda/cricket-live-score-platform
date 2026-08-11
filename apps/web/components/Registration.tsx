@@ -1,91 +1,321 @@
 import Link from 'next/link';
 import { tournamentConfig } from '../config/tournament';
-import { prisma } from 'database';
 
 export default async function Registration() {
   let registeredTeamsCount = 0;
   try {
+    const { prisma } = await import('database');
     registeredTeamsCount = await prisma.team.count();
-  } catch (error) {
-    console.error("Failed to fetch team count:", error);
+  } catch {
+    // DB not configured — silent fallback
   }
 
+  const regOpen = !!tournamentConfig.registrationFormUrl;
+
+  const requirements = [
+    { id: 'req-1', text: 'Official Team Name & Squad Logo' },
+    { id: 'req-2', text: "Captain's Contact & Secondary Representative" },
+    { id: 'req-3', text: 'Full Roster List (Min 11 Players Required)' },
+    { id: 'req-4', text: 'Proof of Payment for Entry Fee' },
+  ];
+
   return (
-    <section className="py-24 bg-[var(--color-foreground)] relative overflow-hidden">
-      {/* Decorative background lines */}
-      <div className="absolute inset-0 opacity-20 text-[var(--color-background)]">
-        <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-              <path d="M0 40V0H40" fill="none" stroke="currentColor" strokeWidth="1" />
-            </pattern>
-          </defs>
-          <rect width="100%" height="100%" fill="url(#grid)" />
-        </svg>
-      </div>
+    <section
+      id="register"
+      style={{
+        padding: 'var(--space-3xl) 0',
+        background: 'var(--color-paper-dark)',
+        color: 'var(--color-paper)',
+        position: 'relative',
+        overflow: 'hidden',
+      }}
+      aria-label="Team Registration"
+    >
+      {/* Background Accent Tint */}
+      <div
+        aria-hidden="true"
+        style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: '800px',
+          height: '400px',
+          borderRadius: '50%',
+          background: 'radial-gradient(circle, rgba(192, 39, 45, 0.15) 0%, transparent 70%)',
+          pointerEvents: 'none',
+        }}
+      />
 
-      <div className="max-w-4xl mx-auto px-4 relative z-10">
-        <div className="bg-[var(--color-background)] border-4 border-[var(--color-foreground)] p-8 md:p-12 shadow-[10px_10px_0px_var(--color-primary-red)] relative overflow-hidden">
-          <div className="absolute top-0 right-0 m-6">
-            <span className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--color-foreground)] text-[var(--color-background)] text-sm font-bold uppercase border-2 border-[var(--color-foreground)] shadow-[4px_4px_0px_var(--color-primary-red)]">
-              {tournamentConfig.registrationFormUrl && (
-                <span className="w-2 h-2 rounded-full bg-[var(--color-primary-red)] animate-pulse"></span>
-              )}
-              {registeredTeamsCount} Teams Registered
-            </span>
-          </div>
+      <div
+        style={{
+          maxWidth: '1100px',
+          margin: '0 auto',
+          padding: '0 var(--space-md)',
+          position: 'relative',
+          zIndex: 10,
+        }}
+      >
+        {/* Editorial Section Header */}
+        <div style={{ textAlign: 'center', maxWidth: '640px', margin: '0 auto var(--space-2xl)' }}>
+          <span
+            style={{
+              fontFamily: 'var(--font-body)',
+              fontSize: '0.75rem',
+              fontWeight: 700,
+              letterSpacing: '0.14em',
+              textTransform: 'uppercase',
+              color: 'var(--color-accent-bright)',
+              display: 'block',
+              marginBottom: '8px',
+            }}
+          >
+            Official Entry Portal
+          </span>
+          <h2
+            style={{
+              fontFamily: 'var(--font-display)',
+              fontSize: 'clamp(2.8rem, 6vw, 4.5rem)',
+              fontWeight: 900,
+              textTransform: 'uppercase',
+              lineHeight: 0.95,
+              color: 'var(--color-paper)',
+              marginBottom: 'var(--space-md)',
+              overflowWrap: 'anywhere',
+            }}
+          >
+            Register Your <span style={{ color: 'var(--color-accent)' }}>Squad</span>
+          </h2>
+          <p
+            style={{
+              fontFamily: 'var(--font-body)',
+              fontSize: '1rem',
+              color: 'rgba(255, 255, 255, 0.7)',
+              lineHeight: 1.6,
+            }}
+          >
+            Ensure your team meets all tournament eligibility requirements prior to submitting your official squad roster.
+          </p>
+        </div>
 
-          <h2 className="text-3xl md:text-5xl font-extrabold text-[var(--color-foreground)] mb-6 pr-40 uppercase">Ready to Play?</h2>
-          
-          <div className="prose prose-lg text-[var(--color-foreground)]/80 mb-10 font-medium">
-            <p>
-              Gather your squad and register before the deadline. Make sure you have the following details ready before starting the application:
-            </p>
-            <ul className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-6">
-              <li className="flex items-center gap-3">
-                <svg className="w-5 h-5 text-[var(--color-primary-red)]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7"/></svg>
-                <span>Team Name & Optional Logo</span>
-              </li>
-              <li className="flex items-center gap-3">
-                <svg className="w-5 h-5 text-[var(--color-primary-red)]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7"/></svg>
-                <span>Captain's Contact Info</span>
-              </li>
-              <li className="flex items-center gap-3">
-                <svg className="w-5 h-5 text-[var(--color-primary-red)]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7"/></svg>
-                <span>Full Squad List (Min 11 players)</span>
-              </li>
-              <li className="flex items-center gap-3">
-                <svg className="w-5 h-5 text-[var(--color-primary-red)]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7"/></svg>
-                <span>Entry Fee Proof of Payment</span>
-              </li>
-            </ul>
-          </div>
-
-          <div className="flex flex-col sm:flex-row items-center gap-6 p-6 bg-[var(--color-background)] border-4 border-[var(--color-foreground)] relative">
-            <div className="absolute inset-0 bg-[var(--color-primary-red)]/5 pointer-events-none"></div>
-            <div className="flex-1 text-center sm:text-left relative z-10">
-              <p className="text-sm text-[var(--color-foreground)]/60 uppercase tracking-widest font-bold mb-1">Deadline</p>
-              <p className="text-xl text-[var(--color-foreground)] font-extrabold">{tournamentConfig.registrationDeadline || "TBA"}</p>
+        {/* Tournament Ticket / Entry Pass Layout (No re-drawn browser chrome - Gate 47) */}
+        <div
+          style={{
+            background: 'rgba(255, 255, 255, 0.03)',
+            border: '1.5px solid rgba(255, 255, 255, 0.12)',
+            borderRadius: 'var(--radius-lg)',
+            padding: 'var(--space-xl)',
+            boxShadow: '0 20px 50px rgba(0, 0, 0, 0.4)',
+          }}
+        >
+          {/* Registered Teams Header Counter */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: 'var(--space-md)',
+              paddingBottom: 'var(--space-md)',
+              marginBottom: 'var(--space-xl)',
+              borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+            }}
+          >
+            <div>
+              <span
+                style={{
+                  fontFamily: 'var(--font-body)',
+                  fontSize: '0.75rem',
+                  fontWeight: 700,
+                  letterSpacing: '0.1em',
+                  textTransform: 'uppercase',
+                  color: 'var(--color-ink-subtle)',
+                }}
+              >
+                Team Slots Status
+              </span>
+              <h3
+                style={{
+                  fontFamily: 'var(--font-display)',
+                  fontSize: '1.6rem',
+                  fontWeight: 800,
+                  color: 'var(--color-paper)',
+                }}
+              >
+                {registeredTeamsCount} Teams Registered
+              </h3>
             </div>
-            
-            {tournamentConfig.registrationFormUrl ? (
-              <Link 
-                href={tournamentConfig.registrationFormUrl}
+
+            <div
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '6px 14px',
+                borderRadius: '9999px',
+                background: regOpen ? 'var(--color-accent)' : 'rgba(255, 255, 255, 0.1)',
+                color: 'var(--color-paper)',
+                fontFamily: 'var(--font-body)',
+                fontSize: '0.75rem',
+                fontWeight: 700,
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
+              }}
+            >
+              <span
+                style={{
+                  width: '6px',
+                  height: '6px',
+                  borderRadius: '50%',
+                  background: 'currentColor',
+                }}
+                className={regOpen ? 'animate-pulse-dot' : ''}
+              />
+              {regOpen ? 'Registration Active' : 'Portal Closed'}
+            </div>
+          </div>
+
+          {/* Checklist Requirements Grid */}
+          <div style={{ marginBottom: 'var(--space-xl)' }}>
+            <span
+              style={{
+                fontFamily: 'var(--font-body)',
+                fontSize: '0.75rem',
+                fontWeight: 700,
+                letterSpacing: '0.12em',
+                textTransform: 'uppercase',
+                color: 'var(--color-ink-subtle)',
+                display: 'block',
+                marginBottom: 'var(--space-md)',
+              }}
+            >
+              Submission Checklist
+            </span>
+
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+                gap: 'var(--space-md)',
+              }}
+            >
+              {requirements.map((req) => (
+                <div
+                  key={req.id}
+                  id={req.id}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    padding: 'var(--space-md)',
+                    background: 'rgba(255, 255, 255, 0.04)',
+                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                    borderRadius: 'var(--radius-md)',
+                  }}
+                >
+                  <div
+                    style={{
+                      width: '24px',
+                      height: '24px',
+                      borderRadius: '50%',
+                      background: 'var(--color-accent-soft)',
+                      color: 'var(--color-accent-bright)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '0.8rem',
+                      fontWeight: 900,
+                      flexShrink: 0,
+                    }}
+                  >
+                    ✓
+                  </div>
+                  <span
+                    style={{
+                      fontFamily: 'var(--font-body)',
+                      fontSize: '0.9rem',
+                      fontWeight: 500,
+                      color: 'rgba(255, 255, 255, 0.85)',
+                    }}
+                  >
+                    {req.text}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Deadline & CTA Section Bar */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: 'var(--space-md)',
+              padding: 'var(--space-md) var(--space-lg)',
+              background: 'rgba(0, 0, 0, 0.3)',
+              borderRadius: 'var(--radius-md)',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+            }}
+          >
+            <div>
+              <span
+                style={{
+                  fontFamily: 'var(--font-body)',
+                  fontSize: '0.7rem',
+                  fontWeight: 700,
+                  letterSpacing: '0.12em',
+                  textTransform: 'uppercase',
+                  color: 'var(--color-ink-subtle)',
+                }}
+              >
+                Registration Deadline
+              </span>
+              <p
+                style={{
+                  fontFamily: 'var(--font-data)',
+                  fontSize: '1.1rem',
+                  fontWeight: 700,
+                  color: 'var(--color-paper)',
+                  fontVariantNumeric: 'tabular-nums',
+                }}
+              >
+                {tournamentConfig.registrationDeadline || 'TBA'}
+              </p>
+            </div>
+
+            {regOpen ? (
+              <Link
+                href={tournamentConfig.registrationFormUrl!}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="relative z-10 w-full sm:w-auto px-8 py-4 bg-[var(--color-primary-red)] hover:translate-y-1 text-white font-bold text-lg uppercase transition-all duration-300 shadow-[4px_4px_0px_var(--color-foreground)] hover:shadow-[2px_2px_0px_var(--color-foreground)] flex items-center justify-center whitespace-nowrap"
+                className="btn-hallmark-primary"
+                id="reg-cta-button"
+                style={{ height: '44px', padding: '0 20px', maxWidth: '100%' }}
               >
-                Complete Registration
-                <svg className="w-5 h-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                Complete Registration Form
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               </Link>
             ) : (
-              <button 
+              <button
                 disabled
-                className="relative z-10 w-full sm:w-auto px-8 py-4 bg-[var(--color-foreground)]/10 text-[var(--color-foreground)]/50 font-bold text-lg uppercase border-2 border-[var(--color-foreground)]/10 cursor-not-allowed flex items-center justify-center whitespace-nowrap"
+                className="btn-hallmark-primary"
+                id="reg-cta-disabled"
+                style={{
+                  height: 'auto',
+                  minHeight: '44px',
+                  padding: '8px 16px',
+                  maxWidth: '100%',
+                  whiteSpace: 'normal',
+                  fontSize: '0.85rem',
+                  lineHeight: 1.2,
+                  textAlign: 'center',
+                }}
               >
-                Registrations Not Open
+                Registrations Not Currently Open
               </button>
             )}
           </div>
