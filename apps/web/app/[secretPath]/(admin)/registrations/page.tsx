@@ -200,7 +200,7 @@ export default async function AdminRegistrationsPage({
                 <th style={{ padding: '12px 18px', color: '#8B9BB4', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', textAlign: 'right' }}>Action</th>
               </tr>
             </thead>
-            <tbody style={{ divideY: '1px solid #161D2B' }}>
+            <tbody>
               {registrations.length === 0 ? (
                 <tr>
                   <td colSpan={7} style={{ padding: '48px 24px', textAlign: 'center', color: '#8B9BB4' }}>
