@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { requireAdminAuth, getAdminEntryPath } from '@/lib/auth/admin-auth';
 import { getMatchesList } from '@/lib/scoring/scoring-service';
 import { createPerfTracker, logPerfMetric } from '@/lib/utils/perf-logger';
+import DeleteMatchButton from '@/components/admin/DeleteMatchButton';
 
 export const dynamic = 'force-dynamic';
 
@@ -219,6 +220,7 @@ export default async function AdminMatchesPage() {
                     >
                       Public View ↗
                     </Link>
+                    <DeleteMatchButton isIconOnly matchId={m.id} matchTitle={`${m.teamA.name} vs ${m.teamB.name}`} />
                   </div>
                 </div>
               );
@@ -297,21 +299,24 @@ export default async function AdminMatchesPage() {
                   <span style={{ fontSize: '11px', color: '#8B9BB4', fontFamily: 'monospace' }}>
                     {m.scheduledAt ? new Date(m.scheduledAt).toLocaleDateString() : 'TBD'}
                   </span>
-                  <Link
-                    href={`/${entryPath}/matches/${m.id}/score`}
-                    style={{
-                      padding: '6px 14px',
-                      borderRadius: '6px',
-                      backgroundColor: '#1E2638',
-                      color: '#FFFFFF',
-                      fontSize: '11px',
-                      fontWeight: 700,
-                      textDecoration: 'none',
-                      border: '1px solid #2A364E',
-                    }}
-                  >
-                    Start Match →
-                  </Link>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Link
+                      href={`/${entryPath}/matches/${m.id}/score`}
+                      style={{
+                        padding: '6px 14px',
+                        borderRadius: '6px',
+                        backgroundColor: '#1E2638',
+                        color: '#FFFFFF',
+                        fontSize: '11px',
+                        fontWeight: 700,
+                        textDecoration: 'none',
+                        border: '1px solid #2A364E',
+                      }}
+                    >
+                      Start Match →
+                    </Link>
+                    <DeleteMatchButton isIconOnly matchId={m.id} matchTitle={`${m.teamA.name} vs ${m.teamB.name}`} />
+                  </div>
                 </div>
               </div>
             ))}
@@ -366,7 +371,7 @@ export default async function AdminMatchesPage() {
                   </div>
                 )}
 
-                <div style={{ paddingTop: '8px', borderTop: '1px solid #161D2B', textAlign: 'right' }}>
+                <div style={{ paddingTop: '8px', borderTop: '1px solid #161D2B', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <Link
                     href={`/scorecard?matchId=${m.id}`}
                     target="_blank"
@@ -378,6 +383,7 @@ export default async function AdminMatchesPage() {
                   >
                     View Scorecard ↗
                   </Link>
+                  <DeleteMatchButton isIconOnly matchId={m.id} matchTitle={`${m.teamA.name} vs ${m.teamB.name}`} />
                 </div>
               </div>
             ))}

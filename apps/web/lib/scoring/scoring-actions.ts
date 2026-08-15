@@ -67,3 +67,40 @@ export async function completeMatchAction(matchId: string, input: { winnerTeamId
   await requireAdminAuth();
   return await completeMatch(matchId, input);
 }
+
+export async function deleteMatchAction(matchId: string) {
+  await requireAdminAuth();
+  const { getAdminEntryPath } = await import('@/lib/auth/admin-auth');
+  const { revalidatePath } = await import('next/cache');
+  const { prisma } = await import('database');
+  const entryPath = getAdminEntryPath();
+
+  const inningsList = await (prisma as any).innings.findMany({
+    where: { matchId },
+    select: { id: true },
+  });
+  const inningsIds = inningsList.map((i: any) => i.id);
+  if (inningsIds.length > 0) {
+    await (prisma as any).ballEvent.deleteMany({
+      where: { inningsId: { in: inningsIds } },
+    }).catch(() => {});
+    await (prisma as any).inningsBatter.deleteMany({
+      where: { inningsId: { in: inningsIds } },
+    }).catch(() => {});
+    await (prisma as any).inningsBowler.deleteMany({
+      where: { inningsId: { in: inningsIds } },
+    }).catch(() => {});
+    await (prisma as any).innings.deleteMany({
+      where: { matchId },
+    }).catch(() => {});
+  }
+
+  await (prisma as any).match.delete({
+    where: { id: matchId },
+  });
+
+  revalidatePath(`/${entryPath}/matches`);
+  revalidatePath(`/${entryPath}/dashboard`);
+  revalidatePath('/');
+  return { success: true, redirectUrl: `/${entryPath}/matches` };
+}
