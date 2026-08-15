@@ -31,6 +31,9 @@ export default async function AdminRegistrationsPage({
   tracker.renderEnd = performance.now();
   logPerfMetric('/registrations', tracker);
 
+  const totalCount = data?.pagination?.total ?? 0;
+  const registrations = data?.items ?? [];
+
   return (
     <div className="max-w-6xl mx-auto space-y-8">
       {/* Header */}
@@ -41,7 +44,7 @@ export default async function AdminRegistrationsPage({
               Verification Queue
             </span>
             <span className="text-white/30">•</span>
-            <span className="text-xs text-white/50">{data.total} Submissions</span>
+            <span className="text-xs text-white/50">{totalCount} Submissions</span>
           </div>
           <h1 className="text-3xl font-black tracking-tight font-display text-white">
             Team Registrations
@@ -120,14 +123,14 @@ export default async function AdminRegistrationsPage({
               </tr>
             </thead>
             <tbody className="divide-y divide-white/[0.06] text-sm">
-              {data.registrations.length === 0 ? (
+              {registrations.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="px-6 py-12 text-center text-white/40">
                     No registrations match the selected criteria.
                   </td>
                 </tr>
               ) : (
-                data.registrations.map((r: any) => (
+                registrations.map((r: any) => (
                   <tr key={r.id} className="hover:bg-white/[0.03] transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap font-mono font-bold text-[#C0272D]">
                       {r.registrationCode}

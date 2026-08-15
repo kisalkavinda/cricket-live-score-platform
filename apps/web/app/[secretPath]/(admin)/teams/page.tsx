@@ -5,8 +5,8 @@ import { createPerfTracker, logPerfMetric } from '@/lib/utils/perf-logger';
 
 export const dynamic = 'force-dynamic';
 
-const getTeams = () =>
-  prisma.team.findMany({
+const getTeams = async () =>
+  (prisma as any).team.findMany({
     orderBy: { createdAt: 'desc' },
     select: {
       id: true,
@@ -17,13 +17,10 @@ const getTeams = () =>
       _count: {
         select: {
           teamPlayers: true,
-          matchesWon: true,
         },
       },
     },
   });
-
-type TeamRow = Awaited<ReturnType<typeof getTeams>>[number];
 
 export default async function AdminTeamsPage() {
   const tracker = createPerfTracker();
@@ -89,7 +86,7 @@ export default async function AdminTeamsPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {teams.map((team: TeamRow) => (
+          {teams.map((team: any) => (
             <div
               key={team.id}
               className="group relative rounded-2xl bg-[#141010]/80 hover:bg-[#1A1414]/90 border border-white/[0.08] hover:border-white/20 p-5 backdrop-blur-xl transition-all duration-200 hover:shadow-xl hover:shadow-black/50"
@@ -131,9 +128,6 @@ export default async function AdminTeamsPage() {
                 <div className="flex items-center gap-4 text-white/60">
                   <span>
                     <strong className="text-white font-mono">{team._count?.teamPlayers ?? 0}</strong> Players
-                  </span>
-                  <span>
-                    <strong className="text-emerald-400 font-mono">{team._count?.matchesWon ?? 0}</strong> Wins
                   </span>
                 </div>
 
