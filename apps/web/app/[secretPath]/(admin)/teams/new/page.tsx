@@ -57,8 +57,8 @@ export default function NewTeamPage() {
         </div>
         
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">City</label>
-          <input type="text" name="city" className="w-full border-slate-300 rounded-lg p-3 border" placeholder="e.g. Colombo" />
+          <label className="block text-sm font-medium text-slate-700 mb-1">Intake</label>
+          <input type="text" name="city" className="w-full border-slate-300 rounded-lg p-3 border" placeholder="e.g. Intake 39" />
         </div>
 
         <div>

@@ -168,7 +168,7 @@ export default async function TeamDetailPage({
                 </span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginTop: '6px', fontSize: '13px', color: '#8B9BB4' }}>
-                {team.city && <span>📍 {team.city}</span>}
+                {team.city && <span>🎓 Intake: {team.city}</span>}
                 <span>🛡️ Franchise ID: <code style={{ fontFamily: 'monospace', color: '#CBD5E1' }}>{team.id.substring(0, 8)}...</code></span>
               </div>
             </div>
@@ -266,13 +266,13 @@ export default async function TeamDetailPage({
 
             <div>
               <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, color: '#8B9BB4', marginBottom: '4px' }}>
-                City / Faculty
+                Intake
               </label>
               <input
                 type="text"
                 name="city"
                 defaultValue={team.city || ''}
-                placeholder="e.g. Computing"
+                placeholder="e.g. Intake 39"
                 style={{
                   width: '100%',
                   height: '36px',

@@ -244,7 +244,7 @@ export default async function AdminTeamsPage() {
                       </span>
                       {team.city && (
                         <span style={{ fontSize: '12px', color: '#8B9BB4' }}>
-                          📍 {team.city}
+                          🎓 Intake: {team.city}
                         </span>
                       )}
                     </div>
