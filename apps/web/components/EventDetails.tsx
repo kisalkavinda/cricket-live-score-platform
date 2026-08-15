@@ -58,7 +58,7 @@ export default function EventDetails() {
     {
       id: 'detail-format',
       title: 'Tournament Format',
-      value: tournamentConfig.format,
+      value: tournamentConfig.format || 'League + Knockout',
       subtitle: 'Rules & Match Structure',
       icon: (
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -69,7 +69,7 @@ export default function EventDetails() {
     {
       id: 'detail-fee',
       title: 'Entry Registration Fee',
-      value: tournamentConfig.entryFee,
+      value: tournamentConfig.entryFee === '[PLACEHOLDER ENTRY FEE]' ? 'Free Entry / University Sponsored' : tournamentConfig.entryFee,
       subtitle: 'Per Team Entry',
       icon: (
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -111,7 +111,7 @@ export default function EventDetails() {
           padding: '0 var(--space-md)',
         }}
       >
-        {/* Section Header (No two-column hanging eyebrow - Gate 54) */}
+        {/* Section Header */}
         <div style={{ marginBottom: 'var(--space-2xl)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
             <span
@@ -139,7 +139,7 @@ export default function EventDetails() {
           <h2
             style={{
               fontFamily: 'var(--font-display)',
-              fontSize: 'clamp(2.5rem, 5vw, 4rem)',
+              fontSize: 'clamp(2.2rem, 5vw, 3.6rem)',
               fontWeight: 900,
               textTransform: 'uppercase',
               color: 'var(--color-ink)',
@@ -149,113 +149,102 @@ export default function EventDetails() {
           </h2>
         </div>
 
-        {/* Asymmetric Editorial Grid Layout (Replaces 3-equal column grid - Gate 3) */}
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(12, 1fr)',
-            gap: 'var(--space-md)',
-          }}
-        >
-          {/* Main Key Info Feature Card (Spans 7 cols on desktop) */}
+        {/* Clean Stacked & Horizontally Aligned Layout */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          {/* Main Key Info Feature Card (Full Width Banner) */}
           <div
-            className="col-span-12 lg:col-span-7"
             style={{
               background: 'var(--color-paper-card)',
               border: '1px solid var(--color-border)',
               borderRadius: 'var(--radius-lg)',
               padding: 'var(--space-xl)',
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'space-between',
               boxShadow: '0 4px 20px rgba(0, 0, 0, 0.03)',
             }}
           >
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: 'var(--space-md)' }}>
-                <div
-                  style={{
-                    width: '44px',
-                    height: '44px',
-                    borderRadius: 'var(--radius-md)',
-                    background: 'var(--color-accent-soft)',
-                    color: 'var(--color-accent)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  {details[0].icon}
-                </div>
-                <div>
-                  <h3
-                    style={{
-                      fontFamily: 'var(--font-display)',
-                      fontSize: '1.4rem',
-                      fontWeight: 800,
-                      color: 'var(--color-ink)',
-                    }}
-                  >
-                    Match Day & Venue Overview
-                  </h3>
-                  <span style={{ fontSize: '0.85rem', color: 'var(--color-ink-muted)' }}>
-                    Primary Event Logistics
-                  </span>
-                </div>
-              </div>
-
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: 'var(--space-md)' }}>
               <div
                 style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                  gap: 'var(--space-md)',
-                  paddingTop: 'var(--space-md)',
-                  borderTop: '1px solid var(--color-border)',
+                  width: '44px',
+                  height: '44px',
+                  borderRadius: 'var(--radius-md)',
+                  background: 'var(--color-accent-soft)',
+                  color: 'var(--color-accent)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
                 }}
               >
-                <div>
-                  <span style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--color-ink-subtle)' }}>
-                    Tournament Date
-                  </span>
-                  <p style={{ fontFamily: 'var(--font-data)', fontSize: '1.15rem', fontWeight: 700, color: 'var(--color-ink)' }}>
-                    {details[0].value}
-                  </p>
-                </div>
-
-                <div>
-                  <span style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--color-ink-subtle)' }}>
-                    Reporting Time
-                  </span>
-                  <p style={{ fontFamily: 'var(--font-data)', fontSize: '1.15rem', fontWeight: 700, color: 'var(--color-ink)' }}>
-                    {details[1].value}
-                  </p>
-                </div>
-
-                <div>
-                  <span style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--color-ink-subtle)' }}>
-                    Venue
-                  </span>
-                  <p style={{ fontFamily: 'var(--font-body)', fontSize: '1.1rem', fontWeight: 700, color: 'var(--color-ink)' }}>
-                    {details[2].value}
-                  </p>
-                </div>
+                {details[0].icon}
+              </div>
+              <div>
+                <h3
+                  style={{
+                    fontFamily: 'var(--font-display)',
+                    fontSize: '1.4rem',
+                    fontWeight: 800,
+                    color: 'var(--color-ink)',
+                    margin: 0,
+                  }}
+                >
+                  Match Day & Venue Overview
+                </h3>
+                <span style={{ fontSize: '0.85rem', color: 'var(--color-ink-muted)' }}>
+                  Primary Event Logistics
+                </span>
               </div>
             </div>
 
-            <div style={{ marginTop: 'var(--space-xl)', paddingTop: 'var(--space-md)', borderTop: '1px dashed var(--color-border)' }}>
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+                gap: 'var(--space-lg)',
+                paddingTop: 'var(--space-md)',
+                borderTop: '1px solid var(--color-border)',
+              }}
+            >
+              <div>
+                <span style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--color-ink-subtle)', display: 'block', marginBottom: '4px' }}>
+                  Tournament Date
+                </span>
+                <p style={{ fontFamily: 'var(--font-data)', fontSize: '1.2rem', fontWeight: 800, color: 'var(--color-ink)', margin: 0 }}>
+                  {details[0].value}
+                </p>
+              </div>
+
+              <div>
+                <span style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--color-ink-subtle)', display: 'block', marginBottom: '4px' }}>
+                  Reporting Time
+                </span>
+                <p style={{ fontFamily: 'var(--font-data)', fontSize: '1.2rem', fontWeight: 800, color: 'var(--color-ink)', margin: 0 }}>
+                  {details[1].value}
+                </p>
+              </div>
+
+              <div>
+                <span style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--color-ink-subtle)', display: 'block', marginBottom: '4px' }}>
+                  Venue
+                </span>
+                <p style={{ fontFamily: 'var(--font-body)', fontSize: '1.15rem', fontWeight: 700, color: 'var(--color-ink)', margin: 0 }}>
+                  {details[2].value}
+                </p>
+              </div>
+            </div>
+
+            <div style={{ marginTop: 'var(--space-lg)', paddingTop: 'var(--space-md)', borderTop: '1px dashed var(--color-border)' }}>
               <span style={{ fontSize: '0.85rem', color: 'var(--color-ink-muted)' }}>
                 * Final fixture schedules and pitch allocations will be emailed to registered team captains.
               </span>
             </div>
           </div>
 
-          {/* Secondary Details Column (Spans 5 cols on desktop) */}
+          {/* Secondary Specifications: Horizontally Aligned 3-Column Grid */}
           <div
-            className="col-span-12 lg:col-span-5"
             style={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 'var(--space-md)',
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+              gap: '20px',
             }}
           >
             {details.slice(3).map((item) => (
@@ -266,17 +255,18 @@ export default function EventDetails() {
                   background: 'var(--color-paper-card)',
                   border: '1px solid var(--color-border)',
                   borderRadius: 'var(--radius-md)',
-                  padding: 'var(--space-md)',
+                  padding: '20px',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: 'var(--space-md)',
+                  gap: '16px',
+                  boxShadow: '0 2px 10px rgba(0, 0, 0, 0.02)',
                   transition: 'border-color var(--dur-fast)',
                 }}
               >
                 <div
                   style={{
-                    width: '40px',
-                    height: '40px',
+                    width: '44px',
+                    height: '44px',
                     borderRadius: 'var(--radius-md)',
                     background: 'var(--color-accent-soft)',
                     color: 'var(--color-accent)',
@@ -288,7 +278,7 @@ export default function EventDetails() {
                 >
                   {item.icon}
                 </div>
-                <div style={{ flex: 1 }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
                   <div
                     style={{
                       fontFamily: 'var(--font-body)',
@@ -297,6 +287,7 @@ export default function EventDetails() {
                       letterSpacing: '0.08em',
                       textTransform: 'uppercase',
                       color: 'var(--color-ink-subtle)',
+                      marginBottom: '4px',
                     }}
                   >
                     {item.title}
@@ -305,8 +296,10 @@ export default function EventDetails() {
                     style={{
                       fontFamily: 'var(--font-data)',
                       fontSize: '1.05rem',
-                      fontWeight: 700,
+                      fontWeight: 800,
                       color: 'var(--color-ink)',
+                      lineHeight: 1.3,
+                      wordBreak: 'break-word',
                     }}
                   >
                     {item.value}
