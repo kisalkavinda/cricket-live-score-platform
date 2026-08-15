@@ -204,21 +204,33 @@ h1, h2, h3, h4, h5, h6,
   background: var(--color-accent-soft);
 }
 
-/* Mobile Responsive Utility Classes */
-@media (max-width: 768px) {
+/* Mobile / Desktop Responsive Utility Classes */
+@media (min-width: 768px) {
+  .md-hide {
+    display: none !important;
+  }
+  .md-flex {
+    display: flex !important;
+  }
+}
+
+@media (max-width: 767px) {
+  .mobile-hide {
+    display: none !important;
+  }
+  .mobile-flex {
+    display: flex !important;
+  }
   .hide-on-mobile {
     display: none !important;
   }
-  
   .stack-on-mobile {
     flex-direction: column !important;
     align-items: stretch !important;
   }
-  
   .mobile-p-sm {
     padding: 14px !important;
   }
-  
   .mobile-text-center {
     text-align: center !important;
   }
