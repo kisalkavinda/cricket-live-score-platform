@@ -1,10 +1,10 @@
 import { requireAdminAuth } from '@/lib/auth/admin-auth';
 import { getExceptionsList } from '@/lib/admin/admin-service';
 import { prisma } from 'database';
-import {
-  createExceptionServerAction,
-  toggleExceptionServerAction,
-} from '@/lib/admin/admin-actions';
+import { createExceptionServerAction } from '@/lib/admin/admin-actions';
+import ExceptionCard from '@/components/admin/ExceptionCard';
+
+export const dynamic = 'force-dynamic';
 
 export default async function RegistrationExceptionsPage() {
   await requireAdminAuth();
@@ -260,53 +260,7 @@ export default async function RegistrationExceptionsPage() {
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {exceptions.map((ex: any) => (
-                <div
-                  key={ex.id}
-                  style={{
-                    backgroundColor: '#141A26',
-                    border: '1px solid #1E2638',
-                    borderRadius: '8px',
-                    padding: '14px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '8px',
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <div style={{ fontWeight: 700, color: '#FFFFFF', fontSize: '14px' }}>
-                      {ex.name || 'Unnamed Rule'}
-                    </div>
-                    <form
-                      action={async () => {
-                        'use server';
-                        await toggleExceptionServerAction(ex.id, !ex.active);
-                      }}
-                    >
-                      <button
-                        type="submit"
-                        style={{
-                          padding: '3px 8px',
-                          borderRadius: '4px',
-                          fontSize: '10px',
-                          fontWeight: 800,
-                          fontFamily: 'monospace',
-                          backgroundColor: ex.active ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
-                          color: ex.active ? '#34D399' : '#F87171',
-                          border: ex.active ? '1px solid rgba(16, 185, 129, 0.3)' : '1px solid rgba(239, 68, 68, 0.3)',
-                          cursor: 'pointer',
-                        }}
-                      >
-                        {ex.active ? 'ACTIVE' : 'DISABLED'}
-                      </button>
-                    </form>
-                  </div>
-
-                  <div style={{ fontSize: '12px', color: '#8B9BB4', display: 'flex', flexDirection: 'column', gap: '3px' }}>
-                    {ex.teamName && <div>Team Match: <strong style={{ color: '#E2E8F0' }}>{ex.teamName}</strong></div>}
-                    {ex.indexPrefix && <div>Index Prefix: <strong style={{ color: '#FBBF24', fontFamily: 'monospace' }}>{ex.indexPrefix}*</strong></div>}
-                    <div>Allowed Min: <strong style={{ color: '#FFFFFF', fontFamily: 'monospace' }}>{ex.minPlayers} players</strong></div>
-                  </div>
-                </div>
+                <ExceptionCard key={ex.id} exception={ex} tournaments={tournaments} />
               ))}
             </div>
           )}
