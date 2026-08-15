@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { createPlayer } from '../../actions';
+import { createPlayerServerAction } from '@/lib/admin/admin-actions';
 import { createClient } from '@/utils/supabase/client';
 import { useRouter } from 'next/navigation';
 
@@ -38,7 +38,7 @@ export default function NewPlayerPage() {
       formData.set('profileImageUrl', publicUrlData.publicUrl);
     }
 
-    await createPlayer(formData);
+    await createPlayerServerAction(formData);
   }
 
   return (

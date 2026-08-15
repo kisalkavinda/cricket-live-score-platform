@@ -1,12 +1,15 @@
 import { prisma } from 'database';
 import Link from 'next/link';
 
+import { getAdminEntryPath } from '@/lib/auth/admin-auth';
+
 const getTournaments = () => prisma.tournament.findMany({ include: { stages: true } });
 type TournamentRow = Awaited<ReturnType<typeof getTournaments>>[number];
 
 export const dynamic = 'force-dynamic';
 
 export default async function AdminTournamentsPage() {
+  const entryPath = getAdminEntryPath();
   const tournaments = await prisma.tournament.findMany({
     orderBy: { createdAt: 'desc' },
     include: {
@@ -18,7 +21,7 @@ export default async function AdminTournamentsPage() {
     <div>
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold">Tournaments</h1>
-        <Link href="/admin/tournaments/new" className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow">
+        <Link href={`/${entryPath}/tournaments/new`} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow">
           + Create Tournament
         </Link>
       </div>

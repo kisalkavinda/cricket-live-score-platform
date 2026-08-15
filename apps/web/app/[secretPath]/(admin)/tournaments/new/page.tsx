@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { createTournament } from '../../actions';
+import { createTournamentServerAction } from '@/lib/admin/admin-actions';
 import { useRouter } from 'next/navigation';
 
 export default function NewTournamentPage() {
@@ -13,7 +13,7 @@ export default function NewTournamentPage() {
     setIsSubmitting(true);
     
     const formData = new FormData(e.currentTarget);
-    await createTournament(formData);
+    await createTournamentServerAction(formData);
   }
 
   return (

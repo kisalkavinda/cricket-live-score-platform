@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { createTeam } from '../../actions';
+import { createTeamServerAction } from '@/lib/admin/admin-actions';
 import { createClient } from '@/utils/supabase/client';
 import { useRouter } from 'next/navigation';
 
@@ -38,7 +38,7 @@ export default function NewTeamPage() {
       formData.set('logoUrl', publicUrlData.publicUrl);
     }
 
-    await createTeam(formData);
+    await createTeamServerAction(formData);
   }
 
   return (

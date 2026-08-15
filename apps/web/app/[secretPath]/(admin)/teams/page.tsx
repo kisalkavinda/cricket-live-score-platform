@@ -1,11 +1,14 @@
 import { prisma } from 'database';
 import Link from 'next/link';
 
+import { getAdminEntryPath } from '@/lib/auth/admin-auth';
+
 type TeamRow = Awaited<ReturnType<typeof prisma.team.findMany>>[number];
 
 export const dynamic = 'force-dynamic'; // Prevent static caching for admin pages
 
 export default async function AdminTeamsPage() {
+  const entryPath = getAdminEntryPath();
   const teams = await prisma.team.findMany({
     orderBy: { createdAt: 'desc' }
   });
@@ -14,7 +17,7 @@ export default async function AdminTeamsPage() {
     <div>
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold">Teams</h1>
-        <Link href="/admin/teams/new" className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow">
+        <Link href={`/${entryPath}/teams/new`} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow">
           + Add New Team
         </Link>
       </div>
