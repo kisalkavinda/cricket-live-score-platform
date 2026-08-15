@@ -17,10 +17,10 @@ export default function Navbar() {
   }, []);
 
   const navLinks = [
-    { label: '🔴 Live Scores', href: '#live-scores', id: 'nav-scores' },
+    { label: '🔴 Live Scores', href: '/#live-scores', id: 'nav-scores' },
     { label: 'Overview', href: '/', id: 'nav-overview' },
-    { label: 'Tournament Info', href: '#details', id: 'nav-details' },
-    { label: 'Register Squad', href: '#register', id: 'nav-register' },
+    { label: 'Tournament Info', href: '/#details', id: 'nav-details' },
+    { label: 'Register Squad', href: '/register', id: 'nav-register' },
   ];
 
   return (
@@ -93,12 +93,13 @@ export default function Navbar() {
             style={{
               fontFamily: 'var(--font-display)',
               fontWeight: 900,
-              fontSize: '1.35rem',
+              fontSize: '1.45rem',
               letterSpacing: '0.04em',
               color: scrolled ? 'var(--color-ink)' : 'var(--color-paper)',
+              whiteSpace: 'nowrap',
             }}
           >
-            {tournamentConfig.name}
+            {tournamentConfig.shortName || 'CPL'}
           </span>
         </Link>
 
@@ -145,41 +146,18 @@ export default function Navbar() {
 
         {/* Action Button & Mobile Toggle */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          {tournamentConfig.registrationFormUrl ? (
-            <Link
-              href={tournamentConfig.registrationFormUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn-hallmark-primary"
-              style={{
-                height: '36px',
-                padding: '0 16px',
-                fontSize: '0.85rem',
-                borderRadius: '9999px',
-              }}
-            >
-              Register
-            </Link>
-          ) : (
-            <span
-              style={{
-                fontFamily: 'var(--font-display)',
-                fontSize: '0.8rem',
-                fontWeight: 700,
-                textTransform: 'uppercase',
-                letterSpacing: '0.08em',
-                padding: '4px 12px',
-                borderRadius: '9999px',
-                background: scrolled
-                  ? 'var(--color-paper-alt)'
-                  : 'rgba(255, 255, 255, 0.1)',
-                color: scrolled ? 'var(--color-accent)' : 'var(--color-paper)',
-                border: '1px solid rgba(192, 39, 45, 0.3)',
-              }}
-            >
-              Opening Soon
-            </span>
-          )}
+          <Link
+            href="/register"
+            className="btn-hallmark-primary"
+            style={{
+              height: '36px',
+              padding: '0 16px',
+              fontSize: '0.85rem',
+              borderRadius: '9999px',
+            }}
+          >
+            Register
+          </Link>
 
           {/* Mobile Menu Button */}
           <button
