@@ -35,46 +35,97 @@ export default async function AdminRegistrationsPage({
   const registrations = data?.items ?? [];
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-white/[0.08]">
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '16px',
+          paddingBottom: '20px',
+          borderBottom: '1px solid #1E2638',
+        }}
+      >
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-xs font-extrabold tracking-widest text-[#C0272D] uppercase font-mono">
-              Verification Queue
-            </span>
-            <span className="text-white/30">•</span>
-            <span className="text-xs text-white/50">{totalCount} Submissions</span>
+          <div
+            style={{
+              fontSize: '11px',
+              fontWeight: 800,
+              letterSpacing: '0.08em',
+              color: '#C0272D',
+              textTransform: 'uppercase',
+              marginBottom: '4px',
+              fontFamily: 'monospace',
+            }}
+          >
+            VERIFICATION QUEUE • {totalCount} SUBMISSIONS
           </div>
-          <h1 className="text-3xl font-black tracking-tight font-display text-white">
+          <h1
+            style={{
+              fontSize: '24px',
+              fontWeight: 800,
+              color: '#FFFFFF',
+              margin: 0,
+              letterSpacing: '-0.01em',
+            }}
+          >
             Team Registrations
           </h1>
-          <p className="text-sm text-white/60 mt-1">
-            Verify submitted university rosters, validate index numbers, and approve official teams.
+          <p style={{ fontSize: '13px', color: '#8B9BB4', margin: '4px 0 0' }}>
+            Verify submitted university rosters, validate student index numbers, and approve official teams.
           </p>
         </div>
       </div>
 
-      {/* Filter & Search Bar */}
-      <div className="rounded-2xl bg-[#141010]/80 border border-white/[0.08] p-5 backdrop-blur-xl shadow-lg">
-        <form method="GET" className="flex flex-wrap items-center gap-3">
-          {/* Search Box */}
-          <div className="flex-1 min-w-[260px]">
+      {/* Filter and Search Bar */}
+      <div
+        style={{
+          backgroundColor: '#10141E',
+          border: '1px solid #1E2638',
+          borderRadius: '12px',
+          padding: '16px 20px',
+        }}
+      >
+        <form method="GET" style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+          <div style={{ flex: '1 1 240px' }}>
             <input
               type="text"
               name="search"
               defaultValue={search}
               placeholder="Search code, team name, leader, or index number..."
-              className="w-full h-11 px-4 rounded-xl bg-black/40 border border-white/15 text-white placeholder-white/40 text-sm focus:outline-none focus:border-[#C0272D] transition"
+              style={{
+                width: '100%',
+                height: '40px',
+                padding: '0 14px',
+                borderRadius: '8px',
+                backgroundColor: '#1A1F2C',
+                border: '1px solid #2A364E',
+                color: '#FFFFFF',
+                fontSize: '13px',
+                boxSizing: 'border-box',
+                outline: 'none',
+              }}
             />
           </div>
 
-          {/* Status Filter */}
-          <div className="w-44">
+          <div style={{ minWidth: '150px' }}>
             <select
               name="status"
               defaultValue={status}
-              className="w-full h-11 px-3 rounded-xl bg-[#1A1414] border border-white/15 text-white text-sm focus:outline-none focus:border-[#C0272D] transition"
+              style={{
+                width: '100%',
+                height: '40px',
+                padding: '0 12px',
+                borderRadius: '8px',
+                backgroundColor: '#1A1F2C',
+                border: '1px solid #2A364E',
+                color: '#FFFFFF',
+                fontSize: '13px',
+                boxSizing: 'border-box',
+                outline: 'none',
+              }}
             >
               <option value="ALL">All Statuses</option>
               <option value="PENDING">Pending Review</option>
@@ -83,12 +134,22 @@ export default async function AdminRegistrationsPage({
             </select>
           </div>
 
-          {/* Backup Status Filter */}
-          <div className="w-44">
+          <div style={{ minWidth: '150px' }}>
             <select
               name="backupStatus"
               defaultValue={backupStatus}
-              className="w-full h-11 px-3 rounded-xl bg-[#1A1414] border border-white/15 text-white text-sm focus:outline-none focus:border-[#C0272D] transition"
+              style={{
+                width: '100%',
+                height: '40px',
+                padding: '0 12px',
+                borderRadius: '8px',
+                backgroundColor: '#1A1F2C',
+                border: '1px solid #2A364E',
+                color: '#FFFFFF',
+                fontSize: '13px',
+                boxSizing: 'border-box',
+                outline: 'none',
+              }}
             >
               <option value="ALL">All Backup States</option>
               <option value="SYNCED">Synced (Mirror)</option>
@@ -99,82 +160,122 @@ export default async function AdminRegistrationsPage({
 
           <button
             type="submit"
-            className="h-11 px-6 rounded-xl bg-white/10 hover:bg-white/20 text-white text-sm font-bold transition flex items-center gap-2"
+            style={{
+              height: '40px',
+              padding: '0 20px',
+              borderRadius: '8px',
+              backgroundColor: '#1E2638',
+              border: '1px solid #2A364E',
+              color: '#FFFFFF',
+              fontSize: '13px',
+              fontWeight: 700,
+              cursor: 'pointer',
+            }}
           >
-            <span>🔍</span>
-            <span>Filter</span>
+            Filter
           </button>
         </form>
       </div>
 
-      {/* Registrations List Card */}
-      <div className="rounded-2xl bg-[#141010]/80 border border-white/[0.08] backdrop-blur-xl overflow-hidden shadow-2xl shadow-black/40">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+      {/* Registrations Data Table */}
+      <div
+        style={{
+          backgroundColor: '#10141E',
+          border: '1px solid #1E2638',
+          borderRadius: '12px',
+          overflow: 'hidden',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+        }}
+      >
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', textAlign: 'left' }}>
             <thead>
-              <tr className="border-b border-white/[0.08] bg-white/[0.02]">
-                <th className="px-6 py-4 text-xs font-bold text-white/50 uppercase tracking-wider font-mono">Code</th>
-                <th className="px-6 py-4 text-xs font-bold text-white/50 uppercase tracking-wider">Team</th>
-                <th className="px-6 py-4 text-xs font-bold text-white/50 uppercase tracking-wider">Leader / Index</th>
-                <th className="px-6 py-4 text-xs font-bold text-white/50 uppercase tracking-wider">Squad</th>
-                <th className="px-6 py-4 text-xs font-bold text-white/50 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-4 text-xs font-bold text-white/50 uppercase tracking-wider">Backup</th>
-                <th className="px-6 py-4 text-right text-xs font-bold text-white/50 uppercase tracking-wider">Action</th>
+              <tr style={{ backgroundColor: '#141A26', borderBottom: '1px solid #1E2638' }}>
+                <th style={{ padding: '12px 18px', color: '#8B9BB4', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', fontFamily: 'monospace' }}>Code</th>
+                <th style={{ padding: '12px 18px', color: '#8B9BB4', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase' }}>Team Name</th>
+                <th style={{ padding: '12px 18px', color: '#8B9BB4', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase' }}>Leader / Index</th>
+                <th style={{ padding: '12px 18px', color: '#8B9BB4', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase' }}>Squad</th>
+                <th style={{ padding: '12px 18px', color: '#8B9BB4', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase' }}>Status</th>
+                <th style={{ padding: '12px 18px', color: '#8B9BB4', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase' }}>Backup</th>
+                <th style={{ padding: '12px 18px', color: '#8B9BB4', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', textAlign: 'right' }}>Action</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/[0.06] text-sm">
+            <tbody style={{ divideY: '1px solid #161D2B' }}>
               {registrations.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center text-white/40">
-                    No registrations match the selected criteria.
+                  <td colSpan={7} style={{ padding: '48px 24px', textAlign: 'center', color: '#8B9BB4' }}>
+                    No registrations match the selected filters.
                   </td>
                 </tr>
               ) : (
                 registrations.map((r: any) => (
-                  <tr key={r.id} className="hover:bg-white/[0.03] transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap font-mono font-bold text-[#C0272D]">
+                  <tr key={r.id} style={{ borderBottom: '1px solid #161D2B' }}>
+                    <td style={{ padding: '14px 18px', fontFamily: 'monospace', fontWeight: 800, color: '#C0272D' }}>
                       {r.registrationCode}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap font-bold text-white">
+                    <td style={{ padding: '14px 18px', fontWeight: 700, color: '#FFFFFF' }}>
                       {r.teamName}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-white/90 font-medium">{r.leaderName}</div>
-                      <div className="text-xs text-white/40 font-mono">{r.leaderIndexNumber}</div>
+                    <td style={{ padding: '14px 18px' }}>
+                      <div style={{ color: '#FFFFFF', fontWeight: 600 }}>{r.leaderName}</div>
+                      <div style={{ color: '#8B9BB4', fontSize: '11px', fontFamily: 'monospace', marginTop: '2px' }}>{r.leaderIndexNumber}</div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap font-mono text-white/70">
+                    <td style={{ padding: '14px 18px', fontFamily: 'monospace', color: '#8B9BB4' }}>
                       {r._count?.players ?? r.players?.length ?? 0} players
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td style={{ padding: '14px 18px' }}>
                       <span
-                        className={`px-2.5 py-1 rounded-md text-[11px] font-bold font-mono ${
-                          r.status === 'APPROVED'
-                            ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
-                            : r.status === 'REJECTED'
-                            ? 'bg-red-500/15 text-red-400 border border-red-500/30'
-                            : 'bg-amber-500/15 text-amber-300 border border-amber-500/30'
-                        }`}
+                        style={{
+                          padding: '3px 8px',
+                          borderRadius: '4px',
+                          fontSize: '10px',
+                          fontWeight: 800,
+                          fontFamily: 'monospace',
+                          backgroundColor:
+                            r.status === 'APPROVED'
+                              ? 'rgba(16, 185, 129, 0.15)'
+                              : r.status === 'REJECTED'
+                              ? 'rgba(239, 68, 68, 0.15)'
+                              : 'rgba(245, 158, 11, 0.15)',
+                          color:
+                            r.status === 'APPROVED'
+                              ? '#34D399'
+                              : r.status === 'REJECTED'
+                              ? '#F87171'
+                              : '#FBBF24',
+                          border:
+                            r.status === 'APPROVED'
+                              ? '1px solid rgba(16, 185, 129, 0.3)'
+                              : r.status === 'REJECTED'
+                              ? '1px solid rgba(239, 68, 68, 0.3)'
+                              : '1px solid rgba(245, 158, 11, 0.3)',
+                        }}
                       >
                         {r.status}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td style={{ padding: '14px 18px', fontFamily: 'monospace', fontSize: '11px', fontWeight: 700 }}>
                       <span
-                        className={`text-xs font-bold font-mono ${
-                          r.backupStatus === 'SYNCED'
-                            ? 'text-emerald-400'
-                            : r.backupStatus === 'FAILED'
-                            ? 'text-red-400'
-                            : 'text-amber-400'
-                        }`}
+                        style={{
+                          color: r.backupStatus === 'SYNCED' ? '#34D399' : r.backupStatus === 'FAILED' ? '#F87171' : '#FBBF24',
+                        }}
                       >
                         {r.backupStatus}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-xs">
+                    <td style={{ padding: '14px 18px', textAlign: 'right' }}>
                       <Link
                         href={`/${entryPath}/registrations/${r.id}`}
-                        className="px-3.5 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white font-bold transition inline-block"
+                        style={{
+                          padding: '6px 12px',
+                          borderRadius: '6px',
+                          backgroundColor: '#1E2638',
+                          color: '#E2E8F0',
+                          fontSize: '11px',
+                          fontWeight: 700,
+                          textDecoration: 'none',
+                          border: '1px solid #2A364E',
+                        }}
                       >
                         Review & Verify →
                       </Link>

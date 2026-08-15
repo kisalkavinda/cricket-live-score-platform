@@ -56,36 +56,58 @@ export default function AdminNavLinks({ entryPath }: AdminNavLinksProps) {
   ];
 
   return (
-    <nav className="flex flex-col gap-1.5">
+    <nav style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
       {links.map((item) => {
-        const isActive = pathname === item.href || (item.href !== `/${entryPath}` && pathname.startsWith(item.href));
+        const isActive =
+          pathname === item.href ||
+          (item.href !== `/${entryPath}` && pathname.startsWith(item.href));
 
         return (
           <Link
             key={item.href}
             href={item.href}
             prefetch={true}
-            className={`group relative flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
-              isActive
-                ? 'bg-gradient-to-r from-[#C0272D]/25 to-[#C0272D]/10 text-white font-semibold border border-[#C0272D]/35 shadow-lg shadow-[#C0272D]/10'
-                : 'text-white/70 hover:text-white hover:bg-white/[0.04] border border-transparent'
-            }`}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: '10px 14px',
+              borderRadius: '8px',
+              textDecoration: 'none',
+              fontSize: '13px',
+              fontWeight: isActive ? 700 : 500,
+              backgroundColor: isActive ? '#C0272D' : 'transparent',
+              color: isActive ? '#FFFFFF' : '#94A3B8',
+              border: isActive ? '1px solid #D32F35' : '1px solid transparent',
+              boxShadow: isActive ? '0 2px 8px rgba(192, 39, 45, 0.25)' : 'none',
+              transition: 'all 0.15s ease',
+              boxSizing: 'border-box',
+            }}
           >
-            <div className="flex items-center gap-3">
-              <span className="text-base group-hover:scale-110 transition-transform duration-200">
-                {item.icon}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
+              <span style={{ fontSize: '15px', flexShrink: 0 }}>{item.icon}</span>
+              <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                {item.label}
               </span>
-              <span>{item.label}</span>
             </div>
 
             {item.badge && (
-              <span className="px-1.5 py-0.5 text-[10px] font-extrabold tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded-md font-mono animate-pulse">
+              <span
+                style={{
+                  padding: '2px 6px',
+                  fontSize: '9px',
+                  fontWeight: 800,
+                  borderRadius: '4px',
+                  fontFamily: 'monospace',
+                  letterSpacing: '0.05em',
+                  backgroundColor: isActive ? 'rgba(0, 0, 0, 0.4)' : 'rgba(239, 68, 68, 0.2)',
+                  color: isActive ? '#FEF08A' : '#F87171',
+                  border: isActive ? 'none' : '1px solid rgba(239, 68, 68, 0.3)',
+                  flexShrink: 0,
+                }}
+              >
                 {item.badge}
               </span>
-            )}
-
-            {isActive && (
-              <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 rounded-r-full bg-[#C0272D] shadow-md shadow-[#C0272D]" />
             )}
           </Link>
         );

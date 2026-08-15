@@ -39,28 +39,72 @@ export default async function AdminTeamsPage() {
   logPerfMetric('/teams', tracker);
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-white/[0.08]">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
+      {/* Top Header Row */}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '16px',
+          paddingBottom: '20px',
+          borderBottom: '1px solid #1E2638',
+        }}
+      >
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-xs font-extrabold tracking-widest text-[#C0272D] uppercase font-mono">
-              Directory
-            </span>
-            <span className="text-white/30">•</span>
-            <span className="text-xs text-white/50">{teams.length} Registered</span>
+          <div
+            style={{
+              fontSize: '11px',
+              fontWeight: 800,
+              letterSpacing: '0.08em',
+              color: '#C0272D',
+              textTransform: 'uppercase',
+              marginBottom: '4px',
+              fontFamily: 'monospace',
+            }}
+          >
+            DIRECTORY • {teams.length} OFFICIAL FRANCHISES
           </div>
-          <h1 className="text-3xl font-black tracking-tight font-display text-white">
+          <h1
+            style={{
+              fontSize: '24px',
+              fontWeight: 800,
+              color: '#FFFFFF',
+              margin: 0,
+              letterSpacing: '-0.01em',
+            }}
+          >
             Official Teams
           </h1>
-          <p className="text-sm text-white/60 mt-1">
-            Manage participating tournament franchises, rosters, and official team logos.
+          <p
+            style={{
+              fontSize: '13px',
+              color: '#8B9BB4',
+              margin: '4px 0 0',
+            }}
+          >
+            Manage participating tournament franchises, official team rosters, and squad allocations.
           </p>
         </div>
 
         <Link
           href={`/${entryPath}/teams/new`}
-          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#C0272D] to-[#991B1F] hover:from-[#D32F35] hover:to-[#B22227] text-white text-sm font-bold shadow-lg shadow-[#C0272D]/25 border border-[#C0272D]/40 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '8px',
+            padding: '10px 18px',
+            borderRadius: '8px',
+            backgroundColor: '#C0272D',
+            color: '#FFFFFF',
+            fontSize: '13px',
+            fontWeight: 700,
+            textDecoration: 'none',
+            border: '1px solid #D32F35',
+            boxShadow: '0 2px 10px rgba(192, 39, 45, 0.3)',
+            transition: 'all 0.15s ease',
+          }}
         >
           <span>+</span>
           <span>Add New Team</span>
@@ -69,77 +113,181 @@ export default async function AdminTeamsPage() {
 
       {/* Grid of Teams */}
       {teams.length === 0 ? (
-        <div className="rounded-2xl bg-white/[0.02] border border-dashed border-white/10 p-12 text-center">
-          <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center text-2xl mx-auto mb-3">
-            🛡️
-          </div>
-          <h3 className="text-base font-bold text-white mb-1">No official teams yet</h3>
-          <p className="text-xs text-white/50 max-w-sm mx-auto mb-5">
+        <div
+          style={{
+            backgroundColor: '#10141E',
+            border: '1px dashed #1E2638',
+            borderRadius: '12px',
+            padding: '48px 24px',
+            textAlign: 'center',
+          }}
+        >
+          <div style={{ fontSize: '32px', marginBottom: '12px' }}>🛡️</div>
+          <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#FFFFFF', margin: '0 0 6px' }}>
+            No official teams yet
+          </h3>
+          <p style={{ fontSize: '13px', color: '#8B9BB4', margin: '0 0 20px' }}>
             Teams will appear here once approved from registrations or created manually.
           </p>
           <Link
             href={`/${entryPath}/teams/new`}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white/10 hover:bg-white/15 text-white text-xs font-semibold transition"
+            style={{
+              display: 'inline-block',
+              padding: '8px 16px',
+              borderRadius: '6px',
+              backgroundColor: '#C0272D',
+              color: '#FFFFFF',
+              fontSize: '12px',
+              fontWeight: 700,
+              textDecoration: 'none',
+            }}
           >
             Create Team Franchise
           </Link>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {teams.map((team: any) => (
-            <div
-              key={team.id}
-              className="group relative rounded-2xl bg-[#141010]/80 hover:bg-[#1A1414]/90 border border-white/[0.08] hover:border-white/20 p-5 backdrop-blur-xl transition-all duration-200 hover:shadow-xl hover:shadow-black/50"
-            >
-              <div className="flex items-start justify-between gap-3 mb-4">
-                <div className="flex items-center gap-3.5">
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+            gap: '20px',
+          }}
+        >
+          {teams.map((team: any) => {
+            const playerCount = team._count?.teamPlayers ?? 0;
+
+            return (
+              <div
+                key={team.id}
+                style={{
+                  backgroundColor: '#10141E',
+                  border: '1px solid #1E2638',
+                  borderRadius: '12px',
+                  padding: '20px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'space-between',
+                  gap: '16px',
+                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)',
+                  transition: 'border-color 0.15s ease',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '14px' }}>
+                  {/* Team Logo or Crest Avatar */}
                   {team.logoUrl ? (
                     <img
                       src={team.logoUrl}
                       alt={team.name}
-                      className="w-12 h-12 rounded-xl object-cover bg-black/40 border border-white/10 p-1"
+                      style={{
+                        width: '48px',
+                        height: '48px',
+                        borderRadius: '10px',
+                        objectFit: 'cover',
+                        backgroundColor: '#0A0D14',
+                        border: '1px solid #1E2638',
+                        padding: '2px',
+                        flexShrink: 0,
+                      }}
                     />
                   ) : (
-                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500/20 to-red-500/20 border border-amber-500/30 flex items-center justify-center text-amber-300 font-extrabold text-base tracking-wider font-mono">
-                      {team.shortName}
+                    <div
+                      style={{
+                        width: '48px',
+                        height: '48px',
+                        borderRadius: '10px',
+                        background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(192, 39, 45, 0.15) 100%)',
+                        border: '1px solid rgba(245, 158, 11, 0.3)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: '#FBBF24',
+                        fontWeight: 800,
+                        fontSize: '15px',
+                        fontFamily: 'monospace',
+                        letterSpacing: '0.04em',
+                        flexShrink: 0,
+                      }}
+                    >
+                      {team.shortName || team.name?.substring(0, 3)?.toUpperCase()}
                     </div>
                   )}
 
-                  <div>
-                    <h3 className="font-extrabold text-base text-white group-hover:text-amber-400 transition-colors">
+                  {/* Team Details */}
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <h3
+                      style={{
+                        fontSize: '16px',
+                        fontWeight: 800,
+                        color: '#FFFFFF',
+                        margin: 0,
+                        lineHeight: 1.3,
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                      }}
+                    >
                       {team.name}
                     </h3>
-                    <div className="flex items-center gap-2 mt-0.5">
-                      <span className="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-white/10 text-white/80 border border-white/10">
-                        {team.shortName}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px', flexWrap: 'wrap' }}>
+                      <span
+                        style={{
+                          padding: '2px 6px',
+                          borderRadius: '4px',
+                          fontSize: '11px',
+                          fontWeight: 700,
+                          fontFamily: 'monospace',
+                          backgroundColor: '#1E2638',
+                          color: '#FBBF24',
+                        }}
+                      >
+                        {team.shortName || 'N/A'}
                       </span>
                       {team.city && (
-                        <span className="text-xs text-white/50 flex items-center gap-1">
+                        <span style={{ fontSize: '12px', color: '#8B9BB4' }}>
                           📍 {team.city}
                         </span>
                       )}
                     </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Stats Footer */}
-              <div className="pt-4 border-t border-white/[0.06] flex items-center justify-between text-xs">
-                <div className="flex items-center gap-4 text-white/60">
-                  <span>
-                    <strong className="text-white font-mono">{team._count?.teamPlayers ?? 0}</strong> Players
-                  </span>
-                </div>
-
-                <Link
-                  href={`/${entryPath}/teams/${team.id}`}
-                  className="text-xs font-semibold text-white/50 hover:text-white transition"
+                {/* Card Footer Strip */}
+                <div
+                  style={{
+                    paddingTop: '14px',
+                    borderTop: '1px solid #1E2638',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                  }}
                 >
-                  Manage →
-                </Link>
+                  <div style={{ fontSize: '12px', color: '#8B9BB4' }}>
+                    <strong style={{ color: '#FFFFFF', fontFamily: 'monospace', fontSize: '13px' }}>
+                      {playerCount}
+                    </strong>{' '}
+                    Players in Squad
+                  </div>
+
+                  <Link
+                    href={`/${entryPath}/teams/${team.id}`}
+                    style={{
+                      padding: '6px 12px',
+                      borderRadius: '6px',
+                      backgroundColor: '#1E2638',
+                      color: '#E2E8F0',
+                      fontSize: '11px',
+                      fontWeight: 700,
+                      textDecoration: 'none',
+                      border: '1px solid #2A364E',
+                      transition: 'all 0.15s ease',
+                    }}
+                  >
+                    Manage Roster →
+                  </Link>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

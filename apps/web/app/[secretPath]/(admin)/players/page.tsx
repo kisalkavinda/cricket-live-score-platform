@@ -5,8 +5,8 @@ import { createPerfTracker, logPerfMetric } from '@/lib/utils/perf-logger';
 
 export const dynamic = 'force-dynamic';
 
-const getPlayers = () =>
-  prisma.player.findMany({
+const getPlayers = async () =>
+  (prisma as any).player.findMany({
     orderBy: { name: 'asc' },
     take: 100,
     select: {
@@ -31,9 +31,6 @@ const getPlayers = () =>
     },
   });
 
-type PlayerRow = Awaited<ReturnType<typeof getPlayers>>[number];
-type TeamPlayerRow = PlayerRow['teamPlayers'][number];
-
 export default async function AdminPlayersPage() {
   const tracker = createPerfTracker();
   tracker.authStart = performance.now();
@@ -53,110 +50,202 @@ export default async function AdminPlayersPage() {
   const getRoleBadge = (role: string) => {
     switch (role) {
       case 'BATTER':
-        return <span className="px-2 py-0.5 rounded-md text-[11px] font-bold bg-blue-500/15 text-blue-300 border border-blue-500/25">🏏 BATTER</span>;
+        return (
+          <span style={{ padding: '3px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 700, fontFamily: 'monospace', backgroundColor: 'rgba(59, 130, 246, 0.15)', color: '#93C5FD', border: '1px solid rgba(59, 130, 246, 0.25)' }}>
+            🏏 BATTER
+          </span>
+        );
       case 'BOWLER':
-        return <span className="px-2 py-0.5 rounded-md text-[11px] font-bold bg-amber-500/15 text-amber-300 border border-amber-500/25">🎯 BOWLER</span>;
+        return (
+          <span style={{ padding: '3px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 700, fontFamily: 'monospace', backgroundColor: 'rgba(245, 158, 11, 0.15)', color: '#FCD34D', border: '1px solid rgba(245, 158, 11, 0.25)' }}>
+            🎯 BOWLER
+          </span>
+        );
       case 'ALL_ROUNDER':
-        return <span className="px-2 py-0.5 rounded-md text-[11px] font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/25">⚡ ALL-ROUNDER</span>;
+        return (
+          <span style={{ padding: '3px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 700, fontFamily: 'monospace', backgroundColor: 'rgba(16, 185, 129, 0.15)', color: '#6EE7B7', border: '1px solid rgba(16, 185, 129, 0.25)' }}>
+            ⚡ ALL-ROUNDER
+          </span>
+        );
       case 'WICKET_KEEPER':
-        return <span className="px-2 py-0.5 rounded-md text-[11px] font-bold bg-purple-500/15 text-purple-300 border border-purple-500/25">🧤 WICKET-KEEPER</span>;
+        return (
+          <span style={{ padding: '3px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 700, fontFamily: 'monospace', backgroundColor: 'rgba(168, 85, 247, 0.15)', color: '#D8B4FE', border: '1px solid rgba(168, 85, 247, 0.25)' }}>
+            🧤 WICKET-KEEPER
+          </span>
+        );
       default:
-        return <span className="px-2 py-0.5 rounded-md text-[11px] font-bold bg-white/10 text-white/70">{role}</span>;
+        return (
+          <span style={{ padding: '3px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 700, fontFamily: 'monospace', backgroundColor: '#1E2638', color: '#94A3B8' }}>
+            {role}
+          </span>
+        );
     }
   };
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-white/[0.08]">
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '16px',
+          paddingBottom: '20px',
+          borderBottom: '1px solid #1E2638',
+        }}
+      >
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-xs font-extrabold tracking-widest text-[#C0272D] uppercase font-mono">
-              Roster
-            </span>
-            <span className="text-white/30">•</span>
-            <span className="text-xs text-white/50">{players.length} Active Profiles</span>
+          <div
+            style={{
+              fontSize: '11px',
+              fontWeight: 800,
+              letterSpacing: '0.08em',
+              color: '#C0272D',
+              textTransform: 'uppercase',
+              marginBottom: '4px',
+              fontFamily: 'monospace',
+            }}
+          >
+            ROSTER • {players.length} ACTIVE PROFILES
           </div>
-          <h1 className="text-3xl font-black tracking-tight font-display text-white">
+          <h1
+            style={{
+              fontSize: '24px',
+              fontWeight: 800,
+              color: '#FFFFFF',
+              margin: 0,
+              letterSpacing: '-0.01em',
+            }}
+          >
             Official Players
           </h1>
-          <p className="text-sm text-white/60 mt-1">
+          <p style={{ fontSize: '13px', color: '#8B9BB4', margin: '4px 0 0' }}>
             Comprehensive player registry with batting/bowling disciplines and franchise squad allocations.
           </p>
         </div>
 
         <Link
           href={`/${entryPath}/players/new`}
-          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#C0272D] to-[#991B1F] hover:from-[#D32F35] hover:to-[#B22227] text-white text-sm font-bold shadow-lg shadow-[#C0272D]/25 border border-[#C0272D]/40 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '8px',
+            padding: '10px 18px',
+            borderRadius: '8px',
+            backgroundColor: '#C0272D',
+            color: '#FFFFFF',
+            fontSize: '13px',
+            fontWeight: 700,
+            textDecoration: 'none',
+            border: '1px solid #D32F35',
+            boxShadow: '0 2px 10px rgba(192, 39, 45, 0.3)',
+          }}
         >
           <span>+</span>
           <span>Add New Player</span>
         </Link>
       </div>
 
-      {/* Players Table Card */}
-      <div className="rounded-2xl bg-[#141010]/80 border border-white/[0.08] backdrop-blur-xl overflow-hidden shadow-2xl shadow-black/40">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+      {/* Players Data Table */}
+      <div
+        style={{
+          backgroundColor: '#10141E',
+          border: '1px solid #1E2638',
+          borderRadius: '12px',
+          overflow: 'hidden',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+        }}
+      >
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', textAlign: 'left' }}>
             <thead>
-              <tr className="border-b border-white/[0.08] bg-white/[0.02]">
-                <th className="px-6 py-4 text-xs font-bold text-white/50 uppercase tracking-wider">Player</th>
-                <th className="px-6 py-4 text-xs font-bold text-white/50 uppercase tracking-wider">Role</th>
-                <th className="px-6 py-4 text-xs font-bold text-white/50 uppercase tracking-wider">Style</th>
-                <th className="px-6 py-4 text-xs font-bold text-white/50 uppercase tracking-wider">Team</th>
-                <th className="px-6 py-4 text-right text-xs font-bold text-white/50 uppercase tracking-wider">Action</th>
+              <tr style={{ backgroundColor: '#141A26', borderBottom: '1px solid #1E2638' }}>
+                <th style={{ padding: '12px 18px', color: '#8B9BB4', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase' }}>Player</th>
+                <th style={{ padding: '12px 18px', color: '#8B9BB4', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase' }}>Role</th>
+                <th style={{ padding: '12px 18px', color: '#8B9BB4', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase' }}>Style</th>
+                <th style={{ padding: '12px 18px', color: '#8B9BB4', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase' }}>Team</th>
+                <th style={{ padding: '12px 18px', color: '#8B9BB4', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', textAlign: 'right' }}>Action</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/[0.06] text-sm">
+            <tbody>
               {players.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-12 text-center text-white/40">
+                  <td colSpan={5} style={{ padding: '48px 24px', textAlign: 'center', color: '#8B9BB4' }}>
                     No official players registered yet.
                   </td>
                 </tr>
               ) : (
-                players.map((player: PlayerRow) => (
-                  <tr key={player.id} className="hover:bg-white/[0.03] transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-full bg-white/10 border border-white/15 flex items-center justify-center font-bold text-xs text-white/80">
-                          {player.name.charAt(0)}
+                players.map((player: any) => (
+                  <tr key={player.id} style={{ borderBottom: '1px solid #161D2B' }}>
+                    <td style={{ padding: '14px 18px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <div
+                          style={{
+                            width: '36px',
+                            height: '36px',
+                            borderRadius: '50%',
+                            backgroundColor: '#1E2638',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '13px',
+                            fontWeight: 700,
+                            color: '#CBD5E1',
+                            flexShrink: 0,
+                          }}
+                        >
+                          {player.name?.charAt(0) || 'P'}
                         </div>
-                        <div className="font-bold text-white tracking-wide">
-                          {player.name}
-                        </div>
+                        <div style={{ fontWeight: 700, color: '#FFFFFF' }}>{player.name}</div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td style={{ padding: '14px 18px' }}>
                       {getRoleBadge(player.role)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-xs text-white/60">
-                      <div className="space-y-0.5">
-                        {player.battingStyle && <div>🏏 {player.battingStyle}</div>}
-                        {player.bowlingStyle && <div>🎯 {player.bowlingStyle}</div>}
-                        {!player.battingStyle && !player.bowlingStyle && <span className="text-white/30">-</span>}
-                      </div>
+                    <td style={{ padding: '14px 18px', color: '#8B9BB4', fontSize: '12px' }}>
+                      {player.battingStyle && <div>🏏 {player.battingStyle}</div>}
+                      {player.bowlingStyle && <div style={{ marginTop: '2px' }}>🎯 {player.bowlingStyle}</div>}
+                      {!player.battingStyle && !player.bowlingStyle && <span style={{ color: '#475569' }}>-</span>}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {player.teamPlayers.length > 0 ? (
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          {player.teamPlayers.map((tp: TeamPlayerRow) => (
+                    <td style={{ padding: '14px 18px' }}>
+                      {player.teamPlayers?.length > 0 ? (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                          {player.teamPlayers.map((tp: any) => (
                             <span
                               key={tp.id}
-                              className="px-2 py-0.5 rounded-md text-[11px] font-bold bg-amber-500/10 text-amber-300 border border-amber-500/20 font-mono"
+                              style={{
+                                padding: '2px 6px',
+                                borderRadius: '4px',
+                                fontSize: '11px',
+                                fontWeight: 700,
+                                fontFamily: 'monospace',
+                                backgroundColor: '#1E2638',
+                                color: '#FBBF24',
+                              }}
                             >
-                              {tp.team.shortName}
+                              {tp.team?.shortName || tp.team?.name}
                             </span>
                           ))}
                         </div>
                       ) : (
-                        <span className="text-xs text-white/30 italic">Unassigned</span>
+                        <span style={{ fontSize: '12px', color: '#64748B', fontStyle: 'italic' }}>Unassigned</span>
                       )}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-xs">
+                    <td style={{ padding: '14px 18px', textAlign: 'right' }}>
                       <Link
                         href={`/${entryPath}/players/${player.id}`}
-                        className="font-semibold text-white/60 hover:text-white transition"
+                        style={{
+                          padding: '6px 12px',
+                          borderRadius: '6px',
+                          backgroundColor: '#1E2638',
+                          color: '#E2E8F0',
+                          fontSize: '11px',
+                          fontWeight: 700,
+                          textDecoration: 'none',
+                          border: '1px solid #2A364E',
+                        }}
                       >
                         Edit →
                       </Link>
