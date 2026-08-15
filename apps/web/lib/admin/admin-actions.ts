@@ -204,15 +204,36 @@ export async function removePlayerFromTeamServerAction(teamPlayerId: string, tea
   revalidatePath(`/${entryPath}/teams`);
 }
 
+export async function updateTeamServerAction(teamId: string, formData: FormData) {
+  await requireAdminAuth();
+  const entryPath = getAdminEntryPath();
+  const name = formData.get('name') as string;
+  const shortName = formData.get('shortName') as string;
+  const city = formData.get('city') as string;
+  const logoUrl = formData.get('logoUrl') as string | null;
+
+  await (prisma as any).team.update({
+    where: { id: teamId },
+    data: {
+      name: name ? name.trim() : undefined,
+      shortName: shortName ? shortName.trim().toUpperCase() : undefined,
+      city: city ? city.trim() : null,
+      logoUrl: logoUrl ? logoUrl.trim() : null,
+    },
+  });
+
+  revalidatePath(`/${entryPath}/teams/${teamId}`);
+  revalidatePath(`/${entryPath}/teams`);
+  revalidatePath('/');
+}
+
 export async function createAndAssignPlayerServerAction(teamId: string, formData: FormData) {
   await requireAdminAuth();
   const entryPath = getAdminEntryPath();
 
   const name = formData.get('name') as string;
-  const role = (formData.get('role') as any) || 'BATTER';
   const indexNumber = (formData.get('indexNumber') as string) || null;
-  const battingStyle = formData.get('battingStyle') as string;
-  const bowlingStyle = formData.get('bowlingStyle') as string;
+  const profileImageUrl = (formData.get('profileImageUrl') as string) || null;
 
   if (!name || !name.trim()) {
     throw new Error('Player name is required.');
@@ -221,10 +242,9 @@ export async function createAndAssignPlayerServerAction(teamId: string, formData
   const player = await (prisma as any).player.create({
     data: {
       name: name.trim(),
-      role,
+      role: 'ALL_ROUNDER',
       indexNumber: indexNumber ? indexNumber.trim().toUpperCase() : null,
-      battingStyle: battingStyle ? battingStyle.trim() : null,
-      bowlingStyle: bowlingStyle ? bowlingStyle.trim() : null,
+      profileImageUrl: profileImageUrl ? profileImageUrl.trim() : null,
       teamPlayers: {
         create: [
           { teamId },

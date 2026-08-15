@@ -180,30 +180,48 @@ export default async function AdminPlayersPage() {
                   <tr key={player.id} style={{ borderBottom: '1px solid #161D2B' }}>
                     <td style={{ padding: '14px 18px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <div
-                          style={{
-                            width: '36px',
-                            height: '36px',
-                            borderRadius: '50%',
-                            backgroundColor: '#1E2638',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontSize: '13px',
-                            fontWeight: 700,
-                            color: '#CBD5E1',
-                            flexShrink: 0,
-                          }}
-                        >
-                          {player.name?.charAt(0) || 'P'}
+                        {player.profileImageUrl ? (
+                          <img
+                            src={player.profileImageUrl}
+                            alt={player.name}
+                            style={{
+                              width: '36px',
+                              height: '36px',
+                              borderRadius: '50%',
+                              objectFit: 'cover',
+                              backgroundColor: '#1E2638',
+                              border: '1px solid rgba(255, 255, 255, 0.2)',
+                              flexShrink: 0,
+                            }}
+                          />
+                        ) : (
+                          <div
+                            style={{
+                              width: '36px',
+                              height: '36px',
+                              borderRadius: '50%',
+                              backgroundColor: '#1E2638',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontSize: '13px',
+                              fontWeight: 700,
+                              color: '#CBD5E1',
+                              flexShrink: 0,
+                            }}
+                          >
+                            {player.name?.charAt(0) || 'P'}
+                          </div>
+                        )}
+                        <div>
+                          <div style={{ fontWeight: 700, color: '#FFFFFF' }}>{player.name}</div>
+                          {player.indexNumber && (
+                            <div style={{ fontSize: '11px', fontFamily: 'monospace', color: '#FBBF24' }}>
+                              {player.indexNumber}
+                            </div>
+                          )}
                         </div>
-                        <div style={{ fontWeight: 700, color: '#FFFFFF' }}>{player.name}</div>
                       </div>
-                    </td>
-                    <td style={{ padding: '14px 18px', color: '#8B9BB4', fontSize: '12px' }}>
-                      {player.battingStyle && <div>🏏 {player.battingStyle}</div>}
-                      {player.bowlingStyle && <div style={{ marginTop: '2px' }}>🎯 {player.bowlingStyle}</div>}
-                      {!player.battingStyle && !player.bowlingStyle && <span style={{ color: '#475569' }}>-</span>}
                     </td>
                     <td style={{ padding: '14px 18px' }}>
                       {player.teamPlayers?.length > 0 ? (

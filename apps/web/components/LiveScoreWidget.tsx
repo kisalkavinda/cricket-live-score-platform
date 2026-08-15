@@ -226,23 +226,39 @@ export default function LiveScoreWidget() {
           >
             {/* Team A */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: '120px', flex: '1 1 auto' }}>
-              <div
-                style={{
-                  width: '44px',
-                  height: '44px',
-                  borderRadius: '50%',
-                  background: 'rgba(255, 255, 255, 0.1)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '1.2rem',
-                  fontWeight: 900,
-                  border: '1px solid rgba(255, 255, 255, 0.15)',
-                  flexShrink: 0,
-                }}
-              >
-                🏏
-              </div>
+              {currentMatch.match.teamA.logoUrl ? (
+                <img
+                  src={currentMatch.match.teamA.logoUrl}
+                  alt={currentMatch.match.teamA.name}
+                  style={{
+                    width: '44px',
+                    height: '44px',
+                    borderRadius: '50%',
+                    objectFit: 'cover',
+                    border: '1.5px solid rgba(255, 255, 255, 0.2)',
+                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                    flexShrink: 0,
+                  }}
+                />
+              ) : (
+                <div
+                  style={{
+                    width: '44px',
+                    height: '44px',
+                    borderRadius: '50%',
+                    background: 'rgba(255, 255, 255, 0.1)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '1.2rem',
+                    fontWeight: 900,
+                    border: '1px solid rgba(255, 255, 255, 0.15)',
+                    flexShrink: 0,
+                  }}
+                >
+                  🏏
+                </div>
+              )}
               <div>
                 <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.2rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--color-paper)' }}>
                   {currentMatch.match.teamA.name}
@@ -294,23 +310,39 @@ export default function LiveScoreWidget() {
                   {currentMatch.match.teamB.shortName}
                 </div>
               </div>
-              <div
-                style={{
-                  width: '44px',
-                  height: '44px',
-                  borderRadius: '50%',
-                  background: 'rgba(255, 255, 255, 0.1)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '1.2rem',
-                  fontWeight: 900,
-                  border: '1px solid rgba(255, 255, 255, 0.15)',
-                  flexShrink: 0,
-                }}
-              >
-                🦁
-              </div>
+              {currentMatch.match.teamB.logoUrl ? (
+                <img
+                  src={currentMatch.match.teamB.logoUrl}
+                  alt={currentMatch.match.teamB.name}
+                  style={{
+                    width: '44px',
+                    height: '44px',
+                    borderRadius: '50%',
+                    objectFit: 'cover',
+                    border: '1.5px solid rgba(255, 255, 255, 0.2)',
+                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                    flexShrink: 0,
+                  }}
+                />
+              ) : (
+                <div
+                  style={{
+                    width: '44px',
+                    height: '44px',
+                    borderRadius: '50%',
+                    background: 'rgba(255, 255, 255, 0.1)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '1.2rem',
+                    fontWeight: 900,
+                    border: '1px solid rgba(255, 255, 255, 0.15)',
+                    flexShrink: 0,
+                  }}
+                >
+                  🦁
+                </div>
+              )}
             </div>
           </div>
 

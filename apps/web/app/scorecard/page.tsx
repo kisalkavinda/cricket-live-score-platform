@@ -161,48 +161,118 @@ function ScorecardContent() {
               flexWrap: 'wrap',
             }}
           >
-            <div style={{ minWidth: '130px', flex: '1 1 auto' }}>
-              <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.4rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--color-paper)' }}>{match.teamA.name}</div>
-              <div style={{ fontFamily: 'var(--font-data)', fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.5)' }}>{match.teamA.shortName}</div>
-              {inn1 && inn1.battingTeamId === match.teamAId && (
-                <div style={{ fontSize: '1.4rem', fontWeight: 900, color: 'var(--color-gold)', marginTop: '4px', fontFamily: 'var(--font-data)' }}>
-                  {inn1.runs} / {inn1.wickets}{' '}
-                  <span style={{ fontSize: '0.85rem', color: 'rgba(255, 255, 255, 0.6)', fontWeight: 600 }}>
-                    ({inn1.overs}.{inn1.balls} ov)
-                  </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '14px', minWidth: '130px', flex: '1 1 auto' }}>
+              {match.teamA.logoUrl ? (
+                <img
+                  src={match.teamA.logoUrl}
+                  alt={match.teamA.name}
+                  style={{
+                    width: '48px',
+                    height: '48px',
+                    borderRadius: '50%',
+                    objectFit: 'cover',
+                    border: '1.5px solid rgba(255, 255, 255, 0.2)',
+                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                    flexShrink: 0,
+                  }}
+                />
+              ) : (
+                <div
+                  style={{
+                    width: '48px',
+                    height: '48px',
+                    borderRadius: '50%',
+                    background: 'rgba(255, 255, 255, 0.1)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '1.3rem',
+                    fontWeight: 900,
+                    border: '1px solid rgba(255, 255, 255, 0.15)',
+                    flexShrink: 0,
+                  }}
+                >
+                  🏏
                 </div>
               )}
-              {inn2 && inn2.battingTeamId === match.teamAId && (
-                <div style={{ fontSize: '1.4rem', fontWeight: 900, color: 'var(--color-gold)', marginTop: '4px', fontFamily: 'var(--font-data)' }}>
-                  {inn2.runs} / {inn2.wickets}{' '}
-                  <span style={{ fontSize: '0.85rem', color: 'rgba(255, 255, 255, 0.6)', fontWeight: 600 }}>
-                    ({inn2.overs}.{inn2.balls} ov)
-                  </span>
-                </div>
-              )}
+              <div>
+                <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.4rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--color-paper)' }}>{match.teamA.name}</div>
+                <div style={{ fontFamily: 'var(--font-data)', fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.5)' }}>{match.teamA.shortName}</div>
+                {inn1 && inn1.battingTeamId === match.teamAId && (
+                  <div style={{ fontSize: '1.4rem', fontWeight: 900, color: 'var(--color-gold)', marginTop: '4px', fontFamily: 'var(--font-data)' }}>
+                    {inn1.runs} / {inn1.wickets}{' '}
+                    <span style={{ fontSize: '0.85rem', color: 'rgba(255, 255, 255, 0.6)', fontWeight: 600 }}>
+                      ({inn1.overs}.{inn1.balls} ov)
+                    </span>
+                  </div>
+                )}
+                {inn2 && inn2.battingTeamId === match.teamAId && (
+                  <div style={{ fontSize: '1.4rem', fontWeight: 900, color: 'var(--color-gold)', marginTop: '4px', fontFamily: 'var(--font-data)' }}>
+                    {inn2.runs} / {inn2.wickets}{' '}
+                    <span style={{ fontSize: '0.85rem', color: 'rgba(255, 255, 255, 0.6)', fontWeight: 600 }}>
+                      ({inn2.overs}.{inn2.balls} ov)
+                    </span>
+                  </div>
+                )}
+              </div>
             </div>
 
             <div style={{ textAlign: 'center', color: 'var(--color-gold)', fontWeight: 900, fontSize: '1.1rem', padding: '6px 12px', background: 'rgba(0,0,0,0.3)', borderRadius: 'var(--radius-sm)', fontFamily: 'var(--font-display)' }}>
               VS
             </div>
 
-            <div style={{ minWidth: '130px', flex: '1 1 auto', textAlign: 'right' }}>
-              <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.4rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--color-paper)' }}>{match.teamB.name}</div>
-              <div style={{ fontFamily: 'var(--font-data)', fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.5)' }}>{match.teamB.shortName}</div>
-              {inn1 && inn1.battingTeamId === match.teamBId && (
-                <div style={{ fontSize: '1.4rem', fontWeight: 900, color: 'var(--color-gold)', marginTop: '4px', fontFamily: 'var(--font-data)' }}>
-                  {inn1.runs} / {inn1.wickets}{' '}
-                  <span style={{ fontSize: '0.85rem', color: 'rgba(255, 255, 255, 0.6)', fontWeight: 600 }}>
-                    ({inn1.overs}.{inn1.balls} ov)
-                  </span>
-                </div>
-              )}
-              {inn2 && inn2.battingTeamId === match.teamBId && (
-                <div style={{ fontSize: '1.4rem', fontWeight: 900, color: 'var(--color-gold)', marginTop: '4px', fontFamily: 'var(--font-data)' }}>
-                  {inn2.runs} / {inn2.wickets}{' '}
-                  <span style={{ fontSize: '0.85rem', color: 'rgba(255, 255, 255, 0.6)', fontWeight: 600 }}>
-                    ({inn2.overs}.{inn2.balls} ov)
-                  </span>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '14px', minWidth: '130px', flex: '1 1 auto', textAlign: 'right' }}>
+              <div>
+                <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.4rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--color-paper)' }}>{match.teamB.name}</div>
+                <div style={{ fontFamily: 'var(--font-data)', fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.5)' }}>{match.teamB.shortName}</div>
+                {inn1 && inn1.battingTeamId === match.teamBId && (
+                  <div style={{ fontSize: '1.4rem', fontWeight: 900, color: 'var(--color-gold)', marginTop: '4px', fontFamily: 'var(--font-data)' }}>
+                    {inn1.runs} / {inn1.wickets}{' '}
+                    <span style={{ fontSize: '0.85rem', color: 'rgba(255, 255, 255, 0.6)', fontWeight: 600 }}>
+                      ({inn1.overs}.{inn1.balls} ov)
+                    </span>
+                  </div>
+                )}
+                {inn2 && inn2.battingTeamId === match.teamBId && (
+                  <div style={{ fontSize: '1.4rem', fontWeight: 900, color: 'var(--color-gold)', marginTop: '4px', fontFamily: 'var(--font-data)' }}>
+                    {inn2.runs} / {inn2.wickets}{' '}
+                    <span style={{ fontSize: '0.85rem', color: 'rgba(255, 255, 255, 0.6)', fontWeight: 600 }}>
+                      ({inn2.overs}.{inn2.balls} ov)
+                    </span>
+                  </div>
+                )}
+              </div>
+              {match.teamB.logoUrl ? (
+                <img
+                  src={match.teamB.logoUrl}
+                  alt={match.teamB.name}
+                  style={{
+                    width: '48px',
+                    height: '48px',
+                    borderRadius: '50%',
+                    objectFit: 'cover',
+                    border: '1.5px solid rgba(255, 255, 255, 0.2)',
+                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                    flexShrink: 0,
+                  }}
+                />
+              ) : (
+                <div
+                  style={{
+                    width: '48px',
+                    height: '48px',
+                    borderRadius: '50%',
+                    background: 'rgba(255, 255, 255, 0.1)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '1.3rem',
+                    fontWeight: 900,
+                    border: '1px solid rgba(255, 255, 255, 0.15)',
+                    flexShrink: 0,
+                  }}
+                >
+                  🦁
                 </div>
               )}
             </div>
