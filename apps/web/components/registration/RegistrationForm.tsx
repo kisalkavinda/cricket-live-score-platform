@@ -63,17 +63,38 @@ export default function RegistrationForm({
     mode: 'onTouched',
   });
 
-  const leaderName = watch('leaderName');
-  const leaderIndexNumber = watch('leaderIndexNumber');
-
-  // Auto-sync Captain / Leader details directly into Player 1 slot
+  // Two-way real-time synchronization between Team Leader inputs & Player 1 (Captain) slot
   useEffect(() => {
-    setValue('players.0.name', leaderName || '', { shouldValidate: !!leaderName });
-  }, [leaderName, setValue]);
+    const subscription = watch((value, { name }) => {
+      if (name === 'leaderName') {
+        const topVal = value.leaderName ?? '';
+        const p1Val = getValues('players.0.name');
+        if (topVal !== p1Val) {
+          setValue('players.0.name', topVal, { shouldValidate: true, shouldDirty: true });
+        }
+      } else if (name === 'leaderIndexNumber') {
+        const topVal = value.leaderIndexNumber ?? '';
+        const p1Val = getValues('players.0.indexNumber');
+        if (topVal !== p1Val) {
+          setValue('players.0.indexNumber', topVal, { shouldValidate: true, shouldDirty: true });
+        }
+      } else if (name === 'players.0.name') {
+        const p1Val = value.players?.[0]?.name ?? '';
+        const topVal = getValues('leaderName');
+        if (p1Val !== topVal) {
+          setValue('leaderName', p1Val, { shouldValidate: true, shouldDirty: true });
+        }
+      } else if (name === 'players.0.indexNumber') {
+        const p1Val = value.players?.[0]?.indexNumber ?? '';
+        const topVal = getValues('leaderIndexNumber');
+        if (p1Val !== topVal) {
+          setValue('leaderIndexNumber', p1Val, { shouldValidate: true, shouldDirty: true });
+        }
+      }
+    });
 
-  useEffect(() => {
-    setValue('players.0.indexNumber', leaderIndexNumber || '', { shouldValidate: !!leaderIndexNumber });
-  }, [leaderIndexNumber, setValue]);
+    return () => subscription.unsubscribe();
+  }, [watch, setValue, getValues]);
 
   const { fields, append, remove } = useFieldArray({
     control,
