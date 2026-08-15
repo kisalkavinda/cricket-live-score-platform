@@ -64,20 +64,21 @@ export const registrationFormSchema = z
       .min(7, "Minimum 7 players are required in the squad")
       .max(13, "Maximum 13 players are allowed in the squad"),
 
-    confirmInfoCorrect: z.boolean().refine((v) => v === true, {
-      message: "You must confirm that all information provided is accurate",
-    }),
-    confirmUniversityStudents: z.boolean().refine((v) => v === true, {
-      message: "You must confirm all players are eligible university students",
-    }),
-    confirmIndexNumbers: z.boolean().refine((v) => v === true, {
-      message: "You must confirm university index numbers are accurate",
-    }),
-    confirmLeaderInfo: z.boolean().refine((v) => v === true, {
-      message: "You must confirm the team leader contact details are accurate",
-    }),
+    confirmTermsAgreement: z.boolean().optional(),
+    confirmInfoCorrect: z.boolean().optional().default(true),
+    confirmUniversityStudents: z.boolean().optional().default(true),
+    confirmIndexNumbers: z.boolean().optional().default(true),
+    confirmLeaderInfo: z.boolean().optional().default(true),
   })
   .superRefine((data, ctx) => {
+    if (data.confirmTermsAgreement !== true && data.confirmInfoCorrect !== true) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["confirmTermsAgreement"],
+        message: "You must accept the Official Tournament Terms & Eligibility Agreement",
+      });
+    }
+
     // 1. Check for duplicate index numbers within squad
     const seenIndices = new Map<string, number>();
 
