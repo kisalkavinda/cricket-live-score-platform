@@ -167,3 +167,73 @@ export async function createTournamentServerAction(formData: FormData) {
   revalidatePath(`/${entryPath}/tournaments`);
   redirect(`/${entryPath}/tournaments`);
 }
+
+export async function addPlayerToTeamServerAction(teamId: string, playerId: string) {
+  await requireAdminAuth();
+  const entryPath = getAdminEntryPath();
+
+  await (prisma as any).teamPlayer.upsert({
+    where: {
+      teamId_playerId: {
+        teamId,
+        playerId,
+      },
+    },
+    update: {},
+    create: {
+      teamId,
+      playerId,
+    },
+  });
+
+  revalidatePath(`/${entryPath}/teams/${teamId}`);
+  revalidatePath(`/${entryPath}/teams`);
+}
+
+export async function removePlayerFromTeamServerAction(teamPlayerId: string, teamId: string) {
+  await requireAdminAuth();
+  const entryPath = getAdminEntryPath();
+
+  await (prisma as any).teamPlayer.delete({
+    where: { id: teamPlayerId },
+  });
+
+  revalidatePath(`/${entryPath}/teams/${teamId}`);
+  revalidatePath(`/${entryPath}/teams`);
+}
+
+export async function createAndAssignPlayerServerAction(teamId: string, formData: FormData) {
+  await requireAdminAuth();
+  const entryPath = getAdminEntryPath();
+
+  const name = formData.get('name') as string;
+  const role = (formData.get('role') as any) || 'BATTER';
+  const indexNumber = (formData.get('indexNumber') as string) || null;
+  const battingStyle = formData.get('battingStyle') as string;
+  const bowlingStyle = formData.get('bowlingStyle') as string;
+
+  if (!name || !name.trim()) {
+    throw new Error('Player name is required.');
+  }
+
+  const player = await (prisma as any).player.create({
+    data: {
+      name: name.trim(),
+      role,
+      indexNumber: indexNumber ? indexNumber.trim().toUpperCase() : null,
+      battingStyle: battingStyle ? battingStyle.trim() : null,
+      bowlingStyle: bowlingStyle ? bowlingStyle.trim() : null,
+      teamPlayers: {
+        create: [
+          { teamId },
+        ],
+      },
+    },
+  });
+
+  revalidatePath(`/${entryPath}/teams/${teamId}`);
+  revalidatePath(`/${entryPath}/teams`);
+  revalidatePath(`/${entryPath}/players`);
+  return { success: true, playerId: player.id };
+}
+
