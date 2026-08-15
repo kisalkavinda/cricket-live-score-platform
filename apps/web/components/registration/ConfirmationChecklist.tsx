@@ -102,6 +102,7 @@ export default function ConfirmationChecklist({
             fontWeight: 800,
             color: 'var(--color-paper)',
             letterSpacing: '0.02em',
+            textTransform: 'uppercase',
             margin: 0,
           }}
         >
@@ -119,18 +120,18 @@ export default function ConfirmationChecklist({
         </p>
       </div>
 
-      {/* Clean Single Declaration Card */}
+      {/* Clean Hallmark Single Declaration Card */}
       <div
         style={{
-          background: isChecked ? 'rgba(34, 197, 94, 0.06)' : 'rgba(0, 0, 0, 0.25)',
+          background: isChecked ? 'rgba(192, 39, 45, 0.08)' : 'rgba(0, 0, 0, 0.3)',
           border: isChecked
-            ? '1.5px solid rgba(34, 197, 94, 0.35)'
-            : errors.confirmTermsAgreement
             ? '1.5px solid var(--color-accent)'
+            : errors.confirmTermsAgreement
+            ? '1.5px solid var(--color-accent-bright)'
             : '1.5px solid rgba(255, 255, 255, 0.12)',
           borderRadius: 'var(--radius-md)',
           padding: '18px 20px',
-          transition: 'all 0.2s ease',
+          transition: 'all var(--dur-fast) var(--ease-out)',
         }}
       >
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: '14px' }}>
@@ -142,14 +143,14 @@ export default function ConfirmationChecklist({
             style={{
               width: '20px',
               height: '20px',
-              marginTop: '3px',
-              accentColor: '#C0272D',
+              marginTop: '2px',
+              accentColor: 'var(--color-accent)',
               cursor: 'pointer',
               flexShrink: 0,
             }}
           />
 
-          <div style={{ flex: 1, fontSize: '0.92rem', lineHeight: 1.5, color: 'var(--color-paper)' }}>
+          <div style={{ flex: 1, fontFamily: 'var(--font-body)', fontSize: '0.92rem', lineHeight: 1.5, color: 'var(--color-paper)' }}>
             <label htmlFor="confirmTermsAgreement" style={{ cursor: 'pointer', fontWeight: 600 }}>
               I certify that all team members are eligible university students and I accept the{' '}
             </label>
@@ -160,7 +161,7 @@ export default function ConfirmationChecklist({
                 background: 'none',
                 border: 'none',
                 padding: 0,
-                color: '#FFB800',
+                color: 'var(--color-accent-bright)',
                 fontWeight: 700,
                 cursor: 'pointer',
                 textDecoration: 'underline',
@@ -180,6 +181,7 @@ export default function ConfirmationChecklist({
           <div
             style={{
               color: 'var(--color-accent-bright)',
+              fontFamily: 'var(--font-body)',
               fontSize: '0.8rem',
               fontWeight: 600,
               marginTop: '8px',
@@ -191,38 +193,38 @@ export default function ConfirmationChecklist({
         )}
       </div>
 
-      {/* Clean Modal Dialog for Agreement Terms (No Scrollbar) */}
+      {/* Hallmark Modal Dialog for Agreement Terms (No Scrollbar) */}
       {modalOpen && (
         <div
           style={{
             position: 'fixed',
             inset: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.75)',
-            backdropFilter: 'blur(10px)',
-            WebkitBackdropFilter: 'blur(10px)',
+            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+            backdropFilter: 'blur(12px)',
+            WebkitBackdropFilter: 'blur(12px)',
             zIndex: 1000,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            padding: '16px',
+            padding: 'var(--space-md)',
           }}
           onClick={() => setModalOpen(false)}
         >
           <div
             className="no-scrollbar"
             style={{
-              backgroundColor: '#0D111A',
-              border: '1px solid #1E283C',
-              borderRadius: '16px',
-              maxWidth: '560px',
+              backgroundColor: 'var(--color-paper-dark)',
+              border: '1.5px solid rgba(255, 255, 255, 0.15)',
+              borderRadius: 'var(--radius-lg)',
+              maxWidth: '580px',
               width: '100%',
               maxHeight: '90vh',
               overflowY: 'auto',
               scrollbarWidth: 'none',
               msOverflowStyle: 'none',
-              padding: '24px 28px',
-              boxShadow: '0 25px 60px rgba(0, 0, 0, 0.85)',
-              color: '#FFFFFF',
+              padding: 'var(--space-lg)',
+              boxShadow: '0 25px 60px rgba(0, 0, 0, 0.9)',
+              color: 'var(--color-paper)',
             }}
             onClick={(e) => e.stopPropagation()}
           >
@@ -232,26 +234,38 @@ export default function ConfirmationChecklist({
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                paddingBottom: '16px',
-                borderBottom: '1px solid #1A2336',
-                marginBottom: '18px',
+                paddingBottom: 'var(--space-md)',
+                borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+                marginBottom: 'var(--space-md)',
               }}
             >
               <div>
                 <span
                   style={{
-                    fontSize: '11px',
-                    fontWeight: 800,
-                    letterSpacing: '0.12em',
-                    color: '#C0272D',
+                    fontFamily: 'var(--font-body)',
+                    fontSize: '0.72rem',
+                    fontWeight: 700,
+                    letterSpacing: '0.14em',
+                    color: 'var(--color-accent-bright)',
                     textTransform: 'uppercase',
-                    fontFamily: 'monospace',
+                    display: 'block',
+                    marginBottom: '2px',
                   }}
                 >
-                  TOURNAMENT ELIGIBILITY AGREEMENT
+                  Official Regulations
                 </span>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: 800, margin: '2px 0 0', color: '#FFFFFF' }}>
-                  Official Terms & Declarations
+                <h3
+                  style={{
+                    fontFamily: 'var(--font-display)',
+                    fontSize: '1.4rem',
+                    fontWeight: 800,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.02em',
+                    color: 'var(--color-paper)',
+                    margin: 0,
+                  }}
+                >
+                  Tournament Rules & Declarations
                 </h3>
               </div>
 
@@ -260,17 +274,18 @@ export default function ConfirmationChecklist({
                 onClick={() => setModalOpen(false)}
                 aria-label="Close dialog"
                 style={{
-                  background: '#151C2C',
-                  border: '1px solid #23304A',
-                  color: '#94A3B8',
-                  width: '32px',
-                  height: '32px',
-                  borderRadius: '8px',
+                  background: 'rgba(255, 255, 255, 0.06)',
+                  border: '1px solid rgba(255, 255, 255, 0.15)',
+                  color: 'rgba(255, 255, 255, 0.7)',
+                  width: '34px',
+                  height: '34px',
+                  borderRadius: 'var(--radius-sm)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   cursor: 'pointer',
                   fontSize: '13px',
+                  transition: 'all var(--dur-fast)',
                 }}
               >
                 ✕
@@ -278,15 +293,15 @@ export default function ConfirmationChecklist({
             </div>
 
             {/* Clauses List */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-xs)' }}>
               {agreementClauses.map((clause) => (
                 <div
                   key={clause.num}
                   style={{
-                    backgroundColor: '#121824',
-                    padding: '14px 16px',
-                    borderRadius: '10px',
-                    border: '1px solid #1A2336',
+                    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+                    padding: 'var(--space-sm)',
+                    borderRadius: 'var(--radius-md)',
+                    border: '1px solid rgba(255, 255, 255, 0.08)',
                     display: 'flex',
                     gap: '12px',
                     alignItems: 'flex-start',
@@ -294,23 +309,41 @@ export default function ConfirmationChecklist({
                 >
                   <span
                     style={{
-                      fontFamily: 'monospace',
-                      fontSize: '0.75rem',
+                      fontFamily: 'var(--font-data)',
+                      fontSize: '0.78rem',
                       fontWeight: 800,
-                      color: '#C0272D',
-                      backgroundColor: 'rgba(192, 39, 45, 0.12)',
-                      padding: '2px 6px',
-                      borderRadius: '4px',
+                      color: 'var(--color-accent-bright)',
+                      backgroundColor: 'rgba(192, 39, 45, 0.18)',
+                      padding: '2px 8px',
+                      borderRadius: 'var(--radius-sm)',
                       flexShrink: 0,
+                      marginTop: '2px',
                     }}
                   >
                     {clause.num}
                   </span>
                   <div>
-                    <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#F1F5F9', marginBottom: '2px' }}>
+                    <div
+                      style={{
+                        fontFamily: 'var(--font-display)',
+                        fontSize: '1.05rem',
+                        fontWeight: 800,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.02em',
+                        color: 'var(--color-paper)',
+                        marginBottom: '2px',
+                      }}
+                    >
                       {clause.title}
                     </div>
-                    <div style={{ fontSize: '0.82rem', color: '#94A3B8', lineHeight: 1.45 }}>
+                    <div
+                      style={{
+                        fontFamily: 'var(--font-body)',
+                        fontSize: '0.82rem',
+                        color: 'rgba(255, 255, 255, 0.7)',
+                        lineHeight: 1.45,
+                      }}
+                    >
                       {clause.desc}
                     </div>
                   </div>
@@ -321,27 +354,25 @@ export default function ConfirmationChecklist({
             {/* Modal Bottom Actions */}
             <div
               style={{
-                marginTop: '20px',
-                paddingTop: '16px',
-                borderTop: '1px solid #1A2336',
+                marginTop: 'var(--space-lg)',
+                paddingTop: 'var(--space-md)',
+                borderTop: '1px solid rgba(255, 255, 255, 0.1)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'flex-end',
-                gap: '10px',
+                gap: 'var(--space-xs)',
               }}
             >
               <button
                 type="button"
                 onClick={() => setModalOpen(false)}
+                className="btn-hallmark-outline"
                 style={{
-                  padding: '9px 16px',
-                  borderRadius: '8px',
-                  backgroundColor: 'transparent',
-                  border: '1px solid #23304A',
-                  color: '#94A3B8',
-                  fontSize: '0.85rem',
-                  fontWeight: 600,
-                  cursor: 'pointer',
+                  height: '42px',
+                  padding: '0 20px',
+                  color: 'var(--color-paper)',
+                  borderColor: 'rgba(255, 255, 255, 0.25)',
+                  fontSize: '0.95rem',
                 }}
               >
                 Cancel
@@ -350,16 +381,11 @@ export default function ConfirmationChecklist({
               <button
                 type="button"
                 onClick={handleAgreeAndClose}
+                className="btn-hallmark-primary"
                 style={{
-                  padding: '9px 20px',
-                  borderRadius: '8px',
-                  backgroundColor: '#C0272D',
-                  border: '1px solid #D32F35',
-                  color: '#FFFFFF',
-                  fontSize: '0.85rem',
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  boxShadow: '0 2px 10px rgba(192, 39, 45, 0.3)',
+                  height: '42px',
+                  padding: '0 24px',
+                  fontSize: '0.95rem',
                 }}
               >
                 Accept & Confirm
