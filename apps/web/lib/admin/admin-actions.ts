@@ -237,3 +237,58 @@ export async function createAndAssignPlayerServerAction(teamId: string, formData
   return { success: true, playerId: player.id };
 }
 
+export async function updateTournamentServerAction(tournamentId: string, formData: FormData) {
+  await requireAdminAuth();
+  const entryPath = getAdminEntryPath();
+
+  const name = formData.get('name') as string;
+  const season = formData.get('season') as string;
+  const format = formData.get('format') as string;
+  const status = formData.get('status') as any;
+
+  await (prisma as any).tournament.update({
+    where: { id: tournamentId },
+    data: {
+      name,
+      season,
+      format,
+      status,
+    },
+  });
+
+  revalidatePath(`/${entryPath}/tournaments/${tournamentId}`);
+  revalidatePath(`/${entryPath}/tournaments`);
+  return { success: true };
+}
+
+export async function addTournamentStageServerAction(tournamentId: string, formData: FormData) {
+  await requireAdminAuth();
+  const entryPath = getAdminEntryPath();
+
+  const name = formData.get('name') as string;
+  const stageOrder = parseInt(formData.get('stageOrder') as string, 10) || 1;
+  const oversPerInnings = parseInt(formData.get('oversPerInnings') as string, 10) || 20;
+  const ballsPerOver = parseInt(formData.get('ballsPerOver') as string, 10) || 6;
+  const pointsForWin = parseInt(formData.get('pointsForWin') as string, 10) || 2;
+  const pointsForTie = parseInt(formData.get('pointsForTie') as string, 10) || 1;
+  const pointsForNoResult = parseInt(formData.get('pointsForNoResult') as string, 10) || 1;
+
+  await (prisma as any).tournamentStage.create({
+    data: {
+      tournamentId,
+      name,
+      stageOrder,
+      oversPerInnings,
+      ballsPerOver,
+      pointsForWin,
+      pointsForTie,
+      pointsForNoResult,
+    },
+  });
+
+  revalidatePath(`/${entryPath}/tournaments/${tournamentId}`);
+  revalidatePath(`/${entryPath}/tournaments`);
+  return { success: true };
+}
+
+
