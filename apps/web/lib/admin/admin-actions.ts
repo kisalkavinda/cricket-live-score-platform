@@ -55,6 +55,25 @@ export async function rejectRegistrationServerAction(registrationId: string, rea
   return result;
 }
 
+export async function deleteRegistrationServerAction(registrationId: string) {
+  await requireAdminAuth();
+  const entryPath = getAdminEntryPath();
+
+  await (prisma as any).registrationPlayer.deleteMany({
+    where: { registrationId },
+  });
+
+  await (prisma as any).registration.delete({
+    where: { id: registrationId },
+  });
+
+  revalidatePath(`/${entryPath}`);
+  revalidatePath(`/${entryPath}/dashboard`);
+  revalidatePath(`/${entryPath}/registrations`);
+  revalidateTag('teams-count', 'seconds');
+  return { success: true, redirectUrl: `/${entryPath}/registrations` };
+}
+
 export async function retryBackupServerAction(registrationId: string) {
   await requireAdminAuth();
   const entryPath = getAdminEntryPath();
