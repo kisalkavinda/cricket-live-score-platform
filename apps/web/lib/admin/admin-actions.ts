@@ -393,6 +393,83 @@ export async function updateTournamentServerAction(tournamentId: string, formDat
   return { success: true };
 }
 
+export async function deleteTournamentServerAction(tournamentId: string) {
+  await requireAdminAuth();
+  const entryPath = getAdminEntryPath();
+
+  // 1. Clean up exceptions
+  await (prisma as any).registrationException.deleteMany({
+    where: { tournamentId },
+  }).catch(() => {});
+
+  // 2. Clean up registrations & players
+  const registrations = await (prisma as any).registration.findMany({
+    where: { tournamentId },
+    select: { id: true },
+  });
+  const regIds = registrations.map((r: any) => r.id);
+  if (regIds.length > 0) {
+    await (prisma as any).registrationPlayer.deleteMany({
+      where: { registrationId: { in: regIds } },
+    }).catch(() => {});
+    await (prisma as any).registration.deleteMany({
+      where: { tournamentId },
+    }).catch(() => {});
+  }
+
+  // 3. Clean up matches and innings data
+  const matches = await (prisma as any).match.findMany({
+    where: { tournamentId },
+    select: { id: true },
+  });
+  const matchIds = matches.map((m: any) => m.id);
+  if (matchIds.length > 0) {
+    const inningsList = await (prisma as any).innings.findMany({
+      where: { matchId: { in: matchIds } },
+      select: { id: true },
+    });
+    const inningsIds = inningsList.map((i: any) => i.id);
+    if (inningsIds.length > 0) {
+      await (prisma as any).ballEvent.deleteMany({
+        where: { inningsId: { in: inningsIds } },
+      }).catch(() => {});
+      await (prisma as any).inningsBatter.deleteMany({
+        where: { inningsId: { in: inningsIds } },
+      }).catch(() => {});
+      await (prisma as any).inningsBowler.deleteMany({
+        where: { inningsId: { in: inningsIds } },
+      }).catch(() => {});
+      await (prisma as any).innings.deleteMany({
+        where: { matchId: { in: matchIds } },
+      }).catch(() => {});
+    }
+    await (prisma as any).match.deleteMany({
+      where: { tournamentId },
+    }).catch(() => {});
+  }
+
+  // 4. Clean up squads, stages, teams links
+  await (prisma as any).tournamentSquad.deleteMany({
+    where: { tournamentId },
+  }).catch(() => {});
+  await (prisma as any).tournamentStage.deleteMany({
+    where: { tournamentId },
+  }).catch(() => {});
+  await (prisma as any).tournamentTeam.deleteMany({
+    where: { tournamentId },
+  }).catch(() => {});
+
+  // 5. Delete the tournament
+  await (prisma as any).tournament.delete({
+    where: { id: tournamentId },
+  });
+
+  revalidatePath(`/${entryPath}/tournaments`);
+  revalidatePath(`/${entryPath}/dashboard`);
+  revalidatePath('/');
+  return { success: true, redirectUrl: `/${entryPath}/tournaments` };
+}
+
 export async function addTournamentStageServerAction(tournamentId: string, formData: FormData) {
   await requireAdminAuth();
   const entryPath = getAdminEntryPath();

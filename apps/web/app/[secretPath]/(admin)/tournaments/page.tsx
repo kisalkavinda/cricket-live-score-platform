@@ -2,6 +2,7 @@ import { prisma } from 'database';
 import Link from 'next/link';
 import { getAdminEntryPath, requireAdminAuth } from '@/lib/auth/admin-auth';
 import { createPerfTracker, logPerfMetric } from '@/lib/utils/perf-logger';
+import DeleteTournamentButton from '@/components/admin/DeleteTournamentButton';
 
 export const dynamic = 'force-dynamic';
 
@@ -274,20 +275,19 @@ export default async function AdminTournamentsPage() {
                 <Link
                   href={`/${entryPath}/tournaments/${t.id}`}
                   style={{
-                    flex: 1,
-                    textAlign: 'center',
                     padding: '8px 12px',
                     borderRadius: '6px',
-                    backgroundColor: 'rgba(192, 39, 45, 0.15)',
-                    color: '#F87171',
+                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                    color: '#E2E8F0',
                     fontSize: '11px',
                     fontWeight: 700,
                     textDecoration: 'none',
-                    border: '1px solid rgba(192, 39, 45, 0.3)',
+                    border: '1px solid #2A364E',
                   }}
                 >
-                  Settings
+                  ⚙️ Settings
                 </Link>
+                <DeleteTournamentButton isIconOnly tournamentId={t.id} tournamentName={t.name} />
               </div>
             </div>
           ))}
