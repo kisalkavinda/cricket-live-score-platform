@@ -115,13 +115,13 @@ export async function createRegistration(
   let allowedMinimum = 11;
   let exceptions: any[] = [];
   try {
-    exceptions = await (prisma as any).$queryRawUnsafe(
-      `SELECT * FROM "RegistrationException" WHERE "tournamentId" = $1`,
-      data.tournamentId
-    );
+    exceptions = await (prisma as any).registrationException.findMany({
+      where: { tournamentId: data.tournamentId },
+    });
   } catch (err: unknown) {
     console.warn("[RegistrationService] Exception lookup warning:", err);
   }
+
 
   const cleanTeamName = data.teamName.trim().toLowerCase();
   const matchedException = exceptions.find((ex: any) => {
