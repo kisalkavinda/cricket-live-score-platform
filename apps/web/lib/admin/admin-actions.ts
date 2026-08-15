@@ -112,6 +112,47 @@ export async function toggleExceptionServerAction(id: string, active: boolean) {
   revalidatePath(`/${entryPath}/registration-exceptions`);
 }
 
+export async function updateExceptionServerAction(id: string, formData: FormData) {
+  await requireAdminAuth();
+  const entryPath = getAdminEntryPath();
+
+  const tournamentId = formData.get('tournamentId') as string;
+  const name = formData.get('name') as string;
+  const teamName = formData.get('teamName') as string;
+  const indexPrefix = formData.get('indexPrefix') as string;
+  const minPlayers = parseInt(formData.get('minPlayers') as string, 10) || 7;
+  const active = formData.get('active') === 'true' || formData.get('active') === 'on';
+  const notes = formData.get('notes') as string;
+
+  await (prisma as any).registrationException.update({
+    where: { id },
+    data: {
+      tournamentId: tournamentId || undefined,
+      name: name ? name.trim() : null,
+      teamName: teamName ? teamName.trim() : null,
+      indexPrefix: indexPrefix ? indexPrefix.trim().toUpperCase() : null,
+      minPlayers,
+      active,
+      notes: notes ? notes.trim() : null,
+    },
+  });
+
+  revalidatePath(`/${entryPath}/registration-exceptions`);
+  return { success: true };
+}
+
+export async function deleteExceptionServerAction(id: string) {
+  await requireAdminAuth();
+  const entryPath = getAdminEntryPath();
+
+  await (prisma as any).registrationException.delete({
+    where: { id },
+  });
+
+  revalidatePath(`/${entryPath}/registration-exceptions`);
+  return { success: true };
+}
+
 export async function createTeamServerAction(formData: FormData) {
   await requireAdminAuth();
   const entryPath = getAdminEntryPath();
