@@ -202,9 +202,10 @@ export async function getLiveMatches() {
 /**
  * Builds the broadcast payload from PostgreSQL for real-time distribution.
  */
-export async function buildMatchBroadcastPayload(matchId: string): Promise<ScoreBroadcastPayload | null> {
-  const match = await getMatchDetail(matchId);
+export async function buildMatchBroadcastPayload(matchOrId: string | any): Promise<ScoreBroadcastPayload | null> {
+  const match = typeof matchOrId === 'string' ? await getMatchDetail(matchOrId) : matchOrId;
   if (!match) return null;
+
 
   const currentInnings = match.innings.find((i: any) => i.inningsNumber === match.currentInnings) || match.innings[0] || null;
 
