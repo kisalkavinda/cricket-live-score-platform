@@ -2,19 +2,18 @@ import { prisma } from 'database';
 import Link from 'next/link';
 import { getAdminEntryPath, requireAdminAuth } from '@/lib/auth/admin-auth';
 import { createPerfTracker, logPerfMetric } from '@/lib/utils/perf-logger';
+import DeletePlayerButton from '@/components/admin/DeletePlayerButton';
 
 export const dynamic = 'force-dynamic';
 
 const getPlayers = async () =>
   (prisma as any).player.findMany({
     orderBy: { name: 'asc' },
-    take: 100,
+    take: 200,
     select: {
       id: true,
       name: true,
-      role: true,
-      battingStyle: true,
-      bowlingStyle: true,
+      indexNumber: true,
       profileImageUrl: true,
       teamPlayers: {
         select: {
@@ -24,6 +23,7 @@ const getPlayers = async () =>
               id: true,
               name: true,
               shortName: true,
+              logoUrl: true,
             },
           },
         },
@@ -47,32 +47,6 @@ export default async function AdminPlayersPage() {
   tracker.renderEnd = performance.now();
   logPerfMetric('/players', tracker);
 
-  const getRoleBadge = (role: string) => {
-    switch (role) {
-      case 'BATTER':
-        return (
-          <span style={{ padding: '3px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 700, fontFamily: 'monospace', backgroundColor: 'rgba(59, 130, 246, 0.15)', color: '#93C5FD', border: '1px solid rgba(59, 130, 246, 0.25)' }}>
-            🏏 BATTER
-          </span>
-        );
-      case 'BOWLER':
-        return (
-          <span style={{ padding: '3px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 700, fontFamily: 'monospace', backgroundColor: 'rgba(245, 158, 11, 0.15)', color: '#FCD34D', border: '1px solid rgba(245, 158, 11, 0.25)' }}>
-            🎯 BOWLER
-          </span>
-        );
-      case 'ALL_ROUNDER':
-        return (
-          <span style={{ padding: '3px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 700, fontFamily: 'monospace', backgroundColor: 'rgba(16, 185, 129, 0.15)', color: '#6EE7B7', border: '1px solid rgba(16, 185, 129, 0.25)' }}>
-            ⚡ ALL-ROUNDER
-          </span>
-        );
-      case 'WICKET_KEEPER':
-        return (
-          <span style={{ padding: '3px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 700, fontFamily: 'monospace', backgroundColor: 'rgba(168, 85, 247, 0.15)', color: '#D8B4FE', border: '1px solid rgba(168, 85, 247, 0.25)' }}>
-            🧤 WICKET-KEEPER
-          </span>
-        );
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
       {/* Header */}
