@@ -15,7 +15,7 @@ export default function DeleteTeamButton({ teamId, teamName }: DeleteTeamButtonP
     e.preventDefault();
 
     const confirmed = window.confirm(
-      `⚠️ VERIFICATION REQUIRED\n\nAre you sure you want to permanently delete "${teamName}"?\n\nThis will remove the team and all player assignments from this roster. This action CANNOT be undone.`
+      `⚠️ VERIFICATION REQUIRED\n\nAre you sure you want to permanently delete "${teamName}"?\n\nThis will permanently delete the team AND all players in this squad roster. This action CANNOT be undone.`
     );
 
     if (!confirmed) {
