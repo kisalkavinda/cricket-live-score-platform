@@ -265,8 +265,7 @@ export default function RegistrationDetailClient({
               <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.08)', textAlign: 'left', color: 'rgba(255, 255, 255, 0.6)' }}>
                 <th style={{ padding: '10px 12px', width: '60px' }}>#</th>
                 <th style={{ padding: '10px 12px' }}>Player Full Name</th>
-                <th style={{ padding: '10px 12px' }}>University Index Number</th>
-                <th style={{ padding: '10px 12px' }}>Role / Status</th>
+                <th style={{ padding: '10px 12px', textAlign: 'right' }}>University Index Number</th>
               </tr>
             </thead>
             <tbody>
@@ -275,22 +274,11 @@ export default function RegistrationDetailClient({
                 return (
                   <tr key={p.id} style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.04)' }}>
                     <td style={{ padding: '12px', color: 'rgba(255, 255, 255, 0.5)' }}>{idx + 1}</td>
-                    <td style={{ padding: '12px', fontWeight: 700, color: '#FFFFFF' }}>{p.name}</td>
-                    <td style={{ padding: '12px', fontFamily: 'monospace', color: isLeader ? '#C0272D' : 'rgba(255, 255, 255, 0.85)', fontWeight: isLeader ? 800 : 500 }}>
-                      {p.indexNumber}
+                    <td style={{ padding: '12px', fontWeight: 700, color: '#FFFFFF' }}>
+                      {p.name} {isLeader ? <span style={{ color: '#C0272D', fontSize: '0.75rem', fontWeight: 800, marginLeft: '6px' }}>(Captain)</span> : ''}
                     </td>
-                    <td style={{ padding: '12px' }}>
-                      {isLeader ? (
-                        <span style={{ background: 'rgba(192, 39, 45, 0.15)', color: '#C0272D', padding: '2px 8px', borderRadius: '4px', fontSize: '0.72rem', fontWeight: 800 }}>
-                          👑 CAPTAIN / LEADER
-                        </span>
-                      ) : idx < 11 ? (
-                        <span style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '0.78rem' }}>Playing Squad</span>
-                      ) : (
-                        <span style={{ background: 'rgba(255, 255, 255, 0.08)', color: 'rgba(255, 255, 255, 0.8)', padding: '2px 8px', borderRadius: '4px', fontSize: '0.72rem' }}>
-                          Registered Substitute {idx - 10}
-                        </span>
-                      )}
+                    <td style={{ padding: '12px', fontFamily: 'monospace', color: isLeader ? '#C0272D' : 'rgba(255, 255, 255, 0.85)', fontWeight: isLeader ? 800 : 500, textAlign: 'right' }}>
+                      {p.indexNumber}
                     </td>
                   </tr>
                 );

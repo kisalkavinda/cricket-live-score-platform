@@ -163,7 +163,6 @@ export default async function AdminPlayersPage() {
             <thead>
               <tr style={{ backgroundColor: '#141A26', borderBottom: '1px solid #1E2638' }}>
                 <th style={{ padding: '12px 18px', color: '#8B9BB4', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase' }}>Player</th>
-                <th style={{ padding: '12px 18px', color: '#8B9BB4', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase' }}>Role</th>
                 <th style={{ padding: '12px 18px', color: '#8B9BB4', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase' }}>Style</th>
                 <th style={{ padding: '12px 18px', color: '#8B9BB4', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase' }}>Team</th>
                 <th style={{ padding: '12px 18px', color: '#8B9BB4', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', textAlign: 'right' }}>Action</th>
@@ -172,7 +171,7 @@ export default async function AdminPlayersPage() {
             <tbody>
               {players.length === 0 ? (
                 <tr>
-                  <td colSpan={5} style={{ padding: '48px 24px', textAlign: 'center', color: '#8B9BB4' }}>
+                  <td colSpan={4} style={{ padding: '48px 24px', textAlign: 'center', color: '#8B9BB4' }}>
                     No official players registered yet.
                   </td>
                 </tr>
@@ -200,9 +199,6 @@ export default async function AdminPlayersPage() {
                         </div>
                         <div style={{ fontWeight: 700, color: '#FFFFFF' }}>{player.name}</div>
                       </div>
-                    </td>
-                    <td style={{ padding: '14px 18px' }}>
-                      {getRoleBadge(player.role)}
                     </td>
                     <td style={{ padding: '14px 18px', color: '#8B9BB4', fontSize: '12px' }}>
                       {player.battingStyle && <div>🏏 {player.battingStyle}</div>}
