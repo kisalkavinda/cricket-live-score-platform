@@ -19,35 +19,26 @@ export default async function TeamDetailPage({
   const { id } = await params;
   const entryPath = getAdminEntryPath();
 
-  const [team, allPlayers] = await Promise.all([
-    (prisma as any).team.findUnique({
-      where: { id },
-      include: {
-        teamPlayers: {
-          include: {
-            player: true,
-          },
-          orderBy: { joinedAt: 'asc' },
+  const team = await (prisma as any).team.findUnique({
+    where: { id },
+    include: {
+      teamPlayers: {
+        include: {
+          player: true,
         },
-        tournamentTeams: {
-          include: {
-            tournament: true,
-          },
+        orderBy: { joinedAt: 'asc' },
+      },
+      tournamentTeams: {
+        include: {
+          tournament: true,
         },
       },
-    }),
-    (prisma as any).player.findMany({
-      orderBy: { name: 'asc' },
-      take: 100,
-    }),
-  ]);
+    },
+  });
 
   if (!team) {
     notFound();
   }
-
-  const assignedPlayerIds = new Set(team.teamPlayers.map((tp: any) => tp.playerId));
-  const availablePlayers = allPlayers.filter((p: any) => !assignedPlayerIds.has(p.id));
 
   const getRoleBadge = (role: string) => {
     switch (role) {
@@ -293,95 +284,21 @@ export default async function TeamDetailPage({
 
         {/* Right Column: Add Players Sidebar */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          {/* Card 1: Assign Existing Player */}
+          {/* Add Player Directly to Squad */}
           <div
             style={{
               backgroundColor: '#10141E',
               border: '1px solid #1E2638',
               borderRadius: '12px',
-              padding: '20px',
+              padding: '24px',
               boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
             }}
           >
-            <h3 style={{ fontSize: '15px', fontWeight: 800, margin: '0 0 6px', color: '#FFFFFF' }}>
-              Assign Existing Player
+            <h3 style={{ fontSize: '16px', fontWeight: 800, margin: '0 0 6px', color: '#FFFFFF' }}>
+              ➕ Add Player to Squad
             </h3>
             <p style={{ fontSize: '12px', color: '#8B9BB4', margin: '0 0 16px', lineHeight: 1.4 }}>
-              Select a player from the central tournament registry.
-            </p>
-
-            <form
-              action={async (formData) => {
-                'use server';
-                const playerId = formData.get('playerId') as string;
-                if (playerId) {
-                  await addPlayerToTeamServerAction(team.id, playerId);
-                }
-              }}
-              style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}
-            >
-              <div>
-                <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, color: '#8B9BB4', marginBottom: '4px' }}>
-                  Select Player *
-                </label>
-                <select
-                  name="playerId"
-                  required
-                  style={{
-                    width: '100%',
-                    height: '38px',
-                    padding: '0 12px',
-                    borderRadius: '6px',
-                    backgroundColor: '#1A1F2C',
-                    border: '1px solid #2A364E',
-                    color: '#FFFFFF',
-                    fontSize: '13px',
-                    boxSizing: 'border-box',
-                  }}
-                >
-                  <option value="" style={{ backgroundColor: '#10141E' }}>-- Choose a player --</option>
-                  {availablePlayers.map((p: any) => (
-                    <option key={p.id} value={p.id} style={{ backgroundColor: '#10141E' }}>
-                      {p.name} {p.indexNumber ? `- ${p.indexNumber}` : ''}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <button
-                type="submit"
-                style={{
-                  height: '38px',
-                  borderRadius: '6px',
-                  backgroundColor: '#1E2638',
-                  color: '#FFFFFF',
-                  fontSize: '12px',
-                  fontWeight: 700,
-                  border: '1px solid #3B4B68',
-                  cursor: 'pointer',
-                  transition: 'background 0.15s ease',
-                }}
-              >
-                + Assign to Roster
-              </button>
-            </form>
-          </div>
-
-          {/* Card 2: Quick Register New Player */}
-          <div
-            style={{
-              backgroundColor: '#10141E',
-              border: '1px solid #1E2638',
-              borderRadius: '12px',
-              padding: '20px',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
-            }}
-          >
-            <h3 style={{ fontSize: '15px', fontWeight: 800, margin: '0 0 6px', color: '#FFFFFF' }}>
-              Quick Add New Player
-            </h3>
-            <p style={{ fontSize: '12px', color: '#8B9BB4', margin: '0 0 16px', lineHeight: 1.4 }}>
-              Register a brand new player directly to this team roster.
+              Register and add a new player directly to this team roster.
             </p>
 
             <form
@@ -389,7 +306,7 @@ export default async function TeamDetailPage({
                 'use server';
                 await createAndAssignPlayerServerAction(team.id, formData);
               }}
-              style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}
+              style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}
             >
               <div>
                 <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, color: '#8B9BB4', marginBottom: '4px' }}>
