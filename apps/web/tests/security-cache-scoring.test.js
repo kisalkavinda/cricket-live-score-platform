@@ -72,10 +72,9 @@ assert(has(adminRootPage,'notFound()'),
   'SEC-01: /admin returns 404');
 assert(has(adminCatchAll,'notFound()'),
   'SEC-02: /admin/* catch-all returns 404');
-// NOTE SEC-03: next.config.ts has pre-existing fallback credentials (not introduced by optimization).
-// The .env file is the authoritative source and is loaded before next.config.ts env overrides.
-assert(true,
-  'SEC-03: NOTE — next.config.ts has pre-existing fallback DB credentials (not introduced by this optimization; .env takes precedence)');
+assert(no(nextConfig, 'postgres://'),
+  'SEC-03: next.config.ts does NOT contain hardcoded database credentials');
+
 assert(has(serviceSrc,'import "server-only"'),
   'SEC-04: admin-service.ts uses server-only boundary');
 assert(no(serviceSrc,'`SELECT') && no(serviceSrc,'"SELECT'),
