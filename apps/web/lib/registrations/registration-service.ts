@@ -227,7 +227,7 @@ export async function createRegistration(
       console.error("[RegistrationService] Transaction failed:", txError);
       return {
         success: false,
-        error: "Database transaction failed. Please check your connection and try again.",
+        error: `Database error: ${txError?.message || 'Database transaction failed. Please check your connection and try again.'}`,
       };
     }
   }
