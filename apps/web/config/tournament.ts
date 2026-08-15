@@ -1,5 +1,6 @@
 export const tournamentConfig = {
-  name: "CPL",
+  name: "Computing Premier League",
+  shortName: "CPL",
   tagline: "The Biggest Cricket Event — Where Passion Meets Glory",
   date: "September 5, 2026",
   time: null,

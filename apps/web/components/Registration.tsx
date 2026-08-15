@@ -10,13 +10,13 @@ export default async function Registration() {
     // DB not configured — silent fallback
   }
 
-  const regOpen = !!tournamentConfig.registrationFormUrl;
+  const regOpen = true;
 
   const requirements = [
-    { id: 'req-1', text: 'Official Team Name & Squad Logo' },
-    { id: 'req-2', text: "Captain's Contact & Secondary Representative" },
-    { id: 'req-3', text: 'Full Roster List (Min 11 Players Required)' },
-    { id: 'req-4', text: 'Proof of Payment for Entry Fee' },
+    { id: 'req-1', text: 'Official Team Name' },
+    { id: 'req-2', text: "Captain's Contact & WhatsApp Details" },
+    { id: 'req-3', text: '11 Playing Members + Up to 2 Substitutes (Max 13)' },
+    { id: 'req-4', text: 'Valid University Student Index Numbers' },
   ];
 
   return (
@@ -285,39 +285,17 @@ export default async function Registration() {
               </p>
             </div>
 
-            {regOpen ? (
-              <Link
-                href={tournamentConfig.registrationFormUrl!}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn-hallmark-primary"
-                id="reg-cta-button"
-                style={{ height: '44px', padding: '0 20px', maxWidth: '100%' }}
-              >
-                Complete Registration Form
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </Link>
-            ) : (
-              <button
-                disabled
-                className="btn-hallmark-primary"
-                id="reg-cta-disabled"
-                style={{
-                  height: 'auto',
-                  minHeight: '44px',
-                  padding: '8px 16px',
-                  maxWidth: '100%',
-                  whiteSpace: 'normal',
-                  fontSize: '0.85rem',
-                  lineHeight: 1.2,
-                  textAlign: 'center',
-                }}
-              >
-                Registrations Not Currently Open
-              </button>
-            )}
+            <Link
+              href="/register"
+              className="btn-hallmark-primary"
+              id="reg-cta-button"
+              style={{ height: '44px', padding: '0 20px', maxWidth: '100%' }}
+            >
+              Complete Registration Form
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </Link>
           </div>
         </div>
       </div>

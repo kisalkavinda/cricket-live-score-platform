@@ -61,7 +61,7 @@ async function main() {
   // Create Tournament
   const tournament = await prisma.tournament.create({
     data: {
-      name: 'Soft Ball Championship 2026',
+      name: 'Computing Premier League',
       season: '2026',
       format: 'T20',
       status: 'REGISTRATION',

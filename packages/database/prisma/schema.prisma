@@ -100,6 +100,8 @@ model Tournament {
   stages           TournamentStage[]
   tournamentTeams  TournamentTeam[]
   tournamentSquads TournamentSquad[]
+  registrations    Registration[]
+  registrationExceptions RegistrationException[]
 }
 
 model TournamentStage {
@@ -147,4 +149,71 @@ model TournamentSquad {
   player       Player     @relation(fields: [playerId], references: [id])
 
   @@unique([tournamentId, teamId, playerId])
+}
+
+enum RegistrationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+enum BackupStatus {
+  PENDING
+  SYNCED
+  FAILED
+}
+
+model Registration {
+  id                String             @id @default(uuid())
+  registrationCode  String             @unique
+  tournamentId      String
+  tournament        Tournament         @relation(fields: [tournamentId], references: [id])
+  teamName          String
+  leaderName        String
+  leaderWhatsapp    String
+  leaderIndexNumber String
+  status            RegistrationStatus @default(PENDING)
+
+  backupStatus      BackupStatus       @default(PENDING)
+  backupError       String?
+  backupLastAttempt DateTime?
+  backupSyncedAt    DateTime?
+
+  notes             String?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+
+  players           RegistrationPlayer[]
+
+  @@index([tournamentId])
+  @@index([tournamentId, status])
+  @@index([tournamentId, leaderIndexNumber])
+}
+
+model RegistrationPlayer {
+  id             String       @id @default(uuid())
+  registrationId String
+  name           String
+  indexNumber    String
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  registration   Registration @relation(fields: [registrationId], references: [id], onDelete: Cascade)
+
+  @@index([registrationId])
+  @@index([indexNumber])
+}
+
+model RegistrationException {
+  id           String     @id @default(uuid())
+  tournamentId String
+  tournament   Tournament @relation(fields: [tournamentId], references: [id])
+  teamName     String?
+  indexPrefix  String?
+  minPlayers   Int        @default(7)
+  notes        String?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@index([tournamentId])
 }
