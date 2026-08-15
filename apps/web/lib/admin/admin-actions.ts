@@ -231,6 +231,9 @@ export async function deleteTeamServerAction(teamId: string) {
   await requireAdminAuth();
   const entryPath = getAdminEntryPath();
 
+  await (prisma as any).tournamentSquad.deleteMany({
+    where: { teamId },
+  });
   await (prisma as any).teamPlayer.deleteMany({
     where: { teamId },
   });
@@ -244,7 +247,7 @@ export async function deleteTeamServerAction(teamId: string) {
 
   revalidatePath(`/${entryPath}/teams`);
   revalidatePath('/');
-  redirect(`/${entryPath}/teams`);
+  return { success: true, redirectUrl: `/${entryPath}/teams` };
 }
 
 export async function createAndAssignPlayerServerAction(teamId: string, formData: FormData) {
@@ -305,6 +308,9 @@ export async function deletePlayerServerAction(playerId: string) {
   await requireAdminAuth();
   const entryPath = getAdminEntryPath();
 
+  await (prisma as any).tournamentSquad.deleteMany({
+    where: { playerId },
+  });
   await (prisma as any).teamPlayer.deleteMany({
     where: { playerId },
   });
@@ -315,7 +321,7 @@ export async function deletePlayerServerAction(playerId: string) {
 
   revalidatePath(`/${entryPath}/players`);
   revalidatePath(`/${entryPath}/teams`);
-  redirect(`/${entryPath}/players`);
+  return { success: true, redirectUrl: `/${entryPath}/players` };
 }
 
 export async function updateTournamentServerAction(tournamentId: string, formData: FormData) {
