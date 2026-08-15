@@ -259,6 +259,45 @@ export async function createAndAssignPlayerServerAction(teamId: string, formData
   return { success: true, playerId: player.id };
 }
 
+export async function updatePlayerServerAction(playerId: string, formData: FormData) {
+  await requireAdminAuth();
+  const entryPath = getAdminEntryPath();
+
+  const name = formData.get('name') as string;
+  const indexNumber = (formData.get('indexNumber') as string) || null;
+  const profileImageUrl = (formData.get('profileImageUrl') as string) || null;
+
+  await (prisma as any).player.update({
+    where: { id: playerId },
+    data: {
+      name: name ? name.trim() : undefined,
+      indexNumber: indexNumber ? indexNumber.trim().toUpperCase() : null,
+      profileImageUrl: profileImageUrl ? profileImageUrl.trim() : null,
+    },
+  });
+
+  revalidatePath(`/${entryPath}/players/${playerId}`);
+  revalidatePath(`/${entryPath}/players`);
+  revalidatePath(`/${entryPath}/teams`);
+}
+
+export async function deletePlayerServerAction(playerId: string) {
+  await requireAdminAuth();
+  const entryPath = getAdminEntryPath();
+
+  await (prisma as any).teamPlayer.deleteMany({
+    where: { playerId },
+  });
+
+  await (prisma as any).player.delete({
+    where: { id: playerId },
+  });
+
+  revalidatePath(`/${entryPath}/players`);
+  revalidatePath(`/${entryPath}/teams`);
+  redirect(`/${entryPath}/players`);
+}
+
 export async function updateTournamentServerAction(tournamentId: string, formData: FormData) {
   await requireAdminAuth();
   const entryPath = getAdminEntryPath();

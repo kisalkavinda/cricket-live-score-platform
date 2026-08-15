@@ -6,6 +6,7 @@ import {
   addPlayerToTeamServerAction,
   removePlayerFromTeamServerAction,
   createAndAssignPlayerServerAction,
+  updateTeamServerAction,
 } from '@/lib/admin/admin-actions';
 
 export const dynamic = 'force-dynamic';
@@ -426,7 +427,12 @@ export default async function TeamDetailPage({
                               {tp.player.name?.charAt(0) || 'P'}
                             </div>
                           )}
-                          <div style={{ fontWeight: 700, color: '#FFFFFF' }}>{tp.player.name}</div>
+                          <Link
+                            href={`/${entryPath}/players/${tp.player.id}`}
+                            style={{ fontWeight: 700, color: '#FFFFFF', textDecoration: 'none', transition: 'color 0.15s ease' }}
+                          >
+                            {tp.player.name}
+                          </Link>
                         </div>
                       </td>
                       <td style={{ padding: '14px 18px', fontFamily: 'monospace', color: tp.player.indexNumber ? '#FBBF24' : '#64748B' }}>
