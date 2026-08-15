@@ -12,7 +12,6 @@ interface ConfirmationChecklistProps {
 }
 
 export default function ConfirmationChecklist({
-  register,
   setValue,
   watch,
   errors,
@@ -38,6 +37,34 @@ export default function ConfirmationChecklist({
     setValue('confirmIndexNumbers', val, { shouldValidate: true });
     setValue('confirmLeaderInfo', val, { shouldValidate: true });
   };
+
+  const agreementClauses = [
+    {
+      num: '01',
+      title: 'Roster & Identity Accuracy',
+      desc: 'All team names, player names, and contact credentials provided in this submission are 100% genuine, true, and accurate.',
+    },
+    {
+      num: '02',
+      title: 'University Student Enrollment',
+      desc: 'All registered playing members and substitutes are currently enrolled university students who meet all tournament eligibility rules.',
+    },
+    {
+      num: '03',
+      title: 'Index Number Authenticity',
+      desc: 'All university student index numbers belong to the respective students and will undergo official verification by the tournament organizing committee.',
+    },
+    {
+      num: '04',
+      title: 'Official Communications & WhatsApp',
+      desc: 'The team captain’s WhatsApp contact will be used for all official match schedules, toss calls, umpire notices, and tournament updates.',
+    },
+    {
+      num: '05',
+      title: 'Code of Conduct & Fair Play',
+      desc: 'All team members agree to uphold the spirit of cricket, respect umpire and match official decisions, and adhere to university code of conduct standards.',
+    },
+  ];
 
   return (
     <section
@@ -88,21 +115,21 @@ export default function ConfirmationChecklist({
             marginTop: '4px',
           }}
         >
-          Confirm your team eligibility and agree to tournament terms before reviewing your submission.
+          Confirm your squad eligibility to complete registration.
         </p>
       </div>
 
-      {/* Unified Single Checkbox Card */}
+      {/* Clean Single Declaration Card */}
       <div
         style={{
-          background: isChecked ? 'rgba(34, 197, 94, 0.08)' : 'rgba(0, 0, 0, 0.3)',
+          background: isChecked ? 'rgba(34, 197, 94, 0.06)' : 'rgba(0, 0, 0, 0.25)',
           border: isChecked
-            ? '1.5px solid rgba(34, 197, 94, 0.4)'
+            ? '1.5px solid rgba(34, 197, 94, 0.35)'
             : errors.confirmTermsAgreement
             ? '1.5px solid var(--color-accent)'
-            : '1.5px solid rgba(255, 255, 255, 0.15)',
+            : '1.5px solid rgba(255, 255, 255, 0.12)',
           borderRadius: 'var(--radius-md)',
-          padding: '20px',
+          padding: '18px 20px',
           transition: 'all 0.2s ease',
         }}
       >
@@ -113,67 +140,39 @@ export default function ConfirmationChecklist({
             checked={!!isChecked}
             onChange={handleCheckboxChange}
             style={{
-              width: '22px',
-              height: '22px',
-              marginTop: '2px',
+              width: '20px',
+              height: '20px',
+              marginTop: '3px',
               accentColor: '#C0272D',
               cursor: 'pointer',
               flexShrink: 0,
             }}
           />
 
-          <div style={{ flex: 1 }}>
-            <label
-              htmlFor="confirmTermsAgreement"
-              style={{
-                fontFamily: 'var(--font-body)',
-                fontSize: '0.95rem',
-                fontWeight: 700,
-                color: 'var(--color-paper)',
-                cursor: 'pointer',
-                lineHeight: 1.45,
-                display: 'block',
-              }}
-            >
-              I certify that all team members are eligible university students and I accept the Official Tournament Terms & Declaration.
+          <div style={{ flex: 1, fontSize: '0.92rem', lineHeight: 1.5, color: 'var(--color-paper)' }}>
+            <label htmlFor="confirmTermsAgreement" style={{ cursor: 'pointer', fontWeight: 600 }}>
+              I certify that all team members are eligible university students and I accept the{' '}
             </label>
-
-            <div
+            <button
+              type="button"
+              onClick={() => setModalOpen(true)}
               style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                flexWrap: 'wrap',
-                gap: '10px',
-                marginTop: '10px',
+                background: 'none',
+                border: 'none',
+                padding: 0,
+                color: '#FFB800',
+                fontWeight: 700,
+                cursor: 'pointer',
+                textDecoration: 'underline',
+                textUnderlineOffset: '3px',
+                fontSize: 'inherit',
+                fontFamily: 'inherit',
+                display: 'inline',
               }}
             >
-              <span style={{ fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.6)' }}>
-                Includes student index verification and WhatsApp fixture notice terms.
-              </span>
-
-              <button
-                type="button"
-                onClick={() => setModalOpen(true)}
-                style={{
-                  background: 'transparent',
-                  border: '1px solid rgba(255, 255, 255, 0.25)',
-                  color: '#FBBF24',
-                  fontSize: '0.8rem',
-                  fontWeight: 700,
-                  padding: '5px 12px',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  transition: 'all 0.15s ease',
-                }}
-              >
-                <span>📜</span>
-                <span>View Full Agreement & Rules ↗</span>
-              </button>
-            </div>
+              Tournament Rules & Eligibility Terms
+            </button>
+            <span>.</span>
           </div>
         </div>
 
@@ -183,8 +182,8 @@ export default function ConfirmationChecklist({
               color: 'var(--color-accent-bright)',
               fontSize: '0.8rem',
               fontWeight: 600,
-              marginTop: '10px',
-              paddingLeft: '36px',
+              marginTop: '8px',
+              paddingLeft: '34px',
             }}
           >
             {errors.confirmTermsAgreement.message as string}
@@ -192,34 +191,37 @@ export default function ConfirmationChecklist({
         )}
       </div>
 
-      {/* Modal Dialog for Agreement Clauses */}
+      {/* Clean Modal Dialog for Agreement Terms (No Scrollbar) */}
       {modalOpen && (
         <div
           style={{
             position: 'fixed',
             inset: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.8)',
-            backdropFilter: 'blur(8px)',
-            WebkitBackdropFilter: 'blur(8px)',
+            backgroundColor: 'rgba(0, 0, 0, 0.75)',
+            backdropFilter: 'blur(10px)',
+            WebkitBackdropFilter: 'blur(10px)',
             zIndex: 1000,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            padding: '20px',
+            padding: '16px',
           }}
           onClick={() => setModalOpen(false)}
         >
           <div
+            className="no-scrollbar"
             style={{
-              backgroundColor: '#10141E',
-              border: '1.5px solid #1E2638',
+              backgroundColor: '#0D111A',
+              border: '1px solid #1E283C',
               borderRadius: '16px',
-              maxWidth: '620px',
+              maxWidth: '560px',
               width: '100%',
-              maxHeight: '88vh',
+              maxHeight: '90vh',
               overflowY: 'auto',
-              padding: '28px',
-              boxShadow: '0 25px 60px rgba(0, 0, 0, 0.8)',
+              scrollbarWidth: 'none',
+              msOverflowStyle: 'none',
+              padding: '24px 28px',
+              boxShadow: '0 25px 60px rgba(0, 0, 0, 0.85)',
               color: '#FFFFFF',
             }}
             onClick={(e) => e.stopPropagation()}
@@ -231,8 +233,8 @@ export default function ConfirmationChecklist({
                 alignItems: 'center',
                 justifyContent: 'space-between',
                 paddingBottom: '16px',
-                borderBottom: '1px solid #1E2638',
-                marginBottom: '20px',
+                borderBottom: '1px solid #1A2336',
+                marginBottom: '18px',
               }}
             >
               <div>
@@ -240,34 +242,35 @@ export default function ConfirmationChecklist({
                   style={{
                     fontSize: '11px',
                     fontWeight: 800,
-                    letterSpacing: '0.1em',
+                    letterSpacing: '0.12em',
                     color: '#C0272D',
                     textTransform: 'uppercase',
                     fontFamily: 'monospace',
                   }}
                 >
-                  OFFICIAL TOURNAMENT AGREEMENT
+                  TOURNAMENT ELIGIBILITY AGREEMENT
                 </span>
-                <h3 style={{ fontSize: '18px', fontWeight: 800, margin: '4px 0 0', color: '#FFFFFF' }}>
-                  Declaration & Eligibility Terms
+                <h3 style={{ fontSize: '1.25rem', fontWeight: 800, margin: '2px 0 0', color: '#FFFFFF' }}>
+                  Official Terms & Declarations
                 </h3>
               </div>
 
               <button
                 type="button"
                 onClick={() => setModalOpen(false)}
+                aria-label="Close dialog"
                 style={{
-                  background: '#1E2638',
-                  border: '1px solid #2A364E',
+                  background: '#151C2C',
+                  border: '1px solid #23304A',
                   color: '#94A3B8',
                   width: '32px',
                   height: '32px',
-                  borderRadius: '50%',
+                  borderRadius: '8px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   cursor: 'pointer',
-                  fontSize: '14px',
+                  fontSize: '13px',
                 }}
               >
                 ✕
@@ -275,98 +278,91 @@ export default function ConfirmationChecklist({
             </div>
 
             {/* Clauses List */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', fontSize: '13px', lineHeight: 1.5, color: '#CBD5E1' }}>
-              <div style={{ backgroundColor: '#141A26', padding: '14px 16px', borderRadius: '8px', border: '1px solid #1E2638' }}>
-                <div style={{ fontWeight: 700, color: '#FFFFFF', marginBottom: '4px' }}>
-                  1. Roster & Identity Accuracy
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {agreementClauses.map((clause) => (
+                <div
+                  key={clause.num}
+                  style={{
+                    backgroundColor: '#121824',
+                    padding: '14px 16px',
+                    borderRadius: '10px',
+                    border: '1px solid #1A2336',
+                    display: 'flex',
+                    gap: '12px',
+                    alignItems: 'flex-start',
+                  }}
+                >
+                  <span
+                    style={{
+                      fontFamily: 'monospace',
+                      fontSize: '0.75rem',
+                      fontWeight: 800,
+                      color: '#C0272D',
+                      backgroundColor: 'rgba(192, 39, 45, 0.12)',
+                      padding: '2px 6px',
+                      borderRadius: '4px',
+                      flexShrink: 0,
+                    }}
+                  >
+                    {clause.num}
+                  </span>
+                  <div>
+                    <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#F1F5F9', marginBottom: '2px' }}>
+                      {clause.title}
+                    </div>
+                    <div style={{ fontSize: '0.82rem', color: '#94A3B8', lineHeight: 1.45 }}>
+                      {clause.desc}
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  I confirm that all team names, student names, and player designations provided in this submission are 100% true, genuine, and accurate.
-                </div>
-              </div>
-
-              <div style={{ backgroundColor: '#141A26', padding: '14px 16px', borderRadius: '8px', border: '1px solid #1E2638' }}>
-                <div style={{ fontWeight: 700, color: '#FFFFFF', marginBottom: '4px' }}>
-                  2. University Student Enrollment
-                </div>
-                <div>
-                  I certify that all listed players are currently enrolled university students and meet all official tournament eligibility and batch rules.
-                </div>
-              </div>
-
-              <div style={{ backgroundColor: '#141A26', padding: '14px 16px', borderRadius: '8px', border: '1px solid #1E2638' }}>
-                <div style={{ fontWeight: 700, color: '#FFFFFF', marginBottom: '4px' }}>
-                  3. Index Number Authenticity
-                </div>
-                <div>
-                  I confirm that all university index numbers belong to the respective students and will undergo official verification by the tournament committee.
-                </div>
-              </div>
-
-              <div style={{ backgroundColor: '#141A26', padding: '14px 16px', borderRadius: '8px', border: '1px solid #1E2638' }}>
-                <div style={{ fontWeight: 700, color: '#FFFFFF', marginBottom: '4px' }}>
-                  4. Official Communications & WhatsApp
-                </div>
-                <div>
-                  I confirm that the captain’s WhatsApp number is valid for receiving match fixtures, toss timings, and official disciplinary notices.
-                </div>
-              </div>
-
-              <div style={{ backgroundColor: '#141A26', padding: '14px 16px', borderRadius: '8px', border: '1px solid #1E2638' }}>
-                <div style={{ fontWeight: 700, color: '#FFFFFF', marginBottom: '4px' }}>
-                  5. Spirit of Cricket & Code of Conduct
-                </div>
-                <div>
-                  All players agree to abide by umpire decisions, tournament committee regulations, and the spirit of the game.
-                </div>
-              </div>
+              ))}
             </div>
 
-            {/* Modal Bottom Action */}
+            {/* Modal Bottom Actions */}
             <div
               style={{
-                marginTop: '24px',
+                marginTop: '20px',
                 paddingTop: '16px',
-                borderTop: '1px solid #1E2638',
+                borderTop: '1px solid #1A2336',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'flex-end',
-                gap: '12px',
+                gap: '10px',
               }}
             >
               <button
                 type="button"
                 onClick={() => setModalOpen(false)}
                 style={{
-                  padding: '10px 18px',
+                  padding: '9px 16px',
                   borderRadius: '8px',
-                  backgroundColor: '#1E2638',
-                  border: '1px solid #2A364E',
-                  color: '#CBD5E1',
-                  fontSize: '13px',
+                  backgroundColor: 'transparent',
+                  border: '1px solid #23304A',
+                  color: '#94A3B8',
+                  fontSize: '0.85rem',
                   fontWeight: 600,
                   cursor: 'pointer',
                 }}
               >
-                Close
+                Cancel
               </button>
 
               <button
                 type="button"
                 onClick={handleAgreeAndClose}
                 style={{
-                  padding: '10px 22px',
+                  padding: '9px 20px',
                   borderRadius: '8px',
                   backgroundColor: '#C0272D',
                   border: '1px solid #D32F35',
                   color: '#FFFFFF',
-                  fontSize: '13px',
+                  fontSize: '0.85rem',
                   fontWeight: 700,
                   cursor: 'pointer',
                   boxShadow: '0 2px 10px rgba(192, 39, 45, 0.3)',
                 }}
               >
-                ✓ I Understand & Accept Agreement
+                Accept & Confirm
               </button>
             </div>
           </div>

@@ -241,6 +241,17 @@ h1, h2, h3, h4, h5, h6,
   border-radius: 9999px;
 }
 
+/* Hide scrollbar utility */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+
 /* Reduced Motion (Gate 27) */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
