@@ -42,225 +42,402 @@ export default function RegistrationSuccess({
 
   const players = receipt?.players || [];
   const leaderIndex = receipt?.leaderIndexNumber?.trim().toUpperCase() || '';
+  const formattedDate = receipt?.createdAt
+    ? new Date(receipt.createdAt).toLocaleString('en-US', {
+        dateStyle: 'medium',
+        timeStyle: 'short',
+      })
+    : new Date().toLocaleDateString();
 
   return (
-    <div style={{ width: '100%', maxWidth: '760px', margin: '0 auto' }}>
-      {/* Print-specific style sheet for high quality PDF / Print export */}
+    <div style={{ width: '100%', maxWidth: '780px', margin: '0 auto' }}>
+      {/* Print-specific Stylesheet for Official University Tournament Document */}
       <style>{`
         @media print {
+          @page {
+            size: A4 portrait;
+            margin: 12mm 15mm;
+          }
           body * {
             visibility: hidden;
           }
-          #official-registration-slip, #official-registration-slip * {
+          #hallmark-registration-pass, #hallmark-registration-pass * {
             visibility: visible;
           }
-          #official-registration-slip {
+          #hallmark-registration-pass {
             position: absolute;
             left: 0;
             top: 0;
-            width: 100%;
+            width: 100% !important;
+            max-width: 100% !important;
             background: #ffffff !important;
-            color: #000000 !important;
-            padding: 24px !important;
-            border: 2px solid #000000 !important;
+            color: #0f172a !important;
+            padding: 0 !important;
+            border: none !important;
             box-shadow: none !important;
+            border-radius: 0 !important;
           }
           .no-print {
             display: none !important;
           }
-          .print-black-text {
+          .print-only {
+            display: block !important;
+          }
+          .print-black {
             color: #000000 !important;
           }
-          .print-border {
-            border-color: #cccccc !important;
+          .print-muted {
+            color: #475569 !important;
           }
-          .print-bg {
-            background-color: #f8fafc !important;
+          .print-border {
+            border-color: #cbd5e1 !important;
+          }
+          .print-table {
+            border: 1.5px solid #000000 !important;
+          }
+          .print-table th {
+            background-color: #f1f5f9 !important;
+            color: #000000 !important;
+            border-bottom: 1.5px solid #000000 !important;
+          }
+          .print-table td {
+            border-bottom: 1px solid #cbd5e1 !important;
+            color: #000000 !important;
           }
         }
       `}</style>
 
+      {/* Hallmark Ticket / Entry Pass Container */}
       <div
-        id="official-registration-slip"
+        id="hallmark-registration-pass"
         style={{
-          background: 'rgba(17, 22, 34, 0.95)',
-          border: '1.5px solid rgba(255, 255, 255, 0.12)',
-          borderRadius: '16px',
-          padding: '36px 32px',
-          boxShadow: '0 25px 60px rgba(0, 0, 0, 0.6)',
-          textAlign: 'center',
+          background: 'rgba(255, 255, 255, 0.03)',
+          border: '1.5px solid rgba(255, 255, 255, 0.15)',
+          borderRadius: 'var(--radius-lg)',
+          padding: 'var(--space-2xl) var(--space-xl)',
+          boxShadow: '0 25px 60px rgba(0, 0, 0, 0.5)',
+          color: 'var(--color-paper)',
+          position: 'relative',
+          overflow: 'hidden',
         }}
       >
-        {/* Success Icon */}
+        {/* PRINT ONLY: Official University / Tournament Letterhead Header */}
         <div
-          className="no-print"
+          className="print-only"
           style={{
-            width: '64px',
-            height: '64px',
-            borderRadius: '50%',
-            backgroundColor: 'rgba(34, 197, 94, 0.15)',
-            border: '2px solid #22c55e',
-            color: '#22c55e',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '1.8rem',
-            fontWeight: 800,
-            margin: '0 auto 16px',
-            boxShadow: '0 0 24px rgba(34, 197, 94, 0.2)',
+            display: 'none',
+            borderBottom: '2px solid #000000',
+            paddingBottom: '14px',
+            marginBottom: '18px',
           }}
         >
-          ✓
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <div>
+              <div style={{ fontSize: '20px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.04em', color: '#000' }}>
+                🏏 {tournamentName}
+              </div>
+              <div style={{ fontSize: '11px', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.1em', color: '#475569' }}>
+                Official Squad Registration Credential & Entry Pass
+              </div>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ fontFamily: 'monospace', fontSize: '14px', fontWeight: 900, color: '#000' }}>
+                {registrationCode}
+              </div>
+              <div style={{ fontSize: '10px', color: '#64748B', fontFamily: 'monospace' }}>
+                Issued: {formattedDate}
+              </div>
+            </div>
+          </div>
         </div>
 
-        <span
-          style={{
-            fontSize: '12px',
-            fontWeight: 800,
-            letterSpacing: '0.12em',
-            textTransform: 'uppercase',
-            color: '#22c55e',
-            display: 'block',
-            marginBottom: '6px',
-            fontFamily: 'monospace',
-          }}
-        >
-          Official Team Registration Confirmation
-        </span>
-
-        <h1
-          className="print-black-text"
-          style={{
-            fontSize: '28px',
-            fontWeight: 900,
-            color: '#FFFFFF',
-            margin: '0 0 8px',
-            letterSpacing: '-0.01em',
-          }}
-        >
-          {receipt?.teamName ? receipt.teamName : 'Team Registration Submitted'}
-        </h1>
-
-        <p
-          className="print-black-text"
-          style={{
-            fontSize: '14px',
-            color: '#94A3B8',
-            lineHeight: 1.5,
-            margin: '0 0 24px',
-          }}
-        >
-          Participating in <strong>{tournamentName}</strong>
-        </p>
-
-        {/* Official Reference Box */}
+        {/* Subtle Radial Glow (Web Only) */}
         <div
-          className="print-bg print-border"
+          aria-hidden="true"
+          className="no-print"
           style={{
-            padding: '20px',
-            borderRadius: '12px',
-            backgroundColor: '#0D111A',
-            border: '1.5px dashed rgba(245, 158, 11, 0.4)',
-            marginBottom: '28px',
+            position: 'absolute',
+            top: '-50px',
+            right: '-50px',
+            width: '300px',
+            height: '300px',
+            borderRadius: '50%',
+            background: 'radial-gradient(circle, rgba(192, 39, 45, 0.2) 0%, transparent 70%)',
+            pointerEvents: 'none',
+          }}
+        />
+
+        {/* Header Badge */}
+        <div style={{ textAlign: 'center', marginBottom: 'var(--space-xl)' }}>
+          <div
+            className="no-print"
+            style={{
+              width: '56px',
+              height: '56px',
+              borderRadius: '50%',
+              backgroundColor: 'rgba(192, 39, 45, 0.15)',
+              border: '2px solid var(--color-accent)',
+              color: 'var(--color-accent-bright)',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '1.6rem',
+              fontWeight: 900,
+              marginBottom: 'var(--space-sm)',
+              boxShadow: '0 0 20px rgba(192, 39, 45, 0.3)',
+            }}
+          >
+            ✓
+          </div>
+
+          <span
+            style={{
+              fontFamily: 'var(--font-body)',
+              fontSize: '0.75rem',
+              fontWeight: 700,
+              letterSpacing: '0.14em',
+              textTransform: 'uppercase',
+              color: 'var(--color-accent-bright)',
+              display: 'block',
+              marginBottom: '6px',
+            }}
+          >
+            Official Entry Receipt
+          </span>
+
+          <h1
+            className="print-black"
+            style={{
+              fontFamily: 'var(--font-display)',
+              fontSize: 'clamp(2.2rem, 5vw, 3.2rem)',
+              fontWeight: 900,
+              textTransform: 'uppercase',
+              lineHeight: 1,
+              letterSpacing: '0.02em',
+              color: 'var(--color-paper)',
+              margin: '0 0 8px',
+            }}
+          >
+            {receipt?.teamName || 'Registration Confirmed'}
+          </h1>
+
+          <p
+            className="print-muted"
+            style={{
+              fontFamily: 'var(--font-body)',
+              fontSize: '0.95rem',
+              color: 'rgba(255, 255, 255, 0.7)',
+              margin: 0,
+            }}
+          >
+            Official Team Entry Pass for <strong>{tournamentName}</strong>
+          </p>
+        </div>
+
+        {/* Hallmark Reference Code Ticket Box */}
+        <div
+          className="print-border"
+          style={{
+            background: 'rgba(0, 0, 0, 0.4)',
+            border: '1.5px dashed var(--color-accent)',
+            borderRadius: 'var(--radius-md)',
+            padding: 'var(--space-lg)',
+            marginBottom: 'var(--space-xl)',
+            textAlign: 'center',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
-            gap: '6px',
+            gap: '8px',
           }}
         >
           <span
+            className="print-muted"
             style={{
-              fontSize: '11px',
-              fontWeight: 800,
-              letterSpacing: '0.1em',
+              fontFamily: 'var(--font-body)',
+              fontSize: '0.72rem',
+              fontWeight: 700,
+              letterSpacing: '0.14em',
               textTransform: 'uppercase',
-              color: '#94A3B8',
-              fontFamily: 'monospace',
+              color: 'rgba(255, 255, 255, 0.6)',
             }}
           >
             Official Reference Number
           </span>
+
           <div
+            className="print-black"
             style={{
-              fontSize: '32px',
+              fontFamily: 'var(--font-data)',
+              fontSize: 'clamp(1.8rem, 4vw, 2.6rem)',
               fontWeight: 900,
-              color: '#FBBF24',
-              fontFamily: 'monospace',
+              color: 'var(--color-paper)',
               letterSpacing: '0.08em',
+              textShadow: '0 2px 10px rgba(0, 0, 0, 0.5)',
             }}
           >
             {registrationCode}
           </div>
-          <span
+
+          <div
             style={{
               display: 'inline-flex',
               alignItems: 'center',
               gap: '6px',
-              fontSize: '11px',
-              padding: '3px 10px',
+              padding: '4px 12px',
               borderRadius: '9999px',
-              backgroundColor: 'rgba(245, 158, 11, 0.15)',
-              border: '1px solid rgba(245, 158, 11, 0.3)',
-              color: '#FCD34D',
+              background: 'rgba(192, 39, 45, 0.2)',
+              border: '1px solid var(--color-accent)',
+              color: 'var(--color-paper)',
+              fontFamily: 'var(--font-body)',
+              fontSize: '0.75rem',
               fontWeight: 700,
-              fontFamily: 'monospace',
+              letterSpacing: '0.04em',
+              textTransform: 'uppercase',
             }}
           >
-            ● Status: Pending Verification
-          </span>
+            <span
+              style={{
+                width: '6px',
+                height: '6px',
+                borderRadius: '50%',
+                background: 'var(--color-accent-bright)',
+              }}
+              className="animate-pulse-dot"
+            />
+            Status: Pending Committee Verification
+          </div>
         </div>
 
-        {/* Team & Captain Summary */}
+        {/* Team Metadata Grid */}
         {receipt && (
           <div
-            className="print-bg print-border"
+            className="print-border"
             style={{
-              textAlign: 'left',
-              backgroundColor: '#141A26',
-              border: '1px solid #1E2638',
-              borderRadius: '10px',
-              padding: '16px 20px',
-              marginBottom: '24px',
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-              gap: '12px',
-              fontSize: '13px',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+              gap: 'var(--space-md)',
+              background: 'rgba(255, 255, 255, 0.02)',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+              borderRadius: 'var(--radius-md)',
+              padding: 'var(--space-md) var(--space-lg)',
+              marginBottom: 'var(--space-xl)',
             }}
           >
             <div>
-              <span style={{ color: '#8B9BB4', fontSize: '11px', display: 'block', textTransform: 'uppercase', fontWeight: 700, fontFamily: 'monospace' }}>
+              <span
+                className="print-muted"
+                style={{
+                  fontFamily: 'var(--font-body)',
+                  fontSize: '0.7rem',
+                  fontWeight: 700,
+                  letterSpacing: '0.12em',
+                  textTransform: 'uppercase',
+                  color: 'rgba(255, 255, 255, 0.5)',
+                  display: 'block',
+                  marginBottom: '2px',
+                }}
+              >
                 Team Name
               </span>
-              <strong className="print-black-text" style={{ color: '#FFFFFF', fontSize: '14px' }}>
+              <strong
+                className="print-black"
+                style={{
+                  fontFamily: 'var(--font-display)',
+                  fontSize: '1.2rem',
+                  fontWeight: 800,
+                  textTransform: 'uppercase',
+                  color: 'var(--color-paper)',
+                }}
+              >
                 {receipt.teamName}
               </strong>
             </div>
 
             <div>
-              <span style={{ color: '#8B9BB4', fontSize: '11px', display: 'block', textTransform: 'uppercase', fontWeight: 700, fontFamily: 'monospace' }}>
-                Captain / Leader
+              <span
+                className="print-muted"
+                style={{
+                  fontFamily: 'var(--font-body)',
+                  fontSize: '0.7rem',
+                  fontWeight: 700,
+                  letterSpacing: '0.12em',
+                  textTransform: 'uppercase',
+                  color: 'rgba(255, 255, 255, 0.5)',
+                  display: 'block',
+                  marginBottom: '2px',
+                }}
+              >
+                Team Captain
               </span>
-              <strong className="print-black-text" style={{ color: '#FFFFFF', fontSize: '14px' }}>
+              <strong
+                className="print-black"
+                style={{
+                  fontFamily: 'var(--font-body)',
+                  fontSize: '0.95rem',
+                  fontWeight: 700,
+                  color: 'var(--color-paper)',
+                }}
+              >
                 {receipt.leaderName}
               </strong>
             </div>
 
             <div>
-              <span style={{ color: '#8B9BB4', fontSize: '11px', display: 'block', textTransform: 'uppercase', fontWeight: 700, fontFamily: 'monospace' }}>
+              <span
+                className="print-muted"
+                style={{
+                  fontFamily: 'var(--font-body)',
+                  fontSize: '0.7rem',
+                  fontWeight: 700,
+                  letterSpacing: '0.12em',
+                  textTransform: 'uppercase',
+                  color: 'rgba(255, 255, 255, 0.5)',
+                  display: 'block',
+                  marginBottom: '2px',
+                }}
+              >
                 Captain Index
               </span>
-              <strong style={{ color: '#C0272D', fontFamily: 'monospace', fontSize: '13px' }}>
+              <strong
+                className="print-black"
+                style={{
+                  fontFamily: 'var(--font-data)',
+                  fontSize: '0.95rem',
+                  fontWeight: 700,
+                  color: 'var(--color-accent-bright)',
+                }}
+              >
                 {receipt.leaderIndexNumber}
               </strong>
             </div>
 
             <div>
-              <span style={{ color: '#8B9BB4', fontSize: '11px', display: 'block', textTransform: 'uppercase', fontWeight: 700, fontFamily: 'monospace' }}>
-                Registered Squad
+              <span
+                className="print-muted"
+                style={{
+                  fontFamily: 'var(--font-body)',
+                  fontSize: '0.7rem',
+                  fontWeight: 700,
+                  letterSpacing: '0.12em',
+                  textTransform: 'uppercase',
+                  color: 'rgba(255, 255, 255, 0.5)',
+                  display: 'block',
+                  marginBottom: '2px',
+                }}
+              >
+                Squad Size
               </span>
-              <strong className="print-black-text" style={{ color: '#FFFFFF', fontFamily: 'monospace', fontSize: '13px' }}>
-                {players.length} Members
+              <strong
+                className="print-black"
+                style={{
+                  fontFamily: 'var(--font-data)',
+                  fontSize: '0.95rem',
+                  fontWeight: 700,
+                  color: 'var(--color-paper)',
+                }}
+              >
+                {players.length} Players
               </strong>
             </div>
           </div>
@@ -269,84 +446,105 @@ export default function RegistrationSuccess({
         {/* Complete Registered Team Members Table */}
         {players.length > 0 && (
           <div
+            className="print-border"
             style={{
-              textAlign: 'left',
-              backgroundColor: '#141A26',
-              border: '1px solid #1E2638',
-              borderRadius: '10px',
+              background: 'rgba(255, 255, 255, 0.02)',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+              borderRadius: 'var(--radius-md)',
               overflow: 'hidden',
-              marginBottom: '28px',
+              marginBottom: 'var(--space-xl)',
             }}
           >
             <div
+              className="print-border"
               style={{
-                padding: '12px 18px',
-                borderBottom: '1px solid #1E2638',
-                backgroundColor: '#10141E',
+                padding: 'var(--space-sm) var(--space-md)',
+                background: 'rgba(0, 0, 0, 0.2)',
+                borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
               }}
             >
-              <h3 className="print-black-text" style={{ fontSize: '13px', fontWeight: 800, color: '#FFFFFF', margin: 0, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                Official Registered Team Members ({players.length})
+              <h3
+                className="print-black"
+                style={{
+                  fontFamily: 'var(--font-display)',
+                  fontSize: '1.1rem',
+                  fontWeight: 800,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.02em',
+                  color: 'var(--color-paper)',
+                  margin: 0,
+                }}
+              >
+                Official Squad Roster ({players.length})
               </h3>
             </div>
 
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', textAlign: 'left' }}>
+            <div className="table-responsive-container">
+              <table className="print-table" style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.88rem', textAlign: 'left', minWidth: '460px' }}>
                 <thead>
-                  <tr style={{ backgroundColor: '#10141E', borderBottom: '1px solid #1E2638' }}>
-                    <th style={{ padding: '10px 16px', color: '#8B9BB4', fontSize: '11px', fontWeight: 700, width: '45px' }}>#</th>
-                    <th style={{ padding: '10px 16px', color: '#8B9BB4', fontSize: '11px', fontWeight: 700 }}>Player Full Name</th>
-                    <th style={{ padding: '10px 16px', color: '#8B9BB4', fontSize: '11px', fontWeight: 700 }}>University Index Number</th>
-                    <th style={{ padding: '10px 16px', color: '#8B9BB4', fontSize: '11px', fontWeight: 700, textAlign: 'right' }}>Squad Role</th>
+                  <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.08)', background: 'rgba(0, 0, 0, 0.15)' }}>
+                    <th style={{ padding: '10px 16px', color: 'rgba(255, 255, 255, 0.5)', fontFamily: 'var(--font-data)', fontSize: '0.75rem', width: '45px' }}>#</th>
+                    <th style={{ padding: '10px 16px', color: 'rgba(255, 255, 255, 0.5)', fontFamily: 'var(--font-body)', fontSize: '0.75rem', textTransform: 'uppercase', fontWeight: 700 }}>Player Name</th>
+                    <th style={{ padding: '10px 16px', color: 'rgba(255, 255, 255, 0.5)', fontFamily: 'var(--font-body)', fontSize: '0.75rem', textTransform: 'uppercase', fontWeight: 700 }}>Index Number</th>
+                    <th style={{ padding: '10px 16px', color: 'rgba(255, 255, 255, 0.5)', fontFamily: 'var(--font-body)', fontSize: '0.75rem', textTransform: 'uppercase', fontWeight: 700, textAlign: 'right' }}>Role</th>
                   </tr>
                 </thead>
                 <tbody>
                   {players.map((p, idx) => {
                     const isCaptain = p.indexNumber?.trim().toUpperCase() === leaderIndex;
                     return (
-                      <tr key={p.id || idx} style={{ borderBottom: '1px solid #1A2130' }}>
-                        <td style={{ padding: '10px 16px', color: '#64748B', fontFamily: 'monospace' }}>
+                      <tr
+                        key={p.id || idx}
+                        style={{
+                          borderBottom: '1px solid rgba(255, 255, 255, 0.04)',
+                          background: idx % 2 === 0 ? 'transparent' : 'rgba(255, 255, 255, 0.015)',
+                        }}
+                      >
+                        <td className="print-black" style={{ padding: '10px 16px', color: 'rgba(255, 255, 255, 0.4)', fontFamily: 'var(--font-data)', fontSize: '0.8rem' }}>
                           {idx + 1}
                         </td>
-                        <td className="print-black-text" style={{ padding: '10px 16px', fontWeight: 700, color: '#FFFFFF' }}>
+                        <td className="print-black" style={{ padding: '10px 16px', fontWeight: 700, color: 'var(--color-paper)' }}>
                           {p.name}
                         </td>
-                        <td style={{ padding: '10px 16px', fontFamily: 'monospace', fontWeight: isCaptain ? 800 : 500, color: isCaptain ? '#C0272D' : '#CBD5E1' }}>
+                        <td className="print-black" style={{ padding: '10px 16px', fontFamily: 'var(--font-data)', color: isCaptain ? 'var(--color-accent-bright)' : 'rgba(255, 255, 255, 0.8)', fontWeight: isCaptain ? 800 : 500 }}>
                           {p.indexNumber}
                         </td>
                         <td style={{ padding: '10px 16px', textAlign: 'right' }}>
                           {isCaptain ? (
                             <span
+                              className="print-black"
                               style={{
                                 padding: '2px 8px',
-                                borderRadius: '4px',
-                                fontSize: '10px',
+                                borderRadius: 'var(--radius-pill)',
+                                fontSize: '0.7rem',
                                 fontWeight: 800,
-                                fontFamily: 'monospace',
-                                backgroundColor: 'rgba(192, 39, 45, 0.2)',
-                                color: '#F87171',
-                                border: '1px solid rgba(192, 39, 45, 0.4)',
+                                fontFamily: 'var(--font-body)',
+                                textTransform: 'uppercase',
+                                backgroundColor: 'rgba(192, 39, 45, 0.25)',
+                                color: 'var(--color-accent-bright)',
+                                border: '1px solid var(--color-accent)',
                               }}
                             >
-                              👑 CAPTAIN
+                              👑 Captain
                             </span>
                           ) : idx < 11 ? (
-                            <span style={{ fontSize: '11px', color: '#8B9BB4' }}>Playing 11</span>
+                            <span className="print-muted" style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.5)' }}>Playing XI</span>
                           ) : (
                             <span
+                              className="print-muted"
                               style={{
                                 padding: '2px 6px',
-                                borderRadius: '4px',
-                                fontSize: '10px',
-                                backgroundColor: '#1E2638',
-                                color: '#94A3B8',
-                                fontFamily: 'monospace',
+                                borderRadius: 'var(--radius-sm)',
+                                fontSize: '0.7rem',
+                                backgroundColor: 'rgba(255, 255, 255, 0.06)',
+                                color: 'rgba(255, 255, 255, 0.6)',
+                                fontFamily: 'var(--font-data)',
                               }}
                             >
-                              SUB #{idx - 10}
+                              Sub #{idx - 10}
                             </span>
                           )}
                         </td>
@@ -359,51 +557,77 @@ export default function RegistrationSuccess({
           </div>
         )}
 
-        {/* Important Next Steps */}
+        {/* Important Next Steps Box */}
         <div
-          className="print-bg print-border"
+          className="print-border"
           style={{
+            background: 'rgba(0, 0, 0, 0.3)',
+            border: '1px solid rgba(255, 255, 255, 0.08)',
+            borderRadius: 'var(--radius-md)',
+            padding: 'var(--space-md) var(--space-lg)',
+            marginBottom: 'var(--space-xl)',
             textAlign: 'left',
-            backgroundColor: '#141A26',
-            border: '1px solid #1E2638',
-            borderRadius: '10px',
-            padding: '16px 20px',
-            marginBottom: '28px',
           }}
         >
-          <h4
-            className="print-black-text"
+          <span
+            className="print-black"
             style={{
-              fontSize: '13px',
-              fontWeight: 800,
-              color: '#FFFFFF',
-              margin: '0 0 8px',
+              fontFamily: 'var(--font-body)',
+              fontSize: '0.72rem',
+              fontWeight: 700,
+              letterSpacing: '0.12em',
               textTransform: 'uppercase',
-              letterSpacing: '0.04em',
+              color: 'var(--color-accent-bright)',
+              display: 'block',
+              marginBottom: '6px',
             }}
           >
             Important Instructions
-          </h4>
+          </span>
           <ul
-            className="print-black-text"
+            className="print-muted"
             style={{
               paddingLeft: '18px',
-              fontSize: '13px',
-              color: '#8B9BB4',
+              fontSize: '0.85rem',
+              color: 'rgba(255, 255, 255, 0.7)',
               display: 'flex',
               flexDirection: 'column',
-              gap: '6px',
+              gap: '4px',
               margin: 0,
-              lineHeight: 1.4,
+              lineHeight: 1.5,
             }}
           >
-            <li>Save this document or take a screenshot of your registration reference code.</li>
+            <li>Save this receipt or click <strong>Print / Save as PDF</strong> for your team records.</li>
             <li>The tournament organizing committee will verify all student university index numbers.</li>
-            <li>Once verified and approved, your team captain will be contacted via WhatsApp.</li>
+            <li>Your team captain will receive match fixture schedules and pitch allocations via WhatsApp.</li>
           </ul>
         </div>
 
-        {/* Action Buttons (High Contrast & Visible) */}
+        {/* PRINT ONLY: Official Verification & Signature Box */}
+        <div
+          className="print-only"
+          style={{
+            display: 'none',
+            marginTop: '28px',
+            paddingTop: '20px',
+            borderTop: '1.5px solid #000000',
+          }}
+        >
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px', fontSize: '11px', color: '#000' }}>
+            <div>
+              <div style={{ fontWeight: 700, marginBottom: '35px' }}>Team Captain Acknowledgment:</div>
+              <div style={{ borderBottom: '1px solid #000', marginBottom: '4px' }} />
+              <div style={{ color: '#475569' }}>Signature & Date</div>
+            </div>
+            <div>
+              <div style={{ fontWeight: 700, marginBottom: '35px' }}>Tournament Organizing Committee Seal:</div>
+              <div style={{ borderBottom: '1px solid #000', marginBottom: '4px' }} />
+              <div style={{ color: '#475569' }}>Authorized Signature & Official Stamp</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Hallmark Action Buttons (Web Only) */}
         <div
           className="no-print"
           style={{
@@ -411,53 +635,35 @@ export default function RegistrationSuccess({
             alignItems: 'center',
             justifyContent: 'center',
             flexWrap: 'wrap',
-            gap: '14px',
+            gap: 'var(--space-md)',
           }}
         >
           <button
             type="button"
             onClick={handlePrint}
+            className="btn-hallmark-outline"
             style={{
               height: '46px',
               padding: '0 24px',
-              borderRadius: '8px',
-              backgroundColor: '#1E2638',
-              border: '1.5px solid #3B4B68',
-              color: '#FFFFFF',
-              fontSize: '13px',
-              fontWeight: 800,
-              cursor: 'pointer',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '8px',
-              boxShadow: '0 2px 10px rgba(0,0,0,0.3)',
-              transition: 'all 0.15s ease',
+              color: 'var(--color-paper)',
+              borderColor: 'rgba(255, 255, 255, 0.3)',
+              fontSize: '0.95rem',
             }}
           >
-            <span style={{ fontSize: '16px' }}>🖨️</span>
-            <span>PRINT / SAVE AS PDF</span>
+            <span>🖨️</span>
+            <span>Print / Save as PDF</span>
           </button>
 
           <Link
             href="/"
+            className="btn-hallmark-primary"
             style={{
               height: '46px',
-              padding: '0 26px',
-              borderRadius: '8px',
-              backgroundColor: '#C0272D',
-              border: '1.5px solid #D32F35',
-              color: '#FFFFFF',
-              fontSize: '13px',
-              fontWeight: 800,
-              textDecoration: 'none',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px',
-              boxShadow: '0 2px 12px rgba(192, 39, 45, 0.4)',
-              transition: 'all 0.15s ease',
+              padding: '0 28px',
+              fontSize: '0.95rem',
             }}
           >
-            <span>RETURN TO TOURNAMENT HOME →</span>
+            <span>Return to Tournament Home →</span>
           </Link>
         </div>
       </div>
