@@ -205,13 +205,12 @@ export default function RegistrationSummary({
             background: 'rgba(0, 0, 0, 0.3)',
           }}
         >
-          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '480px' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '400px' }}>
             <thead>
               <tr style={{ background: 'rgba(255, 255, 255, 0.05)', borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
                 <th style={{ padding: '12px 16px', fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--color-ink-subtle)', width: '50px' }}>#</th>
-                <th style={{ padding: '12px 16px', fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--color-ink-subtle)', width: '140px' }}>Role / Slot</th>
                 <th style={{ padding: '12px 16px', fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--color-ink-subtle)' }}>Player Full Name</th>
-                <th style={{ padding: '12px 16px', fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--color-ink-subtle)', width: '180px' }}>University Index No.</th>
+                <th style={{ padding: '12px 16px', fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--color-ink-subtle)', width: '200px', textAlign: 'right' }}>University Index No.</th>
               </tr>
             </thead>
             <tbody>
@@ -220,23 +219,15 @@ export default function RegistrationSummary({
                   key={index}
                   style={{
                     borderBottom: index === data.players.length - 1 ? 'none' : '1px solid rgba(255, 255, 255, 0.05)',
-                    background: index >= 11 ? 'rgba(192, 39, 45, 0.05)' : 'transparent',
                   }}
                 >
                   <td style={{ padding: '12px 16px', fontFamily: 'var(--font-data)', fontSize: '0.85rem', color: 'rgba(255, 255, 255, 0.5)' }}>
                     {index + 1}
                   </td>
-                  <td style={{ padding: '12px 16px', fontFamily: 'var(--font-body)', fontSize: '0.78rem', fontWeight: 700, color: index === 0 ? 'var(--color-accent-bright)' : index >= 11 ? 'rgba(255, 255, 255, 0.6)' : 'var(--color-paper)' }}>
-                    {index === 0
-                      ? 'Captain / XI'
-                      : index < 11
-                      ? 'Playing XI'
-                      : `Substitute ${index - 10}`}
-                  </td>
                   <td style={{ padding: '12px 16px', fontFamily: 'var(--font-body)', fontSize: '0.9rem', fontWeight: 600, color: 'var(--color-paper)' }}>
-                    {player.name}
+                    {player.name} {index === 0 ? <span style={{ color: 'var(--color-accent-bright)', fontSize: '0.75rem', fontWeight: 800, marginLeft: '6px' }}>(Captain)</span> : ''}
                   </td>
-                  <td style={{ padding: '12px 16px', fontFamily: 'var(--font-data)', fontSize: '0.9rem', color: 'var(--color-accent-bright)', fontWeight: 700 }}>
+                  <td style={{ padding: '12px 16px', fontFamily: 'var(--font-data)', fontSize: '0.9rem', color: 'var(--color-accent-bright)', fontWeight: 700, textAlign: 'right' }}>
                     {player.indexNumber.toUpperCase().replace(/\s+/g, '')}
                   </td>
                 </tr>

@@ -483,13 +483,12 @@ export default function RegistrationSuccess({
             </div>
 
             <div className="table-responsive-container">
-              <table className="print-table" style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.88rem', textAlign: 'left', minWidth: '460px' }}>
+              <table className="print-table" style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.88rem', textAlign: 'left', minWidth: '400px' }}>
                 <thead>
                   <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.08)', background: 'rgba(0, 0, 0, 0.15)' }}>
-                    <th style={{ padding: '10px 16px', color: 'rgba(255, 255, 255, 0.5)', fontFamily: 'var(--font-data)', fontSize: '0.75rem', width: '45px' }}>#</th>
-                    <th style={{ padding: '10px 16px', color: 'rgba(255, 255, 255, 0.5)', fontFamily: 'var(--font-body)', fontSize: '0.75rem', textTransform: 'uppercase', fontWeight: 700 }}>Player Name</th>
-                    <th style={{ padding: '10px 16px', color: 'rgba(255, 255, 255, 0.5)', fontFamily: 'var(--font-body)', fontSize: '0.75rem', textTransform: 'uppercase', fontWeight: 700 }}>Index Number</th>
-                    <th style={{ padding: '10px 16px', color: 'rgba(255, 255, 255, 0.5)', fontFamily: 'var(--font-body)', fontSize: '0.75rem', textTransform: 'uppercase', fontWeight: 700, textAlign: 'right' }}>Role</th>
+                    <th style={{ padding: '10px 16px', color: 'rgba(255, 255, 255, 0.5)', fontFamily: 'var(--font-data)', fontSize: '0.75rem', width: '50px' }}>#</th>
+                    <th style={{ padding: '10px 16px', color: 'rgba(255, 255, 255, 0.5)', fontFamily: 'var(--font-body)', fontSize: '0.75rem', textTransform: 'uppercase', fontWeight: 700 }}>Player Full Name</th>
+                    <th style={{ padding: '10px 16px', color: 'rgba(255, 255, 255, 0.5)', fontFamily: 'var(--font-body)', fontSize: '0.75rem', textTransform: 'uppercase', fontWeight: 700, textAlign: 'right' }}>University Index Number</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -507,46 +506,10 @@ export default function RegistrationSuccess({
                           {idx + 1}
                         </td>
                         <td className="print-black" style={{ padding: '10px 16px', fontWeight: 700, color: 'var(--color-paper)' }}>
-                          {p.name}
+                          {p.name} {isCaptain ? <span style={{ color: 'var(--color-accent-bright)', fontSize: '0.75rem', fontWeight: 800, marginLeft: '6px' }}>(Captain)</span> : ''}
                         </td>
-                        <td className="print-black" style={{ padding: '10px 16px', fontFamily: 'var(--font-data)', color: isCaptain ? 'var(--color-accent-bright)' : 'rgba(255, 255, 255, 0.8)', fontWeight: isCaptain ? 800 : 500 }}>
+                        <td className="print-black" style={{ padding: '10px 16px', fontFamily: 'var(--font-data)', color: isCaptain ? 'var(--color-accent-bright)' : 'rgba(255, 255, 255, 0.8)', fontWeight: isCaptain ? 800 : 500, textAlign: 'right' }}>
                           {p.indexNumber}
-                        </td>
-                        <td style={{ padding: '10px 16px', textAlign: 'right' }}>
-                          {isCaptain ? (
-                            <span
-                              className="print-black"
-                              style={{
-                                padding: '2px 8px',
-                                borderRadius: 'var(--radius-pill)',
-                                fontSize: '0.7rem',
-                                fontWeight: 800,
-                                fontFamily: 'var(--font-body)',
-                                textTransform: 'uppercase',
-                                backgroundColor: 'rgba(192, 39, 45, 0.25)',
-                                color: 'var(--color-accent-bright)',
-                                border: '1px solid var(--color-accent)',
-                              }}
-                            >
-                              👑 Captain
-                            </span>
-                          ) : idx < 11 ? (
-                            <span className="print-muted" style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.5)' }}>Playing XI</span>
-                          ) : (
-                            <span
-                              className="print-muted"
-                              style={{
-                                padding: '2px 6px',
-                                borderRadius: 'var(--radius-sm)',
-                                fontSize: '0.7rem',
-                                backgroundColor: 'rgba(255, 255, 255, 0.06)',
-                                color: 'rgba(255, 255, 255, 0.6)',
-                                fontFamily: 'var(--font-data)',
-                              }}
-                            >
-                              Sub #{idx - 10}
-                            </span>
-                          )}
                         </td>
                       </tr>
                     );
