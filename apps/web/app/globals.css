@@ -239,6 +239,8 @@ h1, h2, h3, h4, h5, h6,
 .table-responsive-container::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.2);
   border-radius: 9999px;
+}
+
 /* Reduced Motion (Gate 27) */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
@@ -248,4 +250,5 @@ h1, h2, h3, h4, h5, h6,
     scroll-behavior: auto !important;
   }
 }
+
 
