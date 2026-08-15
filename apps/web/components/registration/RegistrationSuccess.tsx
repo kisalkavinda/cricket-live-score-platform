@@ -641,29 +641,74 @@ export default function RegistrationSuccess({
           <button
             type="button"
             onClick={handlePrint}
-            className="btn-hallmark-outline"
             style={{
               height: '46px',
               padding: '0 24px',
-              color: 'var(--color-paper)',
-              borderColor: 'rgba(255, 255, 255, 0.3)',
-              fontSize: '0.95rem',
+              borderRadius: 'var(--radius-sm)',
+              background: '#182030',
+              color: '#FFFFFF',
+              border: '1.5px solid #334155',
+              fontFamily: 'var(--font-display)',
+              fontSize: '1.05rem',
+              fontWeight: 800,
+              textTransform: 'uppercase',
+              letterSpacing: '0.04em',
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '10px',
+              boxShadow: '0 4px 14px rgba(0, 0, 0, 0.4)',
+              transition: 'all var(--dur-fast) var(--ease-out)',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = '#243048';
+              e.currentTarget.style.borderColor = '#64748B';
+              e.currentTarget.style.transform = 'translateY(-1px)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = '#182030';
+              e.currentTarget.style.borderColor = '#334155';
+              e.currentTarget.style.transform = 'none';
             }}
           >
-            <span>🖨️</span>
-            <span>Print / Save as PDF</span>
+            <span style={{ fontSize: '18px' }}>🖨️</span>
+            <span>PRINT / SAVE AS PDF</span>
           </button>
 
           <Link
             href="/"
-            className="btn-hallmark-primary"
             style={{
               height: '46px',
               padding: '0 28px',
-              fontSize: '0.95rem',
+              borderRadius: 'var(--radius-sm)',
+              background: 'var(--color-accent)',
+              color: '#FFFFFF',
+              border: '1.5px solid var(--color-accent-bright)',
+              fontFamily: 'var(--font-display)',
+              fontSize: '1.05rem',
+              fontWeight: 800,
+              textTransform: 'uppercase',
+              letterSpacing: '0.04em',
+              textDecoration: 'none',
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '10px',
+              boxShadow: '0 4px 16px rgba(192, 39, 45, 0.4)',
+              transition: 'all var(--dur-fast) var(--ease-out)',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'var(--color-accent-hover)';
+              e.currentTarget.style.transform = 'translateY(-1px)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'var(--color-accent)';
+              e.currentTarget.style.transform = 'none';
             }}
           >
-            <span>Return to Tournament Home →</span>
+            <span>RETURN TO TOURNAMENT HOME →</span>
           </Link>
         </div>
       </div>
