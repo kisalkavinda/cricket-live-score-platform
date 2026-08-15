@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { requireAdminAuth, getAdminEntryPath } from '@/lib/auth/admin-auth';
 import { getRegistrationsList } from '@/lib/admin/admin-service';
 import { createPerfTracker, logPerfMetric } from '@/lib/utils/perf-logger';
+import DeleteRegistrationButton from '@/components/admin/DeleteRegistrationButton';
 
 export const dynamic = 'force-dynamic';
 
@@ -264,21 +265,29 @@ export default async function AdminRegistrationsPage({
                       </span>
                     </td>
                     <td style={{ padding: '14px 18px', textAlign: 'right' }}>
-                      <Link
-                        href={`/${entryPath}/registrations/${r.id}`}
-                        style={{
-                          padding: '6px 12px',
-                          borderRadius: '6px',
-                          backgroundColor: '#1E2638',
-                          color: '#E2E8F0',
-                          fontSize: '11px',
-                          fontWeight: 700,
-                          textDecoration: 'none',
-                          border: '1px solid #2A364E',
-                        }}
-                      >
-                        Review & Verify →
-                      </Link>
+                      <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                        <Link
+                          href={`/${entryPath}/registrations/${r.id}`}
+                          style={{
+                            padding: '6px 12px',
+                            borderRadius: '6px',
+                            backgroundColor: '#1E2638',
+                            color: '#E2E8F0',
+                            fontSize: '11px',
+                            fontWeight: 700,
+                            textDecoration: 'none',
+                            border: '1px solid #2A364E',
+                          }}
+                        >
+                          Review & Verify →
+                        </Link>
+                        <DeleteRegistrationButton
+                          isIconOnly
+                          registrationId={r.id}
+                          registrationCode={r.registrationCode}
+                          teamName={r.teamName}
+                        />
+                      </div>
                     </td>
                   </tr>
                 ))

@@ -1,19 +1,21 @@
 'use client';
 
 import { useState } from 'react';
-import { deletePlayerServerAction } from '@/lib/admin/admin-actions';
+import { deleteRegistrationServerAction } from '@/lib/admin/admin-actions';
 
-interface DeletePlayerButtonProps {
-  playerId: string;
-  playerName: string;
+interface DeleteRegistrationButtonProps {
+  registrationId: string;
+  registrationCode: string;
+  teamName: string;
   isIconOnly?: boolean;
 }
 
-export default function DeletePlayerButton({
-  playerId,
-  playerName,
+export default function DeleteRegistrationButton({
+  registrationId,
+  registrationCode,
+  teamName,
   isIconOnly = false,
-}: DeletePlayerButtonProps) {
+}: DeleteRegistrationButtonProps) {
   const [isDeleting, setIsDeleting] = useState(false);
 
   async function handleDelete(e: React.FormEvent) {
@@ -21,7 +23,7 @@ export default function DeletePlayerButton({
     e.stopPropagation();
 
     const confirmed = window.confirm(
-      `⚠️ VERIFICATION REQUIRED\n\nAre you sure you want to permanently delete player "${playerName}"?\n\nThis will remove the player record and all team squad roster assignments. This action CANNOT be undone.`
+      `⚠️ VERIFICATION REQUIRED\n\nAre you sure you want to permanently delete registration "${registrationCode}" for team "${teamName}"?\n\nThis will remove the entire registration application and player list. This action CANNOT be undone.`
     );
 
     if (!confirmed) {
@@ -30,12 +32,12 @@ export default function DeletePlayerButton({
 
     setIsDeleting(true);
     try {
-      const res = await deletePlayerServerAction(playerId);
+      const res = await deleteRegistrationServerAction(registrationId);
       if (res?.redirectUrl) {
         window.location.href = res.redirectUrl;
       }
     } catch (err: any) {
-      alert(`Failed to delete player: ${err?.message || 'Unknown error'}`);
+      alert(`Failed to delete registration: ${err?.message || 'Unknown error'}`);
       setIsDeleting(false);
     }
   }
@@ -45,7 +47,7 @@ export default function DeletePlayerButton({
       <button
         type="submit"
         disabled={isDeleting}
-        title={`Delete player ${playerName}`}
+        title={`Delete registration ${registrationCode}`}
         style={
           isIconOnly
             ? {
@@ -74,7 +76,7 @@ export default function DeletePlayerButton({
               }
         }
       >
-        {isDeleting ? '...' : isIconOnly ? '🗑️' : '🗑️ Delete Player'}
+        {isDeleting ? '...' : isIconOnly ? '🗑️' : '🗑️ Delete Registration'}
       </button>
     </form>
   );

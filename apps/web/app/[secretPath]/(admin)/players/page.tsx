@@ -73,15 +73,6 @@ export default async function AdminPlayersPage() {
             🧤 WICKET-KEEPER
           </span>
         );
-      default:
-        return (
-          <span style={{ padding: '3px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 700, fontFamily: 'monospace', backgroundColor: '#1E2638', color: '#94A3B8' }}>
-            {role}
-          </span>
-        );
-    }
-  };
-
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
       {/* Header */}
@@ -122,7 +113,7 @@ export default async function AdminPlayersPage() {
             Official Players
           </h1>
           <p style={{ fontSize: '13px', color: '#8B9BB4', margin: '4px 0 0' }}>
-            Comprehensive player registry with batting/bowling disciplines and franchise squad allocations.
+            Comprehensive player registry and franchise squad allocations.
           </p>
         </div>
 
@@ -163,9 +154,9 @@ export default async function AdminPlayersPage() {
             <thead>
               <tr style={{ backgroundColor: '#141A26', borderBottom: '1px solid #1E2638' }}>
                 <th style={{ padding: '12px 18px', color: '#8B9BB4', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase' }}>Player</th>
-                <th style={{ padding: '12px 18px', color: '#8B9BB4', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase' }}>Style</th>
-                <th style={{ padding: '12px 18px', color: '#8B9BB4', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase' }}>Team</th>
-                <th style={{ padding: '12px 18px', color: '#8B9BB4', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', textAlign: 'right' }}>Action</th>
+                <th style={{ padding: '12px 18px', color: '#8B9BB4', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase' }}>Index Number</th>
+                <th style={{ padding: '12px 18px', color: '#8B9BB4', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase' }}>Assigned Team</th>
+                <th style={{ padding: '12px 18px', color: '#8B9BB4', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', textAlign: 'right' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -213,34 +204,46 @@ export default async function AdminPlayersPage() {
                             {player.name?.charAt(0) || 'P'}
                           </div>
                         )}
-                        <div>
-                          <div style={{ fontWeight: 700, color: '#FFFFFF' }}>{player.name}</div>
-                          {player.indexNumber && (
-                            <div style={{ fontSize: '11px', fontFamily: 'monospace', color: '#FBBF24' }}>
-                              {player.indexNumber}
-                            </div>
-                          )}
-                        </div>
+                        <Link
+                          href={`/${entryPath}/players/${player.id}`}
+                          style={{ fontWeight: 700, color: '#FFFFFF', textDecoration: 'none' }}
+                        >
+                          {player.name}
+                        </Link>
                       </div>
+                    </td>
+                    <td style={{ padding: '14px 18px', fontFamily: 'monospace', color: player.indexNumber ? '#FBBF24' : '#64748B' }}>
+                      {player.indexNumber || 'N/A'}
                     </td>
                     <td style={{ padding: '14px 18px' }}>
                       {player.teamPlayers?.length > 0 ? (
                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
                           {player.teamPlayers.map((tp: any) => (
-                            <span
+                            <Link
                               key={tp.id}
+                              href={`/${entryPath}/teams/${tp.team?.id}`}
                               style={{
-                                padding: '2px 6px',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '6px',
+                                padding: '3px 8px',
                                 borderRadius: '4px',
                                 fontSize: '11px',
                                 fontWeight: 700,
                                 fontFamily: 'monospace',
                                 backgroundColor: '#1E2638',
                                 color: '#FBBF24',
+                                textDecoration: 'none',
+                                border: '1px solid #2A364E',
                               }}
                             >
-                              {tp.team?.shortName || tp.team?.name}
-                            </span>
+                              {tp.team?.logoUrl ? (
+                                <img src={tp.team.logoUrl} alt="" style={{ width: '14px', height: '14px', borderRadius: '2px', objectFit: 'cover' }} />
+                              ) : (
+                                <span>🛡️</span>
+                              )}
+                              <span>{tp.team?.shortName || tp.team?.name}</span>
+                            </Link>
                           ))}
                         </div>
                       ) : (
@@ -248,21 +251,24 @@ export default async function AdminPlayersPage() {
                       )}
                     </td>
                     <td style={{ padding: '14px 18px', textAlign: 'right' }}>
-                      <Link
-                        href={`/${entryPath}/players/${player.id}`}
-                        style={{
-                          padding: '6px 12px',
-                          borderRadius: '6px',
-                          backgroundColor: '#1E2638',
-                          color: '#E2E8F0',
-                          fontSize: '11px',
-                          fontWeight: 700,
-                          textDecoration: 'none',
-                          border: '1px solid #2A364E',
-                        }}
-                      >
-                        Edit →
-                      </Link>
+                      <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                        <Link
+                          href={`/${entryPath}/players/${player.id}`}
+                          style={{
+                            padding: '6px 12px',
+                            borderRadius: '6px',
+                            backgroundColor: '#1E2638',
+                            color: '#E2E8F0',
+                            fontSize: '11px',
+                            fontWeight: 700,
+                            textDecoration: 'none',
+                            border: '1px solid #2A364E',
+                          }}
+                        >
+                          Edit →
+                        </Link>
+                        <DeletePlayerButton isIconOnly playerId={player.id} playerName={player.name} />
+                      </div>
                     </td>
                   </tr>
                 ))

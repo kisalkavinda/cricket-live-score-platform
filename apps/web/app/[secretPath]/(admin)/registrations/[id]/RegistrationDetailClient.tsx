@@ -7,6 +7,7 @@ import {
   rejectRegistrationServerAction,
   retryBackupServerAction,
 } from '@/lib/admin/admin-actions';
+import DeleteRegistrationButton from '@/components/admin/DeleteRegistrationButton';
 
 interface RegistrationDetailClientProps {
   detail: any;
@@ -247,6 +248,18 @@ export default function RegistrationDetailClient({
                   🔄 Retry Backup Sync
                 </button>
               )}
+            </div>
+
+            {/* Danger Zone: Delete Registration */}
+            <div style={{ borderTop: '1px solid #1E2638', paddingTop: '14px', marginTop: '12px' }}>
+              <div style={{ fontSize: '11px', fontWeight: 700, color: '#EF4444', marginBottom: '8px' }}>
+                Danger Zone
+              </div>
+              <DeleteRegistrationButton
+                registrationId={registration.id}
+                registrationCode={registration.registrationCode}
+                teamName={registration.teamName}
+              />
             </div>
           </div>
         </div>
