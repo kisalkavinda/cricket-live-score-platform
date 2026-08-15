@@ -4,6 +4,7 @@ import { tournamentConfig } from '@/config/tournament';
 import RegistrationSuccess from '@/components/registration/RegistrationSuccess';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import { getRegistrationReceipt } from '@/lib/registrations/registration-service';
 
 export const metadata: Metadata = {
   title: `Registration Submitted | ${tournamentConfig.name}`,
@@ -15,6 +16,8 @@ export default async function RegisterSuccessPage(props: {
 }) {
   const searchParams = await props.searchParams;
   const registrationCode = searchParams.registration;
+
+  const receipt = registrationCode ? await getRegistrationReceipt(registrationCode) : null;
 
   return (
     <main
@@ -31,7 +34,7 @@ export default async function RegisterSuccessPage(props: {
       <div
         style={{
           flex: 1,
-          padding: '140px 20px 80px',
+          padding: '120px 20px 80px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -40,7 +43,8 @@ export default async function RegisterSuccessPage(props: {
         {registrationCode ? (
           <RegistrationSuccess
             registrationCode={registrationCode}
-            tournamentName={tournamentConfig.name}
+            tournamentName={receipt?.tournament?.name || tournamentConfig.name}
+            receipt={receipt}
           />
         ) : (
           <div

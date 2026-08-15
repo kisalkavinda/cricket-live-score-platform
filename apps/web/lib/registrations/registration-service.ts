@@ -246,3 +246,40 @@ export async function createRegistration(
     playerCount: normalizedPlayers.length,
   };
 }
+
+export async function getRegistrationReceipt(registrationCode: string) {
+  if (!registrationCode || typeof registrationCode !== 'string') return null;
+  try {
+    const reg = await (prisma as any).registration.findUnique({
+      where: { registrationCode: registrationCode.trim().toUpperCase() },
+      select: {
+        id: true,
+        registrationCode: true,
+        teamName: true,
+        leaderName: true,
+        leaderIndexNumber: true,
+        createdAt: true,
+        status: true,
+        tournament: {
+          select: {
+            name: true,
+            season: true,
+          },
+        },
+        players: {
+          select: {
+            id: true,
+            name: true,
+            indexNumber: true,
+          },
+          orderBy: { createdAt: 'asc' },
+        },
+      },
+    });
+    return reg;
+  } catch (err) {
+    console.error("[getRegistrationReceipt] Error:", err);
+    return null;
+  }
+}
+
