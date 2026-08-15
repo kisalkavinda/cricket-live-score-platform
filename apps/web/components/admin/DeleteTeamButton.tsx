@@ -24,7 +24,10 @@ export default function DeleteTeamButton({ teamId, teamName }: DeleteTeamButtonP
 
     setIsDeleting(true);
     try {
-      await deleteTeamServerAction(teamId);
+      const res = await deleteTeamServerAction(teamId);
+      if (res?.redirectUrl) {
+        window.location.href = res.redirectUrl;
+      }
     } catch (err: any) {
       alert(`Failed to delete team: ${err?.message || 'Unknown error'}`);
       setIsDeleting(false);

@@ -24,7 +24,10 @@ export default function DeletePlayerButton({ playerId, playerName }: DeletePlaye
 
     setIsDeleting(true);
     try {
-      await deletePlayerServerAction(playerId);
+      const res = await deletePlayerServerAction(playerId);
+      if (res?.redirectUrl) {
+        window.location.href = res.redirectUrl;
+      }
     } catch (err: any) {
       alert(`Failed to delete player: ${err?.message || 'Unknown error'}`);
       setIsDeleting(false);
