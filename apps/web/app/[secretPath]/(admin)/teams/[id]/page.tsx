@@ -8,6 +8,7 @@ import {
   createAndAssignPlayerServerAction,
   updateTeamServerAction,
 } from '@/lib/admin/admin-actions';
+import DeleteTeamButton from '@/components/admin/DeleteTeamButton';
 
 export const dynamic = 'force-dynamic';
 
@@ -581,6 +582,24 @@ export default async function TeamDetailPage({
                 + Register & Add to Squad
               </button>
             </form>
+          </div>
+
+          {/* Danger Zone: Delete Team */}
+          <div
+            style={{
+              backgroundColor: '#10141E',
+              border: '1px solid rgba(239, 68, 68, 0.25)',
+              borderRadius: '12px',
+              padding: '20px',
+            }}
+          >
+            <h4 style={{ fontSize: '13px', fontWeight: 700, color: '#EF4444', margin: '0 0 6px' }}>
+              Danger Zone
+            </h4>
+            <p style={{ fontSize: '12px', color: '#8B9BB4', margin: '0 0 14px', lineHeight: 1.4 }}>
+              Permanently delete this franchise and remove all squad roster connections.
+            </p>
+            <DeleteTeamButton teamId={team.id} teamName={team.name} />
           </div>
         </div>
       </div>
