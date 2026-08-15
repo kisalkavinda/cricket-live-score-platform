@@ -1,7 +1,7 @@
 import { prisma } from 'database';
 import Link from 'next/link';
 
-import { getAdminEntryPath } from '@/lib/auth/admin-auth';
+import { getAdminEntryPath, requireAdminAuth } from '@/lib/auth/admin-auth';
 
 const getPlayers = () => prisma.player.findMany({
   orderBy: { name: 'asc' },
@@ -18,7 +18,9 @@ type TeamPlayerRow = PlayerRow['teamPlayers'][number];
 export const dynamic = 'force-dynamic';
 
 export default async function AdminPlayersPage() {
+  await requireAdminAuth();
   const entryPath = getAdminEntryPath();
+
   const players = await getPlayers();
 
   return (

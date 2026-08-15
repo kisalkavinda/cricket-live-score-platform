@@ -1,17 +1,9 @@
-import Link from 'next/link';
-import { tournamentConfig } from '../config/tournament';
-import { getCachedRegisteredTeamsCount } from '@/lib/public/teams';
-
-export default async function Registration() {
-  const registeredTeamsCount = await getCachedRegisteredTeamsCount();
-
-  const regOpen = true;
-
+export default function RegistrationSkeleton() {
   const requirements = [
-    { id: 'req-1', text: 'Official Team Name' },
-    { id: 'req-2', text: "Captain's Contact & WhatsApp Details" },
-    { id: 'req-3', text: '11 Playing Members + Up to 2 Substitutes (Max 13)' },
-    { id: 'req-4', text: 'Valid University Student Index Numbers' },
+    { id: 'sk-req-1', text: 'Official Team Name' },
+    { id: 'sk-req-2', text: "Captain's Contact & WhatsApp Details" },
+    { id: 'sk-req-3', text: '11 Playing Members + Up to 2 Substitutes (Max 13)' },
+    { id: 'sk-req-4', text: 'Valid University Student Index Numbers' },
   ];
 
   return (
@@ -24,7 +16,7 @@ export default async function Registration() {
         position: 'relative',
         overflow: 'hidden',
       }}
-      aria-label="Team Registration"
+      aria-label="Team Registration Loading"
     >
       {/* Background Accent Tint */}
       <div
@@ -93,7 +85,7 @@ export default async function Registration() {
           </p>
         </div>
 
-        {/* Tournament Ticket / Entry Pass Layout (No re-drawn browser chrome - Gate 47) */}
+        {/* Tournament Ticket / Entry Pass Layout Skeleton */}
         <div
           style={{
             background: 'rgba(255, 255, 255, 0.03)',
@@ -103,7 +95,7 @@ export default async function Registration() {
             boxShadow: '0 20px 50px rgba(0, 0, 0, 0.4)',
           }}
         >
-          {/* Registered Teams Header Counter */}
+          {/* Registered Teams Header Counter Skeleton */}
           <div
             style={{
               display: 'flex',
@@ -129,16 +121,16 @@ export default async function Registration() {
               >
                 Team Slots Status
               </span>
-              <h3
+              <div
                 style={{
-                  fontFamily: 'var(--font-display)',
-                  fontSize: '1.6rem',
-                  fontWeight: 800,
-                  color: 'var(--color-paper)',
+                  height: '28px',
+                  width: '180px',
+                  background: 'rgba(255, 255, 255, 0.08)',
+                  borderRadius: '4px',
+                  marginTop: '6px',
+                  animation: 'pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
                 }}
-              >
-                {registeredTeamsCount} Teams Registered
-              </h3>
+              />
             </div>
 
             <div
@@ -148,7 +140,7 @@ export default async function Registration() {
                 gap: '8px',
                 padding: '6px 14px',
                 borderRadius: '9999px',
-                background: regOpen ? 'var(--color-accent)' : 'rgba(255, 255, 255, 0.1)',
+                background: 'var(--color-accent)',
                 color: 'var(--color-paper)',
                 fontFamily: 'var(--font-body)',
                 fontSize: '0.75rem',
@@ -164,9 +156,9 @@ export default async function Registration() {
                   borderRadius: '50%',
                   background: 'currentColor',
                 }}
-                className={regOpen ? 'animate-pulse-dot' : ''}
+                className="animate-pulse-dot"
               />
-              {regOpen ? 'Registration Active' : 'Portal Closed'}
+              Registration Active
             </div>
           </div>
 
@@ -276,21 +268,19 @@ export default async function Registration() {
                   fontVariantNumeric: 'tabular-nums',
                 }}
               >
-                {tournamentConfig.registrationDeadline || 'TBA'}
+                August 01, 2026 — 23:59 IST
               </p>
             </div>
 
-            <Link
-              href="/register"
+            <div
               className="btn-hallmark-primary"
-              id="reg-cta-button"
-              style={{ height: '44px', padding: '0 20px', maxWidth: '100%' }}
+              style={{ height: '44px', padding: '0 20px', maxWidth: '100%', opacity: 0.85 }}
             >
               Complete Registration Form
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
-            </Link>
+            </div>
           </div>
         </div>
       </div>
