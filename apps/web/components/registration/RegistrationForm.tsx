@@ -131,17 +131,21 @@ export default function RegistrationForm({
       const response = await submitRegistration(values);
 
       if (response.success && response.registrationCode) {
-        // Redirect to success page with only the safe registration code in the URL
-        router.push(`/register/success?registration=${encodeURIComponent(response.registrationCode)}`);
+        // Reliable direct navigation to the official ticket receipt
+        window.location.href = `/register/success?registration=${encodeURIComponent(response.registrationCode)}`;
       } else {
-        setServerError(response.error || 'Failed to submit registration. Please try again.');
+        setServerError(response.error || 'Failed to submit registration. Please check the details and try again.');
         setServerErrorDetails(response.details);
-        setStep('FORM'); // Return to form so user can fix issues
+        if (typeof window !== 'undefined') {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
       }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Network error';
       setServerError(`Unable to connect to the server: ${msg}. Please try again.`);
-      setStep('FORM');
+      if (typeof window !== 'undefined') {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
     } finally {
       setIsSubmitting(false);
     }
