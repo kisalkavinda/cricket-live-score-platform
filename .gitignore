@@ -18,3 +18,9 @@ skills-lock.json
 # Scratch / test scripts
 test-pg.js
 test-pooler.js
+
+# Google Service Account keys and credentials (never commit)
+service-account*.json
+*-service-account.json
+*.pem
+*.key

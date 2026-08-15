@@ -1,6 +1,8 @@
 import { prisma } from 'database';
 import Link from 'next/link';
 
+import { getAdminEntryPath } from '@/lib/auth/admin-auth';
+
 const getPlayers = () => prisma.player.findMany({
   orderBy: { name: 'asc' },
   include: {
@@ -16,13 +18,14 @@ type TeamPlayerRow = PlayerRow['teamPlayers'][number];
 export const dynamic = 'force-dynamic';
 
 export default async function AdminPlayersPage() {
+  const entryPath = getAdminEntryPath();
   const players = await getPlayers();
 
   return (
     <div>
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold">Players</h1>
-        <Link href="/admin/players/new" className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow">
+        <Link href={`/${entryPath}/players/new`} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow">
           + Add New Player
         </Link>
       </div>

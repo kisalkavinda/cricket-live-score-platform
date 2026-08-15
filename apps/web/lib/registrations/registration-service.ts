@@ -5,7 +5,7 @@ import {
   RegistrationFormData,
 } from "../validations/registration";
 import { generateRegistrationCode } from "./registration-code";
-import { syncRegistrationToBackup } from "./backup-sync";
+import { syncRegistrationToGoogleSheets } from "./backup-sync";
 
 export interface RegistrationResult {
   success: boolean;
@@ -229,20 +229,13 @@ export async function createRegistration(
     };
   }
 
-  // 6. Asynchronous Non-blocking Secondary Backup Trigger
-  // Does not block or fail the committed registration
-  syncRegistrationToBackup({
-    registrationId: registration.id,
-    registrationCode: registration.registrationCode,
-    tournamentId: registration.tournamentId,
-    teamName: registration.teamName,
-    leaderName: registration.leaderName,
-    leaderWhatsapp: registration.leaderWhatsapp,
-    leaderIndexNumber: registration.leaderIndexNumber,
-    players: normalizedPlayers,
-  }).catch((err) => {
-    console.warn("[RegistrationService] Background backup sync uncaught:", err);
-  });
+  // 6. Asynchronous Secondary Backup Execution
+  // Awaited to ensure completion in serverless environments, but isolated so failures NEVER fail registration
+  try {
+    await syncRegistrationToGoogleSheets(registration.id);
+  } catch (backupErr) {
+    console.warn("[RegistrationService] Non-blocking backup sync error:", backupErr);
+  }
 
   return {
     success: true,
