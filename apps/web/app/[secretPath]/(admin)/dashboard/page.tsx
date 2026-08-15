@@ -1,11 +1,24 @@
 import Link from 'next/link';
 import { requireAdminAuth, getAdminEntryPath } from '@/lib/auth/admin-auth';
 import { getDashboardStats } from '@/lib/admin/admin-service';
+import { createPerfTracker, logPerfMetric } from '@/lib/utils/perf-logger';
 
 export default async function AdminDashboardPage() {
+  const tracker = createPerfTracker();
+  tracker.authStart = performance.now();
   await requireAdminAuth();
+  tracker.authEnd = performance.now();
+
   const entryPath = getAdminEntryPath();
+
+  tracker.dbStart = performance.now();
   const stats = await getDashboardStats();
+  tracker.dbEnd = performance.now();
+
+  tracker.renderStart = performance.now();
+  tracker.renderEnd = performance.now();
+  logPerfMetric('/dashboard', tracker);
+
 
   return (
     <div style={{ maxWidth: '1200px', margin: '0 auto' }}>

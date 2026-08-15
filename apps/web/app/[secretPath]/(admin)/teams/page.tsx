@@ -18,11 +18,24 @@ type TeamRow = Awaited<ReturnType<typeof getTeams>>[number];
 
 export const dynamic = 'force-dynamic'; // Prevent static caching for admin pages
 
+import { createPerfTracker, logPerfMetric } from '@/lib/utils/perf-logger';
+
 export default async function AdminTeamsPage() {
+  const tracker = createPerfTracker();
+  tracker.authStart = performance.now();
   await requireAdminAuth();
+  tracker.authEnd = performance.now();
+
   const entryPath = getAdminEntryPath();
 
+  tracker.dbStart = performance.now();
   const teams = await getTeams();
+  tracker.dbEnd = performance.now();
+
+  tracker.renderStart = performance.now();
+  tracker.renderEnd = performance.now();
+  logPerfMetric('/teams', tracker);
+
 
 
 

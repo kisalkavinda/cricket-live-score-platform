@@ -4,10 +4,24 @@ import { getMatchesList } from '@/lib/scoring/scoring-service';
 
 export const dynamic = 'force-dynamic';
 
+import { createPerfTracker, logPerfMetric } from '@/lib/utils/perf-logger';
+
 export default async function AdminMatchesPage() {
+  const tracker = createPerfTracker();
+  tracker.authStart = performance.now();
   await requireAdminAuth();
+  tracker.authEnd = performance.now();
+
   const entryPath = getAdminEntryPath();
+
+  tracker.dbStart = performance.now();
   const matches = await getMatchesList();
+  tracker.dbEnd = performance.now();
+
+  tracker.renderStart = performance.now();
+  tracker.renderEnd = performance.now();
+  logPerfMetric('/matches', tracker);
+
 
   const liveMatches = matches.filter((m: any) => m.status === 'LIVE');
   const upcomingMatches = matches.filter((m: any) => m.status === 'UPCOMING');
