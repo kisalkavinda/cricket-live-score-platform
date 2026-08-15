@@ -54,6 +54,7 @@ export default function RegistrationForm({
       leaderWhatsapp: '',
       leaderIndexNumber: '',
       players: initialPlayers,
+      confirmTermsAgreement: false,
       confirmInfoCorrect: false,
       confirmUniversityStudents: false,
       confirmIndexNumbers: false,
@@ -151,7 +152,8 @@ export default function RegistrationForm({
           />
 
           {/* Section 3: Official Declaration */}
-          <ConfirmationChecklist register={register} setValue={setValue} errors={errors} />
+          <ConfirmationChecklist register={register} setValue={setValue} watch={watch} errors={errors} />
+
 
           {/* Action Bar */}
           <div
