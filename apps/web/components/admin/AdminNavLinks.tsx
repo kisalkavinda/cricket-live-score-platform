@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
@@ -9,6 +10,11 @@ interface AdminNavLinksProps {
 
 export default function AdminNavLinks({ entryPath }: AdminNavLinksProps) {
   const pathname = usePathname();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const links = [
     {
@@ -59,8 +65,9 @@ export default function AdminNavLinks({ entryPath }: AdminNavLinksProps) {
     <nav style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
       {links.map((item) => {
         const isActive =
-          pathname === item.href ||
-          (item.href !== `/${entryPath}` && pathname.startsWith(item.href));
+          mounted &&
+          (pathname === item.href ||
+            (item.href !== `/${entryPath}` && pathname.startsWith(item.href)));
 
         return (
           <Link
