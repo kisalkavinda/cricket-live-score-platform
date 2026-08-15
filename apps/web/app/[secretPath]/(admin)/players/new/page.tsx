@@ -47,29 +47,13 @@ export default function NewPlayerPage() {
       
       <form onSubmit={handleSubmit} className="space-y-6 bg-white p-8 rounded-xl shadow-sm border border-slate-200">
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">Player Name</label>
+          <label className="block text-sm font-medium text-slate-700 mb-1">Player Full Name</label>
           <input type="text" name="name" required className="w-full border-slate-300 rounded-lg p-3 border" placeholder="e.g. John Doe" />
         </div>
-        
+
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">Role</label>
-          <select name="role" required className="w-full border-slate-300 rounded-lg p-3 border bg-white">
-            <option value="BATTER">Batter</option>
-            <option value="BOWLER">Bowler</option>
-            <option value="ALL_ROUNDER">All Rounder</option>
-            <option value="WICKET_KEEPER">Wicket Keeper</option>
-          </select>
-        </div>
-        
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Batting Style</label>
-            <input type="text" name="battingStyle" className="w-full border-slate-300 rounded-lg p-3 border" placeholder="Right Hand Bat" />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Bowling Style</label>
-            <input type="text" name="bowlingStyle" className="w-full border-slate-300 rounded-lg p-3 border" placeholder="Right Arm Fast" />
-          </div>
+          <label className="block text-sm font-medium text-slate-700 mb-1">University Index Number</label>
+          <input type="text" name="indexNumber" className="w-full border-slate-300 rounded-lg p-3 border" placeholder="e.g. IT22001920" />
         </div>
 
         <div>

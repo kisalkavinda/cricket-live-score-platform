@@ -118,17 +118,19 @@ export async function createPlayerServerAction(formData: FormData) {
   await requireAdminAuth();
   const entryPath = getAdminEntryPath();
   const name = formData.get('name') as string;
-  const role = formData.get('role') as any;
-  const battingStyle = formData.get('battingStyle') as string;
-  const bowlingStyle = formData.get('bowlingStyle') as string;
+  const indexNumber = (formData.get('indexNumber') as string) || null;
+  const role = (formData.get('role') as any) || 'ALL_ROUNDER';
+  const battingStyle = (formData.get('battingStyle') as string) || null;
+  const bowlingStyle = (formData.get('bowlingStyle') as string) || null;
   const profileImageUrl = formData.get('profileImageUrl') as string | null;
 
-  await prisma.player.create({
+  await (prisma as any).player.create({
     data: {
-      name,
+      name: name?.trim(),
+      indexNumber: indexNumber ? indexNumber.trim().toUpperCase() : null,
       role,
-      battingStyle,
-      bowlingStyle,
+      battingStyle: battingStyle ? battingStyle.trim() : null,
+      bowlingStyle: bowlingStyle ? bowlingStyle.trim() : null,
       profileImageUrl,
     },
   });

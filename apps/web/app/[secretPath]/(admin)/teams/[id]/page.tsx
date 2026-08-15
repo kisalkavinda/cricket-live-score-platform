@@ -244,7 +244,6 @@ export default async function TeamDetailPage({
                     <th style={{ padding: '12px 18px', color: '#8B9BB4', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', width: '50px' }}>#</th>
                     <th style={{ padding: '12px 18px', color: '#8B9BB4', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase' }}>Player Name</th>
                     <th style={{ padding: '12px 18px', color: '#8B9BB4', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase' }}>Index Number</th>
-                    <th style={{ padding: '12px 18px', color: '#8B9BB4', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase' }}>Style</th>
                     <th style={{ padding: '12px 18px', color: '#8B9BB4', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', textAlign: 'right' }}>Action</th>
                   </tr>
                 </thead>
@@ -259,11 +258,6 @@ export default async function TeamDetailPage({
                       </td>
                       <td style={{ padding: '14px 18px', fontFamily: 'monospace', color: tp.player.indexNumber ? '#FBBF24' : '#64748B' }}>
                         {tp.player.indexNumber || 'N/A'}
-                      </td>
-                      <td style={{ padding: '14px 18px', color: '#8B9BB4', fontSize: '12px' }}>
-                        {tp.player.battingStyle && <div>🏏 {tp.player.battingStyle}</div>}
-                        {tp.player.bowlingStyle && <div style={{ marginTop: '2px' }}>🎯 {tp.player.bowlingStyle}</div>}
-                        {!tp.player.battingStyle && !tp.player.bowlingStyle && <span style={{ color: '#475569' }}>-</span>}
                       </td>
                       <td style={{ padding: '14px 18px', textAlign: 'right' }}>
                         <form
@@ -297,75 +291,9 @@ export default async function TeamDetailPage({
           )}
         </div>
 
-        {/* Add Player Sidebar Controls */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-          {/* Quick Assign Existing Player */}
-          {availablePlayers.length > 0 && (
-            <div
-              style={{
-                backgroundColor: '#10141E',
-                border: '1px solid #1E2638',
-                borderRadius: '12px',
-                padding: '20px',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
-              }}
-            >
-              <h3 style={{ fontSize: '15px', fontWeight: 800, color: '#FFFFFF', margin: '0 0 12px' }}>
-                Add Existing Player
-              </h3>
-              <form
-                action={async (formData: FormData) => {
-                  'use server';
-                  const playerId = formData.get('playerId') as string;
-                  if (playerId) {
-                    await addPlayerToTeamServerAction(team.id, playerId);
-                  }
-                }}
-                style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}
-              >
-                <select
-                  name="playerId"
-                  required
-                  style={{
-                    width: '100%',
-                    height: '40px',
-                    padding: '0 12px',
-                    borderRadius: '8px',
-                    backgroundColor: '#1A1F2C',
-                    border: '1px solid #2A364E',
-                    color: '#FFFFFF',
-                    fontSize: '13px',
-                    boxSizing: 'border-box',
-                  }}
-                >
-                  <option value="">Select unassigned player...</option>
-                  {availablePlayers.map((p: any) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name} ({p.role}) {p.indexNumber ? `- ${p.indexNumber}` : ''}
-                    </option>
-                  ))}
-                </select>
-
-                <button
-                  type="submit"
-                  style={{
-                    height: '38px',
-                    borderRadius: '8px',
-                    backgroundColor: '#1E2638',
-                    border: '1px solid #2A364E',
-                    color: '#FFFFFF',
-                    fontSize: '12px',
-                    fontWeight: 700,
-                    cursor: 'pointer',
-                  }}
-                >
-                  + Add to Squad
-                </button>
-              </form>
-            </div>
-          )}
-
-          {/* Register New Player Direct to Team */}
+        {/* Right Column: Add Players Sidebar */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          {/* Card 1: Assign Existing Player */}
           <div
             style={{
               backgroundColor: '#10141E',
@@ -375,12 +303,89 @@ export default async function TeamDetailPage({
               boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
             }}
           >
-            <h3 style={{ fontSize: '15px', fontWeight: 800, color: '#FFFFFF', margin: '0 0 12px' }}>
-              Register New Player
+            <h3 style={{ fontSize: '15px', fontWeight: 800, margin: '0 0 6px', color: '#FFFFFF' }}>
+              Assign Existing Player
             </h3>
+            <p style={{ fontSize: '12px', color: '#8B9BB4', margin: '0 0 16px', lineHeight: 1.4 }}>
+              Select a player from the central tournament registry.
+            </p>
 
             <form
-              action={async (formData: FormData) => {
+              action={async (formData) => {
+                'use server';
+                const playerId = formData.get('playerId') as string;
+                if (playerId) {
+                  await addPlayerToTeamServerAction(team.id, playerId);
+                }
+              }}
+              style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}
+            >
+              <div>
+                <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, color: '#8B9BB4', marginBottom: '4px' }}>
+                  Select Player *
+                </label>
+                <select
+                  name="playerId"
+                  required
+                  style={{
+                    width: '100%',
+                    height: '38px',
+                    padding: '0 12px',
+                    borderRadius: '6px',
+                    backgroundColor: '#1A1F2C',
+                    border: '1px solid #2A364E',
+                    color: '#FFFFFF',
+                    fontSize: '13px',
+                    boxSizing: 'border-box',
+                  }}
+                >
+                  <option value="" style={{ backgroundColor: '#10141E' }}>-- Choose a player --</option>
+                  {availablePlayers.map((p: any) => (
+                    <option key={p.id} value={p.id} style={{ backgroundColor: '#10141E' }}>
+                      {p.name} {p.indexNumber ? `- ${p.indexNumber}` : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <button
+                type="submit"
+                style={{
+                  height: '38px',
+                  borderRadius: '6px',
+                  backgroundColor: '#1E2638',
+                  color: '#FFFFFF',
+                  fontSize: '12px',
+                  fontWeight: 700,
+                  border: '1px solid #3B4B68',
+                  cursor: 'pointer',
+                  transition: 'background 0.15s ease',
+                }}
+              >
+                + Assign to Roster
+              </button>
+            </form>
+          </div>
+
+          {/* Card 2: Quick Register New Player */}
+          <div
+            style={{
+              backgroundColor: '#10141E',
+              border: '1px solid #1E2638',
+              borderRadius: '12px',
+              padding: '20px',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+            }}
+          >
+            <h3 style={{ fontSize: '15px', fontWeight: 800, margin: '0 0 6px', color: '#FFFFFF' }}>
+              Quick Add New Player
+            </h3>
+            <p style={{ fontSize: '12px', color: '#8B9BB4', margin: '0 0 16px', lineHeight: 1.4 }}>
+              Register a brand new player directly to this team roster.
+            </p>
+
+            <form
+              action={async (formData) => {
                 'use server';
                 await createAndAssignPlayerServerAction(team.id, formData);
               }}
@@ -388,13 +393,13 @@ export default async function TeamDetailPage({
             >
               <div>
                 <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, color: '#8B9BB4', marginBottom: '4px' }}>
-                  Full Name *
+                  Player Full Name *
                 </label>
                 <input
                   type="text"
                   name="name"
                   required
-                  placeholder="e.g. Kasun Perera"
+                  placeholder="e.g. Kasun Fernando"
                   style={{
                     width: '100%',
                     height: '38px',
@@ -407,32 +412,6 @@ export default async function TeamDetailPage({
                     boxSizing: 'border-box',
                   }}
                 />
-              </div>
-
-              <div>
-                <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, color: '#8B9BB4', marginBottom: '4px' }}>
-                  Role *
-                </label>
-                <select
-                  name="role"
-                  required
-                  style={{
-                    width: '100%',
-                    height: '38px',
-                    padding: '0 12px',
-                    borderRadius: '6px',
-                    backgroundColor: '#1A1F2C',
-                    border: '1px solid #2A364E',
-                    color: '#FFFFFF',
-                    fontSize: '13px',
-                    boxSizing: 'border-box',
-                  }}
-                >
-                  <option value="BATTER">Batter</option>
-                  <option value="BOWLER">Bowler</option>
-                  <option value="ALL_ROUNDER">All-Rounder</option>
-                  <option value="WICKET_KEEPER">Wicket-Keeper</option>
-                </select>
               </div>
 
               <div>
@@ -455,51 +434,6 @@ export default async function TeamDetailPage({
                     boxSizing: 'border-box',
                   }}
                 />
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, color: '#8B9BB4', marginBottom: '4px' }}>
-                    Batting Style
-                  </label>
-                  <input
-                    type="text"
-                    name="battingStyle"
-                    placeholder="Right Hand"
-                    style={{
-                      width: '100%',
-                      height: '38px',
-                      padding: '0 10px',
-                      borderRadius: '6px',
-                      backgroundColor: '#1A1F2C',
-                      border: '1px solid #2A364E',
-                      color: '#FFFFFF',
-                      fontSize: '12px',
-                      boxSizing: 'border-box',
-                    }}
-                  />
-                </div>
-                <div>
-                  <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, color: '#8B9BB4', marginBottom: '4px' }}>
-                    Bowling Style
-                  </label>
-                  <input
-                    type="text"
-                    name="bowlingStyle"
-                    placeholder="Right Fast"
-                    style={{
-                      width: '100%',
-                      height: '38px',
-                      padding: '0 10px',
-                      borderRadius: '6px',
-                      backgroundColor: '#1A1F2C',
-                      border: '1px solid #2A364E',
-                      color: '#FFFFFF',
-                      fontSize: '12px',
-                      boxSizing: 'border-box',
-                    }}
-                  />
-                </div>
               </div>
 
               <button
