@@ -86,7 +86,8 @@ function ScorecardContent() {
         </p>
         <Link
           href="/"
-          style={{ background: 'var(--color-primary)', color: '#FFF', padding: '10px 20px', borderRadius: '8px', textDecoration: 'none', fontWeight: 700 }}
+          className="btn-hallmark-primary"
+          style={{ padding: '10px 20px', borderRadius: '8px', textDecoration: 'none', fontWeight: 700 }}
         >
           ← Return to Home
         </Link>
@@ -102,7 +103,7 @@ function ScorecardContent() {
     <main style={{ paddingTop: '90px', paddingBottom: 'var(--space-3xl)' }}>
       <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '0 16px' }}>
         {/* Navigation Breadcrumb */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', flexWrap: 'wrap', gap: '8px' }}>
           <Link
             href="/"
             style={{
@@ -123,12 +124,13 @@ function ScorecardContent() {
                 fontWeight: 900,
                 padding: '3px 8px',
                 borderRadius: '4px',
+                fontFamily: 'monospace',
               }}
             >
               {match.status}
             </span>
             {lastLivePing && (
-              <span style={{ fontSize: '0.72rem', color: 'rgba(255, 255, 255, 0.4)' }}>
+              <span style={{ fontSize: '0.72rem', color: 'rgba(255, 255, 255, 0.4)', fontFamily: 'monospace' }}>
                 Live Ping: {lastLivePing}
               </span>
             )}
@@ -141,54 +143,64 @@ function ScorecardContent() {
             background: 'linear-gradient(135deg, #1C1616 0%, #291F1F 100%)',
             border: '1.5px solid rgba(255, 184, 0, 0.3)',
             borderRadius: '16px',
-            padding: '24px',
+            padding: '20px',
             boxShadow: '0 12px 32px rgba(0, 0, 0, 0.4)',
-            marginBottom: '24px',
+            marginBottom: '20px',
           }}
         >
-          <div style={{ fontSize: '0.85rem', color: 'rgba(255, 255, 255, 0.6)', marginBottom: '12px' }}>
+          <div style={{ fontSize: '0.82rem', color: 'rgba(255, 255, 255, 0.6)', marginBottom: '12px' }}>
             {match.tournament?.name} • {match.venue || 'Main Stadium'} • {match.oversPerInnings} Overs Match
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', gap: '20px' }}>
-            <div>
-              <div style={{ fontSize: '1.3rem', fontWeight: 900, color: '#FFF' }}>{match.teamA.name}</div>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '16px',
+              flexWrap: 'wrap',
+            }}
+          >
+            <div style={{ minWidth: '130px', flex: '1 1 auto' }}>
+              <div style={{ fontSize: '1.2rem', fontWeight: 900, color: '#FFF' }}>{match.teamA.name}</div>
+              <div style={{ fontSize: '0.8rem', color: '#8B9BB4', fontFamily: 'monospace' }}>{match.teamA.shortName}</div>
               {inn1 && inn1.battingTeamId === match.teamAId && (
-                <div style={{ fontSize: '1.4rem', fontWeight: 900, color: '#FFB800', marginTop: '4px' }}>
+                <div style={{ fontSize: '1.3rem', fontWeight: 900, color: '#FFB800', marginTop: '4px', fontFamily: 'monospace' }}>
                   {inn1.runs} / {inn1.wickets}{' '}
-                  <span style={{ fontSize: '0.9rem', color: 'rgba(255, 255, 255, 0.6)', fontWeight: 600 }}>
+                  <span style={{ fontSize: '0.85rem', color: 'rgba(255, 255, 255, 0.6)', fontWeight: 600 }}>
                     ({inn1.overs}.{inn1.balls} ov)
                   </span>
                 </div>
               )}
               {inn2 && inn2.battingTeamId === match.teamAId && (
-                <div style={{ fontSize: '1.4rem', fontWeight: 900, color: '#FFB800', marginTop: '4px' }}>
+                <div style={{ fontSize: '1.3rem', fontWeight: 900, color: '#FFB800', marginTop: '4px', fontFamily: 'monospace' }}>
                   {inn2.runs} / {inn2.wickets}{' '}
-                  <span style={{ fontSize: '0.9rem', color: 'rgba(255, 255, 255, 0.6)', fontWeight: 600 }}>
+                  <span style={{ fontSize: '0.85rem', color: 'rgba(255, 255, 255, 0.6)', fontWeight: 600 }}>
                     ({inn2.overs}.{inn2.balls} ov)
                   </span>
                 </div>
               )}
             </div>
 
-            <div style={{ textAlign: 'center', color: '#FFB800', fontWeight: 900, fontSize: '1.1rem' }}>
+            <div style={{ textAlign: 'center', color: '#FFB800', fontWeight: 900, fontSize: '1rem', padding: '4px 10px', background: 'rgba(0,0,0,0.3)', borderRadius: '6px' }}>
               VS
             </div>
 
-            <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: '1.3rem', fontWeight: 900, color: '#FFF' }}>{match.teamB.name}</div>
+            <div style={{ minWidth: '130px', flex: '1 1 auto', textAlign: 'right' }}>
+              <div style={{ fontSize: '1.2rem', fontWeight: 900, color: '#FFF' }}>{match.teamB.name}</div>
+              <div style={{ fontSize: '0.8rem', color: '#8B9BB4', fontFamily: 'monospace' }}>{match.teamB.shortName}</div>
               {inn1 && inn1.battingTeamId === match.teamBId && (
-                <div style={{ fontSize: '1.4rem', fontWeight: 900, color: '#FFB800', marginTop: '4px' }}>
+                <div style={{ fontSize: '1.3rem', fontWeight: 900, color: '#FFB800', marginTop: '4px', fontFamily: 'monospace' }}>
                   {inn1.runs} / {inn1.wickets}{' '}
-                  <span style={{ fontSize: '0.9rem', color: 'rgba(255, 255, 255, 0.6)', fontWeight: 600 }}>
+                  <span style={{ fontSize: '0.85rem', color: 'rgba(255, 255, 255, 0.6)', fontWeight: 600 }}>
                     ({inn1.overs}.{inn1.balls} ov)
                   </span>
                 </div>
               )}
               {inn2 && inn2.battingTeamId === match.teamBId && (
-                <div style={{ fontSize: '1.4rem', fontWeight: 900, color: '#FFB800', marginTop: '4px' }}>
+                <div style={{ fontSize: '1.3rem', fontWeight: 900, color: '#FFB800', marginTop: '4px', fontFamily: 'monospace' }}>
                   {inn2.runs} / {inn2.wickets}{' '}
-                  <span style={{ fontSize: '0.9rem', color: 'rgba(255, 255, 255, 0.6)', fontWeight: 600 }}>
+                  <span style={{ fontSize: '0.85rem', color: 'rgba(255, 255, 255, 0.6)', fontWeight: 600 }}>
                     ({inn2.overs}.{inn2.balls} ov)
                   </span>
                 </div>
@@ -197,26 +209,27 @@ function ScorecardContent() {
           </div>
 
           {match.resultNote && (
-            <div style={{ marginTop: '16px', background: 'rgba(255, 215, 0, 0.1)', color: '#FFD700', padding: '10px 16px', borderRadius: '8px', fontWeight: 800, textAlign: 'center', fontSize: '0.95rem' }}>
+            <div style={{ marginTop: '16px', background: 'rgba(255, 215, 0, 0.1)', color: '#FFD700', padding: '10px 16px', borderRadius: '8px', fontWeight: 800, textAlign: 'center', fontSize: '0.9rem' }}>
               🏆 {match.resultNote}
             </div>
           )}
         </div>
 
         {/* INNINGS TABS */}
-        <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', overflowX: 'auto', paddingBottom: '4px' }}>
           {inn1 && (
             <button
               onClick={() => setActiveTab('inn1')}
               style={{
-                padding: '10px 20px',
+                padding: '8px 16px',
                 borderRadius: '8px',
                 border: 'none',
                 background: activeTab === 'inn1' ? '#FFB800' : 'rgba(255, 255, 255, 0.06)',
                 color: activeTab === 'inn1' ? '#000' : '#FFF',
                 fontWeight: 800,
-                fontSize: '0.9rem',
+                fontSize: '0.85rem',
                 cursor: 'pointer',
+                whiteSpace: 'nowrap',
               }}
             >
               1st Innings: {inn1.battingTeam?.shortName} ({inn1.runs}/{inn1.wickets})
@@ -227,14 +240,15 @@ function ScorecardContent() {
             <button
               onClick={() => setActiveTab('inn2')}
               style={{
-                padding: '10px 20px',
+                padding: '8px 16px',
                 borderRadius: '8px',
                 border: 'none',
                 background: activeTab === 'inn2' ? '#FFB800' : 'rgba(255, 255, 255, 0.06)',
                 color: activeTab === 'inn2' ? '#000' : '#FFF',
                 fontWeight: 800,
-                fontSize: '0.9rem',
+                fontSize: '0.85rem',
                 cursor: 'pointer',
+                whiteSpace: 'nowrap',
               }}
             >
               2nd Innings: {inn2.battingTeam?.shortName} ({inn2.runs}/{inn2.wickets})
@@ -251,44 +265,46 @@ function ScorecardContent() {
                 Batting: {selectedInnings.battingTeam?.name}
               </div>
 
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.88rem' }}>
-                <thead>
-                  <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.08)', color: 'rgba(255, 255, 255, 0.5)', textAlign: 'left' }}>
-                    <th style={{ padding: '10px 16px' }}>Batter</th>
-                    <th style={{ padding: '10px 16px' }}>Dismissal</th>
-                    <th style={{ padding: '10px 16px', textAlign: 'right' }}>R</th>
-                    <th style={{ padding: '10px 16px', textAlign: 'right' }}>B</th>
-                    <th style={{ padding: '10px 16px', textAlign: 'right' }}>4s</th>
-                    <th style={{ padding: '10px 16px', textAlign: 'right' }}>6s</th>
-                    <th style={{ padding: '10px 16px', textAlign: 'right' }}>SR</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {(selectedInnings.battingScores || []).map((b: any) => {
-                    const sr = b.balls > 0 ? ((b.runs / b.balls) * 100).toFixed(1) : '0.0';
-                    const isCurrent = b.playerId === selectedInnings.currentStrikerId || b.playerId === selectedInnings.currentNonStrikerId;
-                    return (
-                      <tr key={b.id} style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.04)' }}>
-                        <td style={{ padding: '10px 16px', fontWeight: 700, color: isCurrent ? '#FFB800' : '#FFF' }}>
-                          {b.player?.name} {b.playerId === selectedInnings.currentStrikerId ? ' *' : ''}
-                        </td>
-                        <td style={{ padding: '10px 16px', color: 'rgba(255, 255, 255, 0.6)' }}>
-                          {b.isOut ? b.dismissal || 'Out' : isCurrent ? 'not out (batting)' : 'not out'}
-                        </td>
-                        <td style={{ padding: '10px 16px', textAlign: 'right', fontWeight: 800, color: '#FFF' }}>{b.runs}</td>
-                        <td style={{ padding: '10px 16px', textAlign: 'right', color: 'rgba(255, 255, 255, 0.7)' }}>{b.balls}</td>
-                        <td style={{ padding: '10px 16px', textAlign: 'right', color: 'rgba(255, 255, 255, 0.7)' }}>{b.fours}</td>
-                        <td style={{ padding: '10px 16px', textAlign: 'right', color: 'rgba(255, 255, 255, 0.7)' }}>{b.sixes}</td>
-                        <td style={{ padding: '10px 16px', textAlign: 'right', color: 'rgba(255, 255, 255, 0.7)' }}>{sr}</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+              <div className="table-responsive-container">
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem', minWidth: '500px' }}>
+                  <thead>
+                    <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.08)', color: 'rgba(255, 255, 255, 0.5)', textAlign: 'left' }}>
+                      <th style={{ padding: '10px 14px' }}>Batter</th>
+                      <th style={{ padding: '10px 14px' }}>Dismissal</th>
+                      <th style={{ padding: '10px 14px', textAlign: 'right' }}>R</th>
+                      <th style={{ padding: '10px 14px', textAlign: 'right' }}>B</th>
+                      <th style={{ padding: '10px 14px', textAlign: 'right' }}>4s</th>
+                      <th style={{ padding: '10px 14px', textAlign: 'right' }}>6s</th>
+                      <th style={{ padding: '10px 14px', textAlign: 'right' }}>SR</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(selectedInnings.battingScores || []).map((b: any) => {
+                      const sr = b.balls > 0 ? ((b.runs / b.balls) * 100).toFixed(1) : '0.0';
+                      const isCurrent = b.playerId === selectedInnings.currentStrikerId || b.playerId === selectedInnings.currentNonStrikerId;
+                      return (
+                        <tr key={b.id} style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.04)' }}>
+                          <td style={{ padding: '10px 14px', fontWeight: 700, color: isCurrent ? '#FFB800' : '#FFF' }}>
+                            {b.player?.name} {b.playerId === selectedInnings.currentStrikerId ? ' *' : ''}
+                          </td>
+                          <td style={{ padding: '10px 14px', color: 'rgba(255, 255, 255, 0.6)' }}>
+                            {b.isOut ? b.dismissal || 'Out' : isCurrent ? 'not out (batting)' : 'not out'}
+                          </td>
+                          <td style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 800, color: '#FFF' }}>{b.runs}</td>
+                          <td style={{ padding: '10px 14px', textAlign: 'right', color: 'rgba(255, 255, 255, 0.7)' }}>{b.balls}</td>
+                          <td style={{ padding: '10px 14px', textAlign: 'right', color: 'rgba(255, 255, 255, 0.7)' }}>{b.fours}</td>
+                          <td style={{ padding: '10px 14px', textAlign: 'right', color: 'rgba(255, 255, 255, 0.7)' }}>{b.sixes}</td>
+                          <td style={{ padding: '10px 14px', textAlign: 'right', color: 'rgba(255, 255, 255, 0.7)' }}>{sr}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
 
-              <div style={{ padding: '12px 16px', background: 'rgba(0, 0, 0, 0.2)', display: 'flex', justifyContent: 'space-between', fontWeight: 800, fontSize: '0.95rem' }}>
+              <div style={{ padding: '12px 16px', background: 'rgba(0, 0, 0, 0.2)', display: 'flex', justifyContent: 'space-between', fontWeight: 800, fontSize: '0.9rem', flexWrap: 'wrap', gap: '8px' }}>
                 <span style={{ color: 'rgba(255, 255, 255, 0.7)' }}>Total</span>
-                <span style={{ color: '#FFB800' }}>
+                <span style={{ color: '#FFB800', fontFamily: 'monospace' }}>
                   {selectedInnings.runs} / {selectedInnings.wickets} ({selectedInnings.overs}.{selectedInnings.balls} Overs)
                 </span>
               </div>
@@ -300,40 +316,42 @@ function ScorecardContent() {
                 Bowling: {selectedInnings.bowlingTeam?.name}
               </div>
 
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.88rem' }}>
-                <thead>
-                  <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.08)', color: 'rgba(255, 255, 255, 0.5)', textAlign: 'left' }}>
-                    <th style={{ padding: '10px 16px' }}>Bowler</th>
-                    <th style={{ padding: '10px 16px', textAlign: 'right' }}>O</th>
-                    <th style={{ padding: '10px 16px', textAlign: 'right' }}>M</th>
-                    <th style={{ padding: '10px 16px', textAlign: 'right' }}>R</th>
-                    <th style={{ padding: '10px 16px', textAlign: 'right' }}>W</th>
-                    <th style={{ padding: '10px 16px', textAlign: 'right' }}>Econ</th>
-                    <th style={{ padding: '10px 16px', textAlign: 'right' }}>WD</th>
-                    <th style={{ padding: '10px 16px', textAlign: 'right' }}>NB</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {(selectedInnings.bowlingScores || []).map((b: any) => {
-                    const totalOvers = b.overs + b.balls / 6;
-                    const econ = totalOvers > 0 ? (b.runsConceded / totalOvers).toFixed(2) : '0.00';
-                    return (
-                      <tr key={b.id} style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.04)' }}>
-                        <td style={{ padding: '10px 16px', fontWeight: 700, color: '#FFF' }}>
-                          {b.player?.name} {b.isCurrent ? ' *' : ''}
-                        </td>
-                        <td style={{ padding: '10px 16px', textAlign: 'right', color: '#FFF' }}>{b.overs}.{b.balls}</td>
-                        <td style={{ padding: '10px 16px', textAlign: 'right', color: 'rgba(255, 255, 255, 0.7)' }}>{b.maidens}</td>
-                        <td style={{ padding: '10px 16px', textAlign: 'right', fontWeight: 800, color: '#FFF' }}>{b.runsConceded}</td>
-                        <td style={{ padding: '10px 16px', textAlign: 'right', fontWeight: 800, color: '#FFB800' }}>{b.wickets}</td>
-                        <td style={{ padding: '10px 16px', textAlign: 'right', color: 'rgba(255, 255, 255, 0.7)' }}>{econ}</td>
-                        <td style={{ padding: '10px 16px', textAlign: 'right', color: 'rgba(255, 255, 255, 0.7)' }}>{b.wides}</td>
-                        <td style={{ padding: '10px 16px', textAlign: 'right', color: 'rgba(255, 255, 255, 0.7)' }}>{b.noBalls}</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+              <div className="table-responsive-container">
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem', minWidth: '500px' }}>
+                  <thead>
+                    <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.08)', color: 'rgba(255, 255, 255, 0.5)', textAlign: 'left' }}>
+                      <th style={{ padding: '10px 14px' }}>Bowler</th>
+                      <th style={{ padding: '10px 14px', textAlign: 'right' }}>O</th>
+                      <th style={{ padding: '10px 14px', textAlign: 'right' }}>M</th>
+                      <th style={{ padding: '10px 14px', textAlign: 'right' }}>R</th>
+                      <th style={{ padding: '10px 14px', textAlign: 'right' }}>W</th>
+                      <th style={{ padding: '10px 14px', textAlign: 'right' }}>Econ</th>
+                      <th style={{ padding: '10px 14px', textAlign: 'right' }}>WD</th>
+                      <th style={{ padding: '10px 14px', textAlign: 'right' }}>NB</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(selectedInnings.bowlingScores || []).map((b: any) => {
+                      const totalOvers = b.overs + b.balls / 6;
+                      const econ = totalOvers > 0 ? (b.runsConceded / totalOvers).toFixed(2) : '0.00';
+                      return (
+                        <tr key={b.id} style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.04)' }}>
+                          <td style={{ padding: '10px 14px', fontWeight: 700, color: '#FFF' }}>
+                            {b.player?.name} {b.isCurrent ? ' *' : ''}
+                          </td>
+                          <td style={{ padding: '10px 14px', textAlign: 'right', color: '#FFF' }}>{b.overs}.{b.balls}</td>
+                          <td style={{ padding: '10px 14px', textAlign: 'right', color: 'rgba(255, 255, 255, 0.7)' }}>{b.maidens}</td>
+                          <td style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 800, color: '#FFF' }}>{b.runsConceded}</td>
+                          <td style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 800, color: '#FFB800' }}>{b.wickets}</td>
+                          <td style={{ padding: '10px 14px', textAlign: 'right', color: 'rgba(255, 255, 255, 0.7)' }}>{econ}</td>
+                          <td style={{ padding: '10px 14px', textAlign: 'right', color: 'rgba(255, 255, 255, 0.7)' }}>{b.wides}</td>
+                          <td style={{ padding: '10px 14px', textAlign: 'right', color: 'rgba(255, 255, 255, 0.7)' }}>{b.noBalls}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         ) : (

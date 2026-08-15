@@ -63,8 +63,8 @@ export default function TeamDetailsForm({ register, errors }: TeamDetailsFormPro
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-          gap: 'var(--space-lg)',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+          gap: 'var(--space-md)',
         }}
       >
         {/* Team Name */}

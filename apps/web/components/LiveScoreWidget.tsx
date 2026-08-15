@@ -212,37 +212,39 @@ export default function LiveScoreWidget() {
         </div>
 
         {/* Main Scorecard Body */}
-        <div style={{ padding: '20px 24px' }}>
+        <div style={{ padding: '20px 18px' }}>
           <div
             style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr auto 1fr',
+              display: 'flex',
               alignItems: 'center',
-              gap: '24px',
+              justifyContent: 'space-between',
+              gap: '16px',
+              flexWrap: 'wrap',
               paddingBottom: '20px',
               borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
             }}
           >
             {/* Team A */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: '120px', flex: '1 1 auto' }}>
               <div
                 style={{
-                  width: '48px',
-                  height: '48px',
+                  width: '44px',
+                  height: '44px',
                   borderRadius: '50%',
                   background: 'rgba(255, 255, 255, 0.1)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  fontSize: '1.4rem',
+                  fontSize: '1.2rem',
                   fontWeight: 900,
                   border: '1px solid rgba(255, 255, 255, 0.15)',
+                  flexShrink: 0,
                 }}
               >
                 🏏
               </div>
               <div>
-                <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#FFF' }}>
+                <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#FFF' }}>
                   {currentMatch.match.teamA.name}
                 </div>
                 <div style={{ fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.5)', fontWeight: 600 }}>
@@ -252,26 +254,26 @@ export default function LiveScoreWidget() {
             </div>
 
             {/* Score in Center */}
-            <div style={{ textAlign: 'center' }}>
+            <div style={{ textAlign: 'center', minWidth: '140px', flex: '1 1 auto' }}>
               {currentInnings ? (
                 <div>
                   <div
                     style={{
                       fontFamily: 'monospace',
-                      fontSize: '2.4rem',
+                      fontSize: '2.2rem',
                       fontWeight: 900,
                       color: '#FFB800',
                       letterSpacing: '-0.02em',
                       lineHeight: 1,
-                      marginBottom: '6px',
+                      marginBottom: '4px',
                     }}
                   >
                     {currentInnings.runs} / {currentInnings.wickets}
                   </div>
-                  <div style={{ fontSize: '0.9rem', fontWeight: 700, color: 'rgba(255, 255, 255, 0.8)' }}>
+                  <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'rgba(255, 255, 255, 0.8)' }}>
                     {currentInnings.overs}.{currentInnings.balls} / {currentMatch.match.oversPerInnings} Overs
                   </div>
-                  <div style={{ fontSize: '0.78rem', color: 'rgba(255, 255, 255, 0.5)', marginTop: '4px' }}>
+                  <div style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.5)', marginTop: '2px' }}>
                     CRR: {currentInnings.crr} {currentInnings.rrr ? `• RRR: ${currentInnings.rrr}` : ''}
                   </div>
                 </div>
@@ -283,9 +285,9 @@ export default function LiveScoreWidget() {
             </div>
 
             {/* Team B */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '16px', textAlign: 'right' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '12px', minWidth: '120px', flex: '1 1 auto', textAlign: 'right' }}>
               <div>
-                <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#FFF' }}>
+                <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#FFF' }}>
                   {currentMatch.match.teamB.name}
                 </div>
                 <div style={{ fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.5)', fontWeight: 600 }}>
@@ -294,16 +296,17 @@ export default function LiveScoreWidget() {
               </div>
               <div
                 style={{
-                  width: '48px',
-                  height: '48px',
+                  width: '44px',
+                  height: '44px',
                   borderRadius: '50%',
                   background: 'rgba(255, 255, 255, 0.1)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  fontSize: '1.4rem',
+                  fontSize: '1.2rem',
                   fontWeight: 900,
                   border: '1px solid rgba(255, 255, 255, 0.15)',
+                  flexShrink: 0,
                 }}
               >
                 🦁
@@ -323,8 +326,8 @@ export default function LiveScoreWidget() {
             <div
               style={{
                 display: 'grid',
-                gridTemplateColumns: '2fr 1fr',
-                gap: '20px',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+                gap: '16px',
                 marginTop: '16px',
               }}
             >

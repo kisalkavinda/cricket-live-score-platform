@@ -152,7 +152,7 @@ h1, h2, h3, h4, h5, h6,
   align-items: center;
   justify-content: center;
   gap: 10px;
-  height: var(--tap-min);
+  min-height: var(--tap-min);
   padding: 0 var(--space-md);
   background: var(--color-accent);
   color: var(--color-accent-ink);
@@ -160,25 +160,20 @@ h1, h2, h3, h4, h5, h6,
   font-size: 1.05rem;
   font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  text-decoration: none;
+  letter-spacing: 0.04em;
   border-radius: var(--radius-sm);
-  border: 1px solid transparent;
-  white-space: nowrap; /* Gate 49: Prevent two-line CTA wrap */
+  border: 1.5px solid var(--color-accent-bright);
+  text-decoration: none;
   cursor: pointer;
-  transition: background var(--dur-fast) var(--ease-out), transform var(--dur-fast) var(--ease-out);
+  transition: all var(--dur-fast) var(--ease-out);
+  box-shadow: 0 4px 14px rgba(192, 39, 45, 0.35);
+  box-sizing: border-box;
 }
 
-.btn-hallmark-primary:hover:not(:disabled) {
+.btn-hallmark-primary:hover {
   background: var(--color-accent-hover);
+  box-shadow: 0 6px 20px rgba(192, 39, 45, 0.5);
   transform: translateY(-1px);
-}
-
-.btn-hallmark-primary:disabled {
-  background: var(--color-ink-subtle);
-  color: var(--color-paper-alt);
-  cursor: not-allowed;
-  opacity: 0.7;
 }
 
 .btn-hallmark-outline {
@@ -186,7 +181,7 @@ h1, h2, h3, h4, h5, h6,
   align-items: center;
   justify-content: center;
   gap: 10px;
-  height: var(--tap-min);
+  min-height: var(--tap-min);
   padding: 0 var(--space-md);
   background: transparent;
   color: var(--color-ink);
@@ -194,21 +189,56 @@ h1, h2, h3, h4, h5, h6,
   font-size: 1.05rem;
   font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  text-decoration: none;
+  letter-spacing: 0.04em;
   border-radius: var(--radius-sm);
   border: 1.5px solid var(--color-border);
-  white-space: nowrap; /* Gate 49 */
+  text-decoration: none;
   cursor: pointer;
-  transition: border-color var(--dur-fast) var(--ease-out), background var(--dur-fast) var(--ease-out);
+  transition: all var(--dur-fast) var(--ease-out);
+  box-sizing: border-box;
 }
 
 .btn-hallmark-outline:hover {
   border-color: var(--color-accent);
-  background: var(--color-accent-soft);
   color: var(--color-accent);
+  background: var(--color-accent-soft);
 }
 
+/* Mobile Responsive Utility Classes */
+@media (max-width: 768px) {
+  .hide-on-mobile {
+    display: none !important;
+  }
+  
+  .stack-on-mobile {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+  
+  .mobile-p-sm {
+    padding: 14px !important;
+  }
+  
+  .mobile-text-center {
+    text-align: center !important;
+  }
+}
+
+/* Smooth Table Responsive Scroll */
+.table-responsive-container {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+.table-responsive-container::-webkit-scrollbar {
+  height: 6px;
+}
+
+.table-responsive-container::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 9999px;
 /* Reduced Motion (Gate 27) */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
@@ -218,3 +248,4 @@ h1, h2, h3, h4, h5, h6,
     scroll-behavior: auto !important;
   }
 }
+
