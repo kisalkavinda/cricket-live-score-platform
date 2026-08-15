@@ -26,104 +26,196 @@ export default async function AdminMatchesPage() {
   const completedMatches = matches.filter((m: any) => m.status === 'COMPLETED' || m.status === 'ABANDONED');
 
   return (
-    <div className="max-w-6xl mx-auto space-y-10">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-white/[0.08]">
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '16px',
+          paddingBottom: '20px',
+          borderBottom: '1px solid #1E2638',
+        }}
+      >
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-xs font-extrabold tracking-widest text-amber-400 uppercase font-mono">
-              Live Operations
-            </span>
-            <span className="text-white/30">•</span>
-            <span className="text-xs text-white/50">{matches.length} Total Fixtures</span>
+          <div
+            style={{
+              fontSize: '11px',
+              fontWeight: 800,
+              letterSpacing: '0.08em',
+              color: '#F59E0B',
+              textTransform: 'uppercase',
+              marginBottom: '4px',
+              fontFamily: 'monospace',
+            }}
+          >
+            LIVE OPERATIONS • {matches.length} TOTAL FIXTURES
           </div>
-          <h1 className="text-3xl font-black tracking-tight font-display text-white">
+          <h1
+            style={{
+              fontSize: '24px',
+              fontWeight: 800,
+              color: '#FFFFFF',
+              margin: 0,
+              letterSpacing: '-0.01em',
+            }}
+          >
             Matches & Live Scoring
           </h1>
-          <p className="text-sm text-white/60 mt-1">
+          <p style={{ fontSize: '13px', color: '#8B9BB4', margin: '4px 0 0' }}>
             Schedule championship fixtures, control live ball-by-ball scoring, and broadcast real-time updates.
           </p>
         </div>
 
         <Link
           href={`/${entryPath}/matches/new`}
-          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#C0272D] to-[#991B1F] hover:from-[#D32F35] hover:to-[#B22227] text-white text-sm font-bold shadow-lg shadow-[#C0272D]/25 border border-[#C0272D]/40 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '8px',
+            padding: '10px 18px',
+            borderRadius: '8px',
+            backgroundColor: '#C0272D',
+            color: '#FFFFFF',
+            fontSize: '13px',
+            fontWeight: 700,
+            textDecoration: 'none',
+            border: '1px solid #D32F35',
+            boxShadow: '0 2px 10px rgba(192, 39, 45, 0.3)',
+          }}
         >
           <span>+</span>
           <span>Create New Match</span>
         </Link>
       </div>
 
-      {/* 🔴 LIVE IN-PROGRESS MATCHES */}
-      <div className="space-y-4">
-        <div className="flex items-center gap-2.5">
-          <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse shadow-md shadow-red-500" />
-          <h2 className="text-lg font-black tracking-wide font-display text-amber-400 uppercase">
+      {/* 🔴 LIVE MATCHES */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#EF4444' }} />
+          <h2 style={{ fontSize: '14px', fontWeight: 800, color: '#F59E0B', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: 'monospace', margin: 0 }}>
             Live Matches ({liveMatches.length})
           </h2>
         </div>
 
         {liveMatches.length === 0 ? (
-          <div className="rounded-2xl bg-white/[0.02] border border-dashed border-white/10 p-8 text-center text-sm text-white/40">
+          <div
+            style={{
+              backgroundColor: '#10141E',
+              border: '1px dashed #1E2638',
+              borderRadius: '12px',
+              padding: '32px 20px',
+              textAlign: 'center',
+              color: '#8B9BB4',
+              fontSize: '13px',
+            }}
+          >
             No matches currently live. Start an upcoming fixture below to launch the live scoring engine.
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))',
+              gap: '20px',
+            }}
+          >
             {liveMatches.map((m: any) => {
               const currentInn = m.innings?.find((i: any) => i.inningsNumber === m.currentInnings) || m.innings?.[0];
               return (
                 <div
                   key={m.id}
-                  className="rounded-2xl bg-gradient-to-br from-amber-500/10 via-[#161111] to-[#120E0E] border border-amber-500/35 p-6 backdrop-blur-xl shadow-xl shadow-amber-500/5 space-y-5"
+                  style={{
+                    backgroundColor: '#10141E',
+                    border: '1px solid rgba(245, 158, 11, 0.35)',
+                    borderRadius: '12px',
+                    padding: '20px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '16px',
+                    boxShadow: '0 4px 16px rgba(0,0,0,0.3)',
+                  }}
                 >
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="px-2.5 py-1 rounded-md bg-red-500 text-white font-extrabold font-mono tracking-wider flex items-center gap-1.5 animate-pulse">
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '11px' }}>
+                    <span style={{ padding: '3px 8px', borderRadius: '4px', backgroundColor: '#EF4444', color: '#FFFFFF', fontWeight: 800, fontFamily: 'monospace' }}>
                       ● LIVE INNINGS {m.currentInnings}
                     </span>
-                    <span className="text-white/60 flex items-center gap-1">
+                    <span style={{ color: '#8B9BB4' }}>
                       📍 {m.venue || 'Main University Ground'}
                     </span>
                   </div>
 
-                  <div className="flex items-center justify-between gap-4 py-2">
-                    <div className="flex-1">
-                      <div className="text-lg font-black text-white">{m.teamA.name}</div>
-                      <div className="text-xs text-white/50 font-mono">{m.teamA.shortName}</div>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', padding: '4px 0' }}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: '16px', fontWeight: 800, color: '#FFFFFF' }}>{m.teamA.name}</div>
+                      <div style={{ fontSize: '11px', color: '#8B9BB4', fontFamily: 'monospace' }}>{m.teamA.shortName}</div>
                     </div>
-                    <div className="text-sm font-black text-amber-400 font-mono px-3 py-1 rounded-lg bg-white/5 border border-white/10">
+                    <div style={{ fontSize: '12px', fontWeight: 800, color: '#F59E0B', fontFamily: 'monospace', padding: '4px 8px', borderRadius: '6px', backgroundColor: '#1E2638' }}>
                       VS
                     </div>
-                    <div className="flex-1 text-right">
-                      <div className="text-lg font-black text-white">{m.teamB.name}</div>
-                      <div className="text-xs text-white/50 font-mono">{m.teamB.shortName}</div>
+                    <div style={{ flex: 1, textAlign: 'right' }}>
+                      <div style={{ fontSize: '16px', fontWeight: 800, color: '#FFFFFF' }}>{m.teamB.name}</div>
+                      <div style={{ fontSize: '11px', color: '#8B9BB4', fontFamily: 'monospace' }}>{m.teamB.shortName}</div>
                     </div>
                   </div>
 
                   {currentInn && (
-                    <div className="p-3.5 rounded-xl bg-black/40 border border-white/[0.08] flex items-center justify-between">
-                      <div className="text-xs text-white/80">
-                        Batting: <strong className="text-white font-semibold">{currentInn.battingTeam?.name}</strong>
+                    <div
+                      style={{
+                        backgroundColor: '#141A26',
+                        border: '1px solid #1E2638',
+                        borderRadius: '8px',
+                        padding: '12px 16px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                      }}
+                    >
+                      <div style={{ fontSize: '12px', color: '#CBD5E1' }}>
+                        Batting: <strong style={{ color: '#FFFFFF' }}>{currentInn.battingTeam?.name}</strong>
                       </div>
-                      <div className="text-xl font-black text-amber-400 font-mono">
+                      <div style={{ fontSize: '18px', fontWeight: 800, color: '#FBBF24', fontFamily: 'monospace' }}>
                         {currentInn.runs}/{currentInn.wickets}{' '}
-                        <span className="text-xs text-white/50 font-medium font-sans">
+                        <span style={{ fontSize: '12px', color: '#8B9BB4', fontWeight: 500 }}>
                           ({currentInn.overs}.{currentInn.balls} ov)
                         </span>
                       </div>
                     </div>
                   )}
 
-                  <div className="flex items-center gap-3 pt-2">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', paddingTop: '4px' }}>
                     <Link
                       href={`/${entryPath}/matches/${m.id}/score`}
-                      className="flex-1 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-black font-extrabold text-xs text-center tracking-wider transition shadow-lg shadow-amber-400/20"
+                      style={{
+                        flex: 1,
+                        textAlign: 'center',
+                        padding: '10px 14px',
+                        borderRadius: '6px',
+                        backgroundColor: '#F59E0B',
+                        color: '#000000',
+                        fontSize: '12px',
+                        fontWeight: 800,
+                        textDecoration: 'none',
+                        letterSpacing: '0.04em',
+                      }}
                     >
                       ⚡ OPEN SCORING CONSOLE
                     </Link>
                     <Link
                       href={`/scorecard?matchId=${m.id}`}
                       target="_blank"
-                      className="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 text-white font-semibold text-xs transition"
+                      style={{
+                        padding: '10px 14px',
+                        borderRadius: '6px',
+                        backgroundColor: '#1E2638',
+                        color: '#E2E8F0',
+                        fontSize: '12px',
+                        fontWeight: 600,
+                        textDecoration: 'none',
+                        border: '1px solid #2A364E',
+                      }}
                     >
                       Public View ↗
                     </Link>
@@ -135,54 +227,88 @@ export default async function AdminMatchesPage() {
         )}
       </div>
 
-      {/* 📅 UPCOMING FIXTURES */}
-      <div className="space-y-4">
-        <div className="flex items-center gap-2">
-          <span className="text-base">📅</span>
-          <h2 className="text-lg font-black tracking-wide font-display text-white uppercase">
+      {/* 📅 UPCOMING MATCHES */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{ fontSize: '14px' }}>📅</span>
+          <h2 style={{ fontSize: '14px', fontWeight: 800, color: '#FFFFFF', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: 'monospace', margin: 0 }}>
             Upcoming Fixtures ({upcomingMatches.length})
           </h2>
         </div>
 
         {upcomingMatches.length === 0 ? (
-          <div className="rounded-2xl bg-white/[0.02] border border-white/[0.06] p-8 text-center text-sm text-white/40">
+          <div
+            style={{
+              backgroundColor: '#10141E',
+              border: '1px solid #1E2638',
+              borderRadius: '12px',
+              padding: '32px 20px',
+              textAlign: 'center',
+              color: '#8B9BB4',
+              fontSize: '13px',
+            }}
+          >
             No upcoming fixtures scheduled.
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+              gap: '20px',
+            }}
+          >
             {upcomingMatches.map((m: any) => (
               <div
                 key={m.id}
-                className="rounded-2xl bg-[#141010]/80 border border-white/[0.08] hover:border-white/20 p-5 backdrop-blur-xl transition space-y-4"
+                style={{
+                  backgroundColor: '#10141E',
+                  border: '1px solid #1E2638',
+                  borderRadius: '12px',
+                  padding: '20px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '14px',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+                }}
               >
-                <div className="flex items-center justify-between text-xs">
-                  <span className="px-2 py-0.5 rounded bg-white/10 text-white/70 font-mono font-bold">
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '11px' }}>
+                  <span style={{ padding: '2px 8px', borderRadius: '4px', backgroundColor: '#1E2638', color: '#CBD5E1', fontFamily: 'monospace', fontWeight: 700 }}>
                     {m.oversPerInnings} Overs
                   </span>
-                  <span className="text-white/50 text-[11px]">
+                  <span style={{ color: '#8B9BB4' }}>
                     📍 {m.venue || 'Main Ground'}
                   </span>
                 </div>
 
-                <div className="flex items-center justify-between py-2">
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 0' }}>
                   <div>
-                    <div className="font-bold text-white text-base">{m.teamA.name}</div>
-                    <div className="text-xs text-white/50 font-mono">{m.teamA.shortName}</div>
+                    <div style={{ fontSize: '15px', fontWeight: 800, color: '#FFFFFF' }}>{m.teamA.name}</div>
+                    <div style={{ fontSize: '11px', color: '#8B9BB4', fontFamily: 'monospace' }}>{m.teamA.shortName}</div>
                   </div>
-                  <span className="text-xs font-bold text-white/30 font-mono">VS</span>
-                  <div className="text-right">
-                    <div className="font-bold text-white text-base">{m.teamB.name}</div>
-                    <div className="text-xs text-white/50 font-mono">{m.teamB.shortName}</div>
+                  <span style={{ fontSize: '11px', fontWeight: 800, color: '#64748B', fontFamily: 'monospace' }}>VS</span>
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontSize: '15px', fontWeight: 800, color: '#FFFFFF' }}>{m.teamB.name}</div>
+                    <div style={{ fontSize: '11px', color: '#8B9BB4', fontFamily: 'monospace' }}>{m.teamB.shortName}</div>
                   </div>
                 </div>
 
-                <div className="pt-3 border-t border-white/[0.06] flex items-center justify-between">
-                  <span className="text-xs text-white/40 font-mono">
+                <div style={{ paddingTop: '12px', borderTop: '1px solid #1E2638', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span style={{ fontSize: '11px', color: '#8B9BB4', fontFamily: 'monospace' }}>
                     {m.scheduledAt ? new Date(m.scheduledAt).toLocaleDateString() : 'TBD'}
                   </span>
                   <Link
                     href={`/${entryPath}/matches/${m.id}/score`}
-                    className="px-3.5 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs font-bold transition"
+                    style={{
+                      padding: '6px 14px',
+                      borderRadius: '6px',
+                      backgroundColor: '#1E2638',
+                      color: '#FFFFFF',
+                      fontSize: '11px',
+                      fontWeight: 700,
+                      textDecoration: 'none',
+                      border: '1px solid #2A364E',
+                    }}
                   >
                     Start Match →
                   </Link>
@@ -193,44 +319,62 @@ export default async function AdminMatchesPage() {
         )}
       </div>
 
-      {/* 🏆 COMPLETED FIXTURES */}
+      {/* 🏆 COMPLETED MATCHES */}
       {completedMatches.length > 0 && (
-        <div className="space-y-4">
-          <div className="flex items-center gap-2">
-            <span className="text-base">🏆</span>
-            <h2 className="text-lg font-black tracking-wide font-display text-white/80 uppercase">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '14px' }}>🏆</span>
+            <h2 style={{ fontSize: '14px', fontWeight: 800, color: '#8B9BB4', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: 'monospace', margin: 0 }}>
               Completed Matches ({completedMatches.length})
             </h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+              gap: '16px',
+            }}
+          >
             {completedMatches.map((m: any) => (
               <div
                 key={m.id}
-                className="rounded-2xl bg-white/[0.02] border border-white/[0.06] p-5 space-y-3"
+                style={{
+                  backgroundColor: '#10141E',
+                  border: '1px solid #1E2638',
+                  borderRadius: '12px',
+                  padding: '16px 20px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '10px',
+                }}
               >
-                <div className="flex items-center justify-between text-xs text-white/50">
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '11px', color: '#8B9BB4' }}>
                   <span>{m.tournament?.name || 'Tournament'}</span>
-                  <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 font-mono font-bold">
+                  <span style={{ padding: '2px 6px', borderRadius: '4px', backgroundColor: 'rgba(16, 185, 129, 0.15)', color: '#34D399', fontFamily: 'monospace', fontWeight: 700 }}>
                     FINISHED
                   </span>
                 </div>
 
-                <div className="font-bold text-white">
+                <div style={{ fontSize: '14px', fontWeight: 700, color: '#FFFFFF' }}>
                   {m.teamA.name} vs {m.teamB.name}
                 </div>
 
                 {m.resultNote && (
-                  <div className="text-xs text-amber-300/80 font-medium">
+                  <div style={{ fontSize: '12px', color: '#FBBF24' }}>
                     {m.resultNote}
                   </div>
                 )}
 
-                <div className="pt-2 border-t border-white/[0.04] text-right">
+                <div style={{ paddingTop: '8px', borderTop: '1px solid #161D2B', textAlign: 'right' }}>
                   <Link
                     href={`/scorecard?matchId=${m.id}`}
                     target="_blank"
-                    className="text-xs text-white/60 hover:text-white transition"
+                    style={{
+                      fontSize: '11px',
+                      color: '#8B9BB4',
+                      textDecoration: 'none',
+                    }}
                   >
                     View Scorecard ↗
                   </Link>

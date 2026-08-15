@@ -44,32 +44,31 @@ export default async function AdminTournamentsPage() {
     switch (status) {
       case 'LIVE':
         return (
-          <span className="px-2.5 py-1 text-xs font-extrabold tracking-wider rounded-lg bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 font-mono flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            LIVE IN PROGRESS
+          <span style={{ padding: '3px 8px', borderRadius: '4px', fontSize: '10px', fontWeight: 800, fontFamily: 'monospace', backgroundColor: 'rgba(16, 185, 129, 0.15)', color: '#34D399', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
+            ● LIVE IN PROGRESS
           </span>
         );
       case 'REGISTRATION':
         return (
-          <span className="px-2.5 py-1 text-xs font-extrabold tracking-wider rounded-lg bg-amber-500/15 text-amber-300 border border-amber-500/30 font-mono">
+          <span style={{ padding: '3px 8px', borderRadius: '4px', fontSize: '10px', fontWeight: 800, fontFamily: 'monospace', backgroundColor: 'rgba(245, 158, 11, 0.15)', color: '#FBBF24', border: '1px solid rgba(245, 158, 11, 0.3)' }}>
             REGISTRATION OPEN
           </span>
         );
       case 'SCHEDULED':
         return (
-          <span className="px-2.5 py-1 text-xs font-extrabold tracking-wider rounded-lg bg-blue-500/15 text-blue-300 border border-blue-500/30 font-mono">
+          <span style={{ padding: '3px 8px', borderRadius: '4px', fontSize: '10px', fontWeight: 800, fontFamily: 'monospace', backgroundColor: 'rgba(59, 130, 246, 0.15)', color: '#60A5FA', border: '1px solid rgba(59, 130, 246, 0.3)' }}>
             SCHEDULED
           </span>
         );
       case 'COMPLETED':
         return (
-          <span className="px-2.5 py-1 text-xs font-extrabold tracking-wider rounded-lg bg-white/10 text-white/60 border border-white/10 font-mono">
+          <span style={{ padding: '3px 8px', borderRadius: '4px', fontSize: '10px', fontWeight: 800, fontFamily: 'monospace', backgroundColor: '#1E2638', color: '#94A3B8' }}>
             COMPLETED
           </span>
         );
       default:
         return (
-          <span className="px-2.5 py-1 text-xs font-extrabold tracking-wider rounded-lg bg-purple-500/15 text-purple-300 border border-purple-500/30 font-mono">
+          <span style={{ padding: '3px 8px', borderRadius: '4px', fontSize: '10px', fontWeight: 800, fontFamily: 'monospace', backgroundColor: '#1E2638', color: '#94A3B8' }}>
             {status}
           </span>
         );
@@ -77,100 +76,215 @@ export default async function AdminTournamentsPage() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-white/[0.08]">
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '16px',
+          paddingBottom: '20px',
+          borderBottom: '1px solid #1E2638',
+        }}
+      >
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-xs font-extrabold tracking-widest text-[#C0272D] uppercase font-mono">
-              Championships
-            </span>
-            <span className="text-white/30">•</span>
-            <span className="text-xs text-white/50">{tournaments.length} Tournaments</span>
+          <div
+            style={{
+              fontSize: '11px',
+              fontWeight: 800,
+              letterSpacing: '0.08em',
+              color: '#C0272D',
+              textTransform: 'uppercase',
+              marginBottom: '4px',
+              fontFamily: 'monospace',
+            }}
+          >
+            CHAMPIONSHIPS • {tournaments.length} TOURNAMENTS
           </div>
-          <h1 className="text-3xl font-black tracking-tight font-display text-white">
+          <h1
+            style={{
+              fontSize: '24px',
+              fontWeight: 800,
+              color: '#FFFFFF',
+              margin: 0,
+              letterSpacing: '-0.01em',
+            }}
+          >
             Tournaments
           </h1>
-          <p className="text-sm text-white/60 mt-1">
+          <p style={{ fontSize: '13px', color: '#8B9BB4', margin: '4px 0 0' }}>
             Configure championship seasons, stages, rules, and match scheduling.
           </p>
         </div>
 
         <Link
           href={`/${entryPath}/tournaments/new`}
-          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#C0272D] to-[#991B1F] hover:from-[#D32F35] hover:to-[#B22227] text-white text-sm font-bold shadow-lg shadow-[#C0272D]/25 border border-[#C0272D]/40 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '8px',
+            padding: '10px 18px',
+            borderRadius: '8px',
+            backgroundColor: '#C0272D',
+            color: '#FFFFFF',
+            fontSize: '13px',
+            fontWeight: 700,
+            textDecoration: 'none',
+            border: '1px solid #D32F35',
+            boxShadow: '0 2px 10px rgba(192, 39, 45, 0.3)',
+          }}
         >
           <span>+</span>
           <span>Create Tournament</span>
         </Link>
       </div>
 
-      {/* Grid of Tournaments */}
+      {/* Grid */}
       {tournaments.length === 0 ? (
-        <div className="rounded-2xl bg-white/[0.02] border border-dashed border-white/10 p-12 text-center">
-          <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center text-2xl mx-auto mb-3">
-            🏆
-          </div>
-          <h3 className="text-base font-bold text-white mb-1">No tournaments found</h3>
-          <p className="text-xs text-white/50 max-w-sm mx-auto mb-5">
-            Create your first tournament to start scheduling fixtures and accepting team registrations.
+        <div
+          style={{
+            backgroundColor: '#10141E',
+            border: '1px dashed #1E2638',
+            borderRadius: '12px',
+            padding: '48px 24px',
+            textAlign: 'center',
+          }}
+        >
+          <div style={{ fontSize: '32px', marginBottom: '12px' }}>🏆</div>
+          <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#FFFFFF', margin: '0 0 6px' }}>
+            No tournaments found
+          </h3>
+          <p style={{ fontSize: '13px', color: '#8B9BB4', margin: '0 0 20px' }}>
+            Create your first tournament to start scheduling fixtures and accepting registrations.
           </p>
           <Link
             href={`/${entryPath}/tournaments/new`}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white/10 hover:bg-white/15 text-white text-xs font-semibold transition"
+            style={{
+              display: 'inline-block',
+              padding: '8px 16px',
+              borderRadius: '6px',
+              backgroundColor: '#C0272D',
+              color: '#FFFFFF',
+              fontSize: '12px',
+              fontWeight: 700,
+              textDecoration: 'none',
+            }}
           >
             Create Tournament
           </Link>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {tournaments.map((tournament: any) => (
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+            gap: '20px',
+          }}
+        >
+          {tournaments.map((t: any) => (
             <div
-              key={tournament.id}
-              className="group relative rounded-2xl bg-[#141010]/80 hover:bg-[#1A1414]/90 border border-white/[0.08] hover:border-white/20 p-6 backdrop-blur-xl transition-all duration-200 hover:shadow-xl hover:shadow-black/50 flex flex-col justify-between"
+              key={t.id}
+              style={{
+                backgroundColor: '#10141E',
+                border: '1px solid #1E2638',
+                borderRadius: '12px',
+                padding: '20px',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between',
+                gap: '18px',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+              }}
             >
               <div>
-                <div className="flex items-start justify-between gap-3 mb-4">
-                  <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-xl">
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                  <div
+                    style={{
+                      width: '36px',
+                      height: '36px',
+                      borderRadius: '8px',
+                      backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                      border: '1px solid rgba(245, 158, 11, 0.25)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '18px',
+                    }}
+                  >
                     🏆
                   </div>
-                  {getStatusBadge(tournament.status)}
+                  {getStatusBadge(t.status)}
                 </div>
 
-                <h3 className="text-xl font-extrabold text-white group-hover:text-amber-400 transition-colors mb-2 font-display tracking-wide">
-                  {tournament.name}
+                <h3 style={{ fontSize: '17px', fontWeight: 800, color: '#FFFFFF', margin: '0 0 12px' }}>
+                  {t.name}
                 </h3>
 
-                <div className="grid grid-cols-2 gap-3 p-3.5 rounded-xl bg-white/[0.03] border border-white/[0.06] text-xs mb-6">
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: '1fr 1fr',
+                    gap: '10px',
+                    backgroundColor: '#141A26',
+                    border: '1px solid #1E2638',
+                    borderRadius: '8px',
+                    padding: '12px',
+                    fontSize: '12px',
+                  }}
+                >
                   <div>
-                    <div className="text-white/40 text-[10px] uppercase font-bold tracking-wider">Season</div>
-                    <div className="font-bold text-white font-mono mt-0.5">{tournament.season || '2026'}</div>
+                    <div style={{ color: '#8B9BB4', fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', fontFamily: 'monospace' }}>Season</div>
+                    <div style={{ color: '#FFFFFF', fontWeight: 700, marginTop: '2px', fontFamily: 'monospace' }}>{t.season || '2026'}</div>
                   </div>
                   <div>
-                    <div className="text-white/40 text-[10px] uppercase font-bold tracking-wider">Format</div>
-                    <div className="font-bold text-white font-mono mt-0.5">{tournament.format || 'T20'}</div>
+                    <div style={{ color: '#8B9BB4', fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', fontFamily: 'monospace' }}>Format</div>
+                    <div style={{ color: '#FFFFFF', fontWeight: 700, marginTop: '2px', fontFamily: 'monospace' }}>{t.format || 'T20'}</div>
                   </div>
                   <div>
-                    <div className="text-white/40 text-[10px] uppercase font-bold tracking-wider">Stages</div>
-                    <div className="font-bold text-white font-mono mt-0.5">{tournament.stages?.length ?? 0}</div>
+                    <div style={{ color: '#8B9BB4', fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', fontFamily: 'monospace' }}>Stages</div>
+                    <div style={{ color: '#FFFFFF', fontWeight: 700, marginTop: '2px', fontFamily: 'monospace' }}>{t.stages?.length ?? 0}</div>
                   </div>
                   <div>
-                    <div className="text-white/40 text-[10px] uppercase font-bold tracking-wider">Fixtures</div>
-                    <div className="font-bold text-white font-mono mt-0.5">{tournament._count?.matches ?? 0}</div>
+                    <div style={{ color: '#8B9BB4', fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', fontFamily: 'monospace' }}>Fixtures</div>
+                    <div style={{ color: '#FFFFFF', fontWeight: 700, marginTop: '2px', fontFamily: 'monospace' }}>{t._count?.matches ?? 0}</div>
                   </div>
                 </div>
               </div>
 
-              <div className="pt-4 border-t border-white/[0.06] flex items-center gap-2.5">
+              <div style={{ paddingTop: '14px', borderTop: '1px solid #1E2638', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <Link
                   href={`/${entryPath}/matches`}
-                  className="flex-1 py-2 rounded-lg bg-white/[0.06] hover:bg-white/[0.12] text-white text-xs font-bold text-center border border-white/10 transition"
+                  style={{
+                    flex: 1,
+                    textAlign: 'center',
+                    padding: '8px 12px',
+                    borderRadius: '6px',
+                    backgroundColor: '#1E2638',
+                    color: '#E2E8F0',
+                    fontSize: '11px',
+                    fontWeight: 700,
+                    textDecoration: 'none',
+                    border: '1px solid #2A364E',
+                  }}
                 >
                   View Matches
                 </Link>
                 <Link
-                  href={`/${entryPath}/tournaments/${tournament.id}`}
-                  className="flex-1 py-2 rounded-lg bg-[#C0272D]/20 hover:bg-[#C0272D]/30 text-red-300 text-xs font-bold text-center border border-[#C0272D]/30 transition"
+                  href={`/${entryPath}/tournaments/${t.id}`}
+                  style={{
+                    flex: 1,
+                    textAlign: 'center',
+                    padding: '8px 12px',
+                    borderRadius: '6px',
+                    backgroundColor: 'rgba(192, 39, 45, 0.15)',
+                    color: '#F87171',
+                    fontSize: '11px',
+                    fontWeight: 700,
+                    textDecoration: 'none',
+                    border: '1px solid rgba(192, 39, 45, 0.3)',
+                  }}
                 >
                   Settings
                 </Link>

@@ -111,40 +111,40 @@ export default function RegistrationDetailClient({
       {/* Grid of Details */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px', marginBottom: '28px' }}>
         {/* Team & Captain Details Card */}
-        <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '12px', padding: '24px' }}>
-          <span style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.12em', color: '#C0272D', textTransform: 'uppercase' }}>
+        <div style={{ backgroundColor: '#10141E', border: '1px solid #1E2638', borderRadius: '12px', padding: '24px', boxShadow: '0 4px 12px rgba(0,0,0,0.2)' }}>
+          <span style={{ fontSize: '11px', fontWeight: 800, letterSpacing: '0.08em', color: '#C0272D', textTransform: 'uppercase', fontFamily: 'monospace' }}>
             Team Roster Overview
           </span>
-          <h3 style={{ fontSize: '1.4rem', fontWeight: 800, margin: '4px 0 16px', color: '#FFFFFF', fontFamily: 'var(--font-display)' }}>
+          <h3 style={{ fontSize: '20px', fontWeight: 800, margin: '6px 0 16px', color: '#FFFFFF' }}>
             {registration.teamName}
           </h3>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '0.85rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '13px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ color: 'rgba(255, 255, 255, 0.6)' }}>Tournament:</span>
-              <span style={{ fontWeight: 600 }}>{registration.tournament?.name || 'Computing Premier League'}</span>
+              <span style={{ color: '#8B9BB4' }}>Tournament:</span>
+              <span style={{ fontWeight: 600, color: '#FFFFFF' }}>{registration.tournament?.name || 'Computing Premier League'}</span>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ color: 'rgba(255, 255, 255, 0.6)' }}>Captain / Leader:</span>
-              <span style={{ fontWeight: 700 }}>{registration.leaderName}</span>
+              <span style={{ color: '#8B9BB4' }}>Captain / Leader:</span>
+              <span style={{ fontWeight: 700, color: '#FFFFFF' }}>{registration.leaderName}</span>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ color: 'rgba(255, 255, 255, 0.6)' }}>WhatsApp Contact:</span>
-              <span style={{ fontFamily: 'monospace' }}>{registration.leaderWhatsapp}</span>
+              <span style={{ color: '#8B9BB4' }}>WhatsApp Contact:</span>
+              <span style={{ fontFamily: 'monospace', color: '#FFFFFF' }}>{registration.leaderWhatsapp}</span>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ color: 'rgba(255, 255, 255, 0.6)' }}>Leader Index:</span>
-              <span style={{ fontFamily: 'monospace', fontWeight: 700, color: '#C0272D' }}>
+              <span style={{ color: '#8B9BB4' }}>Leader Index:</span>
+              <span style={{ fontFamily: 'monospace', fontWeight: 800, color: '#C0272D' }}>
                 {registration.leaderIndexNumber}
               </span>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ color: 'rgba(255, 255, 255, 0.6)' }}>Registered Squad Size:</span>
-              <span style={{ fontWeight: 700 }}>{registration.players.length} Players</span>
+              <span style={{ color: '#8B9BB4' }}>Registered Squad Size:</span>
+              <span style={{ fontWeight: 700, color: '#FFFFFF' }}>{registration.players.length} Players</span>
             </div>
             {matchingException && (
-              <div style={{ background: 'rgba(234, 179, 8, 0.12)', border: '1px solid rgba(234, 179, 8, 0.3)', borderRadius: '6px', padding: '8px 12px', marginTop: '6px' }}>
-                <span style={{ color: '#EAB308', fontWeight: 700, fontSize: '0.78rem' }}>
+              <div style={{ backgroundColor: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.3)', borderRadius: '6px', padding: '8px 12px', marginTop: '6px' }}>
+                <span style={{ color: '#FBBF24', fontWeight: 700, fontSize: '12px' }}>
                   ⚡ Exception Rule Applied: Minimum {matchingException.minPlayers} players permitted.
                 </span>
               </div>
@@ -153,35 +153,42 @@ export default function RegistrationDetailClient({
         </div>
 
         {/* Status, Lifecycle & Google Sheets Backup Card */}
-        <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '12px', padding: '24px' }}>
-          <span style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.12em', color: '#C0272D', textTransform: 'uppercase' }}>
+        <div style={{ backgroundColor: '#10141E', border: '1px solid #1E2638', borderRadius: '12px', padding: '24px', boxShadow: '0 4px 12px rgba(0,0,0,0.2)' }}>
+          <span style={{ fontSize: '11px', fontWeight: 800, letterSpacing: '0.08em', color: '#C0272D', textTransform: 'uppercase', fontFamily: 'monospace' }}>
             Lifecycle & Backup Status
           </span>
-          <h3 style={{ fontSize: '1.4rem', fontWeight: 800, margin: '4px 0 16px', color: '#FFFFFF', fontFamily: 'var(--font-display)' }}>
+          <h3 style={{ fontSize: '20px', fontWeight: 800, margin: '6px 0 16px', color: '#FFFFFF' }}>
             System Sync
           </h3>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '0.85rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '13px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ color: 'rgba(255, 255, 255, 0.6)' }}>Registration Status:</span>
+              <span style={{ color: '#8B9BB4' }}>Registration Status:</span>
               <span
                 style={{
                   padding: '4px 10px',
                   borderRadius: '4px',
-                  fontSize: '0.75rem',
+                  fontSize: '11px',
                   fontWeight: 800,
-                  background:
+                  fontFamily: 'monospace',
+                  backgroundColor:
                     registration.status === 'APPROVED'
-                      ? 'rgba(34, 197, 94, 0.2)'
+                      ? 'rgba(16, 185, 129, 0.15)'
                       : registration.status === 'REJECTED'
-                      ? 'rgba(239, 68, 68, 0.2)'
-                      : 'rgba(234, 179, 8, 0.2)',
+                      ? 'rgba(239, 68, 68, 0.15)'
+                      : 'rgba(245, 158, 11, 0.15)',
                   color:
                     registration.status === 'APPROVED'
-                      ? '#22C55E'
+                      ? '#34D399'
                       : registration.status === 'REJECTED'
-                      ? '#EF4444'
-                      : '#EAB308',
+                      ? '#F87171'
+                      : '#FBBF24',
+                  border:
+                    registration.status === 'APPROVED'
+                      ? '1px solid rgba(16, 185, 129, 0.3)'
+                      : registration.status === 'REJECTED'
+                      ? '1px solid rgba(239, 68, 68, 0.3)'
+                      : '1px solid rgba(245, 158, 11, 0.3)',
                 }}
               >
                 {registration.status}
@@ -189,34 +196,35 @@ export default function RegistrationDetailClient({
             </div>
 
             {registration.status === 'APPROVED' && (
-              <div style={{ fontSize: '0.78rem', color: 'rgba(255, 255, 255, 0.6)' }}>
+              <div style={{ fontSize: '12px', color: '#8B9BB4' }}>
                 ✓ Approved on {registration.approvedAt ? new Date(registration.approvedAt).toLocaleString() : 'N/A'} by {registration.approvedBy || 'Admin'}
               </div>
             )}
 
             {registration.status === 'REJECTED' && (
-              <div style={{ background: 'rgba(239, 68, 68, 0.12)', padding: '10px', borderRadius: '6px', border: '1px solid rgba(239, 68, 68, 0.25)' }}>
-                <div style={{ color: '#EF4444', fontWeight: 700, fontSize: '0.78rem' }}>Rejection Reason:</div>
-                <div style={{ color: '#FFFFFF', fontSize: '0.82rem', marginTop: '2px' }}>{registration.rejectionReason || registration.notes || 'No reason specified.'}</div>
+              <div style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', padding: '10px 12px', borderRadius: '6px', border: '1px solid rgba(239, 68, 68, 0.25)' }}>
+                <div style={{ color: '#F87171', fontWeight: 700, fontSize: '11px' }}>Rejection Reason:</div>
+                <div style={{ color: '#FFFFFF', fontSize: '12px', marginTop: '2px' }}>{registration.rejectionReason || registration.notes || 'No reason specified.'}</div>
               </div>
             )}
 
             {/* Backup Status */}
-            <div style={{ borderTop: '1px solid rgba(255, 255, 255, 0.08)', paddingTop: '12px' }}>
+            <div style={{ borderTop: '1px solid #1E2638', paddingTop: '12px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                <span style={{ color: 'rgba(255, 255, 255, 0.6)' }}>Google Sheets Backup:</span>
+                <span style={{ color: '#8B9BB4' }}>Google Sheets Backup:</span>
                 <span
                   style={{
-                    fontSize: '0.8rem',
+                    fontSize: '12px',
                     fontWeight: 700,
-                    color: registration.backupStatus === 'SYNCED' ? '#22C55E' : registration.backupStatus === 'FAILED' ? '#EF4444' : '#EAB308',
+                    fontFamily: 'monospace',
+                    color: registration.backupStatus === 'SYNCED' ? '#34D399' : registration.backupStatus === 'FAILED' ? '#F87171' : '#FBBF24',
                   }}
                 >
                   ● {registration.backupStatus}
                 </span>
               </div>
               {registration.backupError && (
-                <div style={{ fontSize: '0.75rem', color: '#FF8585', marginBottom: '8px' }}>
+                <div style={{ fontSize: '11px', color: '#F87171', marginBottom: '8px' }}>
                   Error: {registration.backupError}
                 </div>
               )}
@@ -226,12 +234,12 @@ export default function RegistrationDetailClient({
                   onClick={handleRetryBackup}
                   disabled={loading}
                   style={{
-                    background: 'rgba(255, 255, 255, 0.08)',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    backgroundColor: '#1E2638',
+                    border: '1px solid #2A364E',
                     color: '#FFFFFF',
-                    padding: '5px 12px',
-                    borderRadius: '4px',
-                    fontSize: '0.78rem',
+                    padding: '6px 12px',
+                    borderRadius: '6px',
+                    fontSize: '11px',
                     fontWeight: 700,
                     cursor: 'pointer',
                   }}
@@ -245,10 +253,11 @@ export default function RegistrationDetailClient({
       </div>
 
       {/* Complete Squad Members Table */}
-      <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '12px', padding: '24px', marginBottom: '32px' }}>
-        <h3 style={{ fontSize: '1.2rem', fontWeight: 800, margin: '0 0 16px', color: '#FFFFFF', fontFamily: 'var(--font-display)' }}>
+      <div style={{ backgroundColor: '#10141E', border: '1px solid #1E2638', borderRadius: '12px', padding: '24px', marginBottom: '32px', boxShadow: '0 4px 12px rgba(0,0,0,0.2)' }}>
+        <h3 style={{ fontSize: '16px', fontWeight: 800, margin: '0 0 16px', color: '#FFFFFF' }}>
           Squad Members ({registration.players.length})
         </h3>
+
 
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
