@@ -250,6 +250,13 @@ export async function deleteTeamServerAction(teamId: string) {
   await requireAdminAuth();
   const entryPath = getAdminEntryPath();
 
+  // Find all players on this team before deleting relations
+  const teamPlayerLinks = await (prisma as any).teamPlayer.findMany({
+    where: { teamId },
+    select: { playerId: true },
+  });
+  const playerIds: string[] = teamPlayerLinks.map((tp: any) => tp.playerId);
+
   await (prisma as any).tournamentSquad.deleteMany({
     where: { teamId },
   });
@@ -264,7 +271,26 @@ export async function deleteTeamServerAction(teamId: string) {
     where: { id: teamId },
   });
 
+  // Delete all players that belonged to this team
+  for (const pid of playerIds) {
+    try {
+      await (prisma as any).tournamentSquad.deleteMany({
+        where: { playerId: pid },
+      });
+      await (prisma as any).teamPlayer.deleteMany({
+        where: { playerId: pid },
+      });
+      await (prisma as any).player.delete({
+        where: { id: pid },
+      });
+    } catch (err: unknown) {
+      console.warn(`[deleteTeamServerAction] Could not delete player ${pid}:`, err);
+    }
+  }
+
   revalidatePath(`/${entryPath}/teams`);
+  revalidatePath(`/${entryPath}/players`);
+  revalidatePath(`/${entryPath}/dashboard`);
   revalidatePath('/');
   return { success: true, redirectUrl: `/${entryPath}/teams` };
 }
