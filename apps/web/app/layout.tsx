@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from "next";
 import { Barlow_Condensed, Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { tournamentConfig } from "../config/tournament";
+import { SpeedInsights } from "@vercel/speed-insights/next";
+
 
 const barlowCondensed = Barlow_Condensed({
   variable: "--font-display",
@@ -46,7 +48,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     >
       <body className="min-h-full flex flex-col antialiased">
         {children}
+        <SpeedInsights />
       </body>
+
     </html>
   );
 }
