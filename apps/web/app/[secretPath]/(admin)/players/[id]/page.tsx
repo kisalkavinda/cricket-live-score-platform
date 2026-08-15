@@ -6,6 +6,7 @@ import {
   updatePlayerServerAction,
   deletePlayerServerAction,
 } from '@/lib/admin/admin-actions';
+import DeletePlayerButton from '@/components/admin/DeletePlayerButton';
 
 export const dynamic = 'force-dynamic';
 
@@ -245,28 +246,7 @@ export default async function AdminPlayerDetailPage({
             <p style={{ fontSize: '12px', color: '#8B9BB4', margin: '0 0 14px', lineHeight: 1.4 }}>
               Permanently remove this player from the tournament database and all team rosters.
             </p>
-            <form
-              action={async () => {
-                'use server';
-                await deletePlayerServerAction(player.id);
-              }}
-            >
-              <button
-                type="submit"
-                style={{
-                  padding: '8px 16px',
-                  borderRadius: '6px',
-                  backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                  border: '1px solid rgba(239, 68, 68, 0.3)',
-                  color: '#EF4444',
-                  fontSize: '12px',
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                }}
-              >
-                Delete Player
-              </button>
-            </form>
+            <DeletePlayerButton playerId={player.id} playerName={player.name} />
           </div>
         </div>
 

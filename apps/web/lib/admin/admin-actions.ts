@@ -227,6 +227,26 @@ export async function updateTeamServerAction(teamId: string, formData: FormData)
   revalidatePath('/');
 }
 
+export async function deleteTeamServerAction(teamId: string) {
+  await requireAdminAuth();
+  const entryPath = getAdminEntryPath();
+
+  await (prisma as any).teamPlayer.deleteMany({
+    where: { teamId },
+  });
+  await (prisma as any).tournamentTeam.deleteMany({
+    where: { teamId },
+  });
+
+  await (prisma as any).team.delete({
+    where: { id: teamId },
+  });
+
+  revalidatePath(`/${entryPath}/teams`);
+  revalidatePath('/');
+  redirect(`/${entryPath}/teams`);
+}
+
 export async function createAndAssignPlayerServerAction(teamId: string, formData: FormData) {
   await requireAdminAuth();
   const entryPath = getAdminEntryPath();
