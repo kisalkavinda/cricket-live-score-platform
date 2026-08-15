@@ -7,8 +7,9 @@ export async function GET() {
   try {
     const rawMatches = await getLiveMatches();
     const payloads = await Promise.all(
-      rawMatches.map((m: any) => buildMatchBroadcastPayload(m.id))
+      rawMatches.map((m: any) => buildMatchBroadcastPayload(m))
     );
+
 
     const validPayloads = payloads.filter(Boolean);
 
