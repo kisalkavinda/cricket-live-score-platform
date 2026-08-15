@@ -91,7 +91,7 @@ export async function createRegistration(
   // If tournament does not exist, check if any tournament exists or fallback
   if (!tournament) {
     const anyTournament = await (prisma as any).tournament.findFirst({
-      where: { status: { in: ["REGISTRATION", "DRAFT", "SCHEDULED"] } },
+      where: { status: { in: ["REGISTRATION", "DRAFT", "SCHEDULED", "LIVE"] } },
       orderBy: { createdAt: "desc" },
     });
     if (!anyTournament) {
@@ -104,12 +104,13 @@ export async function createRegistration(
     tournament = anyTournament;
   }
 
-  if (tournament.status !== "REGISTRATION" && tournament.status !== "DRAFT") {
+  if (tournament.status === "COMPLETED" || tournament.status === "CANCELLED") {
     return {
       success: false,
       error: "Team registration for this tournament is currently closed.",
     };
   }
+
 
   // 4. Determine Allowed Minimum Squad Size (Standard: 11, Exception: 7)
   let allowedMinimum = 11;
