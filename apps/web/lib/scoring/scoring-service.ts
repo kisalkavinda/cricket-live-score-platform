@@ -60,17 +60,36 @@ export interface RecordDeliveryInput {
 export async function getMatchesList() {
   const matches = await (prisma as any).match.findMany({
     orderBy: [{ status: 'asc' }, { scheduledAt: 'desc' }, { createdAt: 'desc' }],
-    include: {
-      teamA: true,
-      teamB: true,
-      tossWinner: true,
-      winnerTeam: true,
+    select: {
+      id: true,
+      status: true,
+      currentInnings: true,
+      oversPerInnings: true,
+      venue: true,
+      scheduledAt: true,
+      startedAt: true,
+      completedAt: true,
+      resultNote: true,
+      tossDecision: true,
+      tossWinnerId: true,
+      winnerTeamId: true,
       tournament: { select: { id: true, name: true } },
+      teamA: { select: { id: true, name: true, shortName: true, logoUrl: true } },
+      teamB: { select: { id: true, name: true, shortName: true, logoUrl: true } },
+      tossWinner: { select: { id: true, name: true, shortName: true } },
+      winnerTeam: { select: { id: true, name: true, shortName: true } },
       innings: {
         orderBy: { inningsNumber: 'asc' },
-        include: {
-          battingTeam: true,
-          bowlingTeam: true,
+        select: {
+          id: true,
+          inningsNumber: true,
+          runs: true,
+          wickets: true,
+          overs: true,
+          balls: true,
+          status: true,
+          battingTeam: { select: { id: true, name: true, shortName: true } },
+          bowlingTeam: { select: { id: true, name: true, shortName: true } },
         },
       },
     },
@@ -78,6 +97,7 @@ export async function getMatchesList() {
 
   return matches;
 }
+
 
 /**
  * Returns a single match with full details for scoring console or detailed overview.

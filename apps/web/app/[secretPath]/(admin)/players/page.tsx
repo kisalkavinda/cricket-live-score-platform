@@ -5,12 +5,26 @@ import { getAdminEntryPath, requireAdminAuth } from '@/lib/auth/admin-auth';
 
 const getPlayers = () => prisma.player.findMany({
   orderBy: { name: 'asc' },
-  include: {
+  take: 100,
+  select: {
+    id: true,
+    name: true,
+    role: true,
+    battingStyle: true,
+    bowlingStyle: true,
     teamPlayers: {
-      include: { team: true }
-    }
-  }
+      select: {
+        id: true,
+        team: {
+          select: {
+            shortName: true,
+          },
+        },
+      },
+    },
+  },
 });
+
 
 type PlayerRow = Awaited<ReturnType<typeof getPlayers>>[number];
 type TeamPlayerRow = PlayerRow['teamPlayers'][number];

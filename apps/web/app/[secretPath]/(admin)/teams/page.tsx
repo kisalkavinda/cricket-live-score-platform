@@ -3,7 +3,18 @@ import Link from 'next/link';
 
 import { getAdminEntryPath, requireAdminAuth } from '@/lib/auth/admin-auth';
 
-type TeamRow = Awaited<ReturnType<typeof prisma.team.findMany>>[number];
+const getTeams = () => prisma.team.findMany({
+  orderBy: { createdAt: 'desc' },
+  select: {
+    id: true,
+    name: true,
+    shortName: true,
+    logoUrl: true,
+    city: true,
+  },
+});
+
+type TeamRow = Awaited<ReturnType<typeof getTeams>>[number];
 
 export const dynamic = 'force-dynamic'; // Prevent static caching for admin pages
 
@@ -11,9 +22,9 @@ export default async function AdminTeamsPage() {
   await requireAdminAuth();
   const entryPath = getAdminEntryPath();
 
-  const teams = await prisma.team.findMany({
-    orderBy: { createdAt: 'desc' }
-  });
+  const teams = await getTeams();
+
+
 
   return (
     <div>
