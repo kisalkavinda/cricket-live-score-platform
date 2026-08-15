@@ -1,7 +1,9 @@
 import "server-only";
+import { cache } from "react";
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import crypto from "crypto";
+
 
 const ADMIN_COOKIE_NAME = "cpl_admin_session";
 
@@ -203,8 +205,9 @@ export async function logoutAdmin(): Promise<void> {
 
 /**
  * Verifies if current request has a valid admin session.
+ * Request-scoped via React cache to deduplicate layout/page checks within a single request.
  */
-export async function getAdminSession(): Promise<{ authenticated: boolean; username?: string }> {
+export const getAdminSession = cache(async (): Promise<{ authenticated: boolean; username?: string }> => {
   const cookieStore = await cookies();
   const sessionCookie = cookieStore.get(ADMIN_COOKIE_NAME);
 
@@ -218,7 +221,8 @@ export async function getAdminSession(): Promise<{ authenticated: boolean; usern
   }
 
   return { authenticated: true, username: username || "PRIMARY_ADMIN" };
-}
+});
+
 
 /**
  * Server-side guard that redirects unauthenticated requests to the secret admin entry page.

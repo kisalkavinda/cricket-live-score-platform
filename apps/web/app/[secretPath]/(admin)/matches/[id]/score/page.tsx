@@ -7,17 +7,31 @@ import ScoringConsole from '@/components/scoring/ScoringConsole';
 
 export const dynamic = 'force-dynamic';
 
+import { createPerfTracker, logPerfMetric } from '@/lib/utils/perf-logger';
+
 export default async function AdminScoringPage({
   params,
 }: {
   params: Promise<{ secretPath: string; id: string }>;
 }) {
+  const tracker = createPerfTracker();
+  tracker.authStart = performance.now();
   await requireAdminAuth();
+  tracker.authEnd = performance.now();
+
   const { id } = await params;
   const entryPath = getAdminEntryPath();
 
+  tracker.dbStart = performance.now();
   const match = await getMatchDetail(id);
+  tracker.dbEnd = performance.now();
+
   if (!match) notFound();
+
+  tracker.renderStart = performance.now();
+  tracker.renderEnd = performance.now();
+  logPerfMetric(`/matches/${id}/score`, tracker);
+
 
   return (
     <div style={{ maxWidth: '1100px', margin: '0 auto' }}>

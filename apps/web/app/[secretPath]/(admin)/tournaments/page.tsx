@@ -18,11 +18,24 @@ type TournamentRow = Awaited<ReturnType<typeof getTournaments>>[number];
 
 export const dynamic = 'force-dynamic';
 
+import { createPerfTracker, logPerfMetric } from '@/lib/utils/perf-logger';
+
 export default async function AdminTournamentsPage() {
+  const tracker = createPerfTracker();
+  tracker.authStart = performance.now();
   await requireAdminAuth();
+  tracker.authEnd = performance.now();
+
   const entryPath = getAdminEntryPath();
 
+  tracker.dbStart = performance.now();
   const tournaments = await getTournaments();
+  tracker.dbEnd = performance.now();
+
+  tracker.renderStart = performance.now();
+  tracker.renderEnd = performance.now();
+  logPerfMetric('/tournaments', tracker);
+
 
 
   return (
