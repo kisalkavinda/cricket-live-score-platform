@@ -12,8 +12,17 @@ export default function Navbar() {
     const handleScroll = () => {
       setScrolled(window.scrollY > 40);
     };
+    const handleResize = () => {
+      if (window.innerWidth >= 768) {
+        setMobileOpen(false);
+      }
+    };
     window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', handleResize);
+    };
   }, []);
 
   const navLinks = [
@@ -25,39 +34,40 @@ export default function Navbar() {
 
   return (
     <header
+      className="md:hidden md-hide"
       style={{
         position: 'fixed',
-        top: '16px',
+        top: '12px',
         left: 0,
         right: 0,
         zIndex: 100,
         display: 'flex',
         justifyContent: 'center',
-        padding: '0 16px',
+        padding: '0 12px',
         pointerEvents: 'none',
       }}
     >
-      {/* Floating Pill Container (N5 Floating Pill Nav Archetype) */}
+      {/* Mobile Floating Pill Container */}
       <div
         style={{
           pointerEvents: 'auto',
           width: '100%',
-          maxWidth: '960px',
-          height: '54px',
+          maxWidth: '480px',
+          height: '48px',
           borderRadius: '9999px',
-          background: scrolled ? 'rgba(255, 255, 255, 0.94)' : 'rgba(15, 12, 12, 0.88)',
+          background: scrolled ? 'rgba(255, 255, 255, 0.95)' : 'rgba(15, 12, 12, 0.90)',
           backdropFilter: 'blur(16px)',
           WebkitBackdropFilter: 'blur(16px)',
           border: scrolled
             ? '1.5px solid var(--color-border)'
             : '1.5px solid rgba(255, 255, 255, 0.15)',
           boxShadow: scrolled
-            ? '0 8px 30px rgba(0, 0, 0, 0.08)'
-            : '0 12px 40px rgba(0, 0, 0, 0.35)',
+            ? '0 8px 24px rgba(0, 0, 0, 0.08)'
+            : '0 10px 30px rgba(0, 0, 0, 0.4)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          padding: '0 20px',
+          padding: '0 12px 0 16px',
           transition: 'all var(--dur-base) var(--ease-out)',
         }}
       >
@@ -68,14 +78,14 @@ export default function Navbar() {
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '10px',
+            gap: '8px',
             textDecoration: 'none',
           }}
         >
           <div
             style={{
-              width: '32px',
-              height: '32px',
+              width: '28px',
+              height: '28px',
               borderRadius: '50%',
               background: 'var(--color-accent)',
               display: 'flex',
@@ -83,7 +93,7 @@ export default function Navbar() {
               justifyContent: 'center',
               color: 'var(--color-accent-ink)',
               fontWeight: 900,
-              fontSize: '0.85rem',
+              fontSize: '0.75rem',
               fontFamily: 'var(--font-display)',
             }}
           >
@@ -93,92 +103,53 @@ export default function Navbar() {
             style={{
               fontFamily: 'var(--font-display)',
               fontWeight: 900,
-              fontSize: '1.45rem',
+              fontSize: '1.3rem',
               letterSpacing: '0.04em',
               color: scrolled ? 'var(--color-ink)' : 'var(--color-paper)',
               whiteSpace: 'nowrap',
+              textTransform: 'uppercase',
             }}
           >
             {tournamentConfig.shortName || 'CPL'}
           </span>
         </Link>
 
-        {/* Desktop Nav Links */}
-        <nav
-          style={{
-            alignItems: 'center',
-            gap: '6px',
-          }}
-          aria-label="Main Navigation"
-          className="hidden md:flex"
-        >
-          {navLinks.map((link) => (
-            <Link
-              key={link.id}
-              id={link.id}
-              href={link.href}
-              style={{
-                padding: '6px 14px',
-                borderRadius: '9999px',
-                fontFamily: 'var(--font-body)',
-                fontSize: '0.875rem',
-                fontWeight: 600,
-                color: scrolled ? 'var(--color-ink)' : 'rgba(255, 255, 255, 0.85)',
-                textDecoration: 'none',
-                whiteSpace: 'nowrap', // Gate 49
-                transition: 'background var(--dur-fast), color var(--dur-fast)',
-              }}
-              onMouseEnter={(e) => {
-                const target = e.currentTarget;
-                target.style.background = scrolled
-                  ? 'var(--color-paper-alt)'
-                  : 'rgba(255, 255, 255, 0.12)';
-              }}
-              onMouseLeave={(e) => {
-                const target = e.currentTarget;
-                target.style.background = 'transparent';
-              }}
-            >
-              {link.label}
-            </Link>
-          ))}
-        </nav>
-
-        {/* Action Button & Mobile Toggle */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        {/* Action Button & Menu Toggle */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <Link
             href="/register"
             className="btn-hallmark-primary"
             style={{
-              height: '36px',
-              padding: '0 16px',
-              fontSize: '0.85rem',
+              height: '32px',
+              padding: '0 12px',
+              fontSize: '0.8rem',
               borderRadius: '9999px',
             }}
           >
             Register
           </Link>
 
-          {/* Mobile Menu Button */}
           <button
             type="button"
-            className="md:hidden"
             onClick={() => setMobileOpen(!mobileOpen)}
             aria-label={mobileOpen ? 'Close Menu' : 'Open Menu'}
             style={{
-              background: 'transparent',
-              border: 'none',
+              background: mobileOpen ? 'rgba(192, 39, 45, 0.15)' : 'transparent',
+              border: mobileOpen ? '1px solid var(--color-accent)' : 'none',
+              borderRadius: '8px',
               color: scrolled ? 'var(--color-ink)' : 'var(--color-paper)',
               cursor: 'pointer',
               padding: '6px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
+              width: '32px',
+              height: '32px',
             }}
           >
             <svg
-              width="22"
-              height="22"
+              width="18"
+              height="18"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
@@ -200,20 +171,23 @@ export default function Navbar() {
         <div
           style={{
             position: 'absolute',
-            top: '64px',
-            left: '16px',
-            right: '16px',
+            top: '66px',
+            left: '12px',
+            right: '12px',
+            maxWidth: '480px',
+            margin: '0 auto',
             pointerEvents: 'auto',
-            background: 'rgba(15, 12, 12, 0.98)',
+            background: 'var(--color-paper-dark)',
             backdropFilter: 'blur(20px)',
             WebkitBackdropFilter: 'blur(20px)',
-            border: '1px solid var(--color-border-dark)',
-            borderRadius: '20px',
-            padding: '16px',
+            border: '1.5px solid rgba(255, 255, 255, 0.12)',
+            borderRadius: 'var(--radius-lg)',
+            padding: '10px',
             display: 'flex',
             flexDirection: 'column',
-            gap: '8px',
-            boxShadow: '0 20px 50px rgba(0, 0, 0, 0.6)',
+            gap: '6px',
+            boxShadow: '0 20px 50px rgba(0, 0, 0, 0.75)',
+            zIndex: 101,
           }}
         >
           {navLinks.map((link) => (
@@ -222,18 +196,21 @@ export default function Navbar() {
               href={link.href}
               onClick={() => setMobileOpen(false)}
               style={{
-                minHeight: '48px',
+                height: '42px',
                 display: 'flex',
                 alignItems: 'center',
-                padding: '0 18px',
-                borderRadius: '12px',
-                color: link.id === 'nav-scores' ? 'var(--color-accent-bright)' : 'var(--color-paper)',
-                fontFamily: 'var(--font-body)',
-                fontWeight: 700,
-                fontSize: '0.95rem',
+                padding: '0 16px',
+                borderRadius: 'var(--radius-md)',
+                color: 'var(--color-paper)',
+                fontFamily: 'var(--font-display)',
+                textTransform: 'uppercase',
+                letterSpacing: '0.04em',
+                fontWeight: 800,
+                fontSize: '1rem',
                 textDecoration: 'none',
-                background: link.id === 'nav-scores' ? 'rgba(192, 39, 45, 0.2)' : 'rgba(255, 255, 255, 0.05)',
-                border: link.id === 'nav-scores' ? '1px solid var(--color-accent)' : '1px solid transparent',
+                background: link.id === 'nav-scores' ? 'rgba(192, 39, 45, 0.15)' : 'rgba(255, 255, 255, 0.03)',
+                border: link.id === 'nav-scores' ? '1px solid var(--color-accent)' : '1px solid rgba(255, 255, 255, 0.06)',
+                transition: 'all var(--dur-fast)',
               }}
             >
               {link.label}
