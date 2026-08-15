@@ -64,11 +64,11 @@ export const registrationFormSchema = z
       .min(7, "Minimum 7 players are required in the squad")
       .max(13, "Maximum 13 players are allowed in the squad"),
 
-    confirmTermsAgreement: z.boolean().optional(),
-    confirmInfoCorrect: z.boolean().optional().default(true),
-    confirmUniversityStudents: z.boolean().optional().default(true),
-    confirmIndexNumbers: z.boolean().optional().default(true),
-    confirmLeaderInfo: z.boolean().optional().default(true),
+    confirmTermsAgreement: z.boolean().default(false),
+    confirmInfoCorrect: z.boolean().default(true),
+    confirmUniversityStudents: z.boolean().default(true),
+    confirmIndexNumbers: z.boolean().default(true),
+    confirmLeaderInfo: z.boolean().default(true),
   })
   .superRefine((data, ctx) => {
     if (data.confirmTermsAgreement !== true && data.confirmInfoCorrect !== true) {
