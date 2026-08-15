@@ -7,6 +7,7 @@ export async function POST(request: Request) {
     const result = await createRegistration(body);
 
     if (!result.success) {
+      console.warn("[API /api/registrations 400]", result.error, result.details);
       return NextResponse.json(result, { status: 400 });
     }
 

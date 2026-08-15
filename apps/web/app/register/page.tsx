@@ -10,6 +10,8 @@ export const metadata: Metadata = {
   description: `Official Team Squad Registration for ${tournamentConfig.name}. Register your squad of 11 playing members and up to 2 registered substitutes.`,
 };
 
+export const dynamic = 'force-dynamic';
+
 export default async function RegisterPage() {
   let tournamentId = 'cpl-2026-tournament';
   let tournamentName = tournamentConfig.name;
@@ -17,12 +19,29 @@ export default async function RegisterPage() {
 
   try {
     const { prisma } = await import('database');
-    const activeTournament = await prisma.tournament.findFirst({
+    let activeTournament = await prisma.tournament.findFirst({
       where: {
         status: { in: ['REGISTRATION', 'DRAFT', 'SCHEDULED', 'LIVE'] },
       },
       orderBy: { createdAt: 'desc' },
     });
+
+    if (!activeTournament) {
+      activeTournament = await prisma.tournament.findFirst({
+        orderBy: { createdAt: 'desc' },
+      });
+    }
+
+    if (!activeTournament) {
+      activeTournament = await prisma.tournament.create({
+        data: {
+          name: tournamentConfig.name || 'Computing Premier League 2026',
+          season: '2026',
+          format: tournamentConfig.format || 'League + Knockout',
+          status: 'REGISTRATION',
+        },
+      });
+    }
 
     if (activeTournament) {
       tournamentId = activeTournament.id;
