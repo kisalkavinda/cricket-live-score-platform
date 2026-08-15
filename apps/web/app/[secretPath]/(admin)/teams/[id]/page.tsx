@@ -243,7 +243,6 @@ export default async function TeamDetailPage({
                   <tr style={{ backgroundColor: '#141A26', borderBottom: '1px solid #1E2638' }}>
                     <th style={{ padding: '12px 18px', color: '#8B9BB4', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', width: '50px' }}>#</th>
                     <th style={{ padding: '12px 18px', color: '#8B9BB4', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase' }}>Player Name</th>
-                    <th style={{ padding: '12px 18px', color: '#8B9BB4', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase' }}>Role</th>
                     <th style={{ padding: '12px 18px', color: '#8B9BB4', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase' }}>Index Number</th>
                     <th style={{ padding: '12px 18px', color: '#8B9BB4', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase' }}>Style</th>
                     <th style={{ padding: '12px 18px', color: '#8B9BB4', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', textAlign: 'right' }}>Action</th>
@@ -257,9 +256,6 @@ export default async function TeamDetailPage({
                       </td>
                       <td style={{ padding: '14px 18px' }}>
                         <div style={{ fontWeight: 700, color: '#FFFFFF' }}>{tp.player.name}</div>
-                      </td>
-                      <td style={{ padding: '14px 18px' }}>
-                        {getRoleBadge(tp.player.role)}
                       </td>
                       <td style={{ padding: '14px 18px', fontFamily: 'monospace', color: tp.player.indexNumber ? '#FBBF24' : '#64748B' }}>
                         {tp.player.indexNumber || 'N/A'}
