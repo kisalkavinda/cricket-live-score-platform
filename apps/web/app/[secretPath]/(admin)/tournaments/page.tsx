@@ -5,8 +5,8 @@ import { createPerfTracker, logPerfMetric } from '@/lib/utils/perf-logger';
 
 export const dynamic = 'force-dynamic';
 
-const getTournaments = () =>
-  prisma.tournament.findMany({
+const getTournaments = async () =>
+  (prisma as any).tournament.findMany({
     orderBy: { createdAt: 'desc' },
     select: {
       id: true,
@@ -23,8 +23,6 @@ const getTournaments = () =>
       },
     },
   });
-
-type TournamentRow = Awaited<ReturnType<typeof getTournaments>>[number];
 
 export default async function AdminTournamentsPage() {
   const tracker = createPerfTracker();
@@ -126,7 +124,7 @@ export default async function AdminTournamentsPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {tournaments.map((tournament: TournamentRow) => (
+          {tournaments.map((tournament: any) => (
             <div
               key={tournament.id}
               className="group relative rounded-2xl bg-[#141010]/80 hover:bg-[#1A1414]/90 border border-white/[0.08] hover:border-white/20 p-6 backdrop-blur-xl transition-all duration-200 hover:shadow-xl hover:shadow-black/50 flex flex-col justify-between"
@@ -154,7 +152,7 @@ export default async function AdminTournamentsPage() {
                   </div>
                   <div>
                     <div className="text-white/40 text-[10px] uppercase font-bold tracking-wider">Stages</div>
-                    <div className="font-bold text-white font-mono mt-0.5">{tournament.stages.length}</div>
+                    <div className="font-bold text-white font-mono mt-0.5">{tournament.stages?.length ?? 0}</div>
                   </div>
                   <div>
                     <div className="text-white/40 text-[10px] uppercase font-bold tracking-wider">Fixtures</div>
