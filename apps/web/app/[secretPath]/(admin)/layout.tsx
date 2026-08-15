@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { requireAdminAuth, getAdminEntryPath } from '@/lib/auth/admin-auth';
 import { logoutAdminServerAction } from '@/lib/admin/admin-actions';
+import AdminNavLinks from '@/components/admin/AdminNavLinks';
 
 export default async function ManagementLayout({
   children,
@@ -14,80 +15,65 @@ export default async function ManagementLayout({
   const entryPath = getAdminEntryPath();
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0D0B0B', display: 'flex', color: '#FFFFFF', fontFamily: 'var(--font-body)' }}>
-      <aside
-        style={{
-          width: '260px',
-          background: 'rgba(20, 16, 16, 0.98)',
-          borderRight: '1px solid rgba(255, 255, 255, 0.08)',
-          padding: '24px 16px',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'space-between',
-          flexShrink: 0,
-        }}
-      >
+    <div className="min-h-screen bg-[#0A0808] text-white flex flex-col md:flex-row antialiased selection:bg-[#C0272D] selection:text-white">
+      {/* SIDEBAR */}
+      <aside className="w-full md:w-72 bg-[#120E0E]/95 border-b md:border-b-0 md:border-r border-white/[0.08] p-6 flex flex-col justify-between flex-shrink-0 backdrop-blur-xl z-20">
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '0 10px 24px', borderBottom: '1px solid rgba(255, 255, 255, 0.08)' }}>
-            <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#C0272D', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900 }}>
+          {/* Brand Header */}
+          <div className="flex items-center gap-3.5 pb-6 border-b border-white/[0.08]">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#C0272D] to-[#801317] flex items-center justify-center text-xl shadow-lg shadow-[#C0272D]/30 border border-[#C0272D]/40">
               🏏
             </div>
             <div>
-              <div style={{ fontWeight: 800, fontSize: '1.1rem', letterSpacing: '0.04em', fontFamily: 'var(--font-display)' }}>CPL ADMIN</div>
-              <div style={{ fontSize: '0.7rem', color: 'rgba(255, 255, 255, 0.5)' }}>Tournament Manager</div>
+              <div className="font-extrabold text-lg tracking-wider font-display bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
+                CPL COMMAND
+              </div>
+              <div className="text-[11px] font-medium tracking-wide text-white/50 uppercase">
+                Tournament Operations
+              </div>
             </div>
           </div>
 
-          <nav style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '20px' }}>
-            <Link href={`/${entryPath}/dashboard`} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', borderRadius: '6px', color: 'rgba(255, 255, 255, 0.85)', textDecoration: 'none', fontSize: '0.88rem', fontWeight: 600 }}>
-              📊 Dashboard
-            </Link>
-            <Link href={`/${entryPath}/registrations`} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', borderRadius: '6px', color: 'rgba(255, 255, 255, 0.85)', textDecoration: 'none', fontSize: '0.88rem', fontWeight: 600 }}>
-              📋 Registrations
-            </Link>
-            <Link href={`/${entryPath}/registration-exceptions`} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', borderRadius: '6px', color: 'rgba(255, 255, 255, 0.85)', textDecoration: 'none', fontSize: '0.88rem', fontWeight: 600 }}>
-              ⚙️ Older Exceptions
-            </Link>
-            <Link href={`/${entryPath}/teams`} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', borderRadius: '6px', color: 'rgba(255, 255, 255, 0.85)', textDecoration: 'none', fontSize: '0.88rem', fontWeight: 600 }}>
-              🛡️ Official Teams
-            </Link>
-            <Link href={`/${entryPath}/players`} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', borderRadius: '6px', color: 'rgba(255, 255, 255, 0.85)', textDecoration: 'none', fontSize: '0.88rem', fontWeight: 600 }}>
-              🏏 Official Players
-            </Link>
-            <Link href={`/${entryPath}/tournaments`} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', borderRadius: '6px', color: 'rgba(255, 255, 255, 0.85)', textDecoration: 'none', fontSize: '0.88rem', fontWeight: 600 }}>
-              🏆 Tournaments
-            </Link>
-            <Link href={`/${entryPath}/matches`} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', borderRadius: '6px', color: '#FFB800', background: 'rgba(255, 184, 0, 0.1)', textDecoration: 'none', fontSize: '0.88rem', fontWeight: 700, border: '1px solid rgba(255, 184, 0, 0.2)' }}>
-              🔴 Live Scoring & Matches
-            </Link>
-          </nav>
+          {/* Navigation Links */}
+          <div className="mt-6">
+            <div className="text-[10px] font-bold tracking-widest text-white/40 uppercase px-3 mb-2">
+              Management
+            </div>
+            <AdminNavLinks entryPath={entryPath} />
+          </div>
         </div>
 
-        <div style={{ borderTop: '1px solid rgba(255, 255, 255, 0.08)', paddingTop: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ fontSize: '0.78rem', color: 'rgba(255, 255, 255, 0.7)' }}>
-            👤 <strong>{session.username}</strong>
+        {/* User Session & Logout Footer */}
+        <div className="mt-8 pt-5 border-t border-white/[0.08] flex items-center justify-between">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="w-7 h-7 rounded-full bg-white/10 border border-white/15 flex items-center justify-center text-xs font-bold text-white/80">
+              👤
+            </div>
+            <div className="truncate">
+              <div className="text-xs font-semibold text-white/90 truncate">
+                {session.username}
+              </div>
+              <div className="text-[10px] text-emerald-400 flex items-center gap-1 font-mono">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                ACTIVE
+              </div>
+            </div>
           </div>
+
           <form action={logoutAdminServerAction}>
             <button
               type="submit"
-              style={{
-                background: 'rgba(255, 255, 255, 0.06)',
-                border: '1px solid rgba(255, 255, 255, 0.15)',
-                color: '#FF6B6B',
-                borderRadius: '4px',
-                padding: '4px 10px',
-                fontSize: '0.75rem',
-                cursor: 'pointer',
-                fontWeight: 600,
-              }}
+              className="px-2.5 py-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 hover:border-red-500/30 text-xs font-semibold transition-all duration-200"
+              title="Sign Out"
             >
-              Sign Out
+              Exit
             </button>
           </form>
         </div>
       </aside>
 
-      <main style={{ flex: 1, padding: '32px 40px', overflowY: 'auto' }}>
+      {/* MAIN VIEWPORT */}
+      <main className="flex-1 min-w-0 p-6 md:p-10 overflow-y-auto bg-gradient-to-b from-[#0F0C0C] via-[#0A0808] to-[#080606]">
         {children}
       </main>
     </div>

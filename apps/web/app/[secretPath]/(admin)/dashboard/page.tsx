@@ -3,6 +3,8 @@ import { requireAdminAuth, getAdminEntryPath } from '@/lib/auth/admin-auth';
 import { getDashboardStats } from '@/lib/admin/admin-service';
 import { createPerfTracker, logPerfMetric } from '@/lib/utils/perf-logger';
 
+export const dynamic = 'force-dynamic';
+
 export default async function AdminDashboardPage() {
   const tracker = createPerfTracker();
   tracker.authStart = performance.now();
@@ -19,206 +21,204 @@ export default async function AdminDashboardPage() {
   tracker.renderEnd = performance.now();
   logPerfMetric('/dashboard', tracker);
 
-
   return (
-    <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+    <div className="max-w-6xl mx-auto space-y-8">
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '32px' }}>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-white/[0.08]">
         <div>
-          <span style={{ fontSize: '0.75rem', fontWeight: 700, letterSpacing: '0.12em', color: '#C0272D', textTransform: 'uppercase' }}>
-            Overview Console
-          </span>
-          <h1 style={{ fontSize: '2.2rem', fontWeight: 900, fontFamily: 'var(--font-display)', margin: '4px 0 0', color: '#FFFFFF' }}>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-xs font-extrabold tracking-widest text-[#C0272D] uppercase font-mono">
+              Command Overview
+            </span>
+            <span className="text-white/30">•</span>
+            <span className="text-xs text-white/50">Real-time Operations</span>
+          </div>
+          <h1 className="text-3xl font-black tracking-tight font-display text-white">
             Tournament Dashboard
           </h1>
+          <p className="text-sm text-white/60 mt-1">
+            Real-time status of university squad entries, match operations, and cloud sync integrity.
+          </p>
         </div>
-        <Link
-          href={`/${entryPath}/registrations`}
-          style={{
-            background: '#C0272D',
-            color: '#FFFFFF',
-            padding: '10px 18px',
-            borderRadius: '6px',
-            textDecoration: 'none',
-            fontSize: '0.88rem',
-            fontWeight: 800,
-            textTransform: 'uppercase',
-            letterSpacing: '0.04em',
-          }}
-        >
-          Review Registrations →
-        </Link>
+
+        <div className="flex items-center gap-3">
+          <Link
+            href={`/${entryPath}/matches`}
+            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 text-xs font-bold font-mono transition"
+          >
+            <span>🔴</span>
+            <span>Live Scoring Hub</span>
+          </Link>
+          <Link
+            href={`/${entryPath}/registrations`}
+            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#C0272D] to-[#991B1F] hover:from-[#D32F35] hover:to-[#B22227] text-white text-sm font-bold shadow-lg shadow-[#C0272D]/25 border border-[#C0272D]/40 transition"
+          >
+            <span>Review Queue →</span>
+          </Link>
+        </div>
       </div>
 
       {/* Primary Metrics Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginBottom: '32px' }}>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Pending Card */}
-        <div style={{ background: 'rgba(255, 255, 255, 0.04)', border: '1.5px solid rgba(234, 179, 8, 0.3)', borderRadius: '12px', padding: '20px' }}>
-          <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#EAB308', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-            Pending Review
+        <div className="rounded-2xl bg-gradient-to-br from-amber-500/10 via-[#141010] to-[#120E0E] border border-amber-500/30 p-5 backdrop-blur-xl shadow-lg shadow-amber-500/5">
+          <div className="flex items-center justify-between text-xs font-bold text-amber-400 uppercase tracking-wider font-mono">
+            <span>Pending Review</span>
+            <span className="text-base">⏳</span>
           </div>
-          <div style={{ fontSize: '2.4rem', fontWeight: 900, color: '#FFFFFF', margin: '8px 0 4px', fontFamily: 'var(--font-display)' }}>
+          <div className="text-4xl font-black text-white my-3 font-display tracking-tight">
             {stats.registrations.pending}
           </div>
-          <div style={{ fontSize: '0.78rem', color: 'rgba(255, 255, 255, 0.5)' }}>Awaiting manual approval</div>
+          <div className="text-xs text-amber-200/60 font-medium">Awaiting administrator approval</div>
         </div>
 
         {/* Approved Card */}
-        <div style={{ background: 'rgba(255, 255, 255, 0.04)', border: '1.5px solid rgba(34, 197, 94, 0.3)', borderRadius: '12px', padding: '20px' }}>
-          <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#22C55E', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-            Approved Teams
+        <div className="rounded-2xl bg-gradient-to-br from-emerald-500/10 via-[#141010] to-[#120E0E] border border-emerald-500/30 p-5 backdrop-blur-xl shadow-lg shadow-emerald-500/5">
+          <div className="flex items-center justify-between text-xs font-bold text-emerald-400 uppercase tracking-wider font-mono">
+            <span>Approved Teams</span>
+            <span className="text-base">🛡️</span>
           </div>
-          <div style={{ fontSize: '2.4rem', fontWeight: 900, color: '#FFFFFF', margin: '8px 0 4px', fontFamily: 'var(--font-display)' }}>
+          <div className="text-4xl font-black text-white my-3 font-display tracking-tight">
             {stats.registrations.approved}
           </div>
-          <div style={{ fontSize: '0.78rem', color: 'rgba(255, 255, 255, 0.5)' }}>Official teams confirmed</div>
+          <div className="text-xs text-emerald-200/60 font-medium">Official tournament franchises</div>
         </div>
 
         {/* Rejected Card */}
-        <div style={{ background: 'rgba(255, 255, 255, 0.04)', border: '1.5px solid rgba(239, 68, 68, 0.3)', borderRadius: '12px', padding: '20px' }}>
-          <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#EF4444', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-            Rejected
+        <div className="rounded-2xl bg-gradient-to-br from-red-500/10 via-[#141010] to-[#120E0E] border border-red-500/30 p-5 backdrop-blur-xl shadow-lg shadow-red-500/5">
+          <div className="flex items-center justify-between text-xs font-bold text-red-400 uppercase tracking-wider font-mono">
+            <span>Rejected</span>
+            <span className="text-base">✕</span>
           </div>
-          <div style={{ fontSize: '2.4rem', fontWeight: 900, color: '#FFFFFF', margin: '8px 0 4px', fontFamily: 'var(--font-display)' }}>
+          <div className="text-4xl font-black text-white my-3 font-display tracking-tight">
             {stats.registrations.rejected}
           </div>
-          <div style={{ fontSize: '0.78rem', color: 'rgba(255, 255, 255, 0.5)' }}>Declined submissions</div>
+          <div className="text-xs text-red-200/60 font-medium">Declined team entries</div>
         </div>
 
         {/* Total Card */}
-        <div style={{ background: 'rgba(255, 255, 255, 0.04)', border: '1.5px solid rgba(255, 255, 255, 0.12)', borderRadius: '12px', padding: '20px' }}>
-          <div style={{ fontSize: '0.78rem', fontWeight: 700, color: 'rgba(255, 255, 255, 0.7)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-            Total Registrations
+        <div className="rounded-2xl bg-gradient-to-br from-blue-500/10 via-[#141010] to-[#120E0E] border border-white/15 p-5 backdrop-blur-xl shadow-lg">
+          <div className="flex items-center justify-between text-xs font-bold text-white/70 uppercase tracking-wider font-mono">
+            <span>Total Entries</span>
+            <span className="text-base">📋</span>
           </div>
-          <div style={{ fontSize: '2.4rem', fontWeight: 900, color: '#FFFFFF', margin: '8px 0 4px', fontFamily: 'var(--font-display)' }}>
+          <div className="text-4xl font-black text-white my-3 font-display tracking-tight">
             {stats.registrations.total}
           </div>
-          <div style={{ fontSize: '0.78rem', color: 'rgba(255, 255, 255, 0.5)' }}>Submitted to date</div>
+          <div className="text-xs text-white/50 font-medium">Lifetime received submissions</div>
         </div>
       </div>
 
-      {/* Backup Status Strip */}
-      <div
-        style={{
-          background: 'rgba(255, 255, 255, 0.03)',
-          border: '1px solid rgba(255, 255, 255, 0.08)',
-          borderRadius: '10px',
-          padding: '16px 20px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          flexWrap: 'wrap',
-          gap: '16px',
-          marginBottom: '32px',
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <span style={{ fontSize: '1.2rem' }}>📊</span>
+      {/* Google Sheets Backup Health Bar */}
+      <div className="rounded-2xl bg-[#141010]/80 border border-white/[0.08] p-5 backdrop-blur-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3.5">
+          <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-xl">
+            📊
+          </div>
           <div>
-            <div style={{ fontWeight: 700, fontSize: '0.9rem' }}>Google Sheets Backup Integrity</div>
-            <div style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.6)' }}>Secondary online mirror status</div>
+            <div className="font-extrabold text-sm text-white">Google Sheets Backup Mirror</div>
+            <div className="text-xs text-white/50">Secondary offsite spreadsheet synchronization</div>
           </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <span style={{ fontSize: '0.82rem', color: '#22C55E' }}>
-            ● <strong>{stats.backups.synced}</strong> Synced
+        <div className="flex items-center gap-4 text-xs font-mono">
+          <span className="flex items-center gap-1.5 text-emerald-400">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <strong>{stats.backups.synced}</strong> Synced
           </span>
-          <span style={{ fontSize: '0.82rem', color: stats.backups.failed > 0 ? '#EF4444' : 'rgba(255, 255, 255, 0.5)' }}>
-            ● <strong>{stats.backups.failed}</strong> Failed
+          <span className={`flex items-center gap-1.5 ${stats.backups.failed > 0 ? 'text-red-400' : 'text-white/40'}`}>
+            <span className="w-2 h-2 rounded-full bg-red-400" />
+            <strong>{stats.backups.failed}</strong> Failed
           </span>
-          <span style={{ fontSize: '0.82rem', color: '#EAB308' }}>
-            ● <strong>{stats.backups.pending}</strong> Pending
+          <span className="flex items-center gap-1.5 text-amber-400">
+            <span className="w-2 h-2 rounded-full bg-amber-400" />
+            <strong>{stats.backups.pending}</strong> Pending
           </span>
         </div>
       </div>
 
-      {/* Recent Activity Table */}
-      <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '12px', padding: '24px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-          <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 800, fontFamily: 'var(--font-display)' }}>Recent Submissions</h3>
-          <Link href={`/${entryPath}/registrations`} style={{ color: '#C0272D', fontSize: '0.82rem', fontWeight: 700, textDecoration: 'none' }}>
+      {/* Recent Submissions Card */}
+      <div className="rounded-2xl bg-[#141010]/80 border border-white/[0.08] backdrop-blur-xl overflow-hidden shadow-2xl shadow-black/40">
+        <div className="p-6 border-b border-white/[0.08] flex items-center justify-between">
+          <div>
+            <h3 className="text-lg font-black tracking-wide font-display text-white">
+              Recent Submissions
+            </h3>
+            <p className="text-xs text-white/50 mt-0.5">Latest registrations received by the portal</p>
+          </div>
+          <Link
+            href={`/${entryPath}/registrations`}
+            className="text-xs font-bold text-[#C0272D] hover:text-red-400 transition"
+          >
             View All ({stats.registrations.total}) →
           </Link>
         </div>
 
         {stats.recentRegistrations.length === 0 ? (
-          <div style={{ padding: '32px', textAlign: 'center', color: 'rgba(255, 255, 255, 0.5)', fontSize: '0.9rem' }}>
+          <div className="p-12 text-center text-white/40 text-sm">
             No registrations received yet.
           </div>
         ) : (
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
               <thead>
-                <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.08)', textAlign: 'left', color: 'rgba(255, 255, 255, 0.6)' }}>
-                  <th style={{ padding: '10px 12px' }}>Code</th>
-                  <th style={{ padding: '10px 12px' }}>Team Name</th>
-                  <th style={{ padding: '10px 12px' }}>Leader</th>
-                  <th style={{ padding: '10px 12px' }}>Players</th>
-                  <th style={{ padding: '10px 12px' }}>Status</th>
-                  <th style={{ padding: '10px 12px' }}>Backup</th>
-                  <th style={{ padding: '10px 12px', textAlign: 'right' }}>Action</th>
+                <tr className="border-b border-white/[0.08] bg-white/[0.02]">
+                  <th className="px-6 py-4 text-xs font-bold text-white/50 uppercase tracking-wider font-mono">Code</th>
+                  <th className="px-6 py-4 text-xs font-bold text-white/50 uppercase tracking-wider">Team Name</th>
+                  <th className="px-6 py-4 text-xs font-bold text-white/50 uppercase tracking-wider">Leader</th>
+                  <th className="px-6 py-4 text-xs font-bold text-white/50 uppercase tracking-wider">Players</th>
+                  <th className="px-6 py-4 text-xs font-bold text-white/50 uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-4 text-xs font-bold text-white/50 uppercase tracking-wider">Backup</th>
+                  <th className="px-6 py-4 text-right text-xs font-bold text-white/50 uppercase tracking-wider">Action</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-white/[0.06] text-sm">
                 {stats.recentRegistrations.map((r: any) => (
-                  <tr key={r.id} style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.04)' }}>
-                    <td style={{ padding: '12px', fontFamily: 'monospace', fontWeight: 700, color: '#C0272D' }}>
+                  <tr key={r.id} className="hover:bg-white/[0.03] transition-colors">
+                    <td className="px-6 py-4 whitespace-nowrap font-mono font-bold text-[#C0272D]">
                       {r.registrationCode}
                     </td>
-                    <td style={{ padding: '12px', fontWeight: 700 }}>{r.teamName}</td>
-                    <td style={{ padding: '12px', color: 'rgba(255, 255, 255, 0.8)' }}>{r.leaderName}</td>
-                    <td style={{ padding: '12px' }}>{r.players?.length || 0}</td>
-                    <td style={{ padding: '12px' }}>
+                    <td className="px-6 py-4 whitespace-nowrap font-bold text-white">
+                      {r.teamName}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-white/80">
+                      {r.leaderName}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap font-mono text-white/70">
+                      {r.players?.length || 0}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
                       <span
-                        style={{
-                          padding: '3px 8px',
-                          borderRadius: '4px',
-                          fontSize: '0.72rem',
-                          fontWeight: 800,
-                          background:
-                            r.status === 'APPROVED'
-                              ? 'rgba(34, 197, 94, 0.15)'
-                              : r.status === 'REJECTED'
-                              ? 'rgba(239, 68, 68, 0.15)'
-                              : 'rgba(234, 179, 8, 0.15)',
-                          color:
-                            r.status === 'APPROVED'
-                              ? '#22C55E'
-                              : r.status === 'REJECTED'
-                              ? '#EF4444'
-                              : '#EAB308',
-                        }}
+                        className={`px-2 py-0.5 rounded-md text-[11px] font-bold font-mono ${
+                          r.status === 'APPROVED'
+                            ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+                            : r.status === 'REJECTED'
+                            ? 'bg-red-500/15 text-red-400 border border-red-500/30'
+                            : 'bg-amber-500/15 text-amber-300 border border-amber-500/30'
+                        }`}
                       >
                         {r.status}
                       </span>
                     </td>
-                    <td style={{ padding: '12px' }}>
+                    <td className="px-6 py-4 whitespace-nowrap">
                       <span
-                        style={{
-                          fontSize: '0.75rem',
-                          fontWeight: 700,
-                          color: r.backupStatus === 'SYNCED' ? '#22C55E' : r.backupStatus === 'FAILED' ? '#EF4444' : '#EAB308',
-                        }}
+                        className={`text-xs font-bold font-mono ${
+                          r.backupStatus === 'SYNCED'
+                            ? 'text-emerald-400'
+                            : r.backupStatus === 'FAILED'
+                            ? 'text-red-400'
+                            : 'text-amber-400'
+                        }`}
                       >
                         {r.backupStatus}
                       </span>
                     </td>
-                    <td style={{ padding: '12px', textAlign: 'right' }}>
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-xs">
                       <Link
                         href={`/${entryPath}/registrations/${r.id}`}
-                        style={{
-                          background: 'rgba(255, 255, 255, 0.08)',
-                          border: '1px solid rgba(255, 255, 255, 0.2)',
-                          color: '#FFFFFF',
-                          padding: '5px 12px',
-                          borderRadius: '4px',
-                          textDecoration: 'none',
-                          fontSize: '0.78rem',
-                          fontWeight: 700,
-                        }}
+                        className="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white font-bold transition inline-block"
                       >
-                        Review
+                        Review →
                       </Link>
                     </td>
                   </tr>
