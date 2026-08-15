@@ -1,58 +1,113 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-
-interface MatchScore {
-  id: string;
-  status: 'LIVE' | 'UPCOMING' | 'COMPLETED';
-  matchName: string;
-  stage: string;
-  team1: { name: string; shortName: string; flag: string; score: string; overs: string };
-  team2: { name: string; shortName: string; flag: string; score: string; overs: string };
-  statusNote: string;
-  target?: string;
-  crr?: string;
-  rrr?: string;
-  currentBatters?: { name: string; runs: number; balls: number; fours: number; sixes: number; isStriker: boolean }[];
-  currentBowler?: { name: string; overs: string; maidens: number; runs: number; wickets: number };
-  recentBalls?: string[];
-}
-
-const mockMatches: MatchScore[] = [
-  {
-    id: 'match-1',
-    status: 'LIVE',
-    matchName: 'Match 05 — Group Stage',
-    stage: 'Innings 2',
-    team1: { name: 'Colombo Lions', shortName: 'LIONS', flag: '🦁', score: '178/6', overs: '20.0' },
-    team2: { name: 'Kandy Tigers', shortName: 'TIGERS', flag: '🐯', score: '154/4', overs: '17.2' },
-    statusNote: 'Kandy Tigers need 25 runs in 16 balls to win',
-    target: 'Target: 179',
-    crr: '8.88',
-    rrr: '9.38',
-    currentBatters: [
-      { name: 'K. Perera', runs: 58, balls: 34, fours: 6, sixes: 3, isStriker: true },
-      { name: 'D. Shanaka', runs: 24, balls: 14, fours: 2, sixes: 1, isStriker: false },
-    ],
-    currentBowler: { name: 'M. Pathirana', overs: '3.2', maidens: 0, runs: 28, wickets: 2 },
-    recentBalls: ['4', '1', 'W', '6', '1', '2'],
-  },
-  {
-    id: 'match-2',
-    status: 'UPCOMING',
-    matchName: 'Match 06 — Group Stage',
-    stage: 'Starts at 7:30 PM',
-    team1: { name: 'Galle Eagles', shortName: 'EAGLES', flag: '🦅', score: '—', overs: '—' },
-    team2: { name: 'Jaffna Kings', shortName: 'KINGS', flag: '👑', score: '—', overs: '—' },
-    statusNote: 'Toss at 7:00 PM • Mahinda Rajapaksa Stadium',
-  },
-];
+import { createClient } from '@/utils/supabase/client';
+import { ScoreBroadcastPayload } from '@/lib/scoring/scoring-realtime';
 
 export default function LiveScoreWidget() {
-  const [activeMatchId, setActiveMatchId] = useState<string>(mockMatches[0].id);
+  const [matches, setMatches] = useState<ScoreBroadcastPayload[]>([]);
+  const [activeMatchId, setActiveMatchId] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [lastUpdated, setLastUpdated] = useState<string>('');
 
-  const currentMatch = mockMatches.find((m) => m.id === activeMatchId) || mockMatches[0];
+  // 1. Fetch initial live matches from database
+  const fetchLiveMatches = useCallback(async () => {
+    try {
+      const res = await fetch('/api/matches/live', { cache: 'no-store' });
+      const data = await res.json();
+      if (data.success && data.matches && data.matches.length > 0) {
+        setMatches(data.matches);
+        setActiveMatchId((prev) => prev || data.matches[0].matchId);
+        setLastUpdated(new Date().toLocaleTimeString());
+      }
+    } catch (err) {
+      console.error('[LiveScoreWidget] Fetch error:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchLiveMatches();
+  }, [fetchLiveMatches]);
+
+  // 2. Real-time Subscription via Supabase Realtime
+  useEffect(() => {
+    const supabase = createClient();
+
+    // Global live matches channel
+    const liveChannel = supabase.channel('matches:live');
+
+    liveChannel
+      .on('broadcast', { event: 'score_update' }, ({ payload }: { payload: ScoreBroadcastPayload }) => {
+        if (!payload || !payload.matchId) return;
+
+        setMatches((prevMatches) => {
+          const exists = prevMatches.some((m) => m.matchId === payload.matchId);
+          if (exists) {
+            return prevMatches.map((m) => (m.matchId === payload.matchId ? payload : m));
+          } else {
+            return [payload, ...prevMatches];
+          }
+        });
+
+        setActiveMatchId((prev) => prev || payload.matchId);
+        setLastUpdated(new Date().toLocaleTimeString());
+      })
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          // Re-sync on fresh subscription / reconnect
+          fetchLiveMatches();
+        }
+      });
+
+    // Also subscribe specifically to active match channel if set
+    let matchChannel: any = null;
+    if (activeMatchId) {
+      matchChannel = supabase.channel(`match:${activeMatchId}`);
+      matchChannel
+        .on('broadcast', { event: 'score_update' }, ({ payload }: { payload: ScoreBroadcastPayload }) => {
+          if (!payload) return;
+          setMatches((prev) => prev.map((m) => (m.matchId === payload.matchId ? payload : m)));
+          setLastUpdated(new Date().toLocaleTimeString());
+        })
+        .subscribe();
+    }
+
+    return () => {
+      supabase.removeChannel(liveChannel);
+      if (matchChannel) supabase.removeChannel(matchChannel);
+    };
+  }, [activeMatchId, fetchLiveMatches]);
+
+  const currentMatch = matches.find((m) => m.matchId === activeMatchId) || matches[0];
+
+  if (loading) {
+    return (
+      <div id="live-scores" style={{ width: '100%', maxWidth: '1200px', margin: '0 auto', padding: 'var(--space-md) var(--space-md)' }}>
+        <div style={{ background: 'var(--color-paper-dark)', borderRadius: 'var(--radius-lg)', padding: '32px', textAlign: 'center', color: 'rgba(255, 255, 255, 0.6)' }}>
+          Loading live tournament scores...
+        </div>
+      </div>
+    );
+  }
+
+  if (!currentMatch) {
+    return (
+      <div id="live-scores" style={{ width: '100%', maxWidth: '1200px', margin: '0 auto', padding: 'var(--space-md) var(--space-md)' }}>
+        <div style={{ background: 'var(--color-paper-dark)', borderRadius: 'var(--radius-lg)', border: '1.5px solid var(--color-border-dark)', padding: '32px', textAlign: 'center', color: 'var(--color-paper)' }}>
+          <div style={{ fontSize: '2rem', marginBottom: '8px' }}>🏏</div>
+          <h3 style={{ fontSize: '1.2rem', fontWeight: 800, margin: '0 0 6px', color: '#FFF' }}>CPL Live Match Center</h3>
+          <p style={{ fontSize: '0.9rem', color: 'rgba(255, 255, 255, 0.6)', margin: 0 }}>
+            No matches currently in progress. Matches will appear here with live ball-by-ball coverage as soon as play begins!
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  const currentInnings = currentMatch.innings;
 
   return (
     <div
@@ -98,11 +153,11 @@ export default function LiveScoreWidget() {
                 padding: '4px 10px',
                 borderRadius: '9999px',
                 background: currentMatch.status === 'LIVE' ? 'var(--color-accent)' : 'rgba(255, 255, 255, 0.1)',
-                color: 'var(--color-paper)',
-                fontFamily: 'var(--font-display)',
-                fontSize: '0.75rem',
-                fontWeight: 800,
-                letterSpacing: '0.1em',
+                color: 'white',
+                fontSize: '0.72rem',
+                fontWeight: 900,
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
               }}
             >
               {currentMatch.status === 'LIVE' && (
@@ -112,463 +167,286 @@ export default function LiveScoreWidget() {
                     height: '6px',
                     borderRadius: '50%',
                     background: 'white',
+                    animation: 'pulse 1.5s infinite',
                   }}
-                  className="animate-pulse-dot"
                 />
               )}
               {currentMatch.status}
             </span>
 
-            <span
-              style={{
-                fontFamily: 'var(--font-body)',
-                fontSize: '0.8rem',
-                color: 'var(--color-ink-subtle)',
-                fontWeight: 600,
-              }}
-            >
-              {currentMatch.matchName}
-            </span>
-          </div>
-
-          {/* Match Switcher Tabs */}
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              overflowX: 'auto',
-              WebkitOverflowScrolling: 'touch',
-              maxWidth: '100%',
-            }}
-          >
-            {mockMatches.map((m) => (
-              <button
-                key={m.id}
-                type="button"
-                onClick={() => setActiveMatchId(m.id)}
-                style={{
-                  padding: '5px 12px',
-                  borderRadius: '9999px',
-                  fontFamily: 'var(--font-body)',
-                  fontSize: '0.75rem',
-                  fontWeight: 700,
-                  border: 'none',
-                  cursor: 'pointer',
-                  whiteSpace: 'nowrap',
-                  background: activeMatchId === m.id ? 'rgba(255, 255, 255, 0.2)' : 'transparent',
-                  color: activeMatchId === m.id ? 'var(--color-paper)' : 'var(--color-ink-subtle)',
-                  transition: 'all var(--dur-fast)',
-                }}
-              >
-                {m.team1.shortName} vs {m.team2.shortName} {m.status === 'LIVE' && '🔴'}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Main Live Score Display */}
-        <div style={{ padding: 'var(--space-md)' }}>
-          {/* Teams & Scoreboard Grid */}
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
-              gap: 'var(--space-md)',
-              alignItems: 'center',
-              marginBottom: 'var(--space-md)',
-            }}
-          >
-            {/* Team 1 Score Card */}
-            <div
-              style={{
-                background: 'rgba(255, 255, 255, 0.04)',
-                border: '1px solid rgba(255, 255, 255, 0.08)',
-                borderRadius: 'var(--radius-md)',
-                padding: 'var(--space-md)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <span style={{ fontSize: '1.8rem' }}>{currentMatch.team1.flag}</span>
-                <div>
-                  <div
-                    style={{
-                      fontFamily: 'var(--font-display)',
-                      fontSize: '1.2rem',
-                      fontWeight: 800,
-                      letterSpacing: '0.02em',
-                    }}
-                  >
-                    {currentMatch.team1.name}
-                  </div>
-                  <div
-                    style={{
-                      fontFamily: 'var(--font-body)',
-                      fontSize: '0.75rem',
-                      color: 'var(--color-ink-subtle)',
-                    }}
-                  >
-                    1st Innings
-                  </div>
-                </div>
-              </div>
-
-              <div style={{ textAlign: 'right' }}>
-                <div
-                  style={{
-                    fontFamily: 'var(--font-data)',
-                    fontSize: '1.5rem',
-                    fontWeight: 800,
-                    color: 'var(--color-paper)',
-                  }}
-                >
-                  {currentMatch.team1.score}
-                </div>
-                <div
-                  style={{
-                    fontFamily: 'var(--font-data)',
-                    fontSize: '0.75rem',
-                    color: 'var(--color-ink-subtle)',
-                  }}
-                >
-                  ({currentMatch.team1.overs} ov)
-                </div>
-              </div>
-            </div>
-
-            {/* VS Divider badge */}
-            <div
-              style={{
-                textAlign: 'center',
-                fontFamily: 'var(--font-display)',
-                fontWeight: 900,
-                fontSize: '1rem',
-                color: 'var(--color-accent)',
-                letterSpacing: '0.1em',
-              }}
-            >
-              VS
-            </div>
-
-            {/* Team 2 Score Card */}
-            <div
-              style={{
-                background: currentMatch.status === 'LIVE' ? 'rgba(192, 39, 45, 0.12)' : 'rgba(255, 255, 255, 0.04)',
-                border: currentMatch.status === 'LIVE' ? '1px solid var(--color-accent)' : '1px solid rgba(255, 255, 255, 0.08)',
-                borderRadius: 'var(--radius-md)',
-                padding: 'var(--space-md)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <span style={{ fontSize: '1.8rem' }}>{currentMatch.team2.flag}</span>
-                <div>
-                  <div
-                    style={{
-                      fontFamily: 'var(--font-display)',
-                      fontSize: '1.2rem',
-                      fontWeight: 800,
-                      letterSpacing: '0.02em',
-                    }}
-                  >
-                    {currentMatch.team2.name}
-                  </div>
-                  <div
-                    style={{
-                      fontFamily: 'var(--font-body)',
-                      fontSize: '0.75rem',
-                      color: 'var(--color-ink-subtle)',
-                    }}
-                  >
-                    {currentMatch.stage}
-                  </div>
-                </div>
-              </div>
-
-              <div style={{ textAlign: 'right' }}>
-                <div
-                  style={{
-                    fontFamily: 'var(--font-data)',
-                    fontSize: '1.5rem',
-                    fontWeight: 800,
-                    color: 'var(--color-paper)',
-                  }}
-                >
-                  {currentMatch.team2.score}
-                </div>
-                <div
-                  style={{
-                    fontFamily: 'var(--font-data)',
-                    fontSize: '0.75rem',
-                    color: 'var(--color-accent-bright)',
-                    fontWeight: 700,
-                  }}
-                >
-                  ({currentMatch.team2.overs} ov)
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Status Banner */}
-          <div
-            style={{
-              background: 'rgba(255, 255, 255, 0.05)',
-              borderRadius: 'var(--radius-sm)',
-              padding: '10px 14px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: '10px',
-              flexWrap: 'wrap',
-              marginBottom: 'var(--space-md)',
-              borderLeft: '3px solid var(--color-accent)',
-            }}
-          >
-            <span
-              style={{
-                fontFamily: 'var(--font-body)',
-                fontSize: '0.85rem',
-                fontWeight: 700,
-                color: 'var(--color-paper)',
-              }}
-            >
-              📢 {currentMatch.statusNote}
+            <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'rgba(255, 255, 255, 0.7)' }}>
+              {currentMatch.match.venue || 'Main Stadium'} • Innings {currentMatch.currentInnings}
             </span>
 
-            {currentMatch.crr && (
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '12px',
-                  fontFamily: 'var(--font-data)',
-                  fontSize: '0.75rem',
-                  color: 'var(--color-ink-subtle)',
-                }}
-              >
-                <span>CRR: <strong style={{ color: 'white' }}>{currentMatch.crr}</strong></span>
-                {currentMatch.rrr && <span>RRR: <strong style={{ color: 'var(--color-accent-bright)' }}>{currentMatch.rrr}</strong></span>}
-              </div>
+            {lastUpdated && (
+              <span style={{ fontSize: '0.72rem', color: 'rgba(255, 255, 255, 0.4)' }}>
+                (Live: {lastUpdated})
+              </span>
             )}
           </div>
 
-          {/* Active Batters & Bowler Table (Live Match Only) */}
-          {currentMatch.status === 'LIVE' && currentMatch.currentBatters && (
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-                gap: 'var(--space-md)',
-                marginBottom: 'var(--space-md)',
-              }}
-            >
-              {/* Batters List */}
-              <div
-                style={{
-                  background: 'rgba(0, 0, 0, 0.25)',
-                  borderRadius: 'var(--radius-sm)',
-                  padding: '12px',
-                }}
-              >
-                <div
+          {/* Match Switcher Tabs if multiple matches */}
+          {matches.length > 1 && (
+            <div style={{ display: 'flex', gap: '6px', overflowX: 'auto' }}>
+              {matches.map((m) => (
+                <button
+                  key={m.matchId}
+                  onClick={() => setActiveMatchId(m.matchId)}
                   style={{
-                    fontFamily: 'var(--font-body)',
-                    fontSize: '0.7rem',
+                    padding: '6px 12px',
+                    borderRadius: '6px',
+                    border: 'none',
+                    background: m.matchId === activeMatchId ? 'rgba(255, 184, 0, 0.2)' : 'rgba(255, 255, 255, 0.05)',
+                    color: m.matchId === activeMatchId ? '#FFB800' : 'rgba(255, 255, 255, 0.7)',
+                    fontSize: '0.75rem',
                     fontWeight: 700,
-                    letterSpacing: '0.12em',
-                    textTransform: 'uppercase',
-                    color: 'var(--color-ink-subtle)',
-                    marginBottom: '8px',
-                    display: 'flex',
-                    justifyContent: 'space-between',
+                    cursor: 'pointer',
+                    whiteSpace: 'nowrap',
                   }}
                 >
-                  <span>Batter</span>
-                  <span>R (B) • 4s • 6s</span>
-                </div>
+                  {m.match.teamA.shortName} vs {m.match.teamB.shortName}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
 
-                {currentMatch.currentBatters.map((b, idx) => (
-                  <div
-                    key={idx}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      padding: '6px 0',
-                      borderBottom: idx === 0 ? '1px solid rgba(255, 255, 255, 0.08)' : 'none',
-                    }}
-                  >
-                    <span
-                      style={{
-                        fontFamily: 'var(--font-body)',
-                        fontSize: '0.85rem',
-                        fontWeight: b.isStriker ? 700 : 500,
-                        color: b.isStriker ? 'var(--color-accent-bright)' : 'var(--color-paper)',
-                      }}
-                    >
-                      {b.name} {b.isStriker && '*'}
-                    </span>
-                    <span
-                      style={{
-                        fontFamily: 'var(--font-data)',
-                        fontSize: '0.85rem',
-                        fontWeight: 700,
-                        color: 'var(--color-paper)',
-                      }}
-                    >
-                      {b.runs} ({b.balls}) • {b.fours} • {b.sixes}
-                    </span>
-                  </div>
-                ))}
-              </div>
-
-              {/* Bowler & Recent Over */}
+        {/* Main Scorecard Body */}
+        <div style={{ padding: '20px 24px' }}>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr auto 1fr',
+              alignItems: 'center',
+              gap: '24px',
+              paddingBottom: '20px',
+              borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+            }}
+          >
+            {/* Team A */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
               <div
                 style={{
-                  background: 'rgba(0, 0, 0, 0.25)',
-                  borderRadius: 'var(--radius-sm)',
-                  padding: '12px',
+                  width: '48px',
+                  height: '48px',
+                  borderRadius: '50%',
+                  background: 'rgba(255, 255, 255, 0.1)',
                   display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'space-between',
-                  gap: '8px',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '1.4rem',
+                  fontWeight: 900,
+                  border: '1px solid rgba(255, 255, 255, 0.15)',
                 }}
               >
+                🏏
+              </div>
+              <div>
+                <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#FFF' }}>
+                  {currentMatch.match.teamA.name}
+                </div>
+                <div style={{ fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.5)', fontWeight: 600 }}>
+                  {currentMatch.match.teamA.shortName}
+                </div>
+              </div>
+            </div>
+
+            {/* Score in Center */}
+            <div style={{ textAlign: 'center' }}>
+              {currentInnings ? (
                 <div>
                   <div
                     style={{
-                      fontFamily: 'var(--font-body)',
-                      fontSize: '0.7rem',
-                      fontWeight: 700,
-                      letterSpacing: '0.12em',
-                      textTransform: 'uppercase',
-                      color: 'var(--color-ink-subtle)',
-                      marginBottom: '8px',
-                      display: 'flex',
-                      justifyContent: 'space-between',
+                      fontFamily: 'monospace',
+                      fontSize: '2.4rem',
+                      fontWeight: 900,
+                      color: '#FFB800',
+                      letterSpacing: '-0.02em',
+                      lineHeight: 1,
+                      marginBottom: '6px',
                     }}
                   >
-                    <span>Current Bowler</span>
-                    <span>Overs • W/R</span>
+                    {currentInnings.runs} / {currentInnings.wickets}
                   </div>
+                  <div style={{ fontSize: '0.9rem', fontWeight: 700, color: 'rgba(255, 255, 255, 0.8)' }}>
+                    {currentInnings.overs}.{currentInnings.balls} / {currentMatch.match.oversPerInnings} Overs
+                  </div>
+                  <div style={{ fontSize: '0.78rem', color: 'rgba(255, 255, 255, 0.5)', marginTop: '4px' }}>
+                    CRR: {currentInnings.crr} {currentInnings.rrr ? `• RRR: ${currentInnings.rrr}` : ''}
+                  </div>
+                </div>
+              ) : (
+                <div style={{ fontSize: '1.2rem', fontWeight: 700, color: 'rgba(255, 255, 255, 0.5)' }}>
+                  VS
+                </div>
+              )}
+            </div>
 
-                  {currentMatch.currentBowler && (
-                    <div
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        padding: '4px 0',
-                      }}
-                    >
-                      <span
-                        style={{
-                          fontFamily: 'var(--font-body)',
-                          fontSize: '0.85rem',
-                          fontWeight: 600,
-                          color: 'var(--color-paper)',
-                        }}
-                      >
-                        {currentMatch.currentBowler.name}
-                      </span>
-                      <span
-                        style={{
-                          fontFamily: 'var(--font-data)',
-                          fontSize: '0.85rem',
-                          fontWeight: 700,
-                          color: 'var(--color-paper)',
-                        }}
-                      >
-                        {currentMatch.currentBowler.overs} ov • {currentMatch.currentBowler.wickets}/{currentMatch.currentBowler.runs}
-                      </span>
-                    </div>
-                  )}
+            {/* Team B */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '16px', textAlign: 'right' }}>
+              <div>
+                <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#FFF' }}>
+                  {currentMatch.match.teamB.name}
+                </div>
+                <div style={{ fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.5)', fontWeight: 600 }}>
+                  {currentMatch.match.teamB.shortName}
+                </div>
+              </div>
+              <div
+                style={{
+                  width: '48px',
+                  height: '48px',
+                  borderRadius: '50%',
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '1.4rem',
+                  fontWeight: 900,
+                  border: '1px solid rgba(255, 255, 255, 0.15)',
+                }}
+              >
+                🦁
+              </div>
+            </div>
+          </div>
+
+          {/* Result Note if match finished */}
+          {currentMatch.match.resultNote && (
+            <div style={{ marginTop: '14px', background: 'rgba(255, 215, 0, 0.1)', color: '#FFD700', padding: '8px 14px', borderRadius: '8px', fontWeight: 700, textAlign: 'center', fontSize: '0.9rem' }}>
+              🏆 {currentMatch.match.resultNote}
+            </div>
+          )}
+
+          {/* Live Pitch Details: Batters, Bowler, and Recent Balls */}
+          {currentMatch.status === 'LIVE' && currentInnings && (
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '2fr 1fr',
+                gap: '20px',
+                marginTop: '16px',
+              }}
+            >
+              {/* Batters On Pitch */}
+              <div style={{ background: 'rgba(255, 255, 255, 0.02)', borderRadius: '8px', padding: '12px 16px' }}>
+                <div style={{ fontSize: '0.72rem', fontWeight: 800, color: 'rgba(255, 255, 255, 0.4)', textTransform: 'uppercase', marginBottom: '8px' }}>
+                  Batters on Strike
                 </div>
 
-                {/* Recent Balls Strip */}
-                {currentMatch.recentBalls && (
-                  <div>
-                    <div
-                      style={{
-                        fontFamily: 'var(--font-body)',
-                        fontSize: '0.65rem',
-                        fontWeight: 700,
-                        letterSpacing: '0.1em',
-                        textTransform: 'uppercase',
-                        color: 'var(--color-ink-subtle)',
-                        marginBottom: '6px',
-                      }}
-                    >
-                      Recent Balls:
-                    </div>
+                {currentMatch.striker ? (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      {currentMatch.recentBalls.map((ball, i) => {
-                        const isWicket = ball === 'W';
-                        const isBoundary = ball === '4' || ball === '6';
-                        return (
-                          <span
-                            key={i}
-                            style={{
-                              width: '26px',
-                              height: '26px',
-                              borderRadius: '50%',
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              fontFamily: 'var(--font-data)',
-                              fontSize: '0.75rem',
-                              fontWeight: 800,
-                              background: isWicket
-                                ? 'var(--color-accent)'
-                                : isBoundary
-                                ? '#22c55e'
-                                : 'rgba(255, 255, 255, 0.12)',
-                              color: 'white',
-                            }}
-                          >
-                            {ball}
-                          </span>
-                        );
-                      })}
+                      <span style={{ color: '#FFB800', fontWeight: 900, fontSize: '0.85rem' }}>*</span>
+                      <span style={{ fontWeight: 700, fontSize: '0.95rem', color: '#FFF' }}>{currentMatch.striker.name}</span>
+                    </div>
+                    <div style={{ fontWeight: 800, color: '#FFB800', fontSize: '0.95rem' }}>
+                      {currentMatch.striker.runs}{' '}
+                      <span style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.5)', fontWeight: 500 }}>
+                        ({currentMatch.striker.balls}b • {currentMatch.striker.fours}x4 • {currentMatch.striker.sixes}x6)
+                      </span>
                     </div>
                   </div>
+                ) : (
+                  <div style={{ fontSize: '0.85rem', color: 'rgba(255, 255, 255, 0.4)' }}>Striker not set</div>
+                )}
+
+                {currentMatch.nonStriker && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontWeight: 600, fontSize: '0.9rem', color: 'rgba(255, 255, 255, 0.8)' }}>
+                      {currentMatch.nonStriker.name}
+                    </span>
+                    <span style={{ fontWeight: 700, color: 'rgba(255, 255, 255, 0.7)', fontSize: '0.9rem' }}>
+                      {currentMatch.nonStriker.runs}{' '}
+                      <span style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.5)', fontWeight: 500 }}>
+                        ({currentMatch.nonStriker.balls}b)
+                      </span>
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* Bowler Figures & Recent */}
+              <div style={{ background: 'rgba(255, 255, 255, 0.02)', borderRadius: '8px', padding: '12px 16px' }}>
+                <div style={{ fontSize: '0.72rem', fontWeight: 800, color: 'rgba(255, 255, 255, 0.4)', textTransform: 'uppercase', marginBottom: '8px' }}>
+                  Bowler
+                </div>
+
+                {currentMatch.bowler ? (
+                  <div>
+                    <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#FFF' }}>
+                      {currentMatch.bowler.name}
+                    </div>
+                    <div style={{ fontSize: '0.85rem', color: 'rgba(255, 255, 255, 0.7)', fontWeight: 700, marginTop: '2px' }}>
+                      {currentMatch.bowler.wickets} - {currentMatch.bowler.runsConceded}{' '}
+                      <span style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.5)', fontWeight: 500 }}>
+                        ({currentMatch.bowler.overs} ov)
+                      </span>
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ fontSize: '0.85rem', color: 'rgba(255, 255, 255, 0.4)' }}>Bowler not set</div>
                 )}
               </div>
             </div>
           )}
 
-          {/* Action Link to Full Scorecard Dedicated Page */}
-          <div style={{ textAlign: 'center', paddingTop: '10px' }}>
-            <Link
-              href="/scorecard"
-              style={{
-                background: 'var(--color-accent)',
-                color: 'var(--color-paper)',
-                border: 'none',
-                padding: '12px 28px',
-                borderRadius: '9999px',
-                fontFamily: 'var(--font-display)',
-                fontSize: '1rem',
-                fontWeight: 800,
-                letterSpacing: '0.06em',
-                textTransform: 'uppercase',
-                textDecoration: 'none',
-                boxShadow: '0 8px 24px rgba(192, 39, 45, 0.4)',
-                transition: 'all var(--dur-fast)',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '8px',
-              }}
-            >
-              📊 View Full Detailed Scorecard Page →
-            </Link>
-          </div>
+          {/* Recent Balls Strip */}
+          {currentMatch.recentBalls && currentMatch.recentBalls.length > 0 && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '16px', paddingTop: '12px', borderTop: '1px solid rgba(255, 255, 255, 0.06)' }}>
+              <span style={{ fontSize: '0.75rem', fontWeight: 800, color: 'rgba(255, 255, 255, 0.4)', textTransform: 'uppercase' }}>
+                Recent:
+              </span>
+              <div style={{ display: 'flex', gap: '6px' }}>
+                {currentMatch.recentBalls.map((b, idx) => (
+                  <span
+                    key={b.id || idx}
+                    style={{
+                      width: '26px',
+                      height: '26px',
+                      borderRadius: '50%',
+                      background: b.isWicket ? '#FF4D4D' : b.runs === 4 ? '#28A745' : b.runs === 6 ? '#8A2BE2' : 'rgba(255, 255, 255, 0.1)',
+                      color: '#FFF',
+                      fontSize: '0.75rem',
+                      fontWeight: 800,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    {b.display}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Footer Link to Full Scorecard */}
+        <div
+          style={{
+            background: 'rgba(0, 0, 0, 0.3)',
+            padding: '10px 24px',
+            borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}
+        >
+          <span style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.5)' }}>
+            Real-time updates powered by Supabase Realtime
+          </span>
+          <Link
+            href={`/scorecard?matchId=${currentMatch.matchId}`}
+            style={{
+              color: 'var(--color-primary-light, #FFB800)',
+              fontSize: '0.85rem',
+              fontWeight: 700,
+              textDecoration: 'none',
+            }}
+          >
+            View Full Scorecard & Commentary →
+          </Link>
         </div>
       </div>
     </div>

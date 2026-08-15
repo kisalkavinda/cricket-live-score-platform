@@ -57,6 +57,9 @@ export default async function ManagementLayout({
             <Link href={`/${entryPath}/tournaments`} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', borderRadius: '6px', color: 'rgba(255, 255, 255, 0.85)', textDecoration: 'none', fontSize: '0.88rem', fontWeight: 600 }}>
               🏆 Tournaments
             </Link>
+            <Link href={`/${entryPath}/matches`} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', borderRadius: '6px', color: '#FFB800', background: 'rgba(255, 184, 0, 0.1)', textDecoration: 'none', fontSize: '0.88rem', fontWeight: 700, border: '1px solid rgba(255, 184, 0, 0.2)' }}>
+              🔴 Live Scoring & Matches
+            </Link>
           </nav>
         </div>
 

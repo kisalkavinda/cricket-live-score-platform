@@ -1,7 +1,7 @@
 import { prisma } from 'database';
 import Link from 'next/link';
 
-import { getAdminEntryPath } from '@/lib/auth/admin-auth';
+import { getAdminEntryPath, requireAdminAuth } from '@/lib/auth/admin-auth';
 
 const getTournaments = () => prisma.tournament.findMany({ include: { stages: true } });
 type TournamentRow = Awaited<ReturnType<typeof getTournaments>>[number];
@@ -9,7 +9,9 @@ type TournamentRow = Awaited<ReturnType<typeof getTournaments>>[number];
 export const dynamic = 'force-dynamic';
 
 export default async function AdminTournamentsPage() {
+  await requireAdminAuth();
   const entryPath = getAdminEntryPath();
+
   const tournaments = await prisma.tournament.findMany({
     orderBy: { createdAt: 'desc' },
     include: {

@@ -3,8 +3,8 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
 
@@ -30,6 +30,39 @@ enum TournamentStatus {
   KNOCKOUT
   COMPLETED
   CANCELLED
+}
+
+enum MatchStatus {
+  UPCOMING
+  LIVE
+  COMPLETED
+  ABANDONED
+}
+
+enum InningsStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum ExtraType {
+  NONE
+  WIDE
+  NO_BALL
+  BYE
+  LEG_BYE
+}
+
+enum WicketType {
+  BOWLED
+  CAUGHT
+  LBW
+  RUN_OUT
+  STUMPED
+  HIT_WICKET
+  TIMED_OUT
+  RETIRED_HURT
+  OTHER
 }
 
 model User {
@@ -59,22 +92,36 @@ model Team {
   teamPlayers     TeamPlayer[]
   tournamentTeams TournamentTeam[]
   tournamentSquads TournamentSquad[]
+  matchesAsTeamA  Match[]           @relation("MatchTeamA")
+  matchesAsTeamB  Match[]           @relation("MatchTeamB")
+  matchesTossWon  Match[]           @relation("MatchTossWinner")
+  matchesWon      Match[]           @relation("MatchWinner")
+  battingInnings  Innings[]         @relation("InningsBattingTeam")
+  bowlingInnings  Innings[]         @relation("InningsBowlingTeam")
 }
 
 model Player {
-  id              String            @id @default(uuid())
-  name            String
-  indexNumber     String?
-  profileImageUrl String?
-  dateOfBirth     DateTime?
-  role            PlayerRole        @default(BATTER)
-  battingStyle    String?
-  bowlingStyle    String?
-  jerseyNumber    Int?
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
-  teamPlayers     TeamPlayer[]
-  tournamentSquads TournamentSquad[]
+  id                  String            @id @default(uuid())
+  name                String
+  indexNumber         String?
+  profileImageUrl     String?
+  dateOfBirth         DateTime?
+  role                PlayerRole        @default(BATTER)
+  battingStyle        String?
+  bowlingStyle        String?
+  jerseyNumber        Int?
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+  teamPlayers         TeamPlayer[]
+  tournamentSquads    TournamentSquad[]
+  strikerInnings      Innings[]         @relation("InningsCurrentStriker")
+  nonStrikerInnings   Innings[]         @relation("InningsCurrentNonStriker")
+  bowlerInnings       Innings[]         @relation("InningsCurrentBowler")
+  batsmanDeliveries   BallEvent[]       @relation("BallBatsman")
+  bowlerDeliveries    BallEvent[]       @relation("BallBowler")
+  dismissedDeliveries BallEvent[]       @relation("BallDismissedPlayer")
+  battingScores       InningsBatter[]
+  bowlingScores       InningsBowler[]
 
   @@index([indexNumber])
 }
@@ -91,35 +138,36 @@ model TeamPlayer {
 }
 
 model Tournament {
-  id               String            @id @default(uuid())
-  name             String
-  season           String
-  format           String
-  status           TournamentStatus  @default(DRAFT)
-  startDate        DateTime?
-  endDate          DateTime?
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @updatedAt
-  stages           TournamentStage[]
-  tournamentTeams  TournamentTeam[]
-  tournamentSquads TournamentSquad[]
-  registrations    Registration[]
+  id                     String                  @id @default(uuid())
+  name                   String
+  season                 String
+  format                 String
+  status                 TournamentStatus        @default(DRAFT)
+  startDate              DateTime?
+  endDate                DateTime?
+  createdAt              DateTime                @default(now())
+  updatedAt              DateTime                @updatedAt
+  stages                 TournamentStage[]
+  tournamentTeams        TournamentTeam[]
+  tournamentSquads       TournamentSquad[]
+  registrations          Registration[]
   registrationExceptions RegistrationException[]
+  matches                Match[]
 }
 
 model TournamentStage {
-  id                String     @id @default(uuid())
-  tournamentId      String
-  name              String
-  stageOrder        Int
-  oversPerInnings   Int
-  ballsPerOver      Int        @default(6)
-  pointsForWin      Int        @default(2)
-  pointsForTie      Int        @default(1)
-  pointsForNoResult Int        @default(1)
-  pointsForLoss     Int        @default(0)
+  id                 String     @id @default(uuid())
+  tournamentId       String
+  name               String
+  stageOrder         Int
+  oversPerInnings    Int
+  ballsPerOver       Int        @default(6)
+  pointsForWin       Int        @default(2)
+  pointsForTie       Int        @default(1)
+  pointsForNoResult  Int        @default(1)
+  pointsForLoss      Int        @default(0)
   qualificationCount Int?
-  tournament        Tournament @relation(fields: [tournamentId], references: [id])
+  tournament         Tournament @relation(fields: [tournamentId], references: [id])
 }
 
 model TournamentTeam {
@@ -178,22 +226,22 @@ model Registration {
   leaderIndexNumber String
   status            RegistrationStatus @default(PENDING)
 
-  approvedAt        DateTime?
-  approvedBy        String?
-  rejectedAt        DateTime?
-  rejectedBy        String?
-  rejectionReason   String?
+  approvedAt      DateTime?
+  approvedBy      String?
+  rejectedAt      DateTime?
+  rejectedBy      String?
+  rejectionReason String?
 
-  backupStatus      BackupStatus       @default(PENDING)
+  backupStatus      BackupStatus @default(PENDING)
   backupError       String?
   backupLastAttempt DateTime?
   backupSyncedAt    DateTime?
 
-  notes             String?
-  createdAt         DateTime           @default(now())
-  updatedAt         DateTime           @updatedAt
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  players           RegistrationPlayer[]
+  players RegistrationPlayer[]
 
   @@index([tournamentId])
   @@index([tournamentId, status])
@@ -243,4 +291,137 @@ model AdminAuditLog {
   @@index([entityType, entityId])
   @@index([action])
   @@index([createdAt])
+}
+
+model Match {
+  id              String       @id @default(uuid())
+  tournamentId    String
+  tournament      Tournament   @relation(fields: [tournamentId], references: [id])
+  teamAId         String
+  teamA           Team         @relation("MatchTeamA", fields: [teamAId], references: [id])
+  teamBId         String
+  teamB           Team         @relation("MatchTeamB", fields: [teamBId], references: [id])
+  venue           String?
+  scheduledAt     DateTime?
+  startedAt       DateTime?
+  completedAt     DateTime?
+  status          MatchStatus  @default(UPCOMING)
+  currentInnings  Int          @default(1)
+  oversPerInnings Int          @default(20)
+  tossWinnerId    String?
+  tossWinner      Team?        @relation("MatchTossWinner", fields: [tossWinnerId], references: [id])
+  tossDecision    String?
+  winnerTeamId    String?
+  winnerTeam      Team?        @relation("MatchWinner", fields: [winnerTeamId], references: [id])
+  resultNote      String?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  innings         Innings[]
+
+  @@index([tournamentId])
+  @@index([status])
+  @@index([teamAId])
+  @@index([teamBId])
+}
+
+model Innings {
+  id                  String          @id @default(uuid())
+  matchId             String
+  match               Match           @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  inningsNumber       Int
+  battingTeamId       String
+  battingTeam         Team            @relation("InningsBattingTeam", fields: [battingTeamId], references: [id])
+  bowlingTeamId       String
+  bowlingTeam         Team            @relation("InningsBowlingTeam", fields: [bowlingTeamId], references: [id])
+  runs                Int             @default(0)
+  wickets             Int             @default(0)
+  overs               Int             @default(0)
+  balls               Int             @default(0)
+  status              InningsStatus   @default(NOT_STARTED)
+  currentStrikerId    String?
+  currentStriker      Player?         @relation("InningsCurrentStriker", fields: [currentStrikerId], references: [id])
+  currentNonStrikerId String?
+  currentNonStriker   Player?         @relation("InningsCurrentNonStriker", fields: [currentNonStrikerId], references: [id])
+  currentBowlerId     String?
+  currentBowler       Player?         @relation("InningsCurrentBowler", fields: [currentBowlerId], references: [id])
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+  ballEvents          BallEvent[]
+  battingScores       InningsBatter[]
+  bowlingScores       InningsBowler[]
+
+  @@unique([matchId, inningsNumber])
+  @@index([matchId])
+  @@index([status])
+}
+
+model BallEvent {
+  id                 String      @id @default(uuid())
+  inningsId          String
+  innings            Innings     @relation(fields: [inningsId], references: [id], onDelete: Cascade)
+  overNumber         Int
+  ballNumber         Int
+  batsmanId          String
+  batsman            Player      @relation("BallBatsman", fields: [batsmanId], references: [id])
+  bowlerId           String
+  bowler             Player      @relation("BallBowler", fields: [bowlerId], references: [id])
+  runs               Int         @default(0)
+  extras             Int         @default(0)
+  extraType          ExtraType   @default(NONE)
+  isLegal            Boolean     @default(true)
+  isWicket           Boolean     @default(false)
+  wicketType         WicketType?
+  dismissedPlayerId  String?
+  dismissedPlayer    Player?     @relation("BallDismissedPlayer", fields: [dismissedPlayerId], references: [id])
+  commentary         String?
+  strikerIdBefore    String?
+  nonStrikerIdBefore String?
+  bowlerIdBefore     String?
+  createdAt          DateTime    @default(now())
+
+  @@index([inningsId])
+  @@index([inningsId, overNumber])
+  @@index([createdAt])
+}
+
+model InningsBatter {
+  id           String    @id @default(uuid())
+  inningsId    String
+  innings      Innings   @relation(fields: [inningsId], references: [id], onDelete: Cascade)
+  playerId     String
+  player       Player    @relation(fields: [playerId], references: [id])
+  runs         Int       @default(0)
+  balls        Int       @default(0)
+  fours        Int       @default(0)
+  sixes        Int       @default(0)
+  dismissal    String?
+  isOut        Boolean   @default(false)
+  isStriker    Boolean   @default(false)
+  battingOrder Int       @default(0)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@unique([inningsId, playerId])
+  @@index([inningsId])
+}
+
+model InningsBowler {
+  id           String    @id @default(uuid())
+  inningsId    String
+  innings      Innings   @relation(fields: [inningsId], references: [id], onDelete: Cascade)
+  playerId     String
+  player       Player    @relation(fields: [playerId], references: [id])
+  overs        Int       @default(0)
+  balls        Int       @default(0)
+  maidens      Int       @default(0)
+  runsConceded Int       @default(0)
+  wickets      Int       @default(0)
+  wides        Int       @default(0)
+  noBalls      Int       @default(0)
+  isCurrent    Boolean   @default(false)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@unique([inningsId, playerId])
+  @@index([inningsId])
 }

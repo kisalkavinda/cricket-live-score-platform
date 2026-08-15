@@ -1,12 +1,8 @@
 import { notFound } from "next/navigation";
 import { getAdminEntryPath } from "@/lib/auth/admin-auth";
 
-export function generateStaticParams() {
-  const entryPath = getAdminEntryPath();
-  return [{ secretPath: entryPath }];
-}
-
 export default async function ManagementLayout({
+
   children,
   params,
 }: {

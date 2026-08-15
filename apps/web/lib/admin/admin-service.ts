@@ -20,45 +20,86 @@ export interface DashboardStats {
 
 /**
  * Returns dashboard metrics and recent registrations.
+ * - Admin-only: NEVER cached — all data is private and fetched fresh per request.
+ * - Uses groupBy to collapse 7 individual COUNT queries into 2 aggregated queries.
+ * - Reduces database roundtrips from 9 down to 4.
  */
 export async function getDashboardStats(): Promise<DashboardStats> {
+  // Query 1 to 4: Execute all queries concurrently in a single roundtrip via Promise.all
   const [
-    pendingCount,
-    approvedCount,
-    rejectedCount,
-    totalCount,
-    backupSynced,
-    backupFailed,
-    backupPending,
+    statusGroups,
+    backupGroups,
     recentRegistrations,
     attentionRegistrations,
   ] = await Promise.all([
-    (prisma as any).registration.count({ where: { status: "PENDING" } }),
-    (prisma as any).registration.count({ where: { status: "APPROVED" } }),
-    (prisma as any).registration.count({ where: { status: "REJECTED" } }),
-    (prisma as any).registration.count(),
-    (prisma as any).registration.count({ where: { backupStatus: "SYNCED" } }),
-    (prisma as any).registration.count({ where: { backupStatus: "FAILED" } }),
-    (prisma as any).registration.count({ where: { backupStatus: "PENDING" } }),
+    (prisma as any).registration.groupBy({
+      by: ['status'],
+      _count: { _all: true },
+    }),
+    (prisma as any).registration.groupBy({
+      by: ['backupStatus'],
+      _count: { _all: true },
+    }),
     (prisma as any).registration.findMany({
       take: 8,
-      orderBy: { createdAt: "desc" },
-      include: {
-        players: { select: { id: true } },
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        registrationCode: true,
+        teamName: true,
+        leaderName: true,
+        status: true,
+        backupStatus: true,
+        createdAt: true,
+        _count: { select: { players: true } },
         tournament: { select: { name: true } },
       },
     }),
     (prisma as any).registration.findMany({
       where: {
-        OR: [{ status: "PENDING" }, { backupStatus: "FAILED" }],
+        OR: [{ status: 'PENDING' }, { backupStatus: 'FAILED' }],
       },
       take: 6,
-      orderBy: { createdAt: "desc" },
-      include: {
-        players: { select: { id: true } },
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        registrationCode: true,
+        teamName: true,
+        leaderName: true,
+        status: true,
+        backupStatus: true,
+        createdAt: true,
+        _count: { select: { players: true } },
       },
     }),
   ]);
+
+  // Derive counts from group results (default 0 for missing groups)
+  const statusMap: Record<string, number> = {};
+  for (const g of statusGroups) {
+    statusMap[g.status] = g._count._all;
+  }
+  const backupMap: Record<string, number> = {};
+  for (const g of backupGroups) {
+    backupMap[g.backupStatus] = g._count._all;
+  }
+
+  const pendingCount = statusMap['PENDING'] ?? 0;
+  const approvedCount = statusMap['APPROVED'] ?? 0;
+  const rejectedCount = statusMap['REJECTED'] ?? 0;
+  const cancelledCount = statusMap['CANCELLED'] ?? 0;
+  const totalCount = pendingCount + approvedCount + rejectedCount + cancelledCount;
+
+  const backupSynced = backupMap['SYNCED'] ?? 0;
+  const backupFailed = backupMap['FAILED'] ?? 0;
+  const backupPending = backupMap['PENDING'] ?? 0;
+
+
+  // Normalise _count.players into a players array shape for backward-compat with dashboard UI
+  const normaliseItem = (r: any) => ({
+    ...r,
+    players: Array.from({ length: r._count?.players ?? 0 }),
+  });
 
   return {
     registrations: {
@@ -72,10 +113,11 @@ export async function getDashboardStats(): Promise<DashboardStats> {
       failed: backupFailed,
       pending: backupPending,
     },
-    recentRegistrations,
-    attentionRegistrations,
+    recentRegistrations: recentRegistrations.map(normaliseItem),
+    attentionRegistrations: attentionRegistrations.map(normaliseItem),
   };
 }
+
 
 export interface RegistrationsQuery {
   status?: string;
@@ -132,20 +174,36 @@ export async function getRegistrationsList(params: RegistrationsQuery = {}) {
       where,
       skip,
       take: limit,
-      orderBy: { createdAt: "desc" },
-      include: {
-        players: {
-          select: { id: true, name: true, indexNumber: true },
-        },
-        tournament: {
-          select: { id: true, name: true },
-        },
+      orderBy: { createdAt: 'desc' },
+      // Project only the fields the registrations list UI renders.
+      // Do NOT fetch full player objects — use _count to get squad size.
+      // This avoids transferring private player data (names, index numbers)
+      // when they are not displayed on the list page.
+      select: {
+        id: true,
+        registrationCode: true,
+        teamName: true,
+        leaderName: true,
+        leaderIndexNumber: true,
+        status: true,
+        backupStatus: true,
+        createdAt: true,
+        _count: { select: { players: true } },
+        tournament: { select: { id: true, name: true } },
       },
     }),
   ]);
 
+  // Normalise _count.players into a players array shape expected by the list UI (r.players.length)
+  const normalisedItems = items.map((r: any) => ({
+    ...r,
+    players: Array.from({ length: r._count?.players ?? 0 }),
+  }));
+
+
+
   return {
-    items,
+    items: normalisedItems,
     pagination: {
       total,
       page,
@@ -154,6 +212,7 @@ export async function getRegistrationsList(params: RegistrationsQuery = {}) {
     },
   };
 }
+
 
 /**
  * Returns single registration detail with all players and exception checks.

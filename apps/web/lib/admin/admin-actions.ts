@@ -1,6 +1,7 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
+
 import { redirect } from 'next/navigation';
 import { requireAdminAuth, loginAdmin, logoutAdmin, getAdminEntryPath } from '@/lib/auth/admin-auth';
 import {
@@ -31,9 +32,15 @@ export async function approveRegistrationServerAction(registrationId: string) {
     revalidatePath(`/${entryPath}/registrations/${registrationId}`);
     revalidatePath(`/${entryPath}/teams`);
     revalidatePath(`/${entryPath}/players`);
+    // Invalidate the public aggregate team-count cache ONLY after the
+    // authoritative Supabase transaction has committed successfully.
+    // This never runs on failure. Live scoring is completely unrelated.
+    // Profile 'seconds' ensures near-immediate revalidation on next request.
+    revalidateTag('teams-count', 'seconds');
   }
   return result;
 }
+
 
 export async function rejectRegistrationServerAction(registrationId: string, reason: string) {
   await requireAdminAuth();
