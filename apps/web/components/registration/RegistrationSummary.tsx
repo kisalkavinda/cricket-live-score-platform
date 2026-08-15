@@ -197,6 +197,7 @@ export default function RegistrationSummary({
         </div>
 
         <div
+          className="table-responsive-container"
           style={{
             border: '1px solid rgba(255, 255, 255, 0.1)',
             borderRadius: 'var(--radius-md)',
@@ -204,7 +205,7 @@ export default function RegistrationSummary({
             background: 'rgba(0, 0, 0, 0.3)',
           }}
         >
-          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '480px' }}>
             <thead>
               <tr style={{ background: 'rgba(255, 255, 255, 0.05)', borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
                 <th style={{ padding: '12px 16px', fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--color-ink-subtle)', width: '50px' }}>#</th>

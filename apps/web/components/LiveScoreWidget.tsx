@@ -244,10 +244,10 @@ export default function LiveScoreWidget() {
                 🏏
               </div>
               <div>
-                <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#FFF' }}>
+                <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.2rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--color-paper)' }}>
                   {currentMatch.match.teamA.name}
                 </div>
-                <div style={{ fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.5)', fontWeight: 600 }}>
+                <div style={{ fontFamily: 'var(--font-data)', fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.5)', fontWeight: 600 }}>
                   {currentMatch.match.teamA.shortName}
                 </div>
               </div>
@@ -259,10 +259,10 @@ export default function LiveScoreWidget() {
                 <div>
                   <div
                     style={{
-                      fontFamily: 'monospace',
+                      fontFamily: 'var(--font-data)',
                       fontSize: '2.2rem',
                       fontWeight: 900,
-                      color: '#FFB800',
+                      color: 'var(--color-gold)',
                       letterSpacing: '-0.02em',
                       lineHeight: 1,
                       marginBottom: '4px',
@@ -270,15 +270,15 @@ export default function LiveScoreWidget() {
                   >
                     {currentInnings.runs} / {currentInnings.wickets}
                   </div>
-                  <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'rgba(255, 255, 255, 0.8)' }}>
+                  <div style={{ fontFamily: 'var(--font-data)', fontSize: '0.85rem', fontWeight: 700, color: 'var(--color-paper)' }}>
                     {currentInnings.overs}.{currentInnings.balls} / {currentMatch.match.oversPerInnings} Overs
                   </div>
-                  <div style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.5)', marginTop: '2px' }}>
+                  <div style={{ fontFamily: 'var(--font-body)', fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.5)', marginTop: '2px' }}>
                     CRR: {currentInnings.crr} {currentInnings.rrr ? `• RRR: ${currentInnings.rrr}` : ''}
                   </div>
                 </div>
               ) : (
-                <div style={{ fontSize: '1.2rem', fontWeight: 700, color: 'rgba(255, 255, 255, 0.5)' }}>
+                <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.2rem', fontWeight: 800, color: 'rgba(255, 255, 255, 0.5)' }}>
                   VS
                 </div>
               )}
@@ -287,10 +287,10 @@ export default function LiveScoreWidget() {
             {/* Team B */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '12px', minWidth: '120px', flex: '1 1 auto', textAlign: 'right' }}>
               <div>
-                <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#FFF' }}>
+                <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.2rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--color-paper)' }}>
                   {currentMatch.match.teamB.name}
                 </div>
-                <div style={{ fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.5)', fontWeight: 600 }}>
+                <div style={{ fontFamily: 'var(--font-data)', fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.5)', fontWeight: 600 }}>
                   {currentMatch.match.teamB.shortName}
                 </div>
               </div>
@@ -316,7 +316,7 @@ export default function LiveScoreWidget() {
 
           {/* Result Note if match finished */}
           {currentMatch.match.resultNote && (
-            <div style={{ marginTop: '14px', background: 'rgba(255, 215, 0, 0.1)', color: '#FFD700', padding: '8px 14px', borderRadius: '8px', fontWeight: 700, textAlign: 'center', fontSize: '0.9rem' }}>
+            <div style={{ marginTop: '14px', background: 'rgba(192, 39, 45, 0.15)', border: '1px solid var(--color-accent)', color: 'var(--color-paper)', padding: '8px 14px', borderRadius: '8px', fontWeight: 700, textAlign: 'center', fontSize: '0.9rem', fontFamily: 'var(--font-display)', textTransform: 'uppercase' }}>
               🏆 {currentMatch.match.resultNote}
             </div>
           )}
@@ -333,17 +333,17 @@ export default function LiveScoreWidget() {
             >
               {/* Batters On Pitch */}
               <div style={{ background: 'rgba(255, 255, 255, 0.02)', borderRadius: '8px', padding: '12px 16px' }}>
-                <div style={{ fontSize: '0.72rem', fontWeight: 800, color: 'rgba(255, 255, 255, 0.4)', textTransform: 'uppercase', marginBottom: '8px' }}>
+                <div style={{ fontFamily: 'var(--font-body)', fontSize: '0.72rem', fontWeight: 800, color: 'rgba(255, 255, 255, 0.4)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>
                   Batters on Strike
                 </div>
 
                 {currentMatch.striker ? (
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <span style={{ color: '#FFB800', fontWeight: 900, fontSize: '0.85rem' }}>*</span>
-                      <span style={{ fontWeight: 700, fontSize: '0.95rem', color: '#FFF' }}>{currentMatch.striker.name}</span>
+                      <span style={{ color: 'var(--color-accent-bright)', fontWeight: 900, fontSize: '0.85rem' }}>*</span>
+                      <span style={{ fontFamily: 'var(--font-body)', fontWeight: 700, fontSize: '0.95rem', color: 'var(--color-paper)' }}>{currentMatch.striker.name}</span>
                     </div>
-                    <div style={{ fontWeight: 800, color: '#FFB800', fontSize: '0.95rem' }}>
+                    <div style={{ fontFamily: 'var(--font-data)', fontWeight: 800, color: 'var(--color-gold)', fontSize: '0.95rem' }}>
                       {currentMatch.striker.runs}{' '}
                       <span style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.5)', fontWeight: 500 }}>
                         ({currentMatch.striker.balls}b • {currentMatch.striker.fours}x4 • {currentMatch.striker.sixes}x6)
@@ -356,10 +356,10 @@ export default function LiveScoreWidget() {
 
                 {currentMatch.nonStriker && (
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontWeight: 600, fontSize: '0.9rem', color: 'rgba(255, 255, 255, 0.8)' }}>
+                    <span style={{ fontFamily: 'var(--font-body)', fontWeight: 600, fontSize: '0.9rem', color: 'rgba(255, 255, 255, 0.8)' }}>
                       {currentMatch.nonStriker.name}
                     </span>
-                    <span style={{ fontWeight: 700, color: 'rgba(255, 255, 255, 0.7)', fontSize: '0.9rem' }}>
+                    <span style={{ fontFamily: 'var(--font-data)', fontWeight: 700, color: 'rgba(255, 255, 255, 0.7)', fontSize: '0.9rem' }}>
                       {currentMatch.nonStriker.runs}{' '}
                       <span style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.5)', fontWeight: 500 }}>
                         ({currentMatch.nonStriker.balls}b)

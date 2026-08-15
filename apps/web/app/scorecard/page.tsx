@@ -140,15 +140,15 @@ function ScorecardContent() {
         {/* MATCH HERO CARD */}
         <div
           style={{
-            background: 'linear-gradient(135deg, #1C1616 0%, #291F1F 100%)',
-            border: '1.5px solid rgba(255, 184, 0, 0.3)',
-            borderRadius: '16px',
-            padding: '20px',
+            background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%)',
+            border: '1.5px solid rgba(255, 255, 255, 0.15)',
+            borderRadius: 'var(--radius-lg)',
+            padding: 'var(--space-lg)',
             boxShadow: '0 12px 32px rgba(0, 0, 0, 0.4)',
-            marginBottom: '20px',
+            marginBottom: 'var(--space-lg)',
           }}
         >
-          <div style={{ fontSize: '0.82rem', color: 'rgba(255, 255, 255, 0.6)', marginBottom: '12px' }}>
+          <div style={{ fontFamily: 'var(--font-body)', fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.6)', marginBottom: '12px' }}>
             {match.tournament?.name} • {match.venue || 'Main Stadium'} • {match.oversPerInnings} Overs Match
           </div>
 
@@ -162,10 +162,10 @@ function ScorecardContent() {
             }}
           >
             <div style={{ minWidth: '130px', flex: '1 1 auto' }}>
-              <div style={{ fontSize: '1.2rem', fontWeight: 900, color: '#FFF' }}>{match.teamA.name}</div>
-              <div style={{ fontSize: '0.8rem', color: '#8B9BB4', fontFamily: 'monospace' }}>{match.teamA.shortName}</div>
+              <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.4rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--color-paper)' }}>{match.teamA.name}</div>
+              <div style={{ fontFamily: 'var(--font-data)', fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.5)' }}>{match.teamA.shortName}</div>
               {inn1 && inn1.battingTeamId === match.teamAId && (
-                <div style={{ fontSize: '1.3rem', fontWeight: 900, color: '#FFB800', marginTop: '4px', fontFamily: 'monospace' }}>
+                <div style={{ fontSize: '1.4rem', fontWeight: 900, color: 'var(--color-gold)', marginTop: '4px', fontFamily: 'var(--font-data)' }}>
                   {inn1.runs} / {inn1.wickets}{' '}
                   <span style={{ fontSize: '0.85rem', color: 'rgba(255, 255, 255, 0.6)', fontWeight: 600 }}>
                     ({inn1.overs}.{inn1.balls} ov)
@@ -173,7 +173,7 @@ function ScorecardContent() {
                 </div>
               )}
               {inn2 && inn2.battingTeamId === match.teamAId && (
-                <div style={{ fontSize: '1.3rem', fontWeight: 900, color: '#FFB800', marginTop: '4px', fontFamily: 'monospace' }}>
+                <div style={{ fontSize: '1.4rem', fontWeight: 900, color: 'var(--color-gold)', marginTop: '4px', fontFamily: 'var(--font-data)' }}>
                   {inn2.runs} / {inn2.wickets}{' '}
                   <span style={{ fontSize: '0.85rem', color: 'rgba(255, 255, 255, 0.6)', fontWeight: 600 }}>
                     ({inn2.overs}.{inn2.balls} ov)
@@ -182,15 +182,15 @@ function ScorecardContent() {
               )}
             </div>
 
-            <div style={{ textAlign: 'center', color: '#FFB800', fontWeight: 900, fontSize: '1rem', padding: '4px 10px', background: 'rgba(0,0,0,0.3)', borderRadius: '6px' }}>
+            <div style={{ textAlign: 'center', color: 'var(--color-gold)', fontWeight: 900, fontSize: '1.1rem', padding: '6px 12px', background: 'rgba(0,0,0,0.3)', borderRadius: 'var(--radius-sm)', fontFamily: 'var(--font-display)' }}>
               VS
             </div>
 
             <div style={{ minWidth: '130px', flex: '1 1 auto', textAlign: 'right' }}>
-              <div style={{ fontSize: '1.2rem', fontWeight: 900, color: '#FFF' }}>{match.teamB.name}</div>
-              <div style={{ fontSize: '0.8rem', color: '#8B9BB4', fontFamily: 'monospace' }}>{match.teamB.shortName}</div>
+              <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.4rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--color-paper)' }}>{match.teamB.name}</div>
+              <div style={{ fontFamily: 'var(--font-data)', fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.5)' }}>{match.teamB.shortName}</div>
               {inn1 && inn1.battingTeamId === match.teamBId && (
-                <div style={{ fontSize: '1.3rem', fontWeight: 900, color: '#FFB800', marginTop: '4px', fontFamily: 'monospace' }}>
+                <div style={{ fontSize: '1.4rem', fontWeight: 900, color: 'var(--color-gold)', marginTop: '4px', fontFamily: 'var(--font-data)' }}>
                   {inn1.runs} / {inn1.wickets}{' '}
                   <span style={{ fontSize: '0.85rem', color: 'rgba(255, 255, 255, 0.6)', fontWeight: 600 }}>
                     ({inn1.overs}.{inn1.balls} ov)
@@ -198,7 +198,7 @@ function ScorecardContent() {
                 </div>
               )}
               {inn2 && inn2.battingTeamId === match.teamBId && (
-                <div style={{ fontSize: '1.3rem', fontWeight: 900, color: '#FFB800', marginTop: '4px', fontFamily: 'monospace' }}>
+                <div style={{ fontSize: '1.4rem', fontWeight: 900, color: 'var(--color-gold)', marginTop: '4px', fontFamily: 'var(--font-data)' }}>
                   {inn2.runs} / {inn2.wickets}{' '}
                   <span style={{ fontSize: '0.85rem', color: 'rgba(255, 255, 255, 0.6)', fontWeight: 600 }}>
                     ({inn2.overs}.{inn2.balls} ov)
@@ -209,27 +209,25 @@ function ScorecardContent() {
           </div>
 
           {match.resultNote && (
-            <div style={{ marginTop: '16px', background: 'rgba(255, 215, 0, 0.1)', color: '#FFD700', padding: '10px 16px', borderRadius: '8px', fontWeight: 800, textAlign: 'center', fontSize: '0.9rem' }}>
+            <div style={{ marginTop: '16px', background: 'rgba(192, 39, 45, 0.15)', border: '1px solid var(--color-accent)', color: 'var(--color-paper)', padding: '10px 16px', borderRadius: 'var(--radius-sm)', fontWeight: 800, textAlign: 'center', fontSize: '0.95rem', fontFamily: 'var(--font-display)', textTransform: 'uppercase' }}>
               🏆 {match.resultNote}
             </div>
           )}
         </div>
 
         {/* INNINGS TABS */}
-        <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', overflowX: 'auto', paddingBottom: '4px' }}>
+        <div style={{ display: 'flex', gap: '10px', marginBottom: '16px', overflowX: 'auto', paddingBottom: '4px' }}>
           {inn1 && (
             <button
               onClick={() => setActiveTab('inn1')}
+              className={activeTab === 'inn1' ? 'btn-hallmark-primary' : 'btn-hallmark-outline'}
               style={{
-                padding: '8px 16px',
-                borderRadius: '8px',
-                border: 'none',
-                background: activeTab === 'inn1' ? '#FFB800' : 'rgba(255, 255, 255, 0.06)',
-                color: activeTab === 'inn1' ? '#000' : '#FFF',
-                fontWeight: 800,
+                height: '40px',
+                padding: '0 18px',
                 fontSize: '0.85rem',
-                cursor: 'pointer',
+                borderRadius: '9999px',
                 whiteSpace: 'nowrap',
+                cursor: 'pointer',
               }}
             >
               1st Innings: {inn1.battingTeam?.shortName} ({inn1.runs}/{inn1.wickets})
@@ -239,16 +237,14 @@ function ScorecardContent() {
           {inn2 && (
             <button
               onClick={() => setActiveTab('inn2')}
+              className={activeTab === 'inn2' ? 'btn-hallmark-primary' : 'btn-hallmark-outline'}
               style={{
-                padding: '8px 16px',
-                borderRadius: '8px',
-                border: 'none',
-                background: activeTab === 'inn2' ? '#FFB800' : 'rgba(255, 255, 255, 0.06)',
-                color: activeTab === 'inn2' ? '#000' : '#FFF',
-                fontWeight: 800,
+                height: '40px',
+                padding: '0 18px',
                 fontSize: '0.85rem',
-                cursor: 'pointer',
+                borderRadius: '9999px',
                 whiteSpace: 'nowrap',
+                cursor: 'pointer',
               }}
             >
               2nd Innings: {inn2.battingTeam?.shortName} ({inn2.runs}/{inn2.wickets})
@@ -260,15 +256,15 @@ function ScorecardContent() {
         {selectedInnings ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
             {/* Batting Card */}
-            <div style={{ background: 'var(--color-paper-dark)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '12px', overflow: 'hidden' }}>
-              <div style={{ background: 'rgba(255, 255, 255, 0.04)', padding: '12px 16px', borderBottom: '1px solid rgba(255, 255, 255, 0.08)', fontWeight: 800, color: '#FFF' }}>
+            <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
+              <div style={{ background: 'rgba(255, 255, 255, 0.04)', padding: '12px 16px', borderBottom: '1px solid rgba(255, 255, 255, 0.08)', fontWeight: 800, color: 'var(--color-paper)', fontFamily: 'var(--font-display)', fontSize: '1.1rem', textTransform: 'uppercase' }}>
                 Batting: {selectedInnings.battingTeam?.name}
               </div>
 
               <div className="table-responsive-container">
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem', minWidth: '500px' }}>
                   <thead>
-                    <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.08)', color: 'rgba(255, 255, 255, 0.5)', textAlign: 'left' }}>
+                    <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.08)', color: 'rgba(255, 255, 255, 0.5)', textAlign: 'left', fontFamily: 'var(--font-body)', fontSize: '0.75rem', textTransform: 'uppercase' }}>
                       <th style={{ padding: '10px 14px' }}>Batter</th>
                       <th style={{ padding: '10px 14px' }}>Dismissal</th>
                       <th style={{ padding: '10px 14px', textAlign: 'right' }}>R</th>
@@ -284,17 +280,17 @@ function ScorecardContent() {
                       const isCurrent = b.playerId === selectedInnings.currentStrikerId || b.playerId === selectedInnings.currentNonStrikerId;
                       return (
                         <tr key={b.id} style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.04)' }}>
-                          <td style={{ padding: '10px 14px', fontWeight: 700, color: isCurrent ? '#FFB800' : '#FFF' }}>
+                          <td style={{ padding: '10px 14px', fontWeight: 700, color: isCurrent ? 'var(--color-gold)' : 'var(--color-paper)', fontFamily: 'var(--font-body)' }}>
                             {b.player?.name} {b.playerId === selectedInnings.currentStrikerId ? ' *' : ''}
                           </td>
-                          <td style={{ padding: '10px 14px', color: 'rgba(255, 255, 255, 0.6)' }}>
+                          <td style={{ padding: '10px 14px', color: 'rgba(255, 255, 255, 0.6)', fontFamily: 'var(--font-body)' }}>
                             {b.isOut ? b.dismissal || 'Out' : isCurrent ? 'not out (batting)' : 'not out'}
                           </td>
-                          <td style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 800, color: '#FFF' }}>{b.runs}</td>
-                          <td style={{ padding: '10px 14px', textAlign: 'right', color: 'rgba(255, 255, 255, 0.7)' }}>{b.balls}</td>
-                          <td style={{ padding: '10px 14px', textAlign: 'right', color: 'rgba(255, 255, 255, 0.7)' }}>{b.fours}</td>
-                          <td style={{ padding: '10px 14px', textAlign: 'right', color: 'rgba(255, 255, 255, 0.7)' }}>{b.sixes}</td>
-                          <td style={{ padding: '10px 14px', textAlign: 'right', color: 'rgba(255, 255, 255, 0.7)' }}>{sr}</td>
+                          <td style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 800, color: 'var(--color-paper)', fontFamily: 'var(--font-data)' }}>{b.runs}</td>
+                          <td style={{ padding: '10px 14px', textAlign: 'right', color: 'rgba(255, 255, 255, 0.7)', fontFamily: 'var(--font-data)' }}>{b.balls}</td>
+                          <td style={{ padding: '10px 14px', textAlign: 'right', color: 'rgba(255, 255, 255, 0.7)', fontFamily: 'var(--font-data)' }}>{b.fours}</td>
+                          <td style={{ padding: '10px 14px', textAlign: 'right', color: 'rgba(255, 255, 255, 0.7)', fontFamily: 'var(--font-data)' }}>{b.sixes}</td>
+                          <td style={{ padding: '10px 14px', textAlign: 'right', color: 'rgba(255, 255, 255, 0.7)', fontFamily: 'var(--font-data)' }}>{sr}</td>
                         </tr>
                       );
                     })}
@@ -303,23 +299,23 @@ function ScorecardContent() {
               </div>
 
               <div style={{ padding: '12px 16px', background: 'rgba(0, 0, 0, 0.2)', display: 'flex', justifyContent: 'space-between', fontWeight: 800, fontSize: '0.9rem', flexWrap: 'wrap', gap: '8px' }}>
-                <span style={{ color: 'rgba(255, 255, 255, 0.7)' }}>Total</span>
-                <span style={{ color: '#FFB800', fontFamily: 'monospace' }}>
+                <span style={{ color: 'rgba(255, 255, 255, 0.7)', fontFamily: 'var(--font-body)' }}>Total</span>
+                <span style={{ color: 'var(--color-gold)', fontFamily: 'var(--font-data)' }}>
                   {selectedInnings.runs} / {selectedInnings.wickets} ({selectedInnings.overs}.{selectedInnings.balls} Overs)
                 </span>
               </div>
             </div>
 
             {/* Bowling Card */}
-            <div style={{ background: 'var(--color-paper-dark)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '12px', overflow: 'hidden' }}>
-              <div style={{ background: 'rgba(255, 255, 255, 0.04)', padding: '12px 16px', borderBottom: '1px solid rgba(255, 255, 255, 0.08)', fontWeight: 800, color: '#FFF' }}>
+            <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
+              <div style={{ background: 'rgba(255, 255, 255, 0.04)', padding: '12px 16px', borderBottom: '1px solid rgba(255, 255, 255, 0.08)', fontWeight: 800, color: 'var(--color-paper)', fontFamily: 'var(--font-display)', fontSize: '1.1rem', textTransform: 'uppercase' }}>
                 Bowling: {selectedInnings.bowlingTeam?.name}
               </div>
 
               <div className="table-responsive-container">
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem', minWidth: '500px' }}>
                   <thead>
-                    <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.08)', color: 'rgba(255, 255, 255, 0.5)', textAlign: 'left' }}>
+                    <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.08)', color: 'rgba(255, 255, 255, 0.5)', textAlign: 'left', fontFamily: 'var(--font-body)', fontSize: '0.75rem', textTransform: 'uppercase' }}>
                       <th style={{ padding: '10px 14px' }}>Bowler</th>
                       <th style={{ padding: '10px 14px', textAlign: 'right' }}>O</th>
                       <th style={{ padding: '10px 14px', textAlign: 'right' }}>M</th>
@@ -336,16 +332,16 @@ function ScorecardContent() {
                       const econ = totalOvers > 0 ? (b.runsConceded / totalOvers).toFixed(2) : '0.00';
                       return (
                         <tr key={b.id} style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.04)' }}>
-                          <td style={{ padding: '10px 14px', fontWeight: 700, color: '#FFF' }}>
+                          <td style={{ padding: '10px 14px', fontWeight: 700, color: 'var(--color-paper)', fontFamily: 'var(--font-body)' }}>
                             {b.player?.name} {b.isCurrent ? ' *' : ''}
                           </td>
-                          <td style={{ padding: '10px 14px', textAlign: 'right', color: '#FFF' }}>{b.overs}.{b.balls}</td>
-                          <td style={{ padding: '10px 14px', textAlign: 'right', color: 'rgba(255, 255, 255, 0.7)' }}>{b.maidens}</td>
-                          <td style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 800, color: '#FFF' }}>{b.runsConceded}</td>
-                          <td style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 800, color: '#FFB800' }}>{b.wickets}</td>
-                          <td style={{ padding: '10px 14px', textAlign: 'right', color: 'rgba(255, 255, 255, 0.7)' }}>{econ}</td>
-                          <td style={{ padding: '10px 14px', textAlign: 'right', color: 'rgba(255, 255, 255, 0.7)' }}>{b.wides}</td>
-                          <td style={{ padding: '10px 14px', textAlign: 'right', color: 'rgba(255, 255, 255, 0.7)' }}>{b.noBalls}</td>
+                          <td style={{ padding: '10px 14px', textAlign: 'right', color: 'var(--color-paper)', fontFamily: 'var(--font-data)' }}>{b.overs}.{b.balls}</td>
+                          <td style={{ padding: '10px 14px', textAlign: 'right', color: 'rgba(255, 255, 255, 0.7)', fontFamily: 'var(--font-data)' }}>{b.maidens}</td>
+                          <td style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 800, color: 'var(--color-paper)', fontFamily: 'var(--font-data)' }}>{b.runsConceded}</td>
+                          <td style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 800, color: 'var(--color-gold)', fontFamily: 'var(--font-data)' }}>{b.wickets}</td>
+                          <td style={{ padding: '10px 14px', textAlign: 'right', color: 'rgba(255, 255, 255, 0.7)', fontFamily: 'var(--font-data)' }}>{econ}</td>
+                          <td style={{ padding: '10px 14px', textAlign: 'right', color: 'rgba(255, 255, 255, 0.7)', fontFamily: 'var(--font-data)' }}>{b.wides}</td>
+                          <td style={{ padding: '10px 14px', textAlign: 'right', color: 'rgba(255, 255, 255, 0.7)', fontFamily: 'var(--font-data)' }}>{b.noBalls}</td>
                         </tr>
                       );
                     })}
