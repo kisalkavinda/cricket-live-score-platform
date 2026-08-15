@@ -19,7 +19,7 @@ export default async function RegisterPage() {
     const { prisma } = await import('database');
     const activeTournament = await prisma.tournament.findFirst({
       where: {
-        status: { in: ['REGISTRATION', 'DRAFT', 'SCHEDULED'] },
+        status: { in: ['REGISTRATION', 'DRAFT', 'SCHEDULED', 'LIVE'] },
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -29,7 +29,7 @@ export default async function RegisterPage() {
       const name = activeTournament.name.trim();
       const season = activeTournament.season?.trim();
       tournamentName = season && !name.includes(season) ? `${name} ${season}` : name;
-      if (activeTournament.status !== 'REGISTRATION' && activeTournament.status !== 'DRAFT') {
+      if (activeTournament.status === 'COMPLETED' || activeTournament.status === 'CANCELLED') {
         isClosed = true;
       }
     }
