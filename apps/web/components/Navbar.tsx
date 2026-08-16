@@ -29,6 +29,7 @@ export default function Navbar() {
     { label: '🔴 Live Scores', href: '/#live-scores', id: 'nav-scores' },
     { label: 'Overview', href: '/', id: 'nav-overview' },
     { label: 'Tournament Info', href: '/#details', id: 'nav-details' },
+    { label: 'Fixtures & Draw', href: '/#fixtures', id: 'nav-fixtures' },
     { label: 'Register Squad', href: '/register', id: 'nav-register' },
   ];
 
