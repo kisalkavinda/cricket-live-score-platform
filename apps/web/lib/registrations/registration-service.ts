@@ -2,6 +2,7 @@ import { prisma } from "database";
 import {
   registrationFormSchema,
   normalizeIndexNumber,
+  extractIntake,
   RegistrationFormData,
 } from "../validations/registration";
 import { generateRegistrationCode } from "./registration-code";
@@ -23,8 +24,32 @@ export interface RegistrationResult {
 export async function createRegistration(
   rawInput: unknown
 ): Promise<RegistrationResult> {
+  // Pre-filter empty player rows if at least 7 filled players exist
+  let sanitizedInput = rawInput;
+  if (
+    rawInput &&
+    typeof rawInput === "object" &&
+    "players" in rawInput &&
+    Array.isArray((rawInput as any).players)
+  ) {
+    const rawPlayers = (rawInput as any).players;
+    const nonEmpty = rawPlayers.filter(
+      (p: any) =>
+        p &&
+        typeof p === "object" &&
+        ((p.name && String(p.name).trim().length > 0) ||
+          (p.indexNumber && String(p.indexNumber).trim().length > 0))
+    );
+    if (nonEmpty.length >= 7) {
+      sanitizedInput = {
+        ...(rawInput as any),
+        players: nonEmpty,
+      };
+    }
+  }
+
   // 1. Zod Server Validation
-  const parseResult = registrationFormSchema.safeParse(rawInput);
+  const parseResult = registrationFormSchema.safeParse(sanitizedInput);
   if (!parseResult.success) {
     const formattedErrors: Record<string, string[]> = {};
     for (const issue of parseResult.error.issues) {
@@ -78,6 +103,31 @@ export async function createRegistration(
     };
   }
 
+  // Check Batch / Intake Uniformity (No mixed intakes allowed)
+  const captainIntake = extractIntake(normalizedLeaderIndex);
+  let primaryIntake = captainIntake;
+  if (!primaryIntake) {
+    for (const p of normalizedPlayers) {
+      const found = extractIntake(p.indexNumber);
+      if (found) {
+        primaryIntake = found;
+        break;
+      }
+    }
+  }
+
+  if (primaryIntake) {
+    for (const player of normalizedPlayers) {
+      const playerIntake = extractIntake(player.indexNumber);
+      if (playerIntake && playerIntake !== primaryIntake) {
+        return {
+          success: false,
+          error: `Mixed-intake squads are not allowed. All players must belong to Intake ${primaryIntake} (Player index "${player.indexNumber}" has Intake ${playerIntake}).`,
+        };
+      }
+    }
+  }
+
   // 3. Check Tournament Validity & Status
   let tournament;
   try {
@@ -126,21 +176,89 @@ export async function createRegistration(
   let exceptions: any[] = [];
   try {
     exceptions = await (prisma as any).registrationException.findMany({
-      where: { tournamentId: data.tournamentId },
+      where: {
+        OR: [
+          { tournamentId: data.tournamentId },
+          { tournamentId: tournament?.id },
+          { tournamentId: null },
+        ],
+        active: true,
+      },
     });
   } catch (err: unknown) {
-    console.warn("[RegistrationService] Exception lookup warning:", err);
+    try {
+      exceptions = await (prisma as any).registrationException.findMany();
+    } catch {
+      console.warn("[RegistrationService] Exception lookup warning:", err);
+    }
   }
 
+  // Filter to active rules that match this tournament if specified
+  const activeExceptions = exceptions.filter((ex: any) => {
+    if (ex.active === false) return false;
+    if (ex.tournamentId && ex.tournamentId !== data.tournamentId && ex.tournamentId !== tournament?.id) {
+      return false;
+    }
+    return true;
+  });
 
-  const cleanTeamName = data.teamName.trim().toLowerCase();
-  const matchedException = exceptions.find((ex: any) => {
-    const matchName = ex.teamName && cleanTeamName.includes(ex.teamName.trim().toLowerCase());
-    const matchPrefix = ex.indexPrefix && (
-      normalizedLeaderIndex.startsWith(ex.indexPrefix.trim().toUpperCase()) ||
-      normalizedPlayers.some((p: any) => p.indexNumber.startsWith(ex.indexPrefix.trim().toUpperCase()))
-    );
-    return matchName || matchPrefix;
+  // Helper to match intake number in university index format D/***/(intake)/0000
+  const matchesIntakeOrIndex = (studentIndex: string, targetIntake: string): boolean => {
+    if (!studentIndex || !targetIntake) return false;
+    const normalizedIndex = studentIndex.trim().toUpperCase();
+    const normalizedTarget = targetIntake.trim().toUpperCase();
+
+    // 1. Direct segment match (e.g. target "38" in "D/IT/38/0001" or "D-CS-38-0001")
+    const segments = normalizedIndex.split(/[\/\-_.\s]+/);
+    if (segments.includes(normalizedTarget)) {
+      return true;
+    }
+
+    // 2. Delimited substring match
+    if (
+      normalizedIndex.includes(`/${normalizedTarget}/`) ||
+      normalizedIndex.includes(`-${normalizedTarget}-`) ||
+      normalizedIndex.includes(`_${normalizedTarget}_`)
+    ) {
+      return true;
+    }
+
+    // 3. Compact clean substring / prefix match (e.g. "38" in "DIT380001")
+    const cleanIndex = normalizedIndex.replace(/[^A-Z0-9]/g, "");
+    const cleanTarget = normalizedTarget.replace(/[^A-Z0-9]/g, "");
+    if (cleanTarget.length >= 2 && cleanIndex.includes(cleanTarget)) {
+      return true;
+    }
+
+    return false;
+  };
+
+  const matchedException = activeExceptions.find((ex: any) => {
+    const exIntake = (ex.indexPrefix || "").trim();
+    const exName = (ex.name || "").trim();
+
+    // 1. Match on configured Intake / Index Prefix
+    if (exIntake) {
+      const matchCaptain = matchesIntakeOrIndex(data.leaderIndexNumber, exIntake);
+      const matchAnyPlayer = data.players.some((p) => matchesIntakeOrIndex(p.indexNumber, exIntake));
+      if (matchCaptain || matchAnyPlayer) return true;
+    }
+
+    // 2. Match if rule name contains an intake number (e.g. "Intake 38" or "Batch 38")
+    const extractedIntakeMatch = exName.match(/(?:intake|batch|year|\b)(\d{2,3})\b/i);
+    if (extractedIntakeMatch && extractedIntakeMatch[1]) {
+      const intakeNum = extractedIntakeMatch[1];
+      const matchCaptain = matchesIntakeOrIndex(data.leaderIndexNumber, intakeNum);
+      const matchAnyPlayer = data.players.some((p) => matchesIntakeOrIndex(p.indexNumber, intakeNum));
+      if (matchCaptain || matchAnyPlayer) return true;
+    }
+
+    // 3. Universal Tournament Exception: If no intake was constrained, applies to all teams in the tournament
+    if (!exIntake && !extractedIntakeMatch) {
+      return true;
+    }
+
+    return false;
   });
 
   if (matchedException) {

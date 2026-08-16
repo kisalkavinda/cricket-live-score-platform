@@ -106,6 +106,16 @@ export default function RegistrationForm({
     setServerError(null);
     setServerErrorDetails(undefined);
 
+    // Auto-prune empty player rows if at least 7 players are filled
+    const currentPlayers = getValues('players') || [];
+    const nonEmptyPlayers = currentPlayers.filter(
+      (p) => (p.name && p.name.trim().length > 0) || (p.indexNumber && p.indexNumber.trim().length > 0)
+    );
+
+    if (nonEmptyPlayers.length >= 7 && nonEmptyPlayers.length < currentPlayers.length) {
+      setValue('players', nonEmptyPlayers, { shouldValidate: false });
+    }
+
     const isValid = await trigger();
     if (isValid) {
       setStep('REVIEW');
@@ -125,7 +135,14 @@ export default function RegistrationForm({
     setServerError(null);
     setServerErrorDetails(undefined);
 
-    const values = getValues();
+    const rawValues = getValues();
+    const nonEmptyPlayers = (rawValues.players || []).filter(
+      (p) => (p.name && p.name.trim().length > 0) || (p.indexNumber && p.indexNumber.trim().length > 0)
+    );
+    const values = {
+      ...rawValues,
+      players: nonEmptyPlayers.length >= 7 ? nonEmptyPlayers : rawValues.players,
+    };
 
     try {
       const response = await submitRegistration(values);

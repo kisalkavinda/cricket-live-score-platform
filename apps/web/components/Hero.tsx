@@ -157,10 +157,10 @@ export default function Hero() {
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
               gap: 'var(--space-xs)',
               marginBottom: 'var(--space-xl)',
-              maxWidth: '680px',
+              maxWidth: '740px',
             }}
           >
             <div
@@ -182,7 +182,7 @@ export default function Hero() {
                   marginBottom: '4px',
                 }}
               >
-                Match Date
+                Match Day
               </div>
               <div
                 style={{
@@ -194,6 +194,58 @@ export default function Hero() {
                 }}
               >
                 {tournamentConfig.date || 'TBA'}
+              </div>
+              {tournamentConfig.time && (
+                <div
+                  style={{
+                    fontSize: '0.75rem',
+                    color: 'var(--color-accent-bright)',
+                    fontWeight: 700,
+                    marginTop: '2px',
+                    fontFamily: 'var(--font-data)',
+                  }}
+                >
+                  Starts {tournamentConfig.time}
+                </div>
+              )}
+            </div>
+
+            <div
+              style={{
+                background: 'rgba(255, 255, 255, 0.05)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                padding: 'var(--space-sm) var(--space-md)',
+                borderRadius: 'var(--radius-sm)',
+              }}
+            >
+              <div
+                style={{
+                  fontFamily: 'var(--font-body)',
+                  fontSize: '0.7rem',
+                  fontWeight: 700,
+                  letterSpacing: '0.12em',
+                  textTransform: 'uppercase',
+                  color: 'var(--color-ink-subtle)',
+                  marginBottom: '4px',
+                }}
+              >
+                Venue
+              </div>
+              <div
+                style={{
+                  fontFamily: 'var(--font-body)',
+                  fontSize: '0.9rem',
+                  fontWeight: 700,
+                  color: 'var(--color-paper)',
+                  lineHeight: 1.25,
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  display: '-webkit-box',
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: 'vertical',
+                }}
+              >
+                {tournamentConfig.venue || 'TBA'}
               </div>
             </div>
 
@@ -226,40 +278,7 @@ export default function Hero() {
                   color: 'var(--color-paper)',
                 }}
               >
-                League + Knockout
-              </div>
-            </div>
-
-            <div
-              style={{
-                background: 'rgba(255, 255, 255, 0.05)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                padding: 'var(--space-sm) var(--space-md)',
-                borderRadius: 'var(--radius-sm)',
-              }}
-            >
-              <div
-                style={{
-                  fontFamily: 'var(--font-body)',
-                  fontSize: '0.7rem',
-                  fontWeight: 700,
-                  letterSpacing: '0.12em',
-                  textTransform: 'uppercase',
-                  color: 'var(--color-ink-subtle)',
-                  marginBottom: '4px',
-                }}
-              >
-                Entry Fee
-              </div>
-              <div
-                style={{
-                  fontFamily: 'var(--font-data)',
-                  fontSize: '0.95rem',
-                  fontWeight: 700,
-                  color: 'var(--color-accent-bright)',
-                }}
-              >
-                {tournamentConfig.entryFee}
+                League + KO
               </div>
             </div>
           </div>
@@ -374,10 +393,10 @@ export default function Hero() {
           <div className="animate-marquee">
             {[
               `🏏 ${tournamentConfig.name} — ${tournamentConfig.tagline}`,
-              `📅 Date: ${tournamentConfig.date || 'TBA'}`,
-              `📍 Venue: ${tournamentConfig.venue || 'TBA'}`,
+              `📅 Match Date: ${tournamentConfig.date || 'TBA'}${tournamentConfig.time ? ` at ${tournamentConfig.time}` : ''}`,
+              `📍 Ground: ${tournamentConfig.venue || 'TBA'}`,
               `🏆 Format: ${tournamentConfig.format}`,
-              `🏏 Registrations Closing Soon`,
+              `⚡ Registration Open — Lock In Your Squad Today`,
             ].map((text, idx) => (
               <span
                 key={idx}

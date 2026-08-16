@@ -147,14 +147,13 @@ export default function ExceptionCard({ exception, tournaments }: ExceptionCardP
           <div>
             Allowed Min Squad: <strong style={{ color: '#FFFFFF', fontFamily: 'monospace' }}>{exception.minPlayers} players</strong>
           </div>
-          {exception.teamName && (
+          {exception.indexPrefix ? (
             <div>
-              Team Match: <strong style={{ color: '#E2E8F0' }}>{exception.teamName}</strong>
+              Target Intake Number: <strong style={{ color: '#FBBF24', fontFamily: 'monospace' }}>Intake {exception.indexPrefix}</strong> <span style={{ color: '#64748B', fontSize: '11px' }}>(Matches D/***/{exception.indexPrefix}/0000)</span>
             </div>
-          )}
-          {exception.indexPrefix && (
+          ) : (
             <div>
-              Index Prefix: <strong style={{ color: '#FBBF24', fontFamily: 'monospace' }}>{exception.indexPrefix}*</strong>
+              Target Scope: <strong style={{ color: '#34D399' }}>All Intake Batches (Universal)</strong>
             </div>
           )}
           {exception.notes && (
@@ -166,6 +165,7 @@ export default function ExceptionCard({ exception, tournaments }: ExceptionCardP
       ) : (
         /* Edit Mode Form */
         <form onSubmit={handleUpdate} style={{ display: 'flex', flexDirection: 'column', gap: '10px', paddingTop: '10px', borderTop: '1px solid #1E2638' }}>
+          <input type="hidden" name="teamName" value="" />
           <div>
             <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, color: '#8B9BB4', marginBottom: '3px' }}>
               Tournament
@@ -195,7 +195,7 @@ export default function ExceptionCard({ exception, tournaments }: ExceptionCardP
 
           <div>
             <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, color: '#8B9BB4', marginBottom: '3px' }}>
-              Rule Name
+              Rule Name / Description
             </label>
             <input
               type="text"
@@ -216,51 +216,27 @@ export default function ExceptionCard({ exception, tournaments }: ExceptionCardP
             />
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-            <div>
-              <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, color: '#8B9BB4', marginBottom: '3px' }}>
-                Team Name Match
-              </label>
-              <input
-                type="text"
-                name="teamName"
-                defaultValue={exception.teamName || ''}
-                placeholder="Optional"
-                style={{
-                  width: '100%',
-                  height: '34px',
-                  padding: '0 8px',
-                  borderRadius: '6px',
-                  backgroundColor: '#1A1F2C',
-                  border: '1px solid #2A364E',
-                  color: '#FFFFFF',
-                  fontSize: '12px',
-                  boxSizing: 'border-box',
-                }}
-              />
-            </div>
-            <div>
-              <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, color: '#8B9BB4', marginBottom: '3px' }}>
-                Index Prefix
-              </label>
-              <input
-                type="text"
-                name="indexPrefix"
-                defaultValue={exception.indexPrefix || ''}
-                placeholder="e.g. IT08"
-                style={{
-                  width: '100%',
-                  height: '34px',
-                  padding: '0 8px',
-                  borderRadius: '6px',
-                  backgroundColor: '#1A1F2C',
-                  border: '1px solid #2A364E',
-                  color: '#FFFFFF',
-                  fontSize: '12px',
-                  boxSizing: 'border-box',
-                }}
-              />
-            </div>
+          <div>
+            <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, color: '#8B9BB4', marginBottom: '3px' }}>
+              Target Intake Number (e.g. 38, 37, or 39)
+            </label>
+            <input
+              type="text"
+              name="indexPrefix"
+              defaultValue={exception.indexPrefix || ''}
+              placeholder="e.g. 38"
+              style={{
+                width: '100%',
+                height: '34px',
+                padding: '0 8px',
+                borderRadius: '6px',
+                backgroundColor: '#1A1F2C',
+                border: '1px solid #2A364E',
+                color: '#FFFFFF',
+                fontSize: '12px',
+                boxSizing: 'border-box',
+              }}
+            />
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>

@@ -110,12 +110,13 @@ export default async function RegistrationExceptionsPage() {
 
             <div>
               <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#8B9BB4', marginBottom: '4px' }}>
-                Rule Name / Description
+                Rule Name / Description *
               </label>
               <input
                 type="text"
                 name="name"
-                placeholder="e.g. 2008 Batch Alumni Exception"
+                required
+                placeholder="e.g. Intake 38 Squad Exception"
                 style={{
                   width: '100%',
                   height: '40px',
@@ -132,34 +133,12 @@ export default async function RegistrationExceptionsPage() {
 
             <div>
               <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#8B9BB4', marginBottom: '4px' }}>
-                Team Name Match (Optional)
-              </label>
-              <input
-                type="text"
-                name="teamName"
-                placeholder="e.g. 2008 Batch"
-                style={{
-                  width: '100%',
-                  height: '40px',
-                  padding: '0 12px',
-                  borderRadius: '8px',
-                  backgroundColor: '#1A1F2C',
-                  border: '1px solid #2A364E',
-                  color: '#FFFFFF',
-                  fontSize: '13px',
-                  boxSizing: 'border-box',
-                }}
-              />
-            </div>
-
-            <div>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#8B9BB4', marginBottom: '4px' }}>
-                Index Prefix Match (Optional)
+                Target Intake Number (e.g. 38, 37, or 39)
               </label>
               <input
                 type="text"
                 name="indexPrefix"
-                placeholder="e.g. IT08 or EN08"
+                placeholder="e.g. 38"
                 style={{
                   width: '100%',
                   height: '40px',
@@ -172,6 +151,9 @@ export default async function RegistrationExceptionsPage() {
                   boxSizing: 'border-box',
                 }}
               />
+              <span style={{ fontSize: '11px', color: '#64748B', display: 'block', marginTop: '4px' }}>
+                Matches student index numbers matching format <code>D/***/(intake)/0000</code>. Teams can use any team name.
+              </span>
             </div>
 
             <div>
