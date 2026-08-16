@@ -3,7 +3,7 @@ import { tournamentConfig } from '../config/tournament';
 import LottieAnimation from './LottieAnimation';
 
 export default function Hero() {
-  const regOpen = !!tournamentConfig.registrationFormUrl;
+  const regOpen = true;
 
   return (
     <section
@@ -163,12 +163,16 @@ export default function Hero() {
               maxWidth: '740px',
             }}
           >
+            {/* Stat Chip 1: Match Day */}
             <div
               style={{
                 background: 'rgba(255, 255, 255, 0.05)',
                 border: '1px solid rgba(255, 255, 255, 0.1)',
                 padding: 'var(--space-sm) var(--space-md)',
                 borderRadius: 'var(--radius-sm)',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
               }}
             >
               <div
@@ -186,11 +190,11 @@ export default function Hero() {
               </div>
               <div
                 style={{
-                  fontFamily: 'var(--font-data)',
+                  fontFamily: 'var(--font-body)',
                   fontSize: '0.95rem',
-                  fontWeight: 700,
+                  fontWeight: 800,
                   color: 'var(--color-paper)',
-                  fontVariantNumeric: 'tabular-nums',
+                  lineHeight: 1.25,
                 }}
               >
                 {tournamentConfig.date || 'TBA'}
@@ -201,7 +205,7 @@ export default function Hero() {
                     fontSize: '0.75rem',
                     color: 'var(--color-accent-bright)',
                     fontWeight: 700,
-                    marginTop: '2px',
+                    marginTop: '3px',
                     fontFamily: 'var(--font-data)',
                   }}
                 >
@@ -210,12 +214,16 @@ export default function Hero() {
               )}
             </div>
 
+            {/* Stat Chip 2: Venue */}
             <div
               style={{
                 background: 'rgba(255, 255, 255, 0.05)',
                 border: '1px solid rgba(255, 255, 255, 0.1)',
                 padding: 'var(--space-sm) var(--space-md)',
                 borderRadius: 'var(--radius-sm)',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
               }}
             >
               <div
@@ -234,27 +242,37 @@ export default function Hero() {
               <div
                 style={{
                   fontFamily: 'var(--font-body)',
-                  fontSize: '0.9rem',
-                  fontWeight: 700,
+                  fontSize: '0.95rem',
+                  fontWeight: 800,
                   color: 'var(--color-paper)',
                   lineHeight: 1.25,
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  display: '-webkit-box',
-                  WebkitLineClamp: 2,
-                  WebkitBoxOrient: 'vertical',
                 }}
               >
-                {tournamentConfig.venue || 'TBA'}
+                Ratmalana CGR Ground
+              </div>
+              <div
+                style={{
+                  fontSize: '0.75rem',
+                  color: 'var(--color-accent-bright)',
+                  fontWeight: 700,
+                  marginTop: '3px',
+                  fontFamily: 'var(--font-body)',
+                }}
+              >
+                Ratmalana United S.C
               </div>
             </div>
 
+            {/* Stat Chip 3: Format */}
             <div
               style={{
                 background: 'rgba(255, 255, 255, 0.05)',
                 border: '1px solid rgba(255, 255, 255, 0.1)',
                 padding: 'var(--space-sm) var(--space-md)',
                 borderRadius: 'var(--radius-sm)',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
               }}
             >
               <div
@@ -272,13 +290,25 @@ export default function Hero() {
               </div>
               <div
                 style={{
-                  fontFamily: 'var(--font-data)',
+                  fontFamily: 'var(--font-body)',
                   fontSize: '0.95rem',
-                  fontWeight: 700,
+                  fontWeight: 800,
                   color: 'var(--color-paper)',
+                  lineHeight: 1.25,
                 }}
               >
-                League + KO
+                League + Knockout
+              </div>
+              <div
+                style={{
+                  fontSize: '0.75rem',
+                  color: 'var(--color-accent-bright)',
+                  fontWeight: 700,
+                  marginTop: '3px',
+                  fontFamily: 'var(--font-body)',
+                }}
+              >
+                Tournament Elimination
               </div>
             </div>
           </div>
@@ -287,9 +317,7 @@ export default function Hero() {
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-sm)', alignItems: 'center' }}>
             {regOpen ? (
               <Link
-                href={tournamentConfig.registrationFormUrl!}
-                target="_blank"
-                rel="noopener noreferrer"
+                href="/register"
                 className="btn-hallmark-primary"
                 style={{ padding: '0 24px', height: '48px', maxWidth: '100%' }}
               >
@@ -318,11 +346,10 @@ export default function Hero() {
 
             <a
               href="#details"
-              className="btn-hallmark-outline"
+              className="btn-hallmark-outline-dark"
               style={{
                 height: '48px',
-                color: 'var(--color-paper)',
-                borderColor: 'rgba(255, 255, 255, 0.3)',
+                padding: '0 24px',
               }}
             >
               View Tournament Info
