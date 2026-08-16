@@ -299,21 +299,54 @@ export default function EventDetails() {
               marginTop: '8px',
             }}
           >
+            <style>{`
+              .arena-map-grid {
+                display: grid;
+                grid-template-columns: 1fr;
+              }
+              .arena-logistics-col {
+                padding: 20px 16px;
+                border-bottom: 1px solid var(--color-border);
+              }
+              .arena-map-frame {
+                position: relative;
+                min-height: 240px;
+                height: 260px;
+                width: 100%;
+                background: #11141B;
+                overflow: hidden;
+              }
+              @media (min-width: 768px) {
+                .arena-map-grid {
+                  grid-template-columns: 1fr 1.15fr;
+                }
+                .arena-logistics-col {
+                  padding: var(--space-xl);
+                  border-bottom: none;
+                  border-right: 1px solid var(--color-border);
+                }
+                .arena-map-frame {
+                  min-height: 380px;
+                  height: 100%;
+                }
+              }
+            `}</style>
+
             {/* Top Bar Header */}
             <div
               style={{
-                padding: 'var(--space-md) var(--space-xl)',
+                padding: 'clamp(14px, 3vw, 20px) clamp(16px, 4vw, 32px)',
                 background: 'var(--color-paper-alt)',
                 borderBottom: '1px solid var(--color-border)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
                 flexWrap: 'wrap',
-                gap: 'var(--space-sm)',
+                gap: '12px',
               }}
             >
               <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '3px' }}>
                   <span
                     style={{
                       display: 'inline-block',
@@ -327,7 +360,7 @@ export default function EventDetails() {
                   <span
                     style={{
                       fontFamily: 'var(--font-body)',
-                      fontSize: '0.75rem',
+                      fontSize: '0.72rem',
                       fontWeight: 700,
                       letterSpacing: '0.12em',
                       textTransform: 'uppercase',
@@ -340,15 +373,16 @@ export default function EventDetails() {
                 <h3
                   style={{
                     fontFamily: 'var(--font-display)',
-                    fontSize: '1.6rem',
+                    fontSize: 'clamp(1.25rem, 4.5vw, 1.65rem)',
                     fontWeight: 900,
                     color: 'var(--color-ink)',
                     textTransform: 'uppercase',
                     margin: 0,
                     letterSpacing: '-0.01em',
+                    lineHeight: 1.15,
                   }}
                 >
-                  Ratmalana CGR Ground <span style={{ color: 'var(--color-ink-muted)', fontWeight: 600, fontSize: '1.1rem' }}>(Ratmalana United S.C)</span>
+                  Ratmalana CGR Ground <span style={{ color: 'var(--color-ink-muted)', fontWeight: 600, fontSize: 'clamp(0.88rem, 2.5vw, 1.1rem)' }}>(Ratmalana United S.C)</span>
                 </h3>
               </div>
 
@@ -359,13 +393,14 @@ export default function EventDetails() {
                   rel="noopener noreferrer"
                   className="btn-hallmark-primary"
                   style={{
-                    padding: '0 18px',
-                    height: '40px',
+                    padding: '0 16px',
+                    height: '38px',
                     fontSize: '0.85rem',
+                    flexShrink: 0,
                   }}
                 >
                   <span>Open in Google Maps</span>
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3" />
                   </svg>
                 </a>
@@ -373,32 +408,25 @@ export default function EventDetails() {
             </div>
 
             {/* Split Grid: Ground Logistics & Embedded Live Map */}
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-                gap: 0,
-              }}
-            >
+            <div className="arena-map-grid">
               {/* Left Column: Logistics & Facilities */}
               <div
+                className="arena-logistics-col"
                 style={{
-                  padding: 'var(--space-xl)',
                   display: 'flex',
                   flexDirection: 'column',
                   justifyContent: 'space-between',
-                  gap: 'var(--space-lg)',
-                  borderRight: '1px solid var(--color-border)',
+                  gap: 'var(--space-md)',
                   background: 'var(--color-paper-card)',
                 }}
               >
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                   {/* Item 1: Landmark */}
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '14px' }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
                     <div
                       style={{
-                        width: '36px',
-                        height: '36px',
+                        width: '34px',
+                        height: '34px',
                         borderRadius: 'var(--radius-md)',
                         background: 'var(--color-accent-soft)',
                         color: 'var(--color-accent)',
@@ -406,32 +434,33 @@ export default function EventDetails() {
                         alignItems: 'center',
                         justifyContent: 'center',
                         flexShrink: 0,
+                        marginTop: '2px',
                       }}
                     >
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
                         <circle cx="12" cy="10" r="3" />
                       </svg>
                     </div>
                     <div>
-                      <span style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--color-ink-subtle)', display: 'block', marginBottom: '2px', letterSpacing: '0.08em' }}>
+                      <span style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--color-ink-subtle)', display: 'block', marginBottom: '1px', letterSpacing: '0.08em' }}>
                         Location & Address
                       </span>
-                      <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.95rem', fontWeight: 700, color: 'var(--color-ink)', margin: 0 }}>
+                      <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.9rem', fontWeight: 700, color: 'var(--color-ink)', margin: 0 }}>
                         Station Road, Ratmalana
                       </p>
-                      <span style={{ fontSize: '0.8rem', color: 'var(--color-ink-muted)' }}>
+                      <span style={{ fontSize: '0.78rem', color: 'var(--color-ink-muted)', lineHeight: 1.4, display: 'block' }}>
                         Adjacent to Ratmalana Railway Grounds & Angulana
                       </span>
                     </div>
                   </div>
 
                   {/* Item 2: Schedule & Timings */}
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '14px' }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
                     <div
                       style={{
-                        width: '36px',
-                        height: '36px',
+                        width: '34px',
+                        height: '34px',
                         borderRadius: 'var(--radius-md)',
                         background: 'var(--color-accent-soft)',
                         color: 'var(--color-accent)',
@@ -439,32 +468,33 @@ export default function EventDetails() {
                         alignItems: 'center',
                         justifyContent: 'center',
                         flexShrink: 0,
+                        marginTop: '2px',
                       }}
                     >
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                         <circle cx="12" cy="12" r="10" />
                         <polyline points="12 6 12 12 16 14" />
                       </svg>
                     </div>
                     <div>
-                      <span style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--color-ink-subtle)', display: 'block', marginBottom: '2px', letterSpacing: '0.08em' }}>
+                      <span style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--color-ink-subtle)', display: 'block', marginBottom: '1px', letterSpacing: '0.08em' }}>
                         Reporting Schedule
                       </span>
-                      <p style={{ fontFamily: 'var(--font-data)', fontSize: '0.95rem', fontWeight: 700, color: 'var(--color-ink)', margin: 0 }}>
+                      <p style={{ fontFamily: 'var(--font-data)', fontSize: '0.9rem', fontWeight: 700, color: 'var(--color-ink)', margin: 0 }}>
                         08:00 AM Match Start
                       </p>
-                      <span style={{ fontSize: '0.8rem', color: 'var(--color-ink-muted)' }}>
+                      <span style={{ fontSize: '0.78rem', color: 'var(--color-ink-muted)', lineHeight: 1.4, display: 'block' }}>
                         Gates open 07:00 AM · Captains briefing 07:45 AM
                       </span>
                     </div>
                   </div>
 
                   {/* Item 3: Ground Facilities */}
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '14px' }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
                     <div
                       style={{
-                        width: '36px',
-                        height: '36px',
+                        width: '34px',
+                        height: '34px',
                         borderRadius: 'var(--radius-md)',
                         background: 'var(--color-accent-soft)',
                         color: 'var(--color-accent)',
@@ -472,31 +502,32 @@ export default function EventDetails() {
                         alignItems: 'center',
                         justifyContent: 'center',
                         flexShrink: 0,
+                        marginTop: '2px',
                       }}
                     >
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
                       </svg>
                     </div>
                     <div>
-                      <span style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--color-ink-subtle)', display: 'block', marginBottom: '2px', letterSpacing: '0.08em' }}>
+                      <span style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--color-ink-subtle)', display: 'block', marginBottom: '1px', letterSpacing: '0.08em' }}>
                         Arena Facilities
                       </span>
-                      <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.95rem', fontWeight: 700, color: 'var(--color-ink)', margin: 0 }}>
+                      <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.9rem', fontWeight: 700, color: 'var(--color-ink)', margin: 0 }}>
                         Turf Pitch & Pavilion Dugouts
                       </p>
-                      <span style={{ fontSize: '0.8rem', color: 'var(--color-ink-muted)' }}>
+                      <span style={{ fontSize: '0.78rem', color: 'var(--color-ink-muted)', lineHeight: 1.4, display: 'block' }}>
                         Dedicated team benches, spectator stands & parking zones
                       </span>
                     </div>
                   </div>
 
                   {/* Item 4: Transit & Arrival */}
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '14px' }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
                     <div
                       style={{
-                        width: '36px',
-                        height: '36px',
+                        width: '34px',
+                        height: '34px',
                         borderRadius: 'var(--radius-md)',
                         background: 'var(--color-accent-soft)',
                         color: 'var(--color-accent)',
@@ -504,20 +535,21 @@ export default function EventDetails() {
                         alignItems: 'center',
                         justifyContent: 'center',
                         flexShrink: 0,
+                        marginTop: '2px',
                       }}
                     >
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                         <polygon points="3 11 22 2 13 21 11 13 3 11" />
                       </svg>
                     </div>
                     <div>
-                      <span style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--color-ink-subtle)', display: 'block', marginBottom: '2px', letterSpacing: '0.08em' }}>
+                      <span style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--color-ink-subtle)', display: 'block', marginBottom: '1px', letterSpacing: '0.08em' }}>
                         Transit & Access
                       </span>
-                      <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.95rem', fontWeight: 700, color: 'var(--color-ink)', margin: 0 }}>
+                      <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.9rem', fontWeight: 700, color: 'var(--color-ink)', margin: 0 }}>
                         Galle Road & Railway
                       </p>
-                      <span style={{ fontSize: '0.8rem', color: 'var(--color-ink-muted)' }}>
+                      <span style={{ fontSize: '0.78rem', color: 'var(--color-ink-muted)', lineHeight: 1.4, display: 'block' }}>
                         Direct entry via Maliban Jct · 3-min walk from Ratmalana Station
                       </span>
                     </div>
@@ -526,14 +558,7 @@ export default function EventDetails() {
               </div>
 
               {/* Right Column: Custom Framed Embedded Google Map */}
-              <div
-                style={{
-                  position: 'relative',
-                  minHeight: '380px',
-                  background: 'var(--color-paper-dark)',
-                  display: 'flex',
-                }}
-              >
+              <div className="arena-map-frame">
                 {/* Map Iframe */}
                 <iframe
                   title="Ratmalana CGR Ground Map"
@@ -543,7 +568,7 @@ export default function EventDetails() {
                   style={{
                     border: 0,
                     width: '100%',
-                    minHeight: '380px',
+                    height: '100%',
                     display: 'block',
                   }}
                   allowFullScreen={false}
@@ -551,7 +576,7 @@ export default function EventDetails() {
                   referrerPolicy="no-referrer-when-downgrade"
                 />
 
-                {/* Floating Map Watermark Badge */}
+                {/* Floating Map Watermark Badge (Hallmark Clean Pill) */}
                 <div
                   style={{
                     position: 'absolute',
@@ -559,16 +584,18 @@ export default function EventDetails() {
                     left: '12px',
                     background: 'rgba(255, 255, 255, 0.95)',
                     backdropFilter: 'blur(8px)',
-                    padding: '6px 12px',
+                    WebkitBackdropFilter: 'blur(8px)',
+                    padding: '4px 12px',
                     borderRadius: 'var(--radius-pill)',
-                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.12)',
                     display: 'flex',
                     alignItems: 'center',
                     gap: '6px',
                     fontFamily: 'var(--font-body)',
-                    fontSize: '0.75rem',
+                    fontSize: '0.72rem',
                     fontWeight: 700,
                     color: 'var(--color-ink)',
+                    border: '1px solid var(--color-border)',
                     pointerEvents: 'none',
                   }}
                 >

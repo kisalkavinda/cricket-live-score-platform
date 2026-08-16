@@ -3,6 +3,7 @@ import Navbar from '@/components/Navbar';
 import Hero from '@/components/Hero';
 import LiveScoreWidget from '@/components/LiveScoreWidget';
 import EventDetails from '@/components/EventDetails';
+import TournamentBracket from '@/components/TournamentBracket';
 import Registration from '@/components/Registration';
 import RegistrationSkeleton from '@/components/RegistrationSkeleton';
 import Footer from '@/components/Footer';
@@ -14,6 +15,7 @@ export default function Home() {
       <Hero />
       <LiveScoreWidget />
       <EventDetails />
+      <TournamentBracket />
       {/*
         Suspense boundary: Navbar, Hero, LiveScoreWidget, EventDetails render
         immediately. Registration streams in when the cached DB team-count
