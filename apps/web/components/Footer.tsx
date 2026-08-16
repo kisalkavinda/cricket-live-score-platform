@@ -120,7 +120,7 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Contact Colophon */}
+          {/* Event Logistics */}
           <div>
             <span
               style={{
@@ -134,16 +134,16 @@ export default function Footer() {
                 marginBottom: 'var(--space-md)',
               }}
             >
-              Direct Contacts
+              Event Logistics
             </span>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.9rem', color: 'rgba(255, 255, 255, 0.8)' }}>
-              <p>Email: <span style={{ fontFamily: 'var(--font-data)' }}>{tournamentConfig.contactEmail}</span></p>
-              <p>Phone: <span style={{ fontFamily: 'var(--font-data)' }}>{tournamentConfig.contactPhone}</span></p>
-              <p>Event Date: <span style={{ fontFamily: 'var(--font-data)' }}>{tournamentConfig.date || 'TBA'}</span></p>
+              <p>Match Date: <span style={{ fontFamily: 'var(--font-data)', color: 'var(--color-paper)', fontWeight: 700 }}>{tournamentConfig.date || 'TBA'}</span></p>
+              <p>Reporting Time: <span style={{ fontFamily: 'var(--font-data)', color: 'var(--color-paper)', fontWeight: 700 }}>{tournamentConfig.time || 'TBA'}</span></p>
+              <p>Venue: <span style={{ color: 'var(--color-paper)', fontWeight: 600 }}>{tournamentConfig.venue || 'TBA'}</span></p>
             </div>
           </div>
 
-          {/* Official Channels */}
+          {/* Official Inquiries */}
           <div>
             <span
               style={{
@@ -157,55 +157,76 @@ export default function Footer() {
                 marginBottom: 'var(--space-md)',
               }}
             >
-              Social Media
+              Helpline & Inquiries
             </span>
-            <div style={{ display: 'flex', gap: 'var(--space-sm)' }}>
-              <a
-                href={tournamentConfig.socials.facebook}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Facebook"
-                style={{
-                  width: '38px',
-                  height: '38px',
-                  borderRadius: 'var(--radius-sm)',
-                  background: 'rgba(255, 255, 255, 0.08)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: 'var(--color-paper)',
-                  textDecoration: 'none',
-                }}
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
-                </svg>
-              </a>
-
-              <a
-                href={tournamentConfig.socials.instagram}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Instagram"
-                style={{
-                  width: '38px',
-                  height: '38px',
-                  borderRadius: 'var(--radius-sm)',
-                  background: 'rgba(255, 255, 255, 0.08)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: 'var(--color-paper)',
-                  textDecoration: 'none',
-                }}
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
-                  <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
-                  <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
-                </svg>
-              </a>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {tournamentConfig.contactPhones?.map((phone, idx) => (
+                <a
+                  key={idx}
+                  href={`tel:${phone.replace(/\s+/g, '')}`}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    color: 'rgba(255, 255, 255, 0.9)',
+                    textDecoration: 'none',
+                    fontFamily: 'var(--font-data)',
+                    fontSize: '0.92rem',
+                    fontWeight: 700,
+                    letterSpacing: '0.02em',
+                  }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent-bright)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+                  </svg>
+                  <span>{phone}</span>
+                </a>
+              ))}
+              <span style={{ fontSize: '0.75rem', color: 'var(--color-ink-subtle)', marginTop: '2px' }}>
+                Available for team coordination & captain inquiries
+              </span>
             </div>
+          </div>
+
+          {/* Captains Notice */}
+          <div>
+            <span
+              style={{
+                fontFamily: 'var(--font-body)',
+                fontSize: '0.75rem',
+                fontWeight: 700,
+                letterSpacing: '0.14em',
+                textTransform: 'uppercase',
+                color: 'var(--color-accent-bright)',
+                display: 'block',
+                marginBottom: 'var(--space-md)',
+              }}
+            >
+              Captain Briefing
+            </span>
+            <p style={{ fontSize: '0.85rem', color: 'rgba(255, 255, 255, 0.7)', lineHeight: 1.5, margin: '0 0 12px 0' }}>
+              Final fixture schedules and pitch allocations are communicated directly via the official Team Captains WhatsApp group.
+            </p>
+            {tournamentConfig.venueMapUrl && (
+              <a
+                href={tournamentConfig.venueMapUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  fontSize: '0.8rem',
+                  fontWeight: 700,
+                  color: 'var(--color-accent-bright)',
+                  textDecoration: 'none',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.06em',
+                }}
+              >
+                <span>Ground Directions ↗</span>
+              </a>
+            )}
           </div>
         </div>
 

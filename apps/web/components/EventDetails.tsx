@@ -31,22 +31,7 @@ export default function EventDetails() {
     {
       id: 'detail-venue',
       title: 'Stadium Venue',
-      value: tournamentConfig.venue ? (
-        tournamentConfig.venueMapUrl ? (
-          <a
-            href={tournamentConfig.venueMapUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{ color: 'var(--color-accent)', textDecoration: 'underline' }}
-          >
-            {tournamentConfig.venue}
-          </a>
-        ) : (
-          tournamentConfig.venue
-        )
-      ) : (
-        'Coming Soon'
-      ),
+      value: tournamentConfig.venue || 'Coming Soon',
       subtitle: 'Location & Grounds',
       icon: (
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -66,18 +51,7 @@ export default function EventDetails() {
         </svg>
       ),
     },
-    {
-      id: 'detail-fee',
-      title: 'Entry Registration Fee',
-      value: tournamentConfig.entryFee === '[PLACEHOLDER ENTRY FEE]' ? 'Free Entry / University Sponsored' : tournamentConfig.entryFee,
-      subtitle: 'Per Team Entry',
-      icon: (
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-          <line x1="12" y1="1" x2="12" y2="23" />
-          <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-        </svg>
-      ),
-    },
+
     {
       id: 'detail-deadline',
       title: 'Registration Deadline',
@@ -202,39 +176,43 @@ export default function EventDetails() {
                 gap: 'var(--space-lg)',
                 paddingTop: 'var(--space-md)',
                 borderTop: '1px solid var(--color-border)',
+                alignItems: 'start',
               }}
             >
               <div>
-                <span style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--color-ink-subtle)', display: 'block', marginBottom: '4px' }}>
+                <span style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--color-ink-subtle)', display: 'block', marginBottom: '4px', letterSpacing: '0.08em' }}>
                   Tournament Date
                 </span>
-                <p style={{ fontFamily: 'var(--font-data)', fontSize: '1.2rem', fontWeight: 800, color: 'var(--color-ink)', margin: 0 }}>
-                  {details[0].value}
+                <p style={{ fontFamily: 'var(--font-data)', fontSize: '1.25rem', fontWeight: 800, color: 'var(--color-ink)', margin: 0, fontVariantNumeric: 'tabular-nums' }}>
+                  {tournamentConfig.date || 'TBA'}
                 </p>
               </div>
 
               <div>
-                <span style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--color-ink-subtle)', display: 'block', marginBottom: '4px' }}>
+                <span style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--color-ink-subtle)', display: 'block', marginBottom: '4px', letterSpacing: '0.08em' }}>
                   Reporting Time
                 </span>
-                <p style={{ fontFamily: 'var(--font-data)', fontSize: '1.2rem', fontWeight: 800, color: 'var(--color-ink)', margin: 0 }}>
-                  {details[1].value}
+                <p style={{ fontFamily: 'var(--font-data)', fontSize: '1.25rem', fontWeight: 800, color: 'var(--color-ink)', margin: 0, fontVariantNumeric: 'tabular-nums' }}>
+                  {tournamentConfig.time || 'TBA'}
                 </p>
+                <span style={{ fontSize: '0.75rem', color: 'var(--color-ink-muted)', marginTop: '2px', display: 'block' }}>
+                  Check-in & briefing
+                </span>
               </div>
 
               <div>
-                <span style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--color-ink-subtle)', display: 'block', marginBottom: '4px' }}>
-                  Venue
+                <span style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--color-ink-subtle)', display: 'block', marginBottom: '4px', letterSpacing: '0.08em' }}>
+                  Venue & Ground
                 </span>
-                <p style={{ fontFamily: 'var(--font-body)', fontSize: '1.15rem', fontWeight: 700, color: 'var(--color-ink)', margin: 0 }}>
-                  {details[2].value}
+                <p style={{ fontFamily: 'var(--font-body)', fontSize: '1.15rem', fontWeight: 800, color: 'var(--color-ink)', margin: 0, lineHeight: 1.3 }}>
+                  {tournamentConfig.venue || 'Coming Soon'}
                 </p>
               </div>
             </div>
 
             <div style={{ marginTop: 'var(--space-lg)', paddingTop: 'var(--space-md)', borderTop: '1px dashed var(--color-border)' }}>
               <span style={{ fontSize: '0.85rem', color: 'var(--color-ink-muted)' }}>
-                * Final fixture schedules and pitch allocations will be emailed to registered team captains.
+                * Final fixture schedules and pitch allocations will be shared with registered team captains via the official WhatsApp group.
               </span>
             </div>
           </div>
@@ -307,6 +285,298 @@ export default function EventDetails() {
                 </div>
               </div>
             ))}
+          </div>
+
+          {/* Dedicated Match Arena & Live Venue Map Showcase (Hallmark Sport Theme) */}
+          <div
+            id="arena-map"
+            style={{
+              background: 'var(--color-paper-card)',
+              border: '1.5px solid var(--color-border)',
+              borderRadius: 'var(--radius-lg)',
+              overflow: 'hidden',
+              boxShadow: '0 10px 30px rgba(0, 0, 0, 0.04)',
+              marginTop: '8px',
+            }}
+          >
+            {/* Top Bar Header */}
+            <div
+              style={{
+                padding: 'var(--space-md) var(--space-xl)',
+                background: 'var(--color-paper-alt)',
+                borderBottom: '1px solid var(--color-border)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: 'var(--space-sm)',
+              }}
+            >
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                  <span
+                    style={{
+                      display: 'inline-block',
+                      width: '8px',
+                      height: '8px',
+                      borderRadius: '50%',
+                      background: 'var(--color-accent)',
+                    }}
+                    className="animate-pulse-dot"
+                  />
+                  <span
+                    style={{
+                      fontFamily: 'var(--font-body)',
+                      fontSize: '0.75rem',
+                      fontWeight: 700,
+                      letterSpacing: '0.12em',
+                      textTransform: 'uppercase',
+                      color: 'var(--color-accent)',
+                    }}
+                  >
+                    Official Match Ground
+                  </span>
+                </div>
+                <h3
+                  style={{
+                    fontFamily: 'var(--font-display)',
+                    fontSize: '1.6rem',
+                    fontWeight: 900,
+                    color: 'var(--color-ink)',
+                    textTransform: 'uppercase',
+                    margin: 0,
+                    letterSpacing: '-0.01em',
+                  }}
+                >
+                  Ratmalana CGR Ground <span style={{ color: 'var(--color-ink-muted)', fontWeight: 600, fontSize: '1.1rem' }}>(Ratmalana United S.C)</span>
+                </h3>
+              </div>
+
+              {tournamentConfig.venueMapUrl && (
+                <a
+                  href={tournamentConfig.venueMapUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn-hallmark-primary"
+                  style={{
+                    padding: '0 18px',
+                    height: '40px',
+                    fontSize: '0.85rem',
+                  }}
+                >
+                  <span>Open in Google Maps</span>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3" />
+                  </svg>
+                </a>
+              )}
+            </div>
+
+            {/* Split Grid: Ground Logistics & Embedded Live Map */}
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+                gap: 0,
+              }}
+            >
+              {/* Left Column: Logistics & Facilities */}
+              <div
+                style={{
+                  padding: 'var(--space-xl)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'space-between',
+                  gap: 'var(--space-lg)',
+                  borderRight: '1px solid var(--color-border)',
+                  background: 'var(--color-paper-card)',
+                }}
+              >
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
+                  {/* Item 1: Landmark */}
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '14px' }}>
+                    <div
+                      style={{
+                        width: '36px',
+                        height: '36px',
+                        borderRadius: 'var(--radius-md)',
+                        background: 'var(--color-accent-soft)',
+                        color: 'var(--color-accent)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0,
+                      }}
+                    >
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                        <circle cx="12" cy="10" r="3" />
+                      </svg>
+                    </div>
+                    <div>
+                      <span style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--color-ink-subtle)', display: 'block', marginBottom: '2px', letterSpacing: '0.08em' }}>
+                        Location & Address
+                      </span>
+                      <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.95rem', fontWeight: 700, color: 'var(--color-ink)', margin: 0 }}>
+                        Station Road, Ratmalana
+                      </p>
+                      <span style={{ fontSize: '0.8rem', color: 'var(--color-ink-muted)' }}>
+                        Adjacent to Ratmalana Railway Grounds & Angulana
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Item 2: Schedule & Timings */}
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '14px' }}>
+                    <div
+                      style={{
+                        width: '36px',
+                        height: '36px',
+                        borderRadius: 'var(--radius-md)',
+                        background: 'var(--color-accent-soft)',
+                        color: 'var(--color-accent)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0,
+                      }}
+                    >
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="12" r="10" />
+                        <polyline points="12 6 12 12 16 14" />
+                      </svg>
+                    </div>
+                    <div>
+                      <span style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--color-ink-subtle)', display: 'block', marginBottom: '2px', letterSpacing: '0.08em' }}>
+                        Reporting Schedule
+                      </span>
+                      <p style={{ fontFamily: 'var(--font-data)', fontSize: '0.95rem', fontWeight: 700, color: 'var(--color-ink)', margin: 0 }}>
+                        08:00 AM Match Start
+                      </p>
+                      <span style={{ fontSize: '0.8rem', color: 'var(--color-ink-muted)' }}>
+                        Gates open 07:00 AM · Captains briefing 07:45 AM
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Item 3: Ground Facilities */}
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '14px' }}>
+                    <div
+                      style={{
+                        width: '36px',
+                        height: '36px',
+                        borderRadius: 'var(--radius-md)',
+                        background: 'var(--color-accent-soft)',
+                        color: 'var(--color-accent)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0,
+                      }}
+                    >
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <span style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--color-ink-subtle)', display: 'block', marginBottom: '2px', letterSpacing: '0.08em' }}>
+                        Arena Facilities
+                      </span>
+                      <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.95rem', fontWeight: 700, color: 'var(--color-ink)', margin: 0 }}>
+                        Turf Pitch & Pavilion Dugouts
+                      </p>
+                      <span style={{ fontSize: '0.8rem', color: 'var(--color-ink-muted)' }}>
+                        Dedicated team benches, spectator stands & parking zones
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Item 4: Transit & Arrival */}
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '14px' }}>
+                    <div
+                      style={{
+                        width: '36px',
+                        height: '36px',
+                        borderRadius: 'var(--radius-md)',
+                        background: 'var(--color-accent-soft)',
+                        color: 'var(--color-accent)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0,
+                      }}
+                    >
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                        <polygon points="3 11 22 2 13 21 11 13 3 11" />
+                      </svg>
+                    </div>
+                    <div>
+                      <span style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--color-ink-subtle)', display: 'block', marginBottom: '2px', letterSpacing: '0.08em' }}>
+                        Transit & Access
+                      </span>
+                      <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.95rem', fontWeight: 700, color: 'var(--color-ink)', margin: 0 }}>
+                        Galle Road & Railway
+                      </p>
+                      <span style={{ fontSize: '0.8rem', color: 'var(--color-ink-muted)' }}>
+                        Direct entry via Maliban Jct · 3-min walk from Ratmalana Station
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Column: Custom Framed Embedded Google Map */}
+              <div
+                style={{
+                  position: 'relative',
+                  minHeight: '380px',
+                  background: 'var(--color-paper-dark)',
+                  display: 'flex',
+                }}
+              >
+                {/* Map Iframe */}
+                <iframe
+                  title="Ratmalana CGR Ground Map"
+                  src={tournamentConfig.venueEmbedUrl || "https://maps.google.com/maps?q=Ratmalana+CGR+Ground+(Ratmalana+United+S.C)&t=&z=15&ie=UTF8&iwloc=&output=embed"}
+                  width="100%"
+                  height="100%"
+                  style={{
+                    border: 0,
+                    width: '100%',
+                    minHeight: '380px',
+                    display: 'block',
+                  }}
+                  allowFullScreen={false}
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                />
+
+                {/* Floating Map Watermark Badge */}
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: '12px',
+                    left: '12px',
+                    background: 'rgba(255, 255, 255, 0.95)',
+                    backdropFilter: 'blur(8px)',
+                    padding: '6px 12px',
+                    borderRadius: 'var(--radius-pill)',
+                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    fontFamily: 'var(--font-body)',
+                    fontSize: '0.75rem',
+                    fontWeight: 700,
+                    color: 'var(--color-ink)',
+                    pointerEvents: 'none',
+                  }}
+                >
+                  <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--color-accent)' }} />
+                  Ratmalana United S.C. Ground
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>

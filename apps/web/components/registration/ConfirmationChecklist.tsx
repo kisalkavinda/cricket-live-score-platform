@@ -46,8 +46,8 @@ export default function ConfirmationChecklist({
     },
     {
       num: '02',
-      title: 'University Student Enrollment',
-      desc: 'All registered playing members and substitutes are currently enrolled university students who meet all tournament eligibility rules.',
+      title: 'University Enrollment & Batch Uniformity',
+      desc: 'All registered playing members and substitutes are currently enrolled university students belonging to the exact same intake batch. No mixed-intake members are permitted.',
     },
     {
       num: '03',
@@ -56,8 +56,8 @@ export default function ConfirmationChecklist({
     },
     {
       num: '04',
-      title: 'Official Communications & WhatsApp',
-      desc: 'The team captain’s WhatsApp contact will be used for all official match schedules, toss calls, umpire notices, and tournament updates.',
+      title: 'Official Captains WhatsApp Group',
+      desc: 'The team captain must join the official CPL Captains WhatsApp group upon registration to receive official match schedules, pitch allocations, toss calls, and referee updates.',
     },
     {
       num: '05',
