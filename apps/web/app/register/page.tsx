@@ -390,6 +390,33 @@ export default async function RegisterPage() {
                   •
                 </span>
                 <span>
+                  <strong style={{ color: 'var(--color-accent-bright)' }}>Batch Uniformity (No Mixes):</strong> All registered players in a team must belong to the <strong>exact same intake batch</strong> (e.g. all Intake 38 or all Intake 39). Mixed-intake teams are strictly prohibited.
+                </span>
+              </li>
+
+              <li
+                style={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: '12px',
+                  fontSize: '0.92rem',
+                  lineHeight: 1.5,
+                  color: 'rgba(255, 255, 255, 0.95)',
+                }}
+              >
+                <span
+                  style={{
+                    color: 'var(--color-accent-bright)',
+                    fontWeight: 900,
+                    fontSize: '1.1rem',
+                    lineHeight: 1,
+                    marginTop: '3px',
+                    flexShrink: 0,
+                  }}
+                >
+                  •
+                </span>
+                <span>
                   <strong style={{ color: 'var(--color-accent-bright)' }}>Captain:</strong> The team leader/captain must be included in the player squad list.
                 </span>
               </li>

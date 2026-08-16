@@ -25,6 +25,42 @@ export const playerSchema = z.object({
     .max(30, "Index number is too long (max 30 characters)"),
 });
 
+/**
+ * Extracts the intake number from a student index number.
+ * Format examples:
+ * - D/IT/38/0001 -> "38"
+ * - D/CS/39/0002 -> "39"
+ * - D-BSc-38-0001 -> "38"
+ * - IT380001 -> "38"
+ * - 38/IT/0001 -> "38"
+ */
+export function extractIntake(indexNumber: string): string | null {
+  if (!indexNumber) return null;
+  const clean = indexNumber.trim().toUpperCase();
+
+  // 1. Check delimited segments (e.g. "D/IT/38/0001", "D-CS-39-0002", "IT/38/001")
+  const segments = clean.split(/[\/\-_.\s]+/);
+  for (const seg of segments) {
+    if (/^\d{2}$/.test(seg)) {
+      return seg;
+    }
+  }
+
+  // 2. Compact formats: e.g. IT380001, DIT380001, D380001
+  const compactMatch = clean.match(/[A-Z]+(\d{2})\d{3,4}$/);
+  if (compactMatch) {
+    return compactMatch[1];
+  }
+
+  // 3. Fallback: match 2-digit number enclosed by non-digits
+  const generalMatch = clean.match(/(?:^|[^0-9])(\d{2})(?:[^0-9]|$)/);
+  if (generalMatch) {
+    return generalMatch[1];
+  }
+
+  return null;
+}
+
 export type PlayerInput = z.infer<typeof playerSchema>;
 
 /**
@@ -105,6 +141,33 @@ export const registrationFormSchema = z
           message: "The team leader must also be included in the player squad list",
         });
       }
+    }
+
+    // 3. Batch / Intake Uniformity Rule: All squad members must have matching intake numbers (No mixes)
+    const captainIntake = extractIntake(data.leaderIndexNumber);
+    let primaryIntake = captainIntake;
+
+    if (!primaryIntake) {
+      for (const p of data.players) {
+        const found = extractIntake(p.indexNumber);
+        if (found) {
+          primaryIntake = found;
+          break;
+        }
+      }
+    }
+
+    if (primaryIntake) {
+      data.players.forEach((player, index) => {
+        const playerIntake = extractIntake(player.indexNumber);
+        if (playerIntake && playerIntake !== primaryIntake) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ["players", index, "indexNumber"],
+            message: `All squad members must belong to the same intake batch. Expected Intake ${primaryIntake}, but this player is Intake ${playerIntake}. Mixed-intake teams are not allowed.`,
+          });
+        }
+      });
     }
   });
 
