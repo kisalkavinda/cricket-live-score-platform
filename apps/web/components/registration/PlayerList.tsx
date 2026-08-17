@@ -221,8 +221,8 @@ export default function PlayerList({
             <path d="M12 5v14M5 12h14" />
           </svg>
           {count >= 11
-            ? `+ Add Substitute (${Math.max(0, count - 11)}/2)`
-            : `+ Add Player (${count}/11)`}
+            ? `Add Substitute (${Math.max(0, count - 11)}/2)`
+            : `Add Player (${count}/11)`}
         </button>
       </div>
     </section>
