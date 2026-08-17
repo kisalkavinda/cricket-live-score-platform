@@ -80,7 +80,7 @@ export default function Footer() {
             <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 'var(--space-xs)' }}>
               <li>
                 <Link
-                  href="/"
+                  href="/#overview"
                   style={{
                     color: 'rgba(255, 255, 255, 0.8)',
                     textDecoration: 'none',
@@ -93,7 +93,7 @@ export default function Footer() {
               </li>
               <li>
                 <Link
-                  href="#details"
+                  href="/#details"
                   style={{
                     color: 'rgba(255, 255, 255, 0.8)',
                     textDecoration: 'none',
@@ -106,7 +106,7 @@ export default function Footer() {
               </li>
               <li>
                 <Link
-                  href="#register"
+                  href="/#register"
                   style={{
                     color: 'rgba(255, 255, 255, 0.8)',
                     textDecoration: 'none',

@@ -108,6 +108,7 @@ export default function TournamentBracket() {
 
         {/* Outer Container with Stylized Stadium Glass Overlay */}
         <div
+          className="bracket-container"
           style={{
             position: 'relative',
             background: 'var(--color-paper-card)',
@@ -122,6 +123,7 @@ export default function TournamentBracket() {
           {/* SKELETON BRACKET TREE (SUBTLE BACKGROUND PREVIEW)                          */}
           {/* ========================================================================= */}
           <div
+            className="bracket-skeleton hidden md:block"
             style={{
               filter: 'blur(3px)',
               opacity: 0.55,
@@ -130,9 +132,9 @@ export default function TournamentBracket() {
             }}
           >
             <div
+              className="bracket-grid"
               style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
                 gap: '24px',
                 alignItems: 'center',
               }}
@@ -153,17 +155,17 @@ export default function TournamentBracket() {
                         padding: '12px 16px',
                       }}
                     >
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: 'var(--color-ink-subtle)', fontWeight: 700, textTransform: 'uppercase', marginBottom: '8px' }}>
+                      <div className="bracket-match-header" style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: 'var(--color-ink-subtle)', fontWeight: 700, textTransform: 'uppercase', marginBottom: '8px' }}>
                         <span>{qf.title}</span>
                         <span>{qf.time} · {qf.pitch}</span>
                       </div>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 8px', background: 'var(--color-paper-card)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--color-border)' }}>
-                          <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.85rem', fontWeight: 700, color: 'var(--color-ink)' }}>Team Franchise A (Draw TBA)</span>
+                          <span className="bracket-team-name" style={{ fontFamily: 'var(--font-body)', fontWeight: 700, color: 'var(--color-ink)' }}>Team Franchise A (Draw TBA)</span>
                           <span style={{ fontFamily: 'var(--font-data)', fontSize: '0.8rem', color: 'var(--color-ink-subtle)' }}>—</span>
                         </div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 8px', background: 'var(--color-paper-card)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--color-border)' }}>
-                          <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.85rem', fontWeight: 700, color: 'var(--color-ink)' }}>Team Franchise B (Draw TBA)</span>
+                          <span className="bracket-team-name" style={{ fontFamily: 'var(--font-body)', fontWeight: 700, color: 'var(--color-ink)' }}>Team Franchise B (Draw TBA)</span>
                           <span style={{ fontFamily: 'var(--font-data)', fontSize: '0.8rem', color: 'var(--color-ink-subtle)' }}>—</span>
                         </div>
                       </div>
@@ -188,7 +190,7 @@ export default function TournamentBracket() {
                         padding: '16px',
                       }}
                     >
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: 'var(--color-accent)', fontWeight: 700, textTransform: 'uppercase', marginBottom: '8px' }}>
+                      <div className="bracket-match-header" style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: 'var(--color-accent)', fontWeight: 700, textTransform: 'uppercase', marginBottom: '8px' }}>
                         <span>{sf.title}</span>
                         <span>{sf.time}</span>
                       </div>
@@ -209,8 +211,15 @@ export default function TournamentBracket() {
 
               {/* Column 3: The Grand Final */}
               <div>
-                <div style={{ fontFamily: 'var(--font-display)', fontSize: '1rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--color-accent)', marginBottom: '12px', letterSpacing: '0.06em' }}>
-                  🏆 The Championship Final
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontFamily: 'var(--font-display)', fontSize: '1rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--color-accent)', marginBottom: '12px', letterSpacing: '0.06em' }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
+                    <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
+                    <path d="M4 22h16" />
+                    <path d="M10 14.66V17c0 .55-.45 1-1 1H7v4h10v-4h-2c-.55 0-1-.45-1-1v-2.34" />
+                    <path d="M18 4H6v7a6 6 0 0 0 12 0V4Z" />
+                  </svg>
+                  <span>The Championship Final</span>
                 </div>
                 <div
                   style={{
@@ -221,7 +230,15 @@ export default function TournamentBracket() {
                     textAlign: 'center',
                   }}
                 >
-                  <div style={{ fontSize: '32px', marginBottom: '8px' }}>🏆</div>
+                  <div style={{ width: '44px', height: '44px', margin: '0 auto 8px', borderRadius: '50%', background: 'var(--color-accent)', color: '#FFF', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
+                      <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
+                      <path d="M4 22h16" />
+                      <path d="M10 14.66V17c0 .55-.45 1-1 1H7v4h10v-4h-2c-.55 0-1-.45-1-1v-2.34" />
+                      <path d="M18 4H6v7a6 6 0 0 0 12 0V4Z" />
+                    </svg>
+                  </div>
                   <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.4rem', fontWeight: 900, textTransform: 'uppercase', color: 'var(--color-ink)' }}>
                     CPL 2026 Grand Final
                   </div>
@@ -240,6 +257,7 @@ export default function TournamentBracket() {
           {/* HALLMARK TEASER OVERLAY & CTA CARD                                        */}
           {/* ========================================================================= */}
           <div
+            className="bracket-overlay"
             style={{
               position: 'absolute',
               inset: 0,
@@ -253,6 +271,7 @@ export default function TournamentBracket() {
             }}
           >
             <div
+              className="bracket-notice-card"
               style={{
                 width: '100%',
                 maxWidth: '540px',
@@ -277,10 +296,12 @@ export default function TournamentBracket() {
                   alignItems: 'center',
                   justifyContent: 'center',
                   marginBottom: '12px',
-                  fontSize: '20px',
                 }}
               >
-                🔒
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                </svg>
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '6px' }}>
@@ -328,7 +349,7 @@ export default function TournamentBracket() {
               </p>
 
               {/* Action Buttons */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap', gap: '10px' }}>
+              <div className="bracket-overlay-cta-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap', gap: '10px' }}>
                 <Link
                   href="/register"
                   className="btn-hallmark-primary"
