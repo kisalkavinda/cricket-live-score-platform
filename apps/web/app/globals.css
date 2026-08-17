@@ -292,6 +292,286 @@ h1, h2, h3, h4, h5, h6,
   display: none;
 }
 
+/* ============================================================
+   Hero Section Responsive
+   ============================================================ */
+
+/* Desktop defaults for hero elements */
+.hero-section {
+  padding-top: 110px;
+}
+
+.hero-bg-blob-top {
+  width: 600px;
+  height: 600px;
+}
+
+.hero-bg-blob-bottom {
+  width: 500px;
+  height: 500px;
+}
+
+.hero-stat-grid {
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}
+
+.hero-marquee-bar {
+  height: 44px;
+}
+
+.hero-marquee-label {
+  padding: 0 20px;
+  font-size: 0.85rem;
+}
+
+.hero-marquee-label-text {
+  /* full text visible on desktop */
+}
+
+/* Bracket grid desktop default */
+.bracket-grid {
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+/* Bracket team name desktop default */
+.bracket-team-name {
+  font-size: 0.85rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+  flex: 1;
+}
+
+/* Bracket match header desktop default */
+.bracket-match-header {
+  flex-wrap: wrap;
+  gap: 4px;
+}
+/* Hero section desktop/mobile isolation */
+.hero-desktop-content {
+  display: block;
+}
+.hero-mobile-content {
+  display: none !important;
+}
+
+/* ============================================================
+   TABLET (max-width: 1023px)
+   ============================================================ */
+@media (max-width: 1023px) {
+  .hero-stat-grid {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  }
+
+  .bracket-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* ============================================================
+   MOBILE (max-width: 767px) — Comprehensive hero + bracket fix
+   ============================================================ */
+@media (max-width: 767px) {
+  /* ---- Global mobile spacing reduction ---- */
+  :root {
+    --space-3xl: 36px;
+    --space-2xl: 32px;
+    --space-xl: 24px;
+    --space-lg: 18px;
+    --space-md: 14px;
+  }
+
+  /* ---- Hero Section: Desktop/Mobile Switch ---- */
+  .hero-desktop-content {
+    display: none !important;
+  }
+  .hero-mobile-content {
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+    gap: 14px !important;
+    padding-top: 6px !important;
+    padding-bottom: 16px !important;
+  }
+
+  /* ---- Hero Section ---- */
+
+  /* ---- Hero Section: Mobile Flow ---- */
+  .hero-section {
+    padding-top: 76px !important;
+    min-height: auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  /* Scale down background blobs */
+  .hero-bg-blob-top {
+    width: 280px !important;
+    height: 280px !important;
+  }
+
+  .hero-bg-blob-bottom {
+    width: 240px !important;
+    height: 240px !important;
+  }
+
+  /* Stack stat chips vertically */
+  .hero-stat-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Stack CTA buttons vertically, full width */
+  .hero-cta-row {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+
+  .hero-cta-row .btn-hallmark-primary,
+  .hero-cta-row .btn-hallmark-outline-dark {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  /* Compact marquee ticker bar */
+  .hero-marquee-bar {
+    height: 36px !important;
+    margin-top: 20px !important;
+  }
+
+  .hero-marquee-label {
+    padding: 0 10px !important;
+    font-size: 0.7rem !important;
+  }
+
+  .hero-marquee-label-text {
+    display: none;
+  }
+
+  .hero-marquee-label::after {
+    content: 'LIVE';
+    font-size: 0.7rem;
+  }
+
+  /* ---- Tournament Bracket Section ---- */
+
+  /* Reduce fixture section padding */
+  #fixtures {
+    padding-top: 32px !important;
+    padding-bottom: 32px !important;
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
+
+  /* Hide blurred skeleton tree on mobile to eliminate ghost height and dead scroll space */
+  .bracket-skeleton {
+    display: none !important;
+  }
+
+  /* Make bracket container wrap notice card tightly */
+  .bracket-container {
+    padding: 0 !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+  }
+
+  /* Position notice card statically and compactly on mobile */
+  .bracket-overlay {
+    position: relative !important;
+    inset: auto !important;
+    padding: 0 !important;
+    background: transparent !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  /* Notice card mobile styling */
+  .bracket-notice-card {
+    padding: 24px 16px !important;
+    margin: 0 auto !important;
+  }
+
+  /* Single column bracket grid */
+  .bracket-grid {
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+  }
+
+  /* Compact bracket team names */
+  .bracket-team-name {
+    font-size: 0.78rem !important;
+  }
+
+  /* Stack match header title/time vertically */
+  .bracket-match-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 2px !important;
+  }
+
+  /* Stack bracket overlay CTA buttons */
+  .bracket-overlay-cta-row {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+
+  .bracket-overlay-cta-row .btn-hallmark-primary,
+  .bracket-overlay-cta-row a {
+    width: 100% !important;
+    justify-content: center !important;
+    text-align: center !important;
+  }
+
+  /* ---- Buttons: smaller on mobile ---- */
+  .btn-hallmark-primary {
+    font-size: 0.92rem !important;
+    min-height: 42px !important;
+    padding: 0 18px !important;
+  }
+
+  .btn-hallmark-outline-dark {
+    font-size: 0.92rem !important;
+    min-height: 42px !important;
+    padding: 0 18px !important;
+  }
+
+  /* ---- Event Details Section ---- */
+  #details {
+    padding-top: 36px !important;
+    padding-bottom: 36px !important;
+  }
+
+  /* ---- Registration Section ---- */
+  #register {
+    padding-top: 36px !important;
+    padding-bottom: 36px !important;
+  }
+}
+
+/* ============================================================
+   SMALL MOBILE (max-width: 374px) — extra safety for tiny screens
+   ============================================================ */
+@media (max-width: 374px) {
+  .hero-section {
+    padding-top: 72px !important;
+  }
+
+  .hero-bg-blob-top,
+  .hero-bg-blob-bottom {
+    width: 180px !important;
+    height: 180px !important;
+  }
+
+  .hero-marquee-label {
+    padding: 0 8px !important;
+  }
+
+  .bracket-team-name {
+    font-size: 0.72rem !important;
+  }
+}
 
 /* Reduced Motion (Gate 27) */
 @media (prefers-reduced-motion: reduce) {
