@@ -245,6 +245,34 @@ export default function Footer() {
           }}
         >
           <p>© {currentYear} {tournamentConfig.name} Tournament. All rights reserved.</p>
+          <p>
+            Created by{' '}
+            <a
+              href="https://www.linkedin.com/in/kisal-kavinda/"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                color: 'var(--color-accent-bright)',
+                fontWeight: 600,
+                textDecoration: 'none',
+              }}
+            >
+              Kisal
+            </a>
+            {' & '}
+            <a
+              href="https://www.linkedin.com/in/tharusha-nethmina-316b08317"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                color: 'var(--color-accent-bright)',
+                fontWeight: 600,
+                textDecoration: 'none',
+              }}
+            >
+              Tharusha
+            </a>
+          </p>
           <p style={{ fontFamily: 'var(--font-data)' }}>Cricket Live Score Platform</p>
         </div>
       </div>
