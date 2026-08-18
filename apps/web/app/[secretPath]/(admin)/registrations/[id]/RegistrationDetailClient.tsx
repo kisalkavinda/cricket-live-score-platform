@@ -24,13 +24,14 @@ export default function RegistrationDetailClient({
   const [isRejectOpen, setIsRejectOpen] = useState(false);
   const [rejectionReason, setRejectionReason] = useState('');
   const [loading, setLoading] = useState(false);
+  const [forceOverride, setForceOverride] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
 
   const handleApprove = async () => {
     setLoading(true);
     setActionError(null);
     try {
-      const res = await approveRegistrationServerAction(registration.id);
+      const res = await approveRegistrationServerAction(registration.id, forceOverride);
       if (res.success) {
         setIsApproveOpen(false);
         router.refresh();
@@ -421,10 +422,39 @@ export default function RegistrationDetailClient({
               </div>
             )}
 
+            {preflight.canForceApprove && (
+              <div
+                style={{
+                  marginBottom: '16px',
+                  padding: '12px 14px',
+                  background: 'rgba(234, 179, 8, 0.12)',
+                  border: '1px solid rgba(234, 179, 8, 0.35)',
+                  borderRadius: '8px',
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: '10px',
+                }}
+              >
+                <input
+                  type="checkbox"
+                  id="forceOverrideCheckbox"
+                  checked={forceOverride}
+                  onChange={(e) => setForceOverride(e.target.checked)}
+                  style={{ marginTop: '2px', cursor: 'pointer', accentColor: '#EAB308', width: '16px', height: '16px' }}
+                />
+                <label htmlFor="forceOverrideCheckbox" style={{ fontSize: '0.82rem', color: '#FEF08A', cursor: 'pointer', lineHeight: 1.4 }}>
+                  <strong>Admin Force Override:</strong> Approve this squad with {registration.players.length} players (bypasses squad size requirement).
+                </label>
+              </div>
+            )}
+
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
               <button
                 type="button"
-                onClick={() => setIsApproveOpen(false)}
+                onClick={() => {
+                  setIsApproveOpen(false);
+                  setForceOverride(false);
+                }}
                 disabled={loading}
                 style={{
                   height: '40px',
@@ -439,25 +469,35 @@ export default function RegistrationDetailClient({
               >
                 Cancel
               </button>
-              <button
-                type="button"
-                onClick={handleApprove}
-                disabled={loading || !preflight.canApprove}
-                style={{
-                  height: '40px',
-                  padding: '0 20px',
-                  borderRadius: '6px',
-                  background: '#22C55E',
-                  border: 'none',
-                  color: '#FFFFFF',
-                  fontWeight: 800,
-                  fontSize: '0.85rem',
-                  cursor: loading || !preflight.canApprove ? 'not-allowed' : 'pointer',
-                  opacity: loading || !preflight.canApprove ? 0.5 : 1,
-                }}
-              >
-                {loading ? 'Approving...' : 'Confirm & Create Official Team'}
-              </button>
+              {(() => {
+                const isAllowed = preflight.canApprove || (preflight.canForceApprove && forceOverride);
+                return (
+                  <button
+                    type="button"
+                    onClick={handleApprove}
+                    disabled={loading || !isAllowed}
+                    style={{
+                      height: '40px',
+                      padding: '0 20px',
+                      borderRadius: '6px',
+                      background: isAllowed ? (forceOverride ? '#D97706' : '#22C55E') : '#374151',
+                      border: 'none',
+                      color: '#FFFFFF',
+                      fontWeight: 800,
+                      fontSize: '0.85rem',
+                      cursor: loading || !isAllowed ? 'not-allowed' : 'pointer',
+                      opacity: loading || !isAllowed ? 0.5 : 1,
+                      transition: 'all 0.2s ease',
+                    }}
+                  >
+                    {loading
+                      ? 'Approving...'
+                      : forceOverride
+                      ? '⚡ Force Approve & Create Official Team'
+                      : 'Confirm & Create Official Team'}
+                  </button>
+                );
+              })()}
             </div>
           </div>
         </div>
