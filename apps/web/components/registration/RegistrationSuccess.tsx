@@ -185,7 +185,7 @@ export default function RegistrationSuccess({
                 Official Squad Accreditation & Entry Pass
               </div>
               <div style={{ fontSize: '10px', color: '#475569', marginTop: '2px' }}>
-                Tournament Grounds: Ratmalana CGR Ground · Match Date: September 6, 2026
+                Tournament Grounds: {tournamentConfig.venue || 'Ratmalana CGR Ground'} · Match Date: {tournamentConfig.date || 'September 13, 2026'}
               </div>
             </div>
             <div style={{ textAlign: 'right', border: '1.5px solid #000000', padding: '6px 14px', borderRadius: '4px', backgroundColor: '#F8FAFC' }}>
