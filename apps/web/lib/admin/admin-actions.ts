@@ -21,10 +21,10 @@ export async function logoutAdminServerAction() {
   await logoutAdmin();
 }
 
-export async function approveRegistrationServerAction(registrationId: string) {
+export async function approveRegistrationServerAction(registrationId: string, forceOverride: boolean = false) {
   await requireAdminAuth();
   const entryPath = getAdminEntryPath();
-  const result = await approveRegistrationTransaction(registrationId, "PRIMARY_ADMIN");
+  const result = await approveRegistrationTransaction(registrationId, "PRIMARY_ADMIN", forceOverride);
   if (result.success) {
     revalidatePath(`/${entryPath}`);
     revalidatePath(`/${entryPath}/dashboard`);
