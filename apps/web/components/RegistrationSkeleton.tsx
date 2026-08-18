@@ -1,3 +1,5 @@
+import { tournamentConfig } from '../config/tournament';
+
 export default function RegistrationSkeleton() {
   const requirements = [
     { id: 'sk-req-1', text: 'Official Team Name' },
@@ -268,7 +270,7 @@ export default function RegistrationSkeleton() {
                   fontVariantNumeric: 'tabular-nums',
                 }}
               >
-                August 01, 2026 — 23:59 IST
+                {tournamentConfig.registrationDeadline || 'TBA'}
               </p>
             </div>
 
