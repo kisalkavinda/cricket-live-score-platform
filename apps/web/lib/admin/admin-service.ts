@@ -214,6 +214,66 @@ export async function getRegistrationsList(params: RegistrationsQuery = {}) {
 }
 
 
+// Helper to match intake number in university index format D/***/(intake)/0000
+function matchesIntakeOrIndex(studentIndex?: string | null, targetIntake?: string | null): boolean {
+  if (!studentIndex || !targetIntake) return false;
+  const normalizedIndex = studentIndex.trim().toUpperCase();
+  const normalizedTarget = targetIntake.trim().toUpperCase();
+
+  const segments = normalizedIndex.split(/[\/\-_.\s]+/);
+  if (segments.includes(normalizedTarget)) return true;
+
+  if (
+    normalizedIndex.includes(`/${normalizedTarget}/`) ||
+    normalizedIndex.includes(`-${normalizedTarget}-`) ||
+    normalizedIndex.includes(`_${normalizedTarget}_`)
+  ) {
+    return true;
+  }
+
+  const cleanIndex = normalizedIndex.replace(/[^A-Z0-9]/g, "");
+  const cleanTarget = normalizedTarget.replace(/[^A-Z0-9]/g, "");
+  if (cleanTarget.length >= 2 && cleanIndex.includes(cleanTarget)) {
+    return true;
+  }
+
+  return false;
+}
+
+function matchesRegistrationException(reg: any, ex: any): boolean {
+  if (!ex.active) return false;
+  const exIntake = (ex.indexPrefix || "").trim();
+  const exName = (ex.name || "").trim();
+  const exTeam = (ex.teamName || "").trim();
+
+  // 1. Match team name
+  if (exTeam && reg.teamName.toLowerCase().includes(exTeam.toLowerCase())) return true;
+  if (exName && reg.teamName.toLowerCase().includes(exName.toLowerCase())) return true;
+
+  // 2. Match on configured Intake / Index Prefix
+  if (exIntake) {
+    const matchCaptain = matchesIntakeOrIndex(reg.leaderIndexNumber, exIntake);
+    const matchSquad = reg.players?.some((p: any) => matchesIntakeOrIndex(p.indexNumber, exIntake));
+    if (matchCaptain || matchSquad) return true;
+  }
+
+  // 3. Match if rule name contains an intake number (e.g. "Intake 38" or "Batch 38")
+  const extractedIntakeMatch = exName.match(/(?:intake|batch|year|\b)(\d{2,3})\b/i);
+  if (extractedIntakeMatch && extractedIntakeMatch[1]) {
+    const intakeNum = extractedIntakeMatch[1];
+    const matchCaptain = matchesIntakeOrIndex(reg.leaderIndexNumber, intakeNum);
+    const matchSquad = reg.players?.some((p: any) => matchesIntakeOrIndex(p.indexNumber, intakeNum));
+    if (matchCaptain || matchSquad) return true;
+  }
+
+  // 4. Universal Tournament Exception (no specific intake or team name specified)
+  if (!exIntake && !extractedIntakeMatch && !exTeam) {
+    return true;
+  }
+
+  return false;
+}
+
 /**
  * Returns single registration detail with all players and exception checks.
  */
@@ -238,11 +298,7 @@ export async function getRegistrationDetail(id: string) {
     },
   });
 
-  const matchingException = exceptions.find((ex: any) => {
-    if (ex.teamName && registration.teamName.toLowerCase().includes(ex.teamName.toLowerCase())) return true;
-    if (ex.indexPrefix && registration.leaderIndexNumber.toUpperCase().startsWith(ex.indexPrefix.toUpperCase())) return true;
-    return false;
-  });
+  const matchingException = exceptions.find((ex: any) => matchesRegistrationException(registration, ex));
 
   // Check conflicts with official teams / players in this tournament
   const playerIndexes = registration.players.map((p: any) => p.indexNumber.trim().toUpperCase());
@@ -274,7 +330,7 @@ export async function getRegistrationDetail(id: string) {
 export async function verifyApprovalPreflight(registrationId: string) {
   const detail = await getRegistrationDetail(registrationId);
   if (!detail) {
-    return { canApprove: false, errors: ["Registration not found."] };
+    return { canApprove: false, canForceApprove: false, errors: ["Registration not found."] };
   }
 
   const { registration, matchingException, conflicts } = detail;
@@ -307,14 +363,23 @@ export async function verifyApprovalPreflight(registrationId: string) {
     });
   }
 
+  const canApprove = errors.length === 0;
+  const canForceApprove =
+    !canApprove &&
+    registration.status === "PENDING" &&
+    conflicts.length === 0 &&
+    playerCount >= 7 &&
+    playerCount <= 13;
+
   return {
-    canApprove: errors.length === 0,
+    canApprove,
+    canForceApprove,
     errors,
     summary: {
       teamName: registration.teamName,
       playerCount,
       hasException: Boolean(matchingException),
-      exceptionDetails: matchingException ? `Older Batch (${matchingException.minPlayers} min)` : null,
+      exceptionDetails: matchingException ? `Exception Applied (${matchingException.minPlayers} min)` : null,
     },
   };
 }
@@ -325,7 +390,8 @@ export async function verifyApprovalPreflight(registrationId: string) {
  */
 export async function approveRegistrationTransaction(
   registrationId: string,
-  approvedBy: string = "Admin"
+  approvedBy: string = "Admin",
+  forceOverride: boolean = false
 ): Promise<{ success: boolean; error?: string }> {
   try {
     // 1. Authoritative reload and check
@@ -359,17 +425,13 @@ export async function approveRegistrationTransaction(
       where: { tournamentId: reg.tournamentId, active: true },
     });
 
-    const matchingException = exceptions.find((ex: any) => {
-      if (ex.teamName && reg.teamName.toLowerCase().includes(ex.teamName.toLowerCase())) return true;
-      if (ex.indexPrefix && reg.leaderIndexNumber.toUpperCase().startsWith(ex.indexPrefix.toUpperCase())) return true;
-      return false;
-    });
+    const matchingException = exceptions.find((ex: any) => matchesRegistrationException(reg, ex));
 
     const allowedMin = matchingException ? Math.max(7, matchingException.minPlayers) : 11;
-    if (playerCount < allowedMin) {
+    if (!forceOverride && playerCount < allowedMin) {
       return {
         success: false,
-        error: `Squad has ${playerCount} players, but minimum required is ${allowedMin}.`,
+        error: `Squad has ${playerCount} players, but minimum required is ${allowedMin}. Use Admin Force Override if intentional.`,
       };
     }
 
