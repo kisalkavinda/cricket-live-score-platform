@@ -273,7 +273,7 @@ export default function Footer() {
               Tharusha
             </a>
           </p>
-          <p style={{ fontFamily: 'var(--font-data)' }}>Cricket Live Score Platform</p>
+          <p style={{ fontFamily: 'var(--font-data)' }}>Computing Premier League</p>
         </div>
       </div>
     </footer>
