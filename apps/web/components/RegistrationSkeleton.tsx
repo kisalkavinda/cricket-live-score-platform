@@ -97,7 +97,7 @@ export default function RegistrationSkeleton() {
             boxShadow: '0 20px 50px rgba(0, 0, 0, 0.4)',
           }}
         >
-          {/* Registered Teams Header Counter Skeleton */}
+          {/* Registration Status Skeleton Header */}
           <div
             style={{
               display: 'flex',
@@ -116,17 +116,17 @@ export default function RegistrationSkeleton() {
                   fontFamily: 'var(--font-body)',
                   fontSize: '0.75rem',
                   fontWeight: 700,
-                  letterSpacing: '0.1em',
+                  letterSpacing: '0.12em',
                   textTransform: 'uppercase',
-                  color: 'var(--color-ink-subtle)',
+                  color: 'var(--color-accent-bright)',
                 }}
               >
-                Team Slots Status
+                Official Entry Pass
               </span>
               <div
                 style={{
                   height: '28px',
-                  width: '180px',
+                  width: '220px',
                   background: 'rgba(255, 255, 255, 0.08)',
                   borderRadius: '4px',
                   marginTop: '6px',
