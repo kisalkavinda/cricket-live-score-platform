@@ -103,7 +103,7 @@ export default async function Registration() {
             boxShadow: '0 20px 50px rgba(0, 0, 0, 0.4)',
           }}
         >
-          {/* Registered Teams Header Counter */}
+          {/* Registration Status Header */}
           <div
             style={{
               display: 'flex',
@@ -122,22 +122,22 @@ export default async function Registration() {
                   fontFamily: 'var(--font-body)',
                   fontSize: '0.75rem',
                   fontWeight: 700,
-                  letterSpacing: '0.1em',
+                  letterSpacing: '0.12em',
                   textTransform: 'uppercase',
-                  color: 'var(--color-ink-subtle)',
+                  color: 'var(--color-accent-bright)',
                 }}
               >
-                Team Slots Status
+                Official Entry Pass
               </span>
               <h3
                 style={{
                   fontFamily: 'var(--font-display)',
-                  fontSize: '1.6rem',
+                  fontSize: '1.5rem',
                   fontWeight: 800,
                   color: 'var(--color-paper)',
                 }}
               >
-                {registeredTeamsCount} Teams Registered
+                Squad Roster Application
               </h3>
             </div>
 
