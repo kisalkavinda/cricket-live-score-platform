@@ -8,7 +8,7 @@ export const tournamentConfig = {
   venueMapUrl: "https://maps.app.goo.gl/Fb1oVkBWfnBFj1DbA",
   venueEmbedUrl: "https://maps.google.com/maps?q=Ratmalana+CGR+Ground+(Ratmalana+United+S.C)&t=&z=15&ie=UTF8&iwloc=&output=embed",
   registrationFormUrl: null,
-  registrationDeadline: "August 28, 2026",
+  registrationDeadline: "August 31, 2026",
 
   // Leave these open until registration closes
   format: "League + Knockout · overs & balls-per-over TBD",
