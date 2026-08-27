@@ -472,8 +472,8 @@ export default async function TournamentDetailPage({
                   <input
                     type="number"
                     name="oversPerInnings"
-                    defaultValue={20}
-                    placeholder="Overs (20)"
+                    defaultValue={6}
+                    placeholder="Overs (6)"
                     style={{
                       width: '100%',
                       height: '38px',
