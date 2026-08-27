@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { createClient } from '@/utils/supabase/client';
 import { ScoreBroadcastPayload } from '@/lib/scoring/scoring-realtime';
@@ -10,11 +10,17 @@ export default function LiveScoreWidget() {
   const [activeMatchId, setActiveMatchId] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [lastUpdated, setLastUpdated] = useState<string>('');
+  const inFlightRef = useRef<boolean>(false);
 
   // 1. Fetch initial live matches from database
   const fetchLiveMatches = useCallback(async () => {
+    if (inFlightRef.current) return;
+    inFlightRef.current = true;
     try {
-      const res = await fetch('/api/matches/live', { cache: 'no-store' });
+      const res = await fetch(`/api/matches/live?_t=${Date.now()}`, {
+        cache: 'no-store',
+        headers: { 'Cache-Control': 'no-cache', Pragma: 'no-cache' },
+      });
       const data = await res.json();
       if (data.success && data.matches && data.matches.length > 0) {
         setMatches(data.matches);
@@ -24,6 +30,7 @@ export default function LiveScoreWidget() {
     } catch (err) {
       console.error('[LiveScoreWidget] Fetch error:', err);
     } finally {
+      inFlightRef.current = false;
       setLoading(false);
     }
   }, []);
@@ -75,9 +82,17 @@ export default function LiveScoreWidget() {
         .subscribe();
     }
 
+    // Relaxed 12s safety sync (Supabase Realtime handles instant 0ms score updates)
+    const interval = setInterval(() => {
+      fetchLiveMatches();
+    }, 12000);
+
     return () => {
-      supabase.removeChannel(liveChannel);
-      if (matchChannel) supabase.removeChannel(matchChannel);
+      try {
+        supabase.removeChannel(liveChannel);
+        if (matchChannel) supabase.removeChannel(matchChannel);
+      } catch (e) {}
+      clearInterval(interval);
     };
   }, [activeMatchId, fetchLiveMatches]);
 
@@ -426,31 +441,41 @@ export default function LiveScoreWidget() {
             </div>
           )}
 
-          {/* Recent Balls Strip */}
+          {/* THIS OVER BREAKDOWN CARD */}
           {currentMatch.recentBalls && currentMatch.recentBalls.length > 0 && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '16px', paddingTop: '12px', borderTop: '1px solid rgba(255, 255, 255, 0.06)' }}>
-              <span style={{ fontSize: '0.75rem', fontWeight: 800, color: 'rgba(255, 255, 255, 0.4)', textTransform: 'uppercase' }}>
-                Recent:
-              </span>
-              <div style={{ display: 'flex', gap: '6px' }}>
+            <div style={{ background: 'rgba(255, 255, 255, 0.02)', borderRadius: '10px', padding: '14px 16px', marginTop: '16px', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                <span style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--color-gold, #F59E0B)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                  🏏 THIS OVER {currentInnings ? `(Over ${currentInnings.overs + 1})` : ''}
+                </span>
+                <span style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.5)', fontWeight: 600 }}>
+                  Recent Deliveries
+                </span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                 {currentMatch.recentBalls.map((b, idx) => (
-                  <span
-                    key={b.id || idx}
-                    style={{
-                      width: '26px',
-                      height: '26px',
-                      borderRadius: '50%',
-                      background: b.isWicket ? '#FF4D4D' : b.runs === 4 ? '#28A745' : b.runs === 6 ? '#8A2BE2' : 'rgba(255, 255, 255, 0.1)',
-                      color: '#FFF',
-                      fontSize: '0.75rem',
-                      fontWeight: 800,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    {b.display}
-                  </span>
+                  <div key={b.id || idx} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+                    <span
+                      style={{
+                        width: '30px',
+                        height: '30px',
+                        borderRadius: '50%',
+                        background: b.isWicket ? '#EF4444' : b.runs === 4 ? '#10B981' : b.runs === 6 ? '#8B5CF6' : b.extraType === 'WIDE' || b.extraType === 'NO_BALL' ? '#F59E0B' : 'rgba(255, 255, 255, 0.1)',
+                        color: b.extraType === 'WIDE' || b.extraType === 'NO_BALL' ? '#000' : '#FFF',
+                        fontSize: '0.75rem',
+                        fontWeight: 900,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        boxShadow: '0 2px 6px rgba(0,0,0,0.3)',
+                      }}
+                    >
+                      {b.display}
+                    </span>
+                    <span style={{ fontSize: '0.62rem', color: 'rgba(255, 255, 255, 0.4)', fontWeight: 700 }}>
+                      .{idx + 1}
+                    </span>
+                  </div>
                 ))}
               </div>
             </div>
