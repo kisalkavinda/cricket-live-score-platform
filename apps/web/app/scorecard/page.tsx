@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, Suspense } from 'react';
+import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
@@ -15,11 +15,18 @@ function ScorecardContent() {
   const [loading, setLoading] = useState<boolean>(true);
   const [activeTab, setActiveTab] = useState<'inn1' | 'inn2'>('inn1');
   const [lastLivePing, setLastLivePing] = useState<string>('');
+  const inFlightRef = useRef<boolean>(false);
 
   const fetchScorecard = useCallback(async () => {
+    if (inFlightRef.current) return;
+    inFlightRef.current = true;
     try {
+      const cacheBust = `_t=${Date.now()}`;
       if (requestedMatchId) {
-        const res = await fetch(`/api/matches/${requestedMatchId}/scorecard`, { cache: 'no-store' });
+        const res = await fetch(`/api/matches/${requestedMatchId}/scorecard?${cacheBust}`, {
+          cache: 'no-store',
+          headers: { 'Cache-Control': 'no-cache', Pragma: 'no-cache' },
+        });
         const data = await res.json();
         if (data.success && data.match) {
           setMatch(data.match);
@@ -28,11 +35,17 @@ function ScorecardContent() {
         }
       } else {
         // Fetch first live match
-        const res = await fetch('/api/matches/live', { cache: 'no-store' });
+        const res = await fetch(`/api/matches/live?${cacheBust}`, {
+          cache: 'no-store',
+          headers: { 'Cache-Control': 'no-cache', Pragma: 'no-cache' },
+        });
         const data = await res.json();
         if (data.success && data.matches && data.matches.length > 0) {
           const firstMatchId = data.matches[0].matchId;
-          const matchRes = await fetch(`/api/matches/${firstMatchId}/scorecard`, { cache: 'no-store' });
+          const matchRes = await fetch(`/api/matches/${firstMatchId}/scorecard?${cacheBust}`, {
+            cache: 'no-store',
+            headers: { 'Cache-Control': 'no-cache', Pragma: 'no-cache' },
+          });
           const matchData = await matchRes.json();
           if (matchData.success && matchData.match) {
             setMatch(matchData.match);
@@ -44,28 +57,41 @@ function ScorecardContent() {
     } catch (err) {
       console.error('[Scorecard] Fetch error:', err);
     } finally {
+      inFlightRef.current = false;
       setLoading(false);
     }
   }, [requestedMatchId]);
 
   useEffect(() => {
     fetchScorecard();
+    // Resilient 10s background safety sync (Supabase Realtime handles instant 0ms updates)
+    const interval = setInterval(() => {
+      fetchScorecard();
+    }, 10000);
+    return () => clearInterval(interval);
   }, [fetchScorecard]);
 
-  // Realtime Subscription
+  // Realtime Supabase Broadcast Subscription
   useEffect(() => {
     if (!match?.id) return;
-    const supabase = createClient();
-    const channel = supabase.channel(`match:${match.id}`);
-
-    channel
-      .on('broadcast', { event: 'score_update' }, () => {
-        fetchScorecard();
-      })
-      .subscribe();
+    let channel: any = null;
+    try {
+      const supabase = createClient();
+      channel = supabase.channel(`match:${match.id}`);
+      channel
+        .on('broadcast', { event: 'score_update' }, () => {
+          fetchScorecard();
+        })
+        .subscribe();
+    } catch (e) {}
 
     return () => {
-      supabase.removeChannel(channel);
+      if (channel) {
+        try {
+          const supabase = createClient();
+          supabase.removeChannel(channel);
+        } catch (e) {}
+      }
     };
   }, [match?.id, fetchScorecard]);
 
@@ -290,14 +316,22 @@ function ScorecardContent() {
           {inn1 && (
             <button
               onClick={() => setActiveTab('inn1')}
-              className={activeTab === 'inn1' ? 'btn-hallmark-primary' : 'btn-hallmark-outline'}
               style={{
-                height: '40px',
-                padding: '0 18px',
-                fontSize: '0.85rem',
+                height: '42px',
+                padding: '0 20px',
+                fontSize: '0.88rem',
+                fontWeight: 800,
+                fontFamily: 'monospace',
+                letterSpacing: '0.04em',
+                textTransform: 'uppercase',
                 borderRadius: '9999px',
                 whiteSpace: 'nowrap',
                 cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                background: activeTab === 'inn1' ? 'linear-gradient(135deg, #C0272D 0%, #991B1B 100%)' : 'rgba(255, 255, 255, 0.05)',
+                color: activeTab === 'inn1' ? '#FFFFFF' : 'rgba(255, 255, 255, 0.8)',
+                border: activeTab === 'inn1' ? '1.5px solid #EF4444' : '1.5px solid rgba(255, 255, 255, 0.18)',
+                boxShadow: activeTab === 'inn1' ? '0 4px 14px rgba(192, 39, 45, 0.45)' : 'none',
               }}
             >
               1st Innings: {inn1.battingTeam?.shortName} ({inn1.runs}/{inn1.wickets})
@@ -307,14 +341,22 @@ function ScorecardContent() {
           {inn2 && (
             <button
               onClick={() => setActiveTab('inn2')}
-              className={activeTab === 'inn2' ? 'btn-hallmark-primary' : 'btn-hallmark-outline'}
               style={{
-                height: '40px',
-                padding: '0 18px',
-                fontSize: '0.85rem',
+                height: '42px',
+                padding: '0 20px',
+                fontSize: '0.88rem',
+                fontWeight: 800,
+                fontFamily: 'monospace',
+                letterSpacing: '0.04em',
+                textTransform: 'uppercase',
                 borderRadius: '9999px',
                 whiteSpace: 'nowrap',
                 cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                background: activeTab === 'inn2' ? 'linear-gradient(135deg, #C0272D 0%, #991B1B 100%)' : 'rgba(255, 255, 255, 0.05)',
+                color: activeTab === 'inn2' ? '#FFFFFF' : 'rgba(255, 255, 255, 0.8)',
+                border: activeTab === 'inn2' ? '1.5px solid #EF4444' : '1.5px solid rgba(255, 255, 255, 0.18)',
+                boxShadow: activeTab === 'inn2' ? '0 4px 14px rgba(192, 39, 45, 0.45)' : 'none',
               }}
             >
               2nd Innings: {inn2.battingTeam?.shortName} ({inn2.runs}/{inn2.wickets})
@@ -325,6 +367,194 @@ function ScorecardContent() {
         {/* ACTIVE INNINGS SCORECARD */}
         {selectedInnings ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            {/* OVER BREAKDOWN CARD */}
+            {(() => {
+              const allBalls = selectedInnings.ballEvents || [];
+              const currentOverNum = selectedInnings.overs ?? 0;
+              const currentOverDeliveries = [...allBalls.filter((b: any) => b.overNumber === currentOverNum)].reverse();
+              const currentOverRuns = currentOverDeliveries.reduce((sum: number, b: any) => sum + (b.runs || 0) + (b.extras || 0), 0);
+              const legalBallsInCurrentOver = currentOverDeliveries.filter((b: any) => b.isLegal).length;
+              const remainingSlots = Math.max(0, 6 - legalBallsInCurrentOver);
+
+              // Group previous completed overs
+              const completedOversMap: { [key: number]: any[] } = {};
+              allBalls.forEach((b: any) => {
+                if (b.overNumber < currentOverNum) {
+                  if (!completedOversMap[b.overNumber]) completedOversMap[b.overNumber] = [];
+                  completedOversMap[b.overNumber].push(b);
+                }
+              });
+              const completedOverKeys = Object.keys(completedOversMap).map(Number).sort((a, b) => b - a);
+
+              const getBallBadge = (b: any) => {
+                let label = `${b.runs}`;
+                let bg = 'rgba(255, 255, 255, 0.08)';
+                let color = '#FFF';
+                let border = '1px solid rgba(255, 255, 255, 0.15)';
+
+                if (b.isWicket) {
+                  label = 'W';
+                  bg = '#EF4444';
+                  border = '1px solid #DC2626';
+                } else if (b.runs === 4) {
+                  label = '4';
+                  bg = '#10B981';
+                  border = '1px solid #059669';
+                } else if (b.runs === 6) {
+                  label = '6';
+                  bg = '#8B5CF6';
+                  border = '1px solid #7C3AED';
+                } else if (b.extraType === 'WIDE') {
+                  label = b.extras > 1 ? `WD+${b.extras - 1}` : 'WD';
+                  bg = '#F59E0B';
+                  color = '#000';
+                  border = '1px solid #D97706';
+                } else if (b.extraType === 'NO_BALL') {
+                  label = b.runs > 0 ? `NB+${b.runs}` : 'NB';
+                  bg = '#F97316';
+                  color = '#000';
+                  border = '1px solid #EA580C';
+                } else if (b.extraType === 'BYE') {
+                  label = `${b.extras || 1}B`;
+                  bg = 'rgba(255, 255, 255, 0.1)';
+                } else if (b.extraType === 'LEG_BYE') {
+                  label = `${b.extras || 1}LB`;
+                  bg = 'rgba(255, 255, 255, 0.1)';
+                }
+                return { label, bg, color, border };
+              };
+
+              return (
+                <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: 'var(--radius-md)', padding: '16px 20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--color-gold, #F59E0B)', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: 'var(--font-display)' }}>
+                        🏏 THIS OVER (Over {currentOverNum + 1})
+                      </span>
+                      {selectedInnings.currentBowler && (
+                        <span style={{ fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.6)' }}>
+                          • Bowler: {selectedInnings.currentBowler.name}
+                        </span>
+                      )}
+                    </div>
+                    <div style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--color-gold)', fontFamily: 'var(--font-data)' }}>
+                      {currentOverRuns} {currentOverRuns === 1 ? 'Run' : 'Runs'} in Over
+                    </div>
+                  </div>
+
+                  {/* Deliveries of Current Over */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', marginBottom: completedOverKeys.length > 0 ? '14px' : '0' }}>
+                    {currentOverDeliveries.length === 0 ? (
+                      <span style={{ fontSize: '0.82rem', color: 'rgba(255, 255, 255, 0.4)', fontStyle: 'italic' }}>
+                        Over starting...
+                      </span>
+                    ) : (
+                      currentOverDeliveries.map((b: any, idx: number) => {
+                        const style = getBallBadge(b);
+                        return (
+                          <div key={b.id || idx} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3px' }}>
+                            <span
+                              style={{
+                                width: '34px',
+                                height: '34px',
+                                borderRadius: '50%',
+                                background: style.bg,
+                                color: style.color,
+                                border: style.border,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                fontWeight: 900,
+                                fontSize: '0.85rem',
+                                fontFamily: 'var(--font-data)',
+                                boxShadow: '0 2px 6px rgba(0,0,0,0.3)',
+                              }}
+                            >
+                              {style.label}
+                            </span>
+                            <span style={{ fontSize: '0.62rem', color: 'rgba(255, 255, 255, 0.4)', fontWeight: 700, fontFamily: 'var(--font-data)' }}>
+                              .{b.isLegal ? b.ballNumber || idx + 1 : 'ext'}
+                            </span>
+                          </div>
+                        );
+                      })
+                    )}
+
+                    {/* Dotted placeholders for remaining balls */}
+                    {Array.from({ length: remainingSlots }).map((_, sIdx) => (
+                      <div key={`slot-${sIdx}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3px' }}>
+                        <span
+                          style={{
+                            width: '34px',
+                            height: '34px',
+                            borderRadius: '50%',
+                            background: 'rgba(255, 255, 255, 0.02)',
+                            color: 'rgba(255, 255, 255, 0.25)',
+                            border: '1.5px dashed rgba(255, 255, 255, 0.15)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontWeight: 700,
+                            fontSize: '0.8rem',
+                            fontFamily: 'var(--font-data)',
+                          }}
+                        >
+                          ○
+                        </span>
+                        <span style={{ fontSize: '0.62rem', color: 'rgba(255, 255, 255, 0.25)', fontWeight: 600, fontFamily: 'var(--font-data)' }}>
+                          .{legalBallsInCurrentOver + sIdx + 1}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Previous Overs Summary Strip */}
+                  {completedOverKeys.length > 0 && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', paddingTop: '12px', borderTop: '1px solid rgba(255, 255, 255, 0.06)', flexWrap: 'wrap' }}>
+                      <span style={{ fontSize: '0.72rem', fontWeight: 800, color: 'rgba(255, 255, 255, 0.4)', textTransform: 'uppercase', fontFamily: 'var(--font-data)' }}>
+                        Recent Overs:
+                      </span>
+                      <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                        {completedOverKeys.slice(0, 3).map((ovNum) => {
+                          const ovBalls = [...completedOversMap[ovNum]].reverse();
+                          const ovRuns = ovBalls.reduce((s: number, b: any) => s + (b.runs || 0) + (b.extras || 0), 0);
+                          const ovWkts = ovBalls.filter((b: any) => b.isWicket).length;
+                          return (
+                            <div key={ovNum} style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'rgba(255, 255, 255, 0.04)', padding: '3px 8px', borderRadius: '6px' }}>
+                              <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'rgba(255, 255, 255, 0.6)' }}>Ov {ovNum + 1}:</span>
+                              {ovBalls.map((b: any, idx: number) => {
+                                const style = getBallBadge(b);
+                                return (
+                                  <span
+                                    key={b.id || idx}
+                                    style={{
+                                      padding: '1px 5px',
+                                      borderRadius: '3px',
+                                      background: style.bg,
+                                      color: style.color,
+                                      border: style.border,
+                                      fontWeight: 800,
+                                      fontSize: '0.7rem',
+                                      fontFamily: 'var(--font-data)',
+                                    }}
+                                  >
+                                    {style.label}
+                                  </span>
+                                );
+                              })}
+                              <span style={{ fontSize: '0.72rem', color: 'var(--color-gold)', fontWeight: 800, marginLeft: '2px' }}>
+                                = {ovRuns}{ovWkts > 0 ? ` (${ovWkts}w)` : ''}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+
             {/* Batting Card */}
             <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
               <div style={{ background: 'rgba(255, 255, 255, 0.04)', padding: '12px 16px', borderBottom: '1px solid rgba(255, 255, 255, 0.08)', fontWeight: 800, color: 'var(--color-paper)', fontFamily: 'var(--font-display)', fontSize: '1.1rem', textTransform: 'uppercase' }}>
@@ -345,25 +575,31 @@ function ScorecardContent() {
                     </tr>
                   </thead>
                   <tbody>
-                    {(selectedInnings.battingScores || []).map((b: any) => {
-                      const sr = b.balls > 0 ? ((b.runs / b.balls) * 100).toFixed(1) : '0.0';
-                      const isCurrent = b.playerId === selectedInnings.currentStrikerId || b.playerId === selectedInnings.currentNonStrikerId;
-                      return (
-                        <tr key={b.id} style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.04)' }}>
-                          <td style={{ padding: '10px 14px', fontWeight: 700, color: isCurrent ? 'var(--color-gold)' : 'var(--color-paper)', fontFamily: 'var(--font-body)' }}>
-                            {b.player?.name} {b.playerId === selectedInnings.currentStrikerId ? ' *' : ''}
-                          </td>
-                          <td style={{ padding: '10px 14px', color: 'rgba(255, 255, 255, 0.6)', fontFamily: 'var(--font-body)' }}>
-                            {b.isOut ? b.dismissal || 'Out' : isCurrent ? 'not out (batting)' : 'not out'}
-                          </td>
-                          <td style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 800, color: 'var(--color-paper)', fontFamily: 'var(--font-data)' }}>{b.runs}</td>
-                          <td style={{ padding: '10px 14px', textAlign: 'right', color: 'rgba(255, 255, 255, 0.7)', fontFamily: 'var(--font-data)' }}>{b.balls}</td>
-                          <td style={{ padding: '10px 14px', textAlign: 'right', color: 'rgba(255, 255, 255, 0.7)', fontFamily: 'var(--font-data)' }}>{b.fours}</td>
-                          <td style={{ padding: '10px 14px', textAlign: 'right', color: 'rgba(255, 255, 255, 0.7)', fontFamily: 'var(--font-data)' }}>{b.sixes}</td>
-                          <td style={{ padding: '10px 14px', textAlign: 'right', color: 'rgba(255, 255, 255, 0.7)', fontFamily: 'var(--font-data)' }}>{sr}</td>
-                        </tr>
-                      );
-                    })}
+                    {(selectedInnings.battingScores || [])
+                      .filter((b: any) => {
+                        const isCurrent = b.playerId === selectedInnings.currentStrikerId || b.playerId === selectedInnings.currentNonStrikerId;
+                        const hasParticipated = b.balls > 0 || b.runs > 0 || b.isOut;
+                        return isCurrent || hasParticipated;
+                      })
+                      .map((b: any) => {
+                        const sr = b.balls > 0 ? ((b.runs / b.balls) * 100).toFixed(1) : '0.0';
+                        const isCurrent = b.playerId === selectedInnings.currentStrikerId || b.playerId === selectedInnings.currentNonStrikerId;
+                        return (
+                          <tr key={b.id} style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.04)' }}>
+                            <td style={{ padding: '10px 14px', fontWeight: 700, color: isCurrent ? 'var(--color-gold)' : 'var(--color-paper)', fontFamily: 'var(--font-body)' }}>
+                              {b.player?.name} {b.playerId === selectedInnings.currentStrikerId ? ' *' : ''}
+                            </td>
+                            <td style={{ padding: '10px 14px', color: 'rgba(255, 255, 255, 0.6)', fontFamily: 'var(--font-body)' }}>
+                              {b.isOut ? b.dismissal || 'Out' : isCurrent ? 'not out (batting)' : 'not out'}
+                            </td>
+                            <td style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 800, color: 'var(--color-paper)', fontFamily: 'var(--font-data)' }}>{b.runs}</td>
+                            <td style={{ padding: '10px 14px', textAlign: 'right', color: 'rgba(255, 255, 255, 0.7)', fontFamily: 'var(--font-data)' }}>{b.balls}</td>
+                            <td style={{ padding: '10px 14px', textAlign: 'right', color: 'rgba(255, 255, 255, 0.7)', fontFamily: 'var(--font-data)' }}>{b.fours}</td>
+                            <td style={{ padding: '10px 14px', textAlign: 'right', color: 'rgba(255, 255, 255, 0.7)', fontFamily: 'var(--font-data)' }}>{b.sixes}</td>
+                            <td style={{ padding: '10px 14px', textAlign: 'right', color: 'rgba(255, 255, 255, 0.7)', fontFamily: 'var(--font-data)' }}>{sr}</td>
+                          </tr>
+                        );
+                      })}
                   </tbody>
                 </table>
               </div>
@@ -397,24 +633,30 @@ function ScorecardContent() {
                     </tr>
                   </thead>
                   <tbody>
-                    {(selectedInnings.bowlingScores || []).map((b: any) => {
-                      const totalOvers = b.overs + b.balls / 6;
-                      const econ = totalOvers > 0 ? (b.runsConceded / totalOvers).toFixed(2) : '0.00';
-                      return (
-                        <tr key={b.id} style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.04)' }}>
-                          <td style={{ padding: '10px 14px', fontWeight: 700, color: 'var(--color-paper)', fontFamily: 'var(--font-body)' }}>
-                            {b.player?.name} {b.isCurrent ? ' *' : ''}
-                          </td>
-                          <td style={{ padding: '10px 14px', textAlign: 'right', color: 'var(--color-paper)', fontFamily: 'var(--font-data)' }}>{b.overs}.{b.balls}</td>
-                          <td style={{ padding: '10px 14px', textAlign: 'right', color: 'rgba(255, 255, 255, 0.7)', fontFamily: 'var(--font-data)' }}>{b.maidens}</td>
-                          <td style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 800, color: 'var(--color-paper)', fontFamily: 'var(--font-data)' }}>{b.runsConceded}</td>
-                          <td style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 800, color: 'var(--color-gold)', fontFamily: 'var(--font-data)' }}>{b.wickets}</td>
-                          <td style={{ padding: '10px 14px', textAlign: 'right', color: 'rgba(255, 255, 255, 0.7)', fontFamily: 'var(--font-data)' }}>{econ}</td>
-                          <td style={{ padding: '10px 14px', textAlign: 'right', color: 'rgba(255, 255, 255, 0.7)', fontFamily: 'var(--font-data)' }}>{b.wides}</td>
-                          <td style={{ padding: '10px 14px', textAlign: 'right', color: 'rgba(255, 255, 255, 0.7)', fontFamily: 'var(--font-data)' }}>{b.noBalls}</td>
-                        </tr>
-                      );
-                    })}
+                    {(selectedInnings.bowlingScores || [])
+                      .filter((b: any) => {
+                        const isCurrent = b.playerId === selectedInnings.currentBowlerId || b.isCurrent;
+                        const hasBowled = (b.overs > 0 || b.balls > 0 || b.runsConceded > 0 || b.wickets > 0 || b.wides > 0 || b.noBalls > 0);
+                        return isCurrent || hasBowled;
+                      })
+                      .map((b: any) => {
+                        const totalOvers = b.overs + b.balls / 6;
+                        const econ = totalOvers > 0 ? (b.runsConceded / totalOvers).toFixed(2) : '0.00';
+                        return (
+                          <tr key={b.id} style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.04)' }}>
+                            <td style={{ padding: '10px 14px', fontWeight: 700, color: 'var(--color-paper)', fontFamily: 'var(--font-body)' }}>
+                              {b.player?.name} {b.isCurrent || b.playerId === selectedInnings.currentBowlerId ? ' *' : ''}
+                            </td>
+                            <td style={{ padding: '10px 14px', textAlign: 'right', color: 'var(--color-paper)', fontFamily: 'var(--font-data)' }}>{b.overs}.{b.balls}</td>
+                            <td style={{ padding: '10px 14px', textAlign: 'right', color: 'rgba(255, 255, 255, 0.7)', fontFamily: 'var(--font-data)' }}>{b.maidens}</td>
+                            <td style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 800, color: 'var(--color-paper)', fontFamily: 'var(--font-data)' }}>{b.runsConceded}</td>
+                            <td style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 800, color: 'var(--color-gold)', fontFamily: 'var(--font-data)' }}>{b.wickets}</td>
+                            <td style={{ padding: '10px 14px', textAlign: 'right', color: 'rgba(255, 255, 255, 0.7)', fontFamily: 'var(--font-data)' }}>{econ}</td>
+                            <td style={{ padding: '10px 14px', textAlign: 'right', color: 'rgba(255, 255, 255, 0.7)', fontFamily: 'var(--font-data)' }}>{b.wides}</td>
+                            <td style={{ padding: '10px 14px', textAlign: 'right', color: 'rgba(255, 255, 255, 0.7)', fontFamily: 'var(--font-data)' }}>{b.noBalls}</td>
+                          </tr>
+                        );
+                      })}
                   </tbody>
                 </table>
               </div>
