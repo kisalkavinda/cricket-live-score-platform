@@ -106,23 +106,14 @@ export async function getMatchDetail(matchId: string) {
   const match = await (prisma as any).match.findUnique({
     where: { id: matchId },
     include: {
-      tournament: true,
       teamA: {
         include: {
           teamPlayers: { include: { player: true } },
-          tournamentSquads: {
-            where: { tournament: { matches: { some: { id: matchId } } } },
-            include: { player: true },
-          },
         },
       },
       teamB: {
         include: {
           teamPlayers: { include: { player: true } },
-          tournamentSquads: {
-            where: { tournament: { matches: { some: { id: matchId } } } },
-            include: { player: true },
-          },
         },
       },
       tossWinner: true,
@@ -144,7 +135,7 @@ export async function getMatchDetail(matchId: string) {
             orderBy: { createdAt: 'asc' },
           },
           ballEvents: {
-            take: 24,
+            take: 36,
             orderBy: { createdAt: 'desc' },
             include: {
               batsman: true,
@@ -212,7 +203,7 @@ export async function getLiveMatches() {
           currentBowler: true,
           battingScores: { include: { player: true }, orderBy: { battingOrder: 'asc' } },
           bowlingScores: { include: { player: true } },
-          ballEvents: { take: 6, orderBy: { createdAt: 'desc' } },
+          ballEvents: { take: 120, orderBy: { createdAt: 'desc' } },
         },
       },
     },
@@ -495,7 +486,7 @@ export async function startMatch(matchId: string, input: StartMatchInput) {
     },
   });
 
-  await (prisma as any).adminAuditLog.create({
+  (prisma as any).adminAuditLog.create({
     data: {
       action: 'MATCH_STARTED',
       entityType: 'Match',
@@ -504,13 +495,14 @@ export async function startMatch(matchId: string, input: StartMatchInput) {
       performedBy: session.username,
       metadata: { matchId, tossWinnerId: input.tossWinnerId, tossDecision: input.tossDecision },
     },
-  });
+  }).catch(() => {});
 
-  // Broadcast realtime update
-  const payload = await buildMatchBroadcastPayload(matchId);
-  if (payload) await broadcastScoreUpdate(payload);
+  // Broadcast realtime update concurrently
+  buildMatchBroadcastPayload(matchId)
+    .then((p) => { if (p) broadcastScoreUpdate(p); })
+    .catch(() => {});
 
-  return { success: true, inningsId: inn1.id };
+  return { success: true, inningsId: inn1.id, updatedMatch: await getMatchDetail(matchId) };
 }
 
 /**
@@ -576,21 +568,23 @@ export async function setInningsOpeningLineup(inningsId: string, input: OpeningL
     });
   });
 
-  await (prisma as any).adminAuditLog.create({
+  (prisma as any).adminAuditLog.create({
     data: {
-      action: 'LINEUP_SET',
+      action: 'LINEUP_CONFIGURED',
       entityType: 'Innings',
       entityId: inningsId,
-      description: `Opening lineup set: Striker=${input.strikerId}, NonStriker=${input.nonStrikerId}, Bowler=${input.bowlerId}.`,
+      description: `Opening lineup set: Striker (${input.strikerId}), Non-Striker (${input.nonStrikerId}), Bowler (${input.bowlerId}).`,
       performedBy: session.username,
       metadata: { inningsId, ...input },
     },
-  });
+  }).catch(() => {});
 
-  const payload = await buildMatchBroadcastPayload(innings.matchId);
-  if (payload) await broadcastScoreUpdate(payload);
+  // Broadcast realtime update concurrently
+  buildMatchBroadcastPayload(innings.matchId)
+    .then((p) => { if (p) broadcastScoreUpdate(p); })
+    .catch(() => {});
 
-  return { success: true };
+  return { success: true, updatedMatch: await getMatchDetail(innings.matchId) };
 }
 
 /**
@@ -638,15 +632,6 @@ export async function recordDelivery(inningsId: string, input: RecordDeliveryInp
     if (innings.status !== 'IN_PROGRESS') throw new Error(`Innings is ${innings.status}.`);
     if (!innings.currentStrikerId || !innings.currentNonStrikerId || !innings.currentBowlerId) {
       throw new Error('Please set the striker, non-striker, and bowler before recording deliveries.');
-    }
-
-    // Optimistic concurrency / double-click protection check
-    if (input.expectedUpdatedAt) {
-      const currentEpoch = new Date(innings.updatedAt).getTime();
-      const expectedEpoch = new Date(input.expectedUpdatedAt).getTime();
-      if (Math.abs(currentEpoch - expectedEpoch) > 3000) {
-        throw new Error('Conflict: The match state was modified by another request. Please try again.');
-      }
     }
 
     const strikerId = innings.currentStrikerId;
@@ -732,24 +717,85 @@ export async function recordDelivery(inningsId: string, input: RecordDeliveryInp
     const dismissedPlayerId = input.dismissedPlayerId || strikerId;
 
     if (isWicket) {
-      await tx.inningsBatter.update({
+      let dismissalText = 'out';
+      const bowlerName = innings.currentBowler?.name || 'Bowler';
+      if (input.wicketType === 'RUN_OUT') {
+        dismissalText = 'run out';
+      } else if (input.wicketType === 'TIMED_OUT') {
+        dismissalText = 'timed out';
+      } else if (input.wicketType === 'RETIRED_HURT') {
+        dismissalText = 'retired hurt';
+      } else if (input.wicketType === 'BOWLED') {
+        dismissalText = `b ${bowlerName}`;
+      } else if (input.wicketType === 'LBW') {
+        dismissalText = `lbw b ${bowlerName}`;
+      } else if (input.wicketType === 'CAUGHT') {
+        dismissalText = `c b ${bowlerName}`;
+      } else if (input.wicketType === 'STUMPED') {
+        dismissalText = `st b ${bowlerName}`;
+      } else if (input.wicketType === 'HIT_WICKET') {
+        dismissalText = `hit wicket b ${bowlerName}`;
+      } else if (input.wicketType) {
+        dismissalText = input.wicketType.toLowerCase().replace(/_/g, ' ');
+      }
+
+      // Guarantee dismissed player record exists with isOut: true
+      await tx.inningsBatter.upsert({
         where: { inningsId_playerId: { inningsId, playerId: dismissedPlayerId } },
-        data: {
+        create: {
+          inningsId,
+          playerId: dismissedPlayerId,
+          runs: 0,
+          balls: (extraType !== 'WIDE' && dismissedPlayerId === strikerId) ? 1 : 0,
+          fours: 0,
+          sixes: 0,
           isOut: true,
-          dismissal: input.wicketType ? `${input.wicketType} b ${innings.currentBowler.name}` : `Out`,
+          dismissal: dismissalText,
+          isStriker: false,
+        },
+        update: {
+          isOut: true,
+          dismissal: dismissalText,
+          isStriker: false,
         },
       });
 
-      if (input.newBatterId) {
-        // Count existing batters for batting order
+      // Determine next incoming batter
+      let incomingBatterId = input.newBatterId;
+      if (!incomingBatterId && nextWickets < 10) {
+        const existingBatters = await tx.inningsBatter.findMany({
+          where: { inningsId },
+          select: { playerId: true },
+        });
+        const activeOrOutIds = new Set(existingBatters.map((b: any) => b.playerId));
+        activeOrOutIds.add(strikerId);
+        activeOrOutIds.add(nonStrikerId);
+        activeOrOutIds.add(dismissedPlayerId);
+
+        const allBattingTeamPlayers = await tx.player.findMany({
+          where: { teamId: innings.battingTeamId },
+          select: { id: true },
+        });
+        const available = allBattingTeamPlayers.filter((p: any) => !activeOrOutIds.has(p.id));
+        if (available.length > 0) {
+          incomingBatterId = available[0].id;
+        }
+      }
+
+      if (incomingBatterId) {
         const batterCount = await tx.inningsBatter.count({ where: { inningsId } });
         await tx.inningsBatter.upsert({
-          where: { inningsId_playerId: { inningsId, playerId: input.newBatterId } },
+          where: { inningsId_playerId: { inningsId, playerId: incomingBatterId } },
           create: {
             inningsId,
-            playerId: input.newBatterId,
+            playerId: incomingBatterId,
             battingOrder: batterCount + 1,
             isStriker: dismissedPlayerId === strikerId,
+            runs: 0,
+            balls: 0,
+            fours: 0,
+            sixes: 0,
+            isOut: false,
           },
           update: {
             isStriker: dismissedPlayerId === strikerId,
@@ -757,9 +803,9 @@ export async function recordDelivery(inningsId: string, input: RecordDeliveryInp
         });
 
         if (dismissedPlayerId === strikerId) {
-          nextStrikerId = input.newBatterId;
+          nextStrikerId = incomingBatterId;
         } else {
-          nextNonStrikerId = input.newBatterId;
+          nextNonStrikerId = incomingBatterId;
         }
       }
     }
@@ -810,7 +856,7 @@ export async function recordDelivery(inningsId: string, input: RecordDeliveryInp
         }
       }
     } else if (innings.inningsNumber === 1) {
-      // Innings 1 completion check
+      // Innings 1 completion check: when intended overs are bowled or all out
       if (nextWickets >= 10 || (isOverComplete && nextOvers >= innings.match.oversPerInnings)) {
         inningsFinished = true;
       }
@@ -826,12 +872,35 @@ export async function recordDelivery(inningsId: string, input: RecordDeliveryInp
         balls: nextBalls,
         currentStrikerId: nextStrikerId,
         currentNonStrikerId: nextNonStrikerId,
-        currentBowlerId: isOverComplete ? null : bowlerId, // Reset bowler at end of over so admin picks next
+        currentBowlerId: isOverComplete ? null : bowlerId, // Reset bowler at end of over
         status: inningsFinished ? 'COMPLETED' : 'IN_PROGRESS',
       },
     });
 
-    // 9. Update Match if match finished
+    // 9. If Innings 1 finished, automatically initialize Innings 2 with swapped teams
+    if (innings.inningsNumber === 1 && inningsFinished) {
+      await tx.innings.upsert({
+        where: { matchId_inningsNumber: { matchId: innings.matchId, inningsNumber: 2 } },
+        create: {
+          matchId: innings.matchId,
+          inningsNumber: 2,
+          battingTeamId: innings.bowlingTeamId,
+          bowlingTeamId: innings.battingTeamId,
+          status: 'NOT_STARTED',
+        },
+        update: {
+          battingTeamId: innings.bowlingTeamId,
+          bowlingTeamId: innings.battingTeamId,
+        },
+      });
+
+      await tx.match.update({
+        where: { id: innings.matchId },
+        data: { currentInnings: 2 },
+      });
+    }
+
+    // 10. Update Match if match finished
     if (matchFinished) {
       await tx.match.update({
         where: { id: innings.matchId },
@@ -872,26 +941,35 @@ export async function recordDelivery(inningsId: string, input: RecordDeliveryInp
       isOverComplete,
       inningsFinished,
       matchFinished,
+      runs: totalBallRuns,
     };
+  }, {
+    maxWait: 15000,
+    timeout: 30000,
   });
 
-  // Audit log
-  await (prisma as any).adminAuditLog.create({
+  (prisma as any).adminAuditLog.create({
     data: {
-      action: 'BALL_RECORDED',
-      entityType: 'BallEvent',
-      entityId: result.ballEventId,
-      description: `Delivery recorded on innings ${inningsId}: ${runs} runs, extra=${extraType}, wicket=${isWicket}.`,
+      action: 'DELIVERY_RECORDED',
+      entityType: 'Innings',
+      entityId: inningsId,
+      description: `Recorded delivery: ${result.runs} runs, Extra: ${input.extraType || 'NONE'}${input.isWicket ? ' [WICKET]' : ''}.`,
       performedBy: session.username,
-      metadata: { inningsId, ...input },
+      metadata: { inningsId, ballEventId: result.ballEventId, runs: result.runs, isWicket: input.isWicket },
     },
-  });
+  }).catch(() => {});
 
-  // Broadcast realtime update
-  const payload = await buildMatchBroadcastPayload(result.matchId);
-  if (payload) await broadcastScoreUpdate(payload);
+  // Single authoritative match fetch for both response and realtime broadcast
+  const updatedMatch = await getMatchDetail(result.matchId);
 
-  return { success: true, ...result };
+  // Broadcast realtime update concurrently with pre-loaded match object
+  if (updatedMatch) {
+    buildMatchBroadcastPayload(updatedMatch)
+      .then((p) => { if (p) broadcastScoreUpdate(p); })
+      .catch(() => {});
+  }
+
+  return { success: true, ...result, updatedMatch };
 }
 
 /**
@@ -1037,9 +1115,12 @@ export async function undoLastDelivery(inningsId: string) {
       matchId: innings.matchId,
       undoneBallId: lastBall.id,
     };
+  }, {
+    maxWait: 15000,
+    timeout: 30000,
   });
 
-  await (prisma as any).adminAuditLog.create({
+  (prisma as any).adminAuditLog.create({
     data: {
       action: 'BALL_UNDONE',
       entityType: 'Innings',
@@ -1048,12 +1129,17 @@ export async function undoLastDelivery(inningsId: string) {
       performedBy: session.username,
       metadata: { inningsId, undoneBallId: result.undoneBallId },
     },
-  });
+  }).catch(() => {});
 
-  const payload = await buildMatchBroadcastPayload(result.matchId);
-  if (payload) await broadcastScoreUpdate(payload);
+  const updatedMatch = await getMatchDetail(result.matchId);
 
-  return { success: true };
+  if (updatedMatch) {
+    buildMatchBroadcastPayload(updatedMatch)
+      .then((p) => { if (p) broadcastScoreUpdate(p); })
+      .catch(() => {});
+  }
+
+  return { success: true, updatedMatch };
 }
 
 /**
@@ -1092,9 +1178,12 @@ export async function changeBowler(inningsId: string, bowlerId: string) {
       where: { id: inningsId },
       data: { currentBowlerId: bowlerId },
     });
+  }, {
+    maxWait: 15000,
+    timeout: 30000,
   });
 
-  await (prisma as any).adminAuditLog.create({
+  (prisma as any).adminAuditLog.create({
     data: {
       action: 'BOWLER_CHANGED',
       entityType: 'Innings',
@@ -1103,12 +1192,13 @@ export async function changeBowler(inningsId: string, bowlerId: string) {
       performedBy: session.username,
       metadata: { inningsId, bowlerId },
     },
-  });
+  }).catch(() => {});
 
-  const payload = await buildMatchBroadcastPayload(innings.matchId);
-  if (payload) await broadcastScoreUpdate(payload);
+  buildMatchBroadcastPayload(innings.matchId)
+    .then((p) => { if (p) broadcastScoreUpdate(p); })
+    .catch(() => {});
 
-  return { success: true };
+  return { success: true, updatedMatch: await getMatchDetail(innings.matchId) };
 }
 
 /**
@@ -1148,7 +1238,7 @@ export async function swapStriker(inningsId: string) {
     });
   });
 
-  await (prisma as any).adminAuditLog.create({
+  (prisma as any).adminAuditLog.create({
     data: {
       action: 'STRIKER_SWAPPED',
       entityType: 'Innings',
@@ -1157,12 +1247,13 @@ export async function swapStriker(inningsId: string) {
       performedBy: session.username,
       metadata: { inningsId, strikerId: newStrikerId, nonStrikerId: newNonStrikerId },
     },
-  });
+  }).catch(() => {});
 
-  const payload = await buildMatchBroadcastPayload(innings.matchId);
-  if (payload) await broadcastScoreUpdate(payload);
+  buildMatchBroadcastPayload(innings.matchId)
+    .then((p) => { if (p) broadcastScoreUpdate(p); })
+    .catch(() => {});
 
-  return { success: true };
+  return { success: true, updatedMatch: await getMatchDetail(innings.matchId) };
 }
 
 /**
@@ -1206,7 +1297,7 @@ export async function switchBatter(inningsId: string, role: 'striker' | 'nonStri
     }
   });
 
-  await (prisma as any).adminAuditLog.create({
+  (prisma as any).adminAuditLog.create({
     data: {
       action: 'BATTER_CHANGED',
       entityType: 'Innings',
@@ -1215,12 +1306,13 @@ export async function switchBatter(inningsId: string, role: 'striker' | 'nonStri
       performedBy: session.username,
       metadata: { inningsId, role, newPlayerId },
     },
-  });
+  }).catch(() => {});
 
-  const payload = await buildMatchBroadcastPayload(innings.matchId);
-  if (payload) await broadcastScoreUpdate(payload);
+  buildMatchBroadcastPayload(innings.matchId)
+    .then((p) => { if (p) broadcastScoreUpdate(p); })
+    .catch(() => {});
 
-  return { success: true };
+  return { success: true, updatedMatch: await getMatchDetail(innings.matchId) };
 }
 
 /**
@@ -1264,7 +1356,7 @@ export async function endInnings(inningsId: string) {
     });
   }
 
-  await (prisma as any).adminAuditLog.create({
+  (prisma as any).adminAuditLog.create({
     data: {
       action: 'INNINGS_ENDED',
       entityType: 'Innings',
@@ -1273,12 +1365,13 @@ export async function endInnings(inningsId: string) {
       performedBy: session.username,
       metadata: { inningsId, inningsNumber: innings.inningsNumber, score: `${innings.runs}/${innings.wickets}` },
     },
-  });
+  }).catch(() => {});
 
-  const payload = await buildMatchBroadcastPayload(innings.matchId);
-  if (payload) await broadcastScoreUpdate(payload);
+  buildMatchBroadcastPayload(innings.matchId)
+    .then((p) => { if (p) broadcastScoreUpdate(p); })
+    .catch(() => {});
 
-  return { success: true };
+  return { success: true, updatedMatch: await getMatchDetail(innings.matchId) };
 }
 
 /**
@@ -1303,7 +1396,7 @@ export async function completeMatch(matchId: string, input: { winnerTeamId?: str
     },
   });
 
-  await (prisma as any).adminAuditLog.create({
+  (prisma as any).adminAuditLog.create({
     data: {
       action: 'MATCH_COMPLETED',
       entityType: 'Match',
@@ -1312,10 +1405,11 @@ export async function completeMatch(matchId: string, input: { winnerTeamId?: str
       performedBy: session.username,
       metadata: { matchId, ...input },
     },
-  });
+  }).catch(() => {});
 
-  const payload = await buildMatchBroadcastPayload(matchId);
-  if (payload) await broadcastScoreUpdate(payload);
+  buildMatchBroadcastPayload(matchId)
+    .then((p) => { if (p) broadcastScoreUpdate(p); })
+    .catch(() => {});
 
-  return { success: true };
+  return { success: true, updatedMatch: await getMatchDetail(matchId) };
 }

@@ -80,28 +80,41 @@ export interface ScoreBroadcastPayload {
 /**
  * Broadcasts an authoritative match state to Supabase Realtime channel `match:${matchId}`
  * and to a global `matches:live` channel for index widgets.
- * Guaranteed: Does NOT throw if broadcast fails (PostgreSQL transaction remains authoritative).
+ * Guaranteed non-blocking and optimized with httpSend & race timeout.
  */
 export async function broadcastScoreUpdate(payload: ScoreBroadcastPayload): Promise<void> {
   if (!supabase) {
-    console.warn('[Realtime] Supabase credentials not configured, skipping broadcast.');
     return;
   }
 
   try {
-    const channel = supabase.channel(`match:${payload.matchId}`);
-    await channel.send({
-      type: 'broadcast',
-      event: 'score_update',
-      payload,
-    });
-    // Also broadcast to live index channel for homepage widget
-    const indexChannel = supabase.channel('matches:live');
-    await indexChannel.send({
-      type: 'broadcast',
-      event: 'score_update',
-      payload,
-    });
+    const channel1 = supabase.channel(`match:${payload.matchId}`);
+    const channel2 = supabase.channel('matches:live');
+
+    const sendEvent = async (ch: any) => {
+      try {
+        if (typeof ch.httpSend === 'function') {
+          return await ch.httpSend({
+            type: 'broadcast',
+            event: 'score_update',
+            payload,
+          });
+        }
+        return await ch.send({
+          type: 'broadcast',
+          event: 'score_update',
+          payload,
+        });
+      } catch (e) {
+        // Silently catch individual channel send error
+      }
+    };
+
+    // Broadcast concurrently with a strict 200ms timeout so it NEVER blocks or slows down mutations
+    await Promise.race([
+      Promise.allSettled([sendEvent(channel1), sendEvent(channel2)]),
+      new Promise((resolve) => setTimeout(resolve, 200)),
+    ]);
   } catch (err) {
     console.error('[Realtime] Failed to broadcast score update:', err);
   }
