@@ -79,6 +79,7 @@ export default function NewMatchForm({ tournaments, teams, entryPath }: Props) {
           teamAId,
           teamBId,
           oversPerInnings: Number(oversPerInnings),
+          ballsPerOver: Number(ballsPerOver),
         });
 
         if (!createRes.success || !createRes.matchId) {
