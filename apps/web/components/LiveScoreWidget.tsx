@@ -620,7 +620,7 @@ export default function LiveScoreWidget() {
                     </div>
                     <div style={{ fontSize: '0.9rem', color: 'rgba(255, 255, 255, 0.7)', marginTop: '4px', fontWeight: 600 }}>
                       {currentInnings ? `Overs: ${currentInnings.overs}.${currentInnings.balls}` : '0.0 Overs'}
-                      {currentMatch.oversPerInnings ? ` / ${currentMatch.oversPerInnings} ov` : ''}
+                      {currentMatch.match.oversPerInnings ? ` / ${currentMatch.match.oversPerInnings} ov` : ''}
                     </div>
                     {currentMatch.currentInnings >= 3 && (
                       <div style={{ marginTop: '4px', display: 'inline-block', background: 'rgba(245, 158, 11, 0.2)', border: '1px solid #F59E0B', color: '#FBBF24', fontSize: '0.72rem', fontWeight: 800, padding: '2px 8px', borderRadius: '4px' }}>
@@ -679,21 +679,21 @@ export default function LiveScoreWidget() {
                 >
                   <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
                     <span style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
-                      CRR: <strong style={{ color: '#FFF' }}>{currentMatch.crr || '0.00'}</strong>
+                      CRR: <strong style={{ color: '#FFF' }}>{currentMatch.chase?.crr || currentInnings?.crr || '0.00'}</strong>
                     </span>
-                    {currentMatch.target && (
+                    {currentMatch.chase?.isChase && currentMatch.chase?.target ? (
                       <>
                         <span style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
-                          Target: <strong style={{ color: 'var(--color-gold, #FFB800)' }}>{currentMatch.target}</strong>
+                          Target: <strong style={{ color: 'var(--color-gold, #FFB800)' }}>{currentMatch.chase.target}</strong>
                         </span>
                         <span style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
-                          RRR: <strong style={{ color: '#FFF' }}>{currentMatch.rrr || '-'}</strong>
+                          RRR: <strong style={{ color: '#FFF' }}>{currentMatch.chase.rrr || '-'}</strong>
                         </span>
                         <span style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
-                          Need: <strong style={{ color: '#10B981' }}>{currentMatch.needRuns}</strong> off <strong style={{ color: '#10B981' }}>{currentMatch.remainingBalls}</strong> balls
+                          Need: <strong style={{ color: '#10B981' }}>{currentMatch.chase.runsNeeded}</strong> off <strong style={{ color: '#10B981' }}>{currentMatch.chase.ballsRemaining}</strong> balls
                         </span>
                       </>
-                    )}
+                    ) : null}
                   </div>
 
                   {currentMatch.match.resultNote && (
@@ -734,9 +734,9 @@ export default function LiveScoreWidget() {
                           </span>
                         </div>
                         <div style={{ fontFamily: 'var(--font-data, monospace)', fontWeight: 800, color: '#FFF', fontSize: '0.95rem' }}>
-                          {currentMatch.strikerScore?.runs ?? 0}
+                          {currentMatch.striker?.runs ?? 0}
                           <span style={{ color: 'rgba(255, 255, 255, 0.5)', fontSize: '0.8rem', fontWeight: 500 }}>
-                            {' '}({currentMatch.strikerScore?.balls ?? 0}b, {currentMatch.strikerScore?.fours ?? 0}x4, {currentMatch.strikerScore?.sixes ?? 0}x6)
+                            {' '}({currentMatch.striker?.balls ?? 0}b, {currentMatch.striker?.fours ?? 0}x4, {currentMatch.striker?.sixes ?? 0}x6)
                           </span>
                         </div>
                       </div>
@@ -750,9 +750,9 @@ export default function LiveScoreWidget() {
                           </span>
                         </div>
                         <div style={{ fontFamily: 'var(--font-data, monospace)', fontWeight: 700, color: 'rgba(255, 255, 255, 0.75)', fontSize: '0.95rem' }}>
-                          {currentMatch.nonStrikerScore?.runs ?? 0}
+                          {currentMatch.nonStriker?.runs ?? 0}
                           <span style={{ color: 'rgba(255, 255, 255, 0.4)', fontSize: '0.8rem', fontWeight: 500 }}>
-                            {' '}({currentMatch.nonStrikerScore?.balls ?? 0}b)
+                            {' '}({currentMatch.nonStriker?.balls ?? 0}b)
                           </span>
                         </div>
                       </div>
@@ -776,9 +776,9 @@ export default function LiveScoreWidget() {
                         {currentMatch.bowler?.name || 'Bowler'}
                       </div>
                       <div style={{ fontFamily: 'var(--font-data, monospace)', fontWeight: 800, color: '#FFF', fontSize: '0.95rem' }}>
-                        {currentMatch.bowlerScore?.wickets ?? 0}-{currentMatch.bowlerScore?.runsConceded ?? 0}
+                        {currentMatch.bowler?.wickets ?? 0}-{currentMatch.bowler?.runsConceded ?? 0}
                         <span style={{ color: 'rgba(255, 255, 255, 0.5)', fontSize: '0.8rem', fontWeight: 500 }}>
-                          {' '}({currentMatch.bowlerScore?.overs ?? 0}.{currentMatch.bowlerScore?.balls ?? 0} ov)
+                          {' '}({currentMatch.bowler?.overs ?? '0.0'} ov)
                         </span>
                       </div>
                     </div>
