@@ -24,15 +24,34 @@ export interface ScoreBroadcastPayload {
     rrr?: string;
     target?: number;
   } | null;
+  chase?: {
+    isChase: boolean;
+    battingTeamName: string;
+    target: number;
+    runsNeeded: number;
+    ballsRemaining: number;
+    rrr: string;
+    crr: string;
+  } | null;
   match: {
     id: string;
     teamA: { id: string; name: string; shortName: string; logoUrl?: string | null };
     teamB: { id: string; name: string; shortName: string; logoUrl?: string | null };
     venue?: string | null;
     oversPerInnings: number;
+    ballsPerOver?: number;
     resultNote?: string | null;
     winnerTeamId?: string | null;
   };
+  allInningsSummary?: Array<{
+    inningsNumber: number;
+    battingTeamId: string;
+    runs: number;
+    wickets: number;
+    overs: number;
+    balls: number;
+    isSuperOver: boolean;
+  }>;
   striker: {
     id: string;
     name: string;
@@ -59,6 +78,7 @@ export interface ScoreBroadcastPayload {
     runsConceded: number;
     wickets: number;
     econ: string;
+    economy?: string;
     wides: number;
     noBalls: number;
   } | null;

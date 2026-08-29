@@ -310,6 +310,7 @@ model Match {
   status          MatchStatus  @default(UPCOMING)
   currentInnings  Int          @default(1)
   oversPerInnings Int          @default(20)
+  ballsPerOver    Int          @default(6)
   tossWinnerId    String?
   tossWinner      Team?        @relation("MatchTossWinner", fields: [tossWinnerId], references: [id])
   tossDecision    String?
