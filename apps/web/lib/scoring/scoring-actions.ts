@@ -68,6 +68,39 @@ export async function completeMatchAction(matchId: string, input: { winnerTeamId
   return await completeMatch(matchId, input);
 }
 
+export async function editBallDeliveryAction(
+  ballId: string,
+  input: {
+    runs?: number;
+    extraType?: any;
+    extras?: number;
+    isWicket?: boolean;
+    wicketType?: string;
+  }
+) {
+  await requireAdminAuth();
+  const { editBallDelivery } = await import('./scoring-service');
+  return await editBallDelivery(ballId, input);
+}
+
+export async function deleteBallDeliveryAction(ballId: string) {
+  await requireAdminAuth();
+  const { deleteBallDelivery } = await import('./scoring-service');
+  return await deleteBallDelivery(ballId);
+}
+
+export async function startSuperOverAction(matchId: string, input: { battingFirstTeamId: string; ballsPerOver?: number }) {
+  await requireAdminAuth();
+  const { startSuperOver } = await import('./scoring-service');
+  return await startSuperOver(matchId, input);
+}
+
+export async function updateMatchRulesAction(matchId: string, input: { oversPerInnings?: number; ballsPerOver?: number }) {
+  await requireAdminAuth();
+  const { updateMatchRules } = await import('./scoring-service');
+  return await updateMatchRules(matchId, input);
+}
+
 export async function deleteMatchAction(matchId: string) {
   await requireAdminAuth();
   const { getAdminEntryPath } = await import('@/lib/auth/admin-auth');
@@ -75,32 +108,42 @@ export async function deleteMatchAction(matchId: string) {
   const { prisma } = await import('database');
   const entryPath = getAdminEntryPath();
 
-  const inningsList = await (prisma as any).innings.findMany({
-    where: { matchId },
-    select: { id: true },
-  });
-  const inningsIds = inningsList.map((i: any) => i.id);
-  if (inningsIds.length > 0) {
-    await (prisma as any).ballEvent.deleteMany({
-      where: { inningsId: { in: inningsIds } },
-    }).catch(() => {});
-    await (prisma as any).inningsBatter.deleteMany({
-      where: { inningsId: { in: inningsIds } },
-    }).catch(() => {});
-    await (prisma as any).inningsBowler.deleteMany({
-      where: { inningsId: { in: inningsIds } },
-    }).catch(() => {});
-    await (prisma as any).innings.deleteMany({
+  try {
+    const inningsList = await (prisma as any).innings.findMany({
       where: { matchId },
-    }).catch(() => {});
+      select: { id: true },
+    });
+    const inningsIds = inningsList.map((i: any) => i.id);
+    if (inningsIds.length > 0) {
+      await (prisma as any).ballEvent.deleteMany({
+        where: { inningsId: { in: inningsIds } },
+      }).catch(() => {});
+      await (prisma as any).inningsBatter.deleteMany({
+        where: { inningsId: { in: inningsIds } },
+      }).catch(() => {});
+      await (prisma as any).inningsBowler.deleteMany({
+        where: { inningsId: { in: inningsIds } },
+      }).catch(() => {});
+      await (prisma as any).innings.deleteMany({
+        where: { matchId },
+      }).catch(() => {});
+    }
+
+    await (prisma as any).match.delete({
+      where: { id: matchId },
+    }).catch((err: any) => {
+      if (err?.code !== 'P2025') throw err;
+    });
+
+    revalidatePath(`/${entryPath}/matches`);
+    revalidatePath(`/${entryPath}/dashboard`);
+    revalidatePath('/');
+    return { success: true, redirectUrl: `/${entryPath}/matches` };
+  } catch (err: any) {
+    if (err?.code === 'P2025') {
+      revalidatePath(`/${entryPath}/matches`);
+      return { success: true, redirectUrl: `/${entryPath}/matches` };
+    }
+    return { success: false, error: err.message || 'Failed to delete match.' };
   }
-
-  await (prisma as any).match.delete({
-    where: { id: matchId },
-  });
-
-  revalidatePath(`/${entryPath}/matches`);
-  revalidatePath(`/${entryPath}/dashboard`);
-  revalidatePath('/');
-  return { success: true, redirectUrl: `/${entryPath}/matches` };
 }
