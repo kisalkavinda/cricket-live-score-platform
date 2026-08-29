@@ -234,10 +234,10 @@
     "semantic_hash": "5b460a5d0df1ea81416652cd74474593"
   },
   "apps/web/components/LiveScoreWidget.tsx": {
-    "mtime": 1788034254.588605,
-    "seen": 1788034975.2229059,
-    "ast_hash": "c0b531dba725a634daf52d48b7142363",
-    "semantic_hash": "c0b531dba725a634daf52d48b7142363"
+    "mtime": 1788036212.2630653,
+    "seen": 1788036336.6219053,
+    "ast_hash": "9f350b8c3fd5d44b6195f87500760db4",
+    "semantic_hash": ""
   },
   "apps/web/components/LottieAnimation.tsx": {
     "mtime": 1786469723.4836452,
