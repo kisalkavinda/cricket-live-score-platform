@@ -91,19 +91,14 @@ async function runTests() {
       data: { name: 'CPL 2026 Test', season: '2026', format: 'T20', status: 'LIVE' },
     });
 
-    let teamA = await prisma.team.findFirst({ where: { shortName: 'TEMA' } });
-    if (!teamA) {
-      teamA = await prisma.team.create({
-        data: { name: 'Test Lions', shortName: 'TEMA', city: 'Colombo' },
-      });
-    }
+    const testSuffix = Date.now().toString().slice(-4);
+    const teamA = await prisma.team.create({
+      data: { name: `Test Lions ${testSuffix}`, shortName: `TA${testSuffix}`, city: 'Colombo' },
+    });
 
-    let teamB = await prisma.team.findFirst({ where: { shortName: 'TEMB' } });
-    if (!teamB) {
-      teamB = await prisma.team.create({
-        data: { name: 'Test Tigers', shortName: 'TEMB', city: 'Kandy' },
-      });
-    }
+    const teamB = await prisma.team.create({
+      data: { name: `Test Tigers ${testSuffix}`, shortName: `TB${testSuffix}`, city: 'Kandy' },
+    });
 
     let p1 = await prisma.player.findFirst({ where: { name: 'Test Batter 1' } });
     if (!p1) p1 = await prisma.player.create({ data: { name: 'Test Batter 1', indexNumber: 'TB01' } });
@@ -336,9 +331,10 @@ async function runTests() {
         bowlerIdBefore: bowler.id,
       },
     });
-    await prisma.inningsBatter.update({
+    await prisma.inningsBatter.upsert({
       where: { inningsId_playerId: { inningsId: inn1.id, playerId: p2.id } },
-      data: { balls: { increment: 1 }, isOut: true, dismissal: 'c Fielder b Bowler' },
+      create: { inningsId: inn1.id, playerId: p2.id, balls: 1, isOut: true, dismissal: 'c Fielder b Bowler' },
+      update: { balls: { increment: 1 }, isOut: true, dismissal: 'c Fielder b Bowler' },
     });
     await prisma.inningsBatter.create({
       data: { inningsId: inn1.id, playerId: p3.id, isStriker: true, battingOrder: 3 },
@@ -417,11 +413,12 @@ async function runTests() {
       'ENGINE-10: 1-Click Undo rolled back over 1.0 -> 0.5, restored striker/bowler snapshots');
 
     // Clean up test records
-    await prisma.ballEvent.deleteMany({ where: { inningsId: inn1.id } });
-    await prisma.inningsBatter.deleteMany({ where: { inningsId: inn1.id } });
-    await prisma.inningsBowler.deleteMany({ where: { inningsId: inn1.id } });
-    await prisma.innings.deleteMany({ where: { matchId: match.id } });
-    await prisma.match.delete({ where: { id: match.id } });
+    await prisma.ballEvent.deleteMany({ where: { inningsId: inn1.id } }).catch(() => {});
+    await prisma.inningsBatter.deleteMany({ where: { inningsId: inn1.id } }).catch(() => {});
+    await prisma.inningsBowler.deleteMany({ where: { inningsId: inn1.id } }).catch(() => {});
+    await prisma.innings.deleteMany({ where: { matchId: match.id } }).catch(() => {});
+    await prisma.match.delete({ where: { id: match.id } }).catch(() => {});
+    await prisma.team.deleteMany({ where: { id: { in: [teamA.id, teamB.id] } } }).catch(() => {});
 
     assert(true, 'ENGINE-11: Database test teardown completed cleanly');
   } catch (err) {

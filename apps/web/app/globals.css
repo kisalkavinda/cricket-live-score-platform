@@ -293,6 +293,232 @@ h1, h2, h3, h4, h5, h6,
 }
 
 /* ============================================================
+   Editorial Sports Scorecard Styling (Clean & Modern)
+   ============================================================ */
+.sc-card {
+  background: #111318;
+  border: 1px solid #20242f;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.sc-hero {
+  background: #111318;
+  border: 1px solid #20242f;
+  border-radius: 12px;
+  padding: 20px 24px;
+}
+
+.sc-desktop-grid {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 24px;
+}
+
+.sc-mobile-grid {
+  display: none;
+}
+
+.sc-team-crest {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  background: #1b1e28;
+  border: 1px solid #2a2e3d;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.1rem;
+  color: #f8fafc;
+  flex-shrink: 0;
+  letter-spacing: 0.05em;
+}
+
+.sc-team-crest-sm {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: #1b1e28;
+  border: 1px solid #2a2e3d;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 0.85rem;
+  color: #f8fafc;
+  flex-shrink: 0;
+}
+
+.sc-score-num {
+  font-family: var(--font-data);
+  font-size: 1.85rem;
+  font-weight: 800;
+  color: #f8fafc;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.sc-score-sub {
+  font-family: var(--font-data);
+  font-size: 0.85rem;
+  color: #94a3b8;
+  font-weight: 500;
+  margin-left: 6px;
+}
+
+.sc-tab-btn {
+  flex: 1;
+  padding: 10px 16px;
+  background: #161820;
+  border: 1px solid #222632;
+  color: #94a3b8;
+  font-family: var(--font-display);
+  font-size: 0.88rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.sc-tab-btn.active {
+  background: #c0272d;
+  border-color: #dc2626;
+  color: #ffffff;
+}
+
+.sc-ball {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-data);
+  font-weight: 700;
+  font-size: 0.8rem;
+  background: #1b1e28;
+  color: #f8fafc;
+  border: 1px solid #2a2e3d;
+  flex-shrink: 0;
+}
+
+.sc-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.sc-table th {
+  padding: 10px 14px;
+  font-family: var(--font-body);
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #64748b;
+  border-bottom: 1px solid #1f232e;
+  background: #0d0f14;
+}
+
+.sc-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid #171a23;
+  font-size: 0.85rem;
+  color: #f8fafc;
+}
+
+.sc-table tr.active-batter {
+  background: rgba(192, 39, 45, 0.06);
+}
+
+.sc-table tr:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+/* ============================================================
+   Bulletproof Responsive Scoreboard Grid (No wrapping bugs)
+   ============================================================ */
+.scorecard-match-header-grid {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+}
+
+.scorecard-team-a-box {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+}
+
+.scorecard-center-score-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 0 8px;
+}
+
+.scorecard-team-b-box {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  text-align: right;
+}
+
+@media (max-width: 640px) {
+  .scorecard-match-header-grid {
+    grid-template-columns: 1fr auto 1fr;
+    gap: 6px;
+  }
+
+  .scorecard-team-a-box {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 4px;
+  }
+
+  .scorecard-team-b-box {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 4px;
+  }
+
+  .scorecard-team-title {
+    font-size: 0.95rem !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+  }
+
+  .scorecard-main-score {
+    font-size: 1.6rem !important;
+  }
+
+  .scorecard-overs-text {
+    font-size: 0.72rem !important;
+  }
+}
+
+
+
+
+
+/* ============================================================
    Hero Section Responsive
    ============================================================ */
 

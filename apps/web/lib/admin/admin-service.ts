@@ -25,97 +25,106 @@ export interface DashboardStats {
  * - Reduces database roundtrips from 9 down to 4.
  */
 export async function getDashboardStats(): Promise<DashboardStats> {
-  // Query 1 to 4: Execute all queries concurrently in a single roundtrip via Promise.all
-  const [
-    statusGroups,
-    backupGroups,
-    recentRegistrations,
-    attentionRegistrations,
-  ] = await Promise.all([
-    (prisma as any).registration.groupBy({
-      by: ['status'],
-      _count: { _all: true },
-    }),
-    (prisma as any).registration.groupBy({
-      by: ['backupStatus'],
-      _count: { _all: true },
-    }),
-    (prisma as any).registration.findMany({
-      take: 8,
-      orderBy: { createdAt: 'desc' },
-      select: {
-        id: true,
-        registrationCode: true,
-        teamName: true,
-        leaderName: true,
-        status: true,
-        backupStatus: true,
-        createdAt: true,
-        _count: { select: { players: true } },
-        tournament: { select: { name: true } },
-      },
-    }),
-    (prisma as any).registration.findMany({
-      where: {
-        OR: [{ status: 'PENDING' }, { backupStatus: 'FAILED' }],
-      },
-      take: 6,
-      orderBy: { createdAt: 'desc' },
-      select: {
-        id: true,
-        registrationCode: true,
-        teamName: true,
-        leaderName: true,
-        status: true,
-        backupStatus: true,
-        createdAt: true,
-        _count: { select: { players: true } },
-      },
-    }),
-  ]);
+  try {
+    // Query 1 to 4: Execute all queries concurrently in a single roundtrip via Promise.all
+    const [
+      statusGroups,
+      backupGroups,
+      recentRegistrations,
+      attentionRegistrations,
+    ] = await Promise.all([
+      (prisma as any).registration.groupBy({
+        by: ['status'],
+        _count: { _all: true },
+      }),
+      (prisma as any).registration.groupBy({
+        by: ['backupStatus'],
+        _count: { _all: true },
+      }),
+      (prisma as any).registration.findMany({
+        take: 8,
+        orderBy: { createdAt: 'desc' },
+        select: {
+          id: true,
+          registrationCode: true,
+          teamName: true,
+          leaderName: true,
+          status: true,
+          backupStatus: true,
+          createdAt: true,
+          _count: { select: { players: true } },
+          tournament: { select: { name: true } },
+        },
+      }),
+      (prisma as any).registration.findMany({
+        where: {
+          OR: [{ status: 'PENDING' }, { backupStatus: 'FAILED' }],
+        },
+        take: 6,
+        orderBy: { createdAt: 'desc' },
+        select: {
+          id: true,
+          registrationCode: true,
+          teamName: true,
+          leaderName: true,
+          status: true,
+          backupStatus: true,
+          createdAt: true,
+          _count: { select: { players: true } },
+        },
+      }),
+    ]);
 
-  // Derive counts from group results (default 0 for missing groups)
-  const statusMap: Record<string, number> = {};
-  for (const g of statusGroups) {
-    statusMap[g.status] = g._count._all;
+    // Derive counts from group results (default 0 for missing groups)
+    const statusMap: Record<string, number> = {};
+    for (const g of statusGroups || []) {
+      statusMap[g.status] = g._count._all;
+    }
+    const backupMap: Record<string, number> = {};
+    for (const g of backupGroups || []) {
+      backupMap[g.backupStatus] = g._count._all;
+    }
+
+    const pendingCount = statusMap['PENDING'] ?? 0;
+    const approvedCount = statusMap['APPROVED'] ?? 0;
+    const rejectedCount = statusMap['REJECTED'] ?? 0;
+    const cancelledCount = statusMap['CANCELLED'] ?? 0;
+    const totalCount = pendingCount + approvedCount + rejectedCount + cancelledCount;
+
+    const backupSynced = backupMap['SYNCED'] ?? 0;
+    const backupFailed = backupMap['FAILED'] ?? 0;
+    const backupPending = backupMap['PENDING'] ?? 0;
+
+    // Normalise _count.players into a players array shape for backward-compat with dashboard UI
+    const normaliseItem = (r: any) => ({
+      ...r,
+      players: Array.from({ length: r._count?.players ?? 0 }),
+    });
+
+    return {
+      registrations: {
+        pending: pendingCount,
+        approved: approvedCount,
+        rejected: rejectedCount,
+        total: totalCount,
+      },
+      backups: {
+        synced: backupSynced,
+        failed: backupFailed,
+        pending: backupPending,
+      },
+      recentRegistrations: (recentRegistrations || []).map(normaliseItem),
+      attentionRegistrations: (attentionRegistrations || []).map(normaliseItem),
+    };
+  } catch (err) {
+    console.error('[getDashboardStats] Error fetching dashboard stats:', err);
+    return {
+      registrations: { pending: 0, approved: 0, rejected: 0, total: 0 },
+      backups: { synced: 0, failed: 0, pending: 0 },
+      recentRegistrations: [],
+      attentionRegistrations: [],
+    };
   }
-  const backupMap: Record<string, number> = {};
-  for (const g of backupGroups) {
-    backupMap[g.backupStatus] = g._count._all;
-  }
-
-  const pendingCount = statusMap['PENDING'] ?? 0;
-  const approvedCount = statusMap['APPROVED'] ?? 0;
-  const rejectedCount = statusMap['REJECTED'] ?? 0;
-  const cancelledCount = statusMap['CANCELLED'] ?? 0;
-  const totalCount = pendingCount + approvedCount + rejectedCount + cancelledCount;
-
-  const backupSynced = backupMap['SYNCED'] ?? 0;
-  const backupFailed = backupMap['FAILED'] ?? 0;
-  const backupPending = backupMap['PENDING'] ?? 0;
-
-
-  // Normalise _count.players into a players array shape for backward-compat with dashboard UI
-  const normaliseItem = (r: any) => ({
-    ...r,
-    players: Array.from({ length: r._count?.players ?? 0 }),
-  });
-
-  return {
-    registrations: {
-      pending: pendingCount,
-      approved: approvedCount,
-      rejected: rejectedCount,
-      total: totalCount,
-    },
-    backups: {
-      synced: backupSynced,
-      failed: backupFailed,
-      pending: backupPending,
-    },
-    recentRegistrations: recentRegistrations.map(normaliseItem),
-    attentionRegistrations: attentionRegistrations.map(normaliseItem),
-  };
 }
 
 
@@ -131,7 +140,9 @@ export interface RegistrationsQuery {
  * Returns paginated, searchable, and filtered registration records.
  */
 export async function getRegistrationsList(params: RegistrationsQuery = {}) {
-  const { status, backupStatus, search, page = 1, limit = 15 } = params;
+  const page = Math.max(1, Number(params.page) || 1);
+  const limit = Math.min(Math.max(1, Number(params.limit) || 15), 50);
+  const { status, backupStatus, search } = params;
   const skip = (page - 1) * limit;
 
   const where: any = {};

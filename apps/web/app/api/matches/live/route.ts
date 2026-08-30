@@ -3,23 +3,38 @@ import { getLiveMatches, buildMatchBroadcastPayload } from '@/lib/scoring/scorin
 
 export const dynamic = 'force-dynamic';
 
+// In-Memory RAM cache to protect database from hundreds of concurrent viewers
+let liveMatchesCache: { data: any; expiresAt: number } | null = null;
+
 export async function GET() {
   try {
+    const now = Date.now();
+    if (liveMatchesCache && liveMatchesCache.expiresAt > now) {
+      return NextResponse.json(
+        { success: true, matches: liveMatchesCache.data },
+        {
+          headers: {
+            'X-Cache': 'HIT',
+            'Cache-Control': 'no-cache, no-store',
+          },
+        }
+      );
+    }
+
     const rawMatches = await getLiveMatches();
     const payloads = await Promise.all(
       rawMatches.map((m: any) => buildMatchBroadcastPayload(m))
     );
 
-
     const validPayloads = payloads.filter(Boolean);
+    liveMatchesCache = { data: validPayloads, expiresAt: now + 2500 };
 
     return NextResponse.json(
       { success: true, matches: validPayloads },
       {
         headers: {
-          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
-          Pragma: 'no-cache',
-          Expires: '0',
+          'X-Cache': 'MISS',
+          'Cache-Control': 'no-cache, no-store',
         },
       }
     );
