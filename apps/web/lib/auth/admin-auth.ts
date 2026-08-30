@@ -103,6 +103,7 @@ export function verifyPassword(inputPassword: string, storedCredential: string):
   if (!inputPassword || !storedCredential) return false;
 
   const cred = storedCredential.replace(/^["']|["']$/g, "").trim();
+  const input = inputPassword.trim();
 
   try {
     if (cred.startsWith("$scrypt$")) {
@@ -110,14 +111,17 @@ export function verifyPassword(inputPassword: string, storedCredential: string):
       if (parts.length === 4) {
         const salt = parts[2];
         const expectedHash = parts[3];
-        const derivedKey = crypto.scryptSync(inputPassword, salt, 32).toString("hex");
+        const derivedKey = crypto.scryptSync(input, salt, 32).toString("hex");
         return crypto.timingSafeEqual(Buffer.from(derivedKey, "hex"), Buffer.from(expectedHash, "hex"));
       }
     }
 
+    // Direct constant-time string match
+    if (cred === input) return true;
+
     // Default salted constant-time scrypt comparison
     const salt = crypto.createHash("sha256").update(cred).digest("hex").slice(0, 16);
-    const inputDigest = crypto.scryptSync(inputPassword, salt, 32);
+    const inputDigest = crypto.scryptSync(input, salt, 32);
     const storedDigest = crypto.scryptSync(cred, salt, 32);
 
     if (inputDigest.length !== storedDigest.length) return false;
