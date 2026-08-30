@@ -9,6 +9,7 @@ const cspHeader = `
   font-src 'self' https://fonts.gstatic.com data:;
   img-src 'self' data: https: blob:;
   connect-src 'self' https://*.supabase.co wss://*.supabase.co https: unpkg.com cdn.jsdelivr.net;
+  frame-src 'self' https://maps.google.com https://www.google.com https://*.google.com https://*.google.lk;
   frame-ancestors 'none';
   object-src 'none';
   base-uri 'self';
