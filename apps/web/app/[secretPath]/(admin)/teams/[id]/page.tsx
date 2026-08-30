@@ -9,6 +9,7 @@ import {
   updateTeamServerAction,
 } from '@/lib/admin/admin-actions';
 import DeleteTeamButton from '@/components/admin/DeleteTeamButton';
+import RemovePlayerFromTeamButton from '@/components/admin/RemovePlayerFromTeamButton';
 
 export const dynamic = 'force-dynamic';
 
@@ -440,28 +441,12 @@ export default async function TeamDetailPage({
                         {tp.player.indexNumber || 'N/A'}
                       </td>
                       <td style={{ padding: '14px 18px', textAlign: 'right' }}>
-                        <form
-                          action={async () => {
-                            'use server';
-                            await removePlayerFromTeamServerAction(tp.id, team.id);
-                          }}
-                        >
-                          <button
-                            type="submit"
-                            style={{
-                              padding: '4px 10px',
-                              borderRadius: '4px',
-                              backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                              border: '1px solid rgba(239, 68, 68, 0.25)',
-                              color: '#EF4444',
-                              fontSize: '11px',
-                              fontWeight: 700,
-                              cursor: 'pointer',
-                            }}
-                          >
-                            Remove
-                          </button>
-                        </form>
+                        <RemovePlayerFromTeamButton
+                          teamPlayerId={tp.id}
+                          teamId={team.id}
+                          playerName={tp.player.name}
+                          teamName={team.name}
+                        />
                       </td>
                     </tr>
                   ))}

@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { notFound } from 'next/navigation';
 import { requireAdminAuth, getAdminEntryPath } from '@/lib/auth/admin-auth';
 import { logoutAdminServerAction } from '@/lib/admin/admin-actions';
 import AdminNavLinks from '@/components/admin/AdminNavLinks';
@@ -13,6 +14,10 @@ export default async function ManagementLayout({
   const session = await requireAdminAuth();
   const { secretPath } = await params;
   const entryPath = getAdminEntryPath();
+
+  if (secretPath !== entryPath) {
+    notFound();
+  }
 
   return (
     <div
