@@ -24,6 +24,11 @@ function getEnvValue(key: string): string | undefined {
     return process.env[key]!.trim().replace(/^["']|["']$/g, "").trim();
   }
 
+  // In production, environment variables are injected directly into lambda environment
+  if (process.env.NODE_ENV === "production") {
+    return undefined;
+  }
+
   try {
     const cwd = process.cwd();
     const envPaths = [
