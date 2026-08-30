@@ -3,7 +3,12 @@ import { tournamentConfig } from '../config/tournament';
 import { getCachedRegisteredTeamsCount } from '@/lib/public/teams';
 
 export default async function Registration() {
-  const registeredTeamsCount = await getCachedRegisteredTeamsCount();
+  let registeredTeamsCount = 0;
+  try {
+    registeredTeamsCount = await getCachedRegisteredTeamsCount();
+  } catch (err) {
+    console.error('[Registration] Failed to load registered teams count:', err);
+  }
 
   const regOpen = true;
 

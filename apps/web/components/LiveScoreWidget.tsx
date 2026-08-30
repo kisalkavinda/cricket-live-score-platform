@@ -39,6 +39,7 @@ export default function LiveScoreWidget() {
         cache: 'no-store',
         headers: { 'Cache-Control': 'no-cache', Pragma: 'no-cache' },
       });
+      if (!res.ok) return;
       const data = await res.json();
       if (data.success && data.matches && data.matches.length > 0) {
         setMatches(data.matches);
@@ -60,6 +61,7 @@ export default function LiveScoreWidget() {
       const res = await fetch(`/api/tournament/stats?_t=${Date.now()}`, {
         cache: 'no-store',
       });
+      if (!res.ok) return;
       const data = await res.json();
       if (data.success) {
         setStatsData({
