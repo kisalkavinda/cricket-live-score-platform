@@ -14,8 +14,7 @@ const LOCKOUT_DURATION_MS = 15 * 60 * 1000;
 const MAX_LOGIN_ATTEMPTS = MAX_FAILED_ATTEMPTS;
 const LOCKOUT_DURATION_SECONDS = Math.floor(LOCKOUT_DURATION_MS / 1000);
 
-// In-memory quick lookup cache for revoked session token digests
-const revokedTokensCache = new Set<string>();
+
 
 /**
  * Dynamically resolves an environment variable from process.env or .env file fallback.
