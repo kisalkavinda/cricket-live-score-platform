@@ -244,29 +244,22 @@ export async function loginAdmin(password: string): Promise<{ success: boolean; 
   return { success: true };
 }
 
-// In-memory quick lookup cache for validated and revoked session token digests
+// In-memory quick lookup set for known-revoked session token digests (fast reject)
 const revokedTokensCache = new Set<string>();
-const validTokensCache = new Map<string, number>();
 
 /**
  * Checks PostgreSQL database to verify if token hash was explicitly revoked.
- * Protected with in-memory TTL cache and 1500ms timeout race.
+ * Every new request performs a direct DB lookup to guarantee immediate multi-instance revocation.
  */
 async function isTokenRevokedInDb(tokenDigest: string): Promise<boolean> {
   if (revokedTokensCache.has(tokenDigest)) {
     return true;
   }
 
-  const now = Date.now();
-  const validUntil = validTokensCache.get(tokenDigest);
-  if (validUntil && validUntil > now) {
-    return false;
-  }
-
   try {
     const { prisma } = await import("database");
     
-    const queryPromise = (prisma as any).adminAuditLog.findFirst({
+    const revoked = await (prisma as any).adminAuditLog.findFirst({
       where: {
         action: "SESSION_REVOKED",
         entityType: "Session",
@@ -275,17 +268,11 @@ async function isTokenRevokedInDb(tokenDigest: string): Promise<boolean> {
       select: { id: true },
     });
 
-    const timeoutPromise = new Promise((resolve) => setTimeout(() => resolve(null), 1500));
-    const revoked = await Promise.race([queryPromise, timeoutPromise]);
-
     if (revoked) {
       revokedTokensCache.add(tokenDigest);
-      validTokensCache.delete(tokenDigest);
       return true;
     }
 
-    // Cache valid status for 60 seconds to eliminate redundant pooler latency
-    validTokensCache.set(tokenDigest, now + 60000);
     return false;
   } catch {
     return false;
@@ -298,7 +285,6 @@ async function isTokenRevokedInDb(tokenDigest: string): Promise<boolean> {
 export async function revokeSession(token: string): Promise<void> {
   const tokenDigest = hashToken(token);
   revokedTokensCache.add(tokenDigest);
-  validTokensCache.delete(tokenDigest);
 
   try {
     const { prisma } = await import("database");
