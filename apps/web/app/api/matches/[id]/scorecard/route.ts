@@ -3,8 +3,18 @@ import { getMatchDetail } from '@/lib/scoring/scoring-service';
 
 export const dynamic = 'force-dynamic';
 
-// In-Memory RAM Cache to handle hundreds of concurrent viewers with zero database load
+const MAX_SCORECARD_CACHE_ENTRIES = 100;
 const scorecardCache = new Map<string, { data: any; expiresAt: number }>();
+
+function pruneExpiredCache(now: number) {
+  if (scorecardCache.size > MAX_SCORECARD_CACHE_ENTRIES) {
+    for (const [key, entry] of scorecardCache.entries()) {
+      if (entry.expiresAt < now) {
+        scorecardCache.delete(key);
+      }
+    }
+  }
+}
 
 export async function GET(
   request: Request,
@@ -12,8 +22,13 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
+    if (!id || typeof id !== 'string' || id.length > 64) {
+      return NextResponse.json({ success: false, error: 'Invalid match ID' }, { status: 400 });
+    }
+
+    const cleanId = id.trim();
     const now = Date.now();
-    const cached = scorecardCache.get(id);
+    const cached = scorecardCache.get(cleanId);
 
     if (cached && cached.expiresAt > now) {
       return NextResponse.json(
@@ -27,14 +42,15 @@ export async function GET(
       );
     }
 
-    const match = await getMatchDetail(id);
+    const match = await getMatchDetail(cleanId);
 
     if (!match) {
       return NextResponse.json({ success: false, error: 'Match not found' }, { status: 404 });
     }
 
-    // Cache in RAM for 2.5 seconds (protects database from 100+ simultaneous page requests)
-    scorecardCache.set(id, { data: match, expiresAt: now + 2500 });
+    // Prune stale cache entries before inserting
+    pruneExpiredCache(now);
+    scorecardCache.set(cleanId, { data: match, expiresAt: now + 2500 });
 
     return NextResponse.json(
       { success: true, match },

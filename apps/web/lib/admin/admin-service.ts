@@ -131,7 +131,9 @@ export interface RegistrationsQuery {
  * Returns paginated, searchable, and filtered registration records.
  */
 export async function getRegistrationsList(params: RegistrationsQuery = {}) {
-  const { status, backupStatus, search, page = 1, limit = 15 } = params;
+  const page = Math.max(1, Number(params.page) || 1);
+  const limit = Math.min(Math.max(1, Number(params.limit) || 15), 50);
+  const { status, backupStatus, search } = params;
   const skip = (page - 1) * limit;
 
   const where: any = {};
