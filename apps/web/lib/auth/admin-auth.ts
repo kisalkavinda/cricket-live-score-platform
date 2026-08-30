@@ -3,38 +3,84 @@ import { cache } from "react";
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import crypto from "crypto";
+import { checkRateLimit } from "@/lib/utils/rate-limiter";
 
+import fs from "fs";
+import path from "path";
 
 const ADMIN_COOKIE_NAME = "cpl_admin_session";
-
-// In-memory rate limiting map for login attempts per IP
-// Map<ip, { attempts: number; lastAttempt: number; lockedUntil: number }>
-const loginAttemptsMap = new Map<string, { attempts: number; lastAttempt: number; lockedUntil: number }>();
 const MAX_FAILED_ATTEMPTS = 5;
-const LOCKOUT_DURATION_MS = 15 * 60 * 1000; // 15 minutes
+const LOCKOUT_DURATION_MS = 15 * 60 * 1000;
+const MAX_LOGIN_ATTEMPTS = MAX_FAILED_ATTEMPTS;
+const LOCKOUT_DURATION_SECONDS = Math.floor(LOCKOUT_DURATION_MS / 1000);
+
+// In-memory quick lookup cache for revoked session token digests
+const revokedTokensCache = new Set<string>();
+
+/**
+ * Dynamically resolves an environment variable from process.env or .env file fallback.
+ */
+function getEnvValue(key: string): string | undefined {
+  if (process.env[key] && process.env[key]!.trim()) {
+    return process.env[key]!.trim();
+  }
+
+  try {
+    const cwd = process.cwd();
+    const envPaths = [
+      path.join(cwd, ".env"),
+      path.join(cwd, ".env.local"),
+      path.join(cwd, "apps/web/.env"),
+      path.join(cwd, "apps/web/.env.local"),
+      path.resolve(cwd, "../.env"),
+      path.resolve(__dirname, "../../../.env"),
+      path.resolve(__dirname, "../../../../.env"),
+    ];
+
+    for (const envFilePath of envPaths) {
+      if (fs.existsSync(envFilePath)) {
+        const content = fs.readFileSync(envFilePath, "utf8");
+        const match = content.match(new RegExp(`^${key}\\s*=\\s*["']?([^"'\\r\\n]+)["']?`, "m"));
+        if (match && match[1]) {
+          process.env[key] = match[1].trim();
+          return match[1].trim();
+        }
+      }
+    }
+  } catch {}
+
+  return undefined;
+}
 
 /**
  * Returns the secret admin entry path configured in environment.
  * Throws a safe configuration error if not configured.
  */
 export function getAdminEntryPath(): string {
-  const path = process.env.ADMIN_ENTRY_PATH;
-  if (!path || !path.trim()) {
+  const adminPath = getEnvValue("ADMIN_ENTRY_PATH");
+  if (!adminPath || !adminPath.trim()) {
     throw new Error("ADMIN_ENTRY_PATH is not configured in server environment.");
   }
-  // Sanitize leading/trailing slashes
-  return path.trim().replace(/^\/+|\/+$/g, "");
+  return adminPath.trim().replace(/^\/+|\/+$/g, "");
 }
 
 /**
  * Verifies that required admin secrets are defined.
  */
 function getAdminSecrets(): { password: string; secret: string } {
-  const password = process.env.ADMIN_PASSWORD;
-  const secret = process.env.ADMIN_SESSION_SECRET;
+  const passwordHash = getEnvValue("ADMIN_PASSWORD_HASH");
+  const fallbackPassword = getEnvValue("ADMIN_PASSWORD");
+  const secret = getEnvValue("ADMIN_SESSION_SECRET");
+
+  // In production, strictly mandate salted scrypt hash
+  if (process.env.NODE_ENV === "production" && !passwordHash?.startsWith("$scrypt$")) {
+    throw new Error("Production requires ADMIN_PASSWORD_HASH with salted scrypt format.");
+  }
+
+  const password = passwordHash || fallbackPassword;
 
   if (!password || !password.trim()) {
-    throw new Error("ADMIN_PASSWORD is not configured in server environment.");
+    throw new Error("ADMIN_PASSWORD_HASH is not configured in server environment.");
   }
   if (!secret || !secret.trim()) {
     throw new Error("ADMIN_SESSION_SECRET is not configured in server environment.");
@@ -44,12 +90,52 @@ function getAdminSecrets(): { password: string; secret: string } {
 }
 
 /**
- * Creates a signed HMAC token for single admin session.
+ * Constant-time cryptographic password verification.
+ * Supports:
+ * 1. $scrypt$<salt>$<hash> salted password format
+ * 2. Standard constant-time scrypt derivation against stored credentials
+ */
+export function verifyPassword(inputPassword: string, storedCredential: string): boolean {
+  if (!inputPassword || !storedCredential) return false;
+
+  try {
+    if (storedCredential.startsWith("$scrypt$")) {
+      const parts = storedCredential.split("$");
+      if (parts.length === 4) {
+        const salt = parts[2];
+        const expectedHash = parts[3];
+        const derivedKey = crypto.scryptSync(inputPassword, salt, 32).toString("hex");
+        return crypto.timingSafeEqual(Buffer.from(derivedKey, "hex"), Buffer.from(expectedHash, "hex"));
+      }
+    }
+
+    // Default salted constant-time comparison
+    const salt = crypto.createHash("sha256").update(storedCredential).digest("hex").slice(0, 16);
+    const inputDigest = crypto.scryptSync(inputPassword, salt, 32);
+    const storedDigest = crypto.scryptSync(storedCredential, salt, 32);
+
+    if (inputDigest.length !== storedDigest.length) return false;
+    return crypto.timingSafeEqual(inputDigest, storedDigest);
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Computes a SHA-256 hash of a session token for storage/lookup.
+ */
+function hashToken(token: string): string {
+  return crypto.createHash("sha256").update(token).digest("hex");
+}
+
+/**
+ * Creates a signed HMAC token for single admin session with a random cryptographic nonce.
  */
 function createSessionToken(): string {
   const { secret } = getAdminSecrets();
   const timestamp = Date.now();
-  const payload = `PRIMARY_ADMIN:${timestamp}`;
+  const nonce = crypto.randomBytes(16).toString("hex");
+  const payload = `PRIMARY_ADMIN:${timestamp}:${nonce}`;
   const signature = crypto
     .createHmac("sha256", secret)
     .update(payload)
@@ -60,13 +146,13 @@ function createSessionToken(): string {
 /**
  * Verifies the HMAC token signature and 24h freshness.
  */
-function verifySessionToken(token: string): { valid: boolean; username?: string } {
+function verifySessionToken(token: string): { valid: boolean; username?: string; tokenDigest?: string } {
   try {
     const { secret } = getAdminSecrets();
     const parts = token.split(":");
-    if (parts.length !== 3) return { valid: false };
+    if (parts.length !== 4) return { valid: false };
 
-    const [username, timestampStr, signature] = parts;
+    const [username, timestampStr, nonce, signature] = parts;
     const timestamp = parseInt(timestampStr, 10);
     if (isNaN(timestamp)) return { valid: false };
 
@@ -75,14 +161,27 @@ function verifySessionToken(token: string): { valid: boolean; username?: string 
       return { valid: false };
     }
 
-    const payload = `${username}:${timestampStr}`;
+    // Signature must be exactly 64 hex characters
+    if (!signature || signature.length !== 64) {
+      return { valid: false };
+    }
+
+    const payload = `${username}:${timestampStr}:${nonce}`;
     const expectedSignature = crypto
       .createHmac("sha256", secret)
       .update(payload)
       .digest("hex");
 
-    if (crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expectedSignature))) {
-      return { valid: true, username };
+    const sigBuf = Buffer.from(signature, "hex");
+    const expectedBuf = Buffer.from(expectedSignature, "hex");
+
+    if (sigBuf.length !== expectedBuf.length) {
+      return { valid: false };
+    }
+
+    if (crypto.timingSafeEqual(sigBuf, expectedBuf)) {
+      const tokenDigest = hashToken(token);
+      return { valid: true, username, tokenDigest };
     }
     return { valid: false };
   } catch {
@@ -103,67 +202,24 @@ async function getClientIp(): Promise<string> {
 }
 
 /**
- * Checks and records rate-limiting for login attempts.
- */
-async function checkRateLimit(): Promise<{ allowed: boolean; remainingMinutes?: number }> {
-  const ip = await getClientIp();
-  const now = Date.now();
-  const record = loginAttemptsMap.get(ip);
-
-  if (!record) {
-    return { allowed: true };
-  }
-
-  if (record.lockedUntil > now) {
-    const remainingMinutes = Math.ceil((record.lockedUntil - now) / 60000);
-    return { allowed: false, remainingMinutes };
-  }
-
-  // Reset if last attempt was older than lockout window
-  if (now - record.lastAttempt > LOCKOUT_DURATION_MS) {
-    loginAttemptsMap.delete(ip);
-    return { allowed: true };
-  }
-
-  return { allowed: true };
-}
-
-async function recordFailedAttempt(): Promise<void> {
-  const ip = await getClientIp();
-  const now = Date.now();
-  const record = loginAttemptsMap.get(ip) || { attempts: 0, lastAttempt: now, lockedUntil: 0 };
-
-  record.attempts += 1;
-  record.lastAttempt = now;
-
-  if (record.attempts >= MAX_FAILED_ATTEMPTS) {
-    record.lockedUntil = now + LOCKOUT_DURATION_MS;
-  }
-
-  loginAttemptsMap.set(ip, record);
-}
-
-async function resetRateLimit(): Promise<void> {
-  const ip = await getClientIp();
-  loginAttemptsMap.delete(ip);
-}
-
-/**
  * Authenticates admin credentials and sets HttpOnly session cookie.
  */
 export async function loginAdmin(password: string): Promise<{ success: boolean; error?: string }> {
-  const rateLimit = await checkRateLimit();
+  const ip = await getClientIp();
+  const rateLimit = await checkRateLimit(`login:${ip}`, MAX_LOGIN_ATTEMPTS, LOCKOUT_DURATION_SECONDS);
+
   if (!rateLimit.allowed) {
+    const remainingMinutes = Math.ceil(LOCKOUT_DURATION_SECONDS / 60);
     return {
       success: false,
-      error: `Too many failed attempts. Access temporarily locked for ${rateLimit.remainingMinutes} minute(s).`,
+      error: `Too many failed attempts. Access temporarily locked for ${remainingMinutes} minute(s).`,
     };
   }
 
-  let adminPassword = "";
+  let adminCredential = "";
   try {
     const secrets = getAdminSecrets();
-    adminPassword = secrets.password;
+    adminCredential = secrets.password;
   } catch (err: unknown) {
     return {
       success: false,
@@ -171,13 +227,9 @@ export async function loginAdmin(password: string): Promise<{ success: boolean; 
     };
   }
 
-  if (password !== adminPassword) {
-    await recordFailedAttempt();
+  if (!verifyPassword(password, adminCredential)) {
     return { success: false, error: "Invalid credentials." };
   }
-
-  // Reset rate limit on success
-  await resetRateLimit();
 
   const token = createSessionToken();
   const cookieStore = await cookies();
@@ -194,18 +246,76 @@ export async function loginAdmin(password: string): Promise<{ success: boolean; 
 }
 
 /**
- * Logs out the admin by destroying the session cookie and redirecting to the secret entry page.
+ * Checks PostgreSQL database to verify if token hash was explicitly revoked.
+ */
+async function isTokenRevokedInDb(tokenDigest: string): Promise<boolean> {
+  if (revokedTokensCache.has(tokenDigest)) {
+    return true;
+  }
+
+  try {
+    const { prisma } = await import("database");
+    const revoked = await (prisma as any).adminAuditLog.findFirst({
+      where: {
+        action: "SESSION_REVOKED",
+        entityType: "Session",
+        entityId: tokenDigest,
+      },
+      select: { id: true },
+    });
+
+    if (revoked) {
+      revokedTokensCache.add(tokenDigest);
+      return true;
+    }
+    return false;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Revokes a session token by persisting a revocation record to PostgreSQL.
+ */
+export async function revokeSession(token: string): Promise<void> {
+  const tokenDigest = hashToken(token);
+  revokedTokensCache.add(tokenDigest);
+
+  try {
+    const { prisma } = await import("database");
+    await (prisma as any).adminAuditLog.create({
+      data: {
+        action: "SESSION_REVOKED",
+        entityType: "Session",
+        entityId: tokenDigest,
+        description: "Admin session revoked upon logout",
+        performedBy: "PRIMARY_ADMIN",
+      },
+    });
+  } catch (err) {
+    console.error("[revokeSession] Error persisting session revocation:", err);
+  }
+}
+
+/**
+ * Logs out the admin by revoking the session token server-side and deleting the cookie.
  */
 export async function logoutAdmin(): Promise<void> {
   const cookieStore = await cookies();
+  const sessionCookie = cookieStore.get(ADMIN_COOKIE_NAME);
+
+  if (sessionCookie?.value) {
+    await revokeSession(sessionCookie.value);
+  }
+
   cookieStore.delete(ADMIN_COOKIE_NAME);
   const entryPath = getAdminEntryPath();
   redirect(`/${entryPath}`);
 }
 
 /**
- * Verifies if current request has a valid admin session.
- * Request-scoped via React cache to deduplicate layout/page checks within a single request.
+ * Verifies if current request has a valid, non-revoked admin session.
+ * Request-scoped via React cache.
  */
 export const getAdminSession = cache(async (): Promise<{ authenticated: boolean; username?: string }> => {
   const cookieStore = await cookies();
@@ -215,19 +325,66 @@ export const getAdminSession = cache(async (): Promise<{ authenticated: boolean;
     return { authenticated: false };
   }
 
-  const { valid, username } = verifySessionToken(sessionCookie.value);
-  if (!valid) {
+  const { valid, username, tokenDigest } = verifySessionToken(sessionCookie.value);
+  if (!valid || !tokenDigest) {
+    return { authenticated: false };
+  }
+
+  // Verify against database revocation list
+  const isRevoked = await isTokenRevokedInDb(tokenDigest);
+  if (isRevoked) {
     return { authenticated: false };
   }
 
   return { authenticated: true, username: username || "PRIMARY_ADMIN" };
 });
 
+/**
+ * Validates Origin and Referer headers against Host header for state-changing requests (CSRF Protection).
+ */
+export async function verifyCsrfOrigin(): Promise<boolean> {
+  const headerList = await headers();
+  const host = headerList.get("host");
+  const origin = headerList.get("origin");
+  const referer = headerList.get("referer");
+
+  if (!host) return true;
+
+  if (origin) {
+    try {
+      const originHost = new URL(origin).host;
+      if (originHost !== host) {
+        return false;
+      }
+    } catch {
+      return false;
+    }
+  }
+
+  if (referer) {
+    try {
+      const refererHost = new URL(referer).host;
+      if (refererHost !== host) {
+        return false;
+      }
+    } catch {
+      return false;
+    }
+  }
+
+  return true;
+}
 
 /**
- * Server-side guard that redirects unauthenticated requests to the secret admin entry page.
+ * Server-side guard that redirects unauthenticated requests to the secret admin entry page
+ * and validates CSRF Origin headers.
  */
 export async function requireAdminAuth(): Promise<{ username: string }> {
+  const isOriginValid = await verifyCsrfOrigin();
+  if (!isOriginValid) {
+    throw new Error("Cross-origin request forbidden.");
+  }
+
   const session = await getAdminSession();
   if (!session.authenticated || !session.username) {
     const entryPath = getAdminEntryPath();

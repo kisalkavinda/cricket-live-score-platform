@@ -6,10 +6,10 @@
     "semantic_hash": "5c6fe45b2b34346fecb0b2df2fa3333e"
   },
   "apps/web/app/[secretPath]/(admin)/layout.tsx": {
-    "mtime": 1786812119.144195,
-    "seen": 1788034975.222855,
-    "ast_hash": "fdd35575dcf183139f2f11e0ed6c2c88",
-    "semantic_hash": "fdd35575dcf183139f2f11e0ed6c2c88"
+    "mtime": 1788076150.0420926,
+    "seen": 1788076481.3319716,
+    "ast_hash": "82e4df4700da19978c142905d5f50e18",
+    "semantic_hash": ""
   },
   "apps/web/app/[secretPath]/(admin)/matches/[id]/score/ScoringConsole.tsx": {
     "mtime": 1786809229.95216,
@@ -150,10 +150,10 @@
     "semantic_hash": "f47c90966292fa10798afc2cea065c88"
   },
   "apps/web/app/api/matches/[id]/scorecard/route.ts": {
-    "mtime": 1787857444.9180226,
-    "seen": 1788034975.22289,
-    "ast_hash": "cf7e3e389c6049fb89ee5af55a6df3bc",
-    "semantic_hash": "cf7e3e389c6049fb89ee5af55a6df3bc"
+    "mtime": 1788076196.3512785,
+    "seen": 1788076481.3385606,
+    "ast_hash": "7a1b48bb5d85fd43a9aae46a684b6786",
+    "semantic_hash": ""
   },
   "apps/web/app/api/matches/live/route.ts": {
     "mtime": 1787857451.2862213,
@@ -162,10 +162,10 @@
     "semantic_hash": "b39c12b1d866558caeb6a0e990e051aa"
   },
   "apps/web/app/api/registrations/route.ts": {
-    "mtime": 1786820333.9493866,
-    "seen": 1788034975.2228923,
-    "ast_hash": "fac168c618ad2ba0e65c4f0570120e77",
-    "semantic_hash": "fac168c618ad2ba0e65c4f0570120e77"
+    "mtime": 1788076188.7446053,
+    "seen": 1788076481.338674,
+    "ast_hash": "243195d90dc55f617a9420ae5c751bb6",
+    "semantic_hash": ""
   },
   "apps/web/app/api/tournament/stats/route.ts": {
     "mtime": 1788034113.9252312,
@@ -234,10 +234,10 @@
     "semantic_hash": "5b460a5d0df1ea81416652cd74474593"
   },
   "apps/web/components/LiveScoreWidget.tsx": {
-    "mtime": 1788034254.588605,
-    "seen": 1788034975.2229059,
-    "ast_hash": "c0b531dba725a634daf52d48b7142363",
-    "semantic_hash": "c0b531dba725a634daf52d48b7142363"
+    "mtime": 1788036212.2630653,
+    "seen": 1788036336.6219053,
+    "ast_hash": "9f350b8c3fd5d44b6195f87500760db4",
+    "semantic_hash": ""
   },
   "apps/web/components/LottieAnimation.tsx": {
     "mtime": 1786469723.4836452,
@@ -372,10 +372,10 @@
     "semantic_hash": "86ee0408066c88c00d58cf95dbf5d865"
   },
   "apps/web/components/scoring/ScoringConsole.tsx": {
-    "mtime": 1788034768.632093,
-    "seen": 1788034975.2229335,
-    "ast_hash": "73c03bd7a4cac952bff3bb9189f893cd",
-    "semantic_hash": "73c03bd7a4cac952bff3bb9189f893cd"
+    "mtime": 1788035545.5562978,
+    "seen": 1788035584.728193,
+    "ast_hash": "93987d4d621f883c4d0fcf41dd9df045",
+    "semantic_hash": ""
   },
   "apps/web/config/tournament.ts": {
     "mtime": 1787817694.004606,
@@ -390,16 +390,16 @@
     "semantic_hash": "dfa1f5f6a7037bf39dc510f30b180002"
   },
   "apps/web/lib/admin/admin-actions.ts": {
-    "mtime": 1787066043.5147967,
-    "seen": 1788034975.2229369,
-    "ast_hash": "f7af1c2dde0464b61caded97398d1247",
-    "semantic_hash": "f7af1c2dde0464b61caded97398d1247"
+    "mtime": 1788076365.3788095,
+    "seen": 1788076481.343039,
+    "ast_hash": "f47bc075a6921205a0dbc0b73a932d74",
+    "semantic_hash": ""
   },
   "apps/web/lib/admin/admin-service.ts": {
-    "mtime": 1787066043.5160463,
-    "seen": 1788034975.222938,
-    "ast_hash": "e9bef09ba0252d70f2ed293c2a966586",
-    "semantic_hash": "e9bef09ba0252d70f2ed293c2a966586"
+    "mtime": 1788076179.9064586,
+    "seen": 1788076481.3430407,
+    "ast_hash": "ad7d585c211e6f96f440ab8036332349",
+    "semantic_hash": ""
   },
   "apps/web/lib/api/registrations.ts": {
     "mtime": 1786776428.707311,
@@ -408,10 +408,10 @@
     "semantic_hash": "97fb7eaf494d5a4a2bde05b17f598106"
   },
   "apps/web/lib/auth/admin-auth.ts": {
-    "mtime": 1786809083.0145085,
-    "seen": 1788034975.2229404,
-    "ast_hash": "55e80da778a58e1dfca59e8d9aeeca9e",
-    "semantic_hash": "55e80da778a58e1dfca59e8d9aeeca9e"
+    "mtime": 1788076603.3115597,
+    "seen": 1788077350.3359797,
+    "ast_hash": "dda5f6f27b67ffcc6dca6c21a9d64a36",
+    "semantic_hash": ""
   },
   "apps/web/lib/public/teams.ts": {
     "mtime": 1786802286.6214497,
@@ -444,10 +444,10 @@
     "semantic_hash": "c545fda8c62c80f1c29b2d9fe8703f24"
   },
   "apps/web/lib/scoring/scoring-actions.ts": {
-    "mtime": 1788032408.6518712,
-    "seen": 1788034975.2229474,
-    "ast_hash": "6f971e888fa49dc12190a7a382612d14",
-    "semantic_hash": "6f971e888fa49dc12190a7a382612d14"
+    "mtime": 1788076161.3848743,
+    "seen": 1788076481.3436816,
+    "ast_hash": "5065851970cafc802693fc8db2893c3e",
+    "semantic_hash": ""
   },
   "apps/web/lib/scoring/scoring-realtime.ts": {
     "mtime": 1788033431.4580822,
@@ -456,10 +456,10 @@
     "semantic_hash": "6d28671e0c06d19eb35a25d081e5e01d"
   },
   "apps/web/lib/scoring/scoring-service.ts": {
-    "mtime": 1788034750.2315228,
-    "seen": 1788034975.2229497,
-    "ast_hash": "6d4ac598a4e5939823c44fd0f7edf172",
-    "semantic_hash": "6d4ac598a4e5939823c44fd0f7edf172"
+    "mtime": 1788035225.37704,
+    "seen": 1788035584.7296526,
+    "ast_hash": "775ff5d77b04ea615d8215d6e0e25168",
+    "semantic_hash": ""
   },
   "apps/web/lib/utils/perf-logger.ts": {
     "mtime": 1786809083.015513,
@@ -474,10 +474,10 @@
     "semantic_hash": "8b27312f2cf7c70f37836f9778a76b49"
   },
   "apps/web/next.config.ts": {
-    "mtime": 1786803181.5841548,
-    "seen": 1788034975.2229536,
-    "ast_hash": "1d0eb7d28f2ac80b1af591b5c7630da2",
-    "semantic_hash": "1d0eb7d28f2ac80b1af591b5c7630da2"
+    "mtime": 1788076516.1666038,
+    "seen": 1788077350.3383982,
+    "ast_hash": "3426e6588664779461929884bc4fc637",
+    "semantic_hash": ""
   },
   "apps/web/package.json": {
     "mtime": 1786805052.2394636,
@@ -580,5 +580,95 @@
     "seen": 1788034975.2229755,
     "ast_hash": "c24761f2f025888410db45036ea2eb70",
     "semantic_hash": "c24761f2f025888410db45036ea2eb70"
+  },
+  "apps/web/AGENTS.md": {
+    "mtime": 1786217172.1520364,
+    "seen": 1788035584.732092,
+    "ast_hash": "01e8142356e15c3404e0d84c48187cd0",
+    "semantic_hash": ""
+  },
+  "apps/web/CLAUDE.md": {
+    "mtime": 1786217172.152576,
+    "seen": 1788035584.7320948,
+    "ast_hash": "5c27369b226fcf2be8a6cfe52224e767",
+    "semantic_hash": ""
+  },
+  "apps/web/README.md": {
+    "mtime": 1786217044.9934902,
+    "seen": 1788035584.7320962,
+    "ast_hash": "f15aaa42d5d299d091b1171097ea56ad",
+    "semantic_hash": ""
+  },
+  "docs/cricket-platform-build-guide.md": {
+    "mtime": 1786216839.8610706,
+    "seen": 1788035584.7320974,
+    "ast_hash": "e412e3232458ea7453ebc0f15f2469c1",
+    "semantic_hash": ""
+  },
+  "docs/cricket-platform-full-summary (1).md": {
+    "mtime": 1786216553.8367693,
+    "seen": 1788035584.7320988,
+    "ast_hash": "3f4ab3879435169c0eda7ecd0f852e8d",
+    "semantic_hash": ""
+  },
+  "apps/web/public/file.svg": {
+    "mtime": 1786217045.1334047,
+    "seen": 1788035584.732101,
+    "ast_hash": "d09f95206c3fa0bb9bd9fefabfd0ea71",
+    "semantic_hash": ""
+  },
+  "apps/web/public/globe.svg": {
+    "mtime": 1786217045.1744926,
+    "seen": 1788035584.7321024,
+    "ast_hash": "2aaafa6a49b6563925fe440891e32717",
+    "semantic_hash": ""
+  },
+  "apps/web/public/next.svg": {
+    "mtime": 1786217045.2021534,
+    "seen": 1788035584.7321038,
+    "ast_hash": "8e061864f388b47f33a1c3780831193e",
+    "semantic_hash": ""
+  },
+  "apps/web/public/vercel.svg": {
+    "mtime": 1786217045.227741,
+    "seen": 1788035584.7321057,
+    "ast_hash": "c0af2f507b369b085b35ef4bbe3bcf1e",
+    "semantic_hash": ""
+  },
+  "apps/web/public/window.svg": {
+    "mtime": 1786217045.2494369,
+    "seen": 1788035584.7321072,
+    "ast_hash": "a2760511c65806022ad20adf74370ff3",
+    "semantic_hash": ""
+  },
+  "apps/web/lib/utils/rate-limiter.ts": {
+    "mtime": 1788076125.9780896,
+    "seen": 1788076481.3439856,
+    "ast_hash": "63894ac5a52156f650eb8131a9ef4386",
+    "semantic_hash": ""
+  },
+  "apps/web/lib/validations/admin.ts": {
+    "mtime": 1788076354.7181966,
+    "seen": 1788076481.3439875,
+    "ast_hash": "120eef5eb344e64ab2a5d90ba2412119",
+    "semantic_hash": ""
+  },
+  "apps/web/lib/validations/scoring.ts": {
+    "mtime": 1788076349.0163715,
+    "seen": 1788076481.344093,
+    "ast_hash": "ee92f5ce053690f5b9dfc6957208c0d3",
+    "semantic_hash": ""
+  },
+  "apps/web/middleware.ts": {
+    "mtime": 1788076214.8427038,
+    "seen": 1788076481.3440948,
+    "ast_hash": "99722fc9ebb69c0103a0d37ed864b40c",
+    "semantic_hash": ""
+  },
+  "apps/web/tests/security-overhaul.test.js": {
+    "mtime": 1788077473.2404432,
+    "seen": 1788077501.9218898,
+    "ast_hash": "329d135f33a0e94aa4341b0b7ef89588",
+    "semantic_hash": ""
   }
 }

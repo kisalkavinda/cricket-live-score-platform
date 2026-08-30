@@ -1,13 +1,70 @@
 import { NextResponse } from "next/server";
 import { createRegistration } from "@/lib/registrations/registration-service";
+import { checkRateLimit } from "@/lib/utils/rate-limiter";
+
+const MAX_PAYLOAD_BYTES = 32 * 1024; // 32 KB limit
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
+    // 1. IP Rate Limiting: 10 registration submissions per 10 minutes per IP
+    const forwardedFor = request.headers.get("x-forwarded-for");
+    const ip = forwardedFor ? forwardedFor.split(",")[0].trim() : request.headers.get("x-real-ip") || "127.0.0.1";
+
+    const rateLimit = await checkRateLimit(`reg:${ip}`, 10, 600);
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Too many registration attempts. Please wait a few minutes and try again.",
+        },
+        {
+          status: 429,
+          headers: {
+            "Retry-After": "600",
+          },
+        }
+      );
+    }
+
+    // 2. Payload size check
+    const contentLength = request.headers.get("content-length");
+    if (contentLength && parseInt(contentLength, 10) > MAX_PAYLOAD_BYTES) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Request payload exceeds the maximum allowed size (32 KB).",
+        },
+        { status: 413 }
+      );
+    }
+
+    const rawText = await request.text();
+    if (rawText.length > MAX_PAYLOAD_BYTES) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Request payload exceeds the maximum allowed size.",
+        },
+        { status: 413 }
+      );
+    }
+
+    let body: any;
+    try {
+      body = JSON.parse(rawText);
+    } catch {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Invalid JSON format.",
+        },
+        { status: 400 }
+      );
+    }
+
     const result = await createRegistration(body);
 
     if (!result.success) {
-      console.warn("[API /api/registrations 400]", result.error, result.details);
       return NextResponse.json(result, { status: 400 });
     }
 
