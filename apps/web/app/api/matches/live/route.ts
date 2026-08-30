@@ -40,6 +40,14 @@ export async function GET() {
     );
   } catch (error: any) {
     console.error('[/api/matches/live] Error:', error);
-    return NextResponse.json({ success: false, error: 'Failed to fetch live matches' }, { status: 500 });
+    return NextResponse.json(
+      { success: true, matches: liveMatchesCache?.data || [] },
+      {
+        headers: {
+          'X-Cache': 'FALLBACK',
+          'Cache-Control': 'no-cache, no-store',
+        },
+      }
+    );
   }
 }
