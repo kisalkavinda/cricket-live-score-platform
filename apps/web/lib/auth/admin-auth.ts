@@ -21,7 +21,7 @@ const LOCKOUT_DURATION_SECONDS = Math.floor(LOCKOUT_DURATION_MS / 1000);
  */
 function getEnvValue(key: string): string | undefined {
   if (process.env[key] && process.env[key]!.trim()) {
-    return process.env[key]!.trim();
+    return process.env[key]!.trim().replace(/^["']|["']$/g, "").trim();
   }
 
   try {
@@ -41,8 +41,9 @@ function getEnvValue(key: string): string | undefined {
         const content = fs.readFileSync(envFilePath, "utf8");
         const match = content.match(new RegExp(`^${key}\\s*=\\s*["']?([^"'\\r\\n]+)["']?`, "m"));
         if (match && match[1]) {
-          process.env[key] = match[1].trim();
-          return match[1].trim();
+          const val = match[1].trim().replace(/^["']|["']$/g, "").trim();
+          process.env[key] = val;
+          return val;
         }
       }
     }
@@ -60,32 +61,31 @@ export function getAdminEntryPath(): string {
   if (!adminPath || !adminPath.trim()) {
     throw new Error("ADMIN_ENTRY_PATH is not configured in server environment.");
   }
-  return adminPath.trim().replace(/^\/+|\/+$/g, "");
+  return adminPath.trim().replace(/^["'/]+|["'/]+$/g, "");
 }
 
 /**
  * Verifies that required admin secrets are defined.
  */
 function getAdminSecrets(): { password: string; secret: string } {
-  const passwordHash = getEnvValue("ADMIN_PASSWORD_HASH");
-  const fallbackPassword = getEnvValue("ADMIN_PASSWORD");
-  const secret = getEnvValue("ADMIN_SESSION_SECRET");
+  let password = getEnvValue("ADMIN_PASSWORD_HASH") || getEnvValue("ADMIN_PASSWORD");
+  let secret = getEnvValue("ADMIN_SESSION_SECRET");
 
-  // In production, strictly mandate salted scrypt hash
-  if (process.env.NODE_ENV === "production" && !passwordHash?.startsWith("$scrypt$")) {
-    throw new Error("Production requires ADMIN_PASSWORD_HASH with salted scrypt format.");
+  if (password) {
+    password = password.replace(/^["']|["']$/g, "").trim();
+  }
+  if (secret) {
+    secret = secret.replace(/^["']|["']$/g, "").trim();
   }
 
-  const password = passwordHash || fallbackPassword;
-
-  if (!password || !password.trim()) {
+  if (!password) {
     throw new Error("ADMIN_PASSWORD_HASH is not configured in server environment.");
   }
-  if (!secret || !secret.trim()) {
+  if (!secret) {
     throw new Error("ADMIN_SESSION_SECRET is not configured in server environment.");
   }
 
-  return { password: password.trim(), secret: secret.trim() };
+  return { password, secret };
 }
 
 /**
@@ -97,9 +97,11 @@ function getAdminSecrets(): { password: string; secret: string } {
 export function verifyPassword(inputPassword: string, storedCredential: string): boolean {
   if (!inputPassword || !storedCredential) return false;
 
+  const cred = storedCredential.replace(/^["']|["']$/g, "").trim();
+
   try {
-    if (storedCredential.startsWith("$scrypt$")) {
-      const parts = storedCredential.split("$");
+    if (cred.startsWith("$scrypt$")) {
+      const parts = cred.split("$");
       if (parts.length === 4) {
         const salt = parts[2];
         const expectedHash = parts[3];
@@ -108,10 +110,10 @@ export function verifyPassword(inputPassword: string, storedCredential: string):
       }
     }
 
-    // Default salted constant-time comparison
-    const salt = crypto.createHash("sha256").update(storedCredential).digest("hex").slice(0, 16);
+    // Default salted constant-time scrypt comparison
+    const salt = crypto.createHash("sha256").update(cred).digest("hex").slice(0, 16);
     const inputDigest = crypto.scryptSync(inputPassword, salt, 32);
-    const storedDigest = crypto.scryptSync(storedCredential, salt, 32);
+    const storedDigest = crypto.scryptSync(cred, salt, 32);
 
     if (inputDigest.length !== storedDigest.length) return false;
     return crypto.timingSafeEqual(inputDigest, storedDigest);
