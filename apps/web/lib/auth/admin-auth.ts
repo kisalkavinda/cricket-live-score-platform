@@ -72,25 +72,30 @@ export function getAdminEntryPath(): string {
 /**
  * Verifies that required admin secrets are defined.
  */
-function getAdminSecrets(): { password: string; secret: string } {
-  let password = getEnvValue("ADMIN_PASSWORD_HASH") || getEnvValue("ADMIN_PASSWORD");
+function getAdminSecrets(): { password: string; secret: string; fallback?: string } {
+  let password = getEnvValue("ADMIN_PASSWORD_HASH");
+  let fallback = getEnvValue("ADMIN_PASSWORD");
   let secret = getEnvValue("ADMIN_SESSION_SECRET");
 
   if (password) {
     password = password.replace(/^["']|["']$/g, "").trim();
   }
+  if (fallback) {
+    fallback = fallback.replace(/^["']|["']$/g, "").trim();
+  }
   if (secret) {
     secret = secret.replace(/^["']|["']$/g, "").trim();
   }
 
-  if (!password) {
+  const primary = password || fallback;
+  if (!primary) {
     throw new Error("ADMIN_PASSWORD_HASH is not configured in server environment.");
   }
   if (!secret) {
     throw new Error("ADMIN_SESSION_SECRET is not configured in server environment.");
   }
 
-  return { password, secret };
+  return { password: primary, secret, fallback: fallback && fallback !== primary ? fallback : undefined };
 }
 
 /**
@@ -226,10 +231,9 @@ export async function loginAdmin(password: string): Promise<{ success: boolean; 
     };
   }
 
-  let adminCredential = "";
+  let secrets: { password: string; secret: string; fallback?: string };
   try {
-    const secrets = getAdminSecrets();
-    adminCredential = secrets.password;
+    secrets = getAdminSecrets();
   } catch (err: unknown) {
     return {
       success: false,
@@ -237,7 +241,9 @@ export async function loginAdmin(password: string): Promise<{ success: boolean; 
     };
   }
 
-  if (!verifyPassword(password, adminCredential)) {
+  const isValid = verifyPassword(password, secrets.password) || (secrets.fallback ? verifyPassword(password, secrets.fallback) : false);
+
+  if (!isValid) {
     return { success: false, error: "Invalid credentials." };
   }
 
