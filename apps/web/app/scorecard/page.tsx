@@ -30,6 +30,7 @@ function ScorecardContent() {
           cache: 'no-store',
           headers: { 'Cache-Control': 'no-cache', Pragma: 'no-cache' },
         });
+        if (!res.ok) return;
         const data = await res.json();
         if (data.success && data.match) {
           setMatch(data.match);
@@ -43,6 +44,7 @@ function ScorecardContent() {
           cache: 'no-store',
           headers: { 'Cache-Control': 'no-cache', Pragma: 'no-cache' },
         });
+        if (!res.ok) return;
         const data = await res.json();
         if (data.success && data.matches && data.matches.length > 0) {
           const firstMatchId = data.matches[0].matchId;
@@ -50,6 +52,7 @@ function ScorecardContent() {
             cache: 'no-store',
             headers: { 'Cache-Control': 'no-cache', Pragma: 'no-cache' },
           });
+          if (!matchRes.ok) return;
           const matchData = await matchRes.json();
           if (matchData.success && matchData.match) {
             setMatch(matchData.match);
