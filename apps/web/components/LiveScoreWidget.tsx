@@ -629,6 +629,11 @@ export default function LiveScoreWidget() {
                         ⚡ SUPER OVER
                       </div>
                     )}
+                    {currentMatch.isFreeHit && (
+                      <div style={{ marginTop: '6px', display: 'inline-flex', alignItems: 'center', gap: '4px', background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.3) 0%, rgba(234, 88, 12, 0.3) 100%)', border: '1.5px solid #F59E0B', color: '#FEF08A', fontSize: '0.72rem', fontWeight: 900, padding: '3px 10px', borderRadius: '20px', letterSpacing: '0.06em', textTransform: 'uppercase', boxShadow: '0 0 10px rgba(245, 158, 11, 0.4)' }}>
+                        ⚡ FREE HIT
+                      </div>
+                    )}
                   </div>
 
                   {/* Team B Score Block */}
