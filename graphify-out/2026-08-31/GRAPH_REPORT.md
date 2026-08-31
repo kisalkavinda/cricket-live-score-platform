@@ -1,16 +1,16 @@
-# Graph Report - cricket-platform  (2026-08-31)
+# Graph Report - cricket-platform  (2026-08-30)
 
 ## Corpus Check
-- 114 files · ~101,700 words
+- 113 files · ~101,176 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 764 nodes · 1339 edges · 49 communities (40 shown, 9 thin omitted)
+- 757 nodes · 1333 edges · 48 communities (39 shown, 9 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `fbf3e086`
+- Built from commit: `8b1f3c78`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -21,7 +21,7 @@
 - dependencies
 - database/package.json
 - RegistrationForm.tsx
-- createPerfTracker
+- index.ts
 - compilerOptions
 - security-overhaul.test.js
 - security-audit.test.js
@@ -46,7 +46,7 @@
 - requireAdminAuth
 - teams/[id]/page.tsx
 - admin-actions.ts
-- ExceptionCard.tsx
+- registration-exceptions/page.tsx
 - backup-sync.ts
 - live-security-recheck.test.js
 - (admin)/layout.tsx
@@ -54,9 +54,8 @@
 - e2e-system-verification.test.js
 - http-smoke-check.test.js
 - DeleteRegistrationButton.tsx
-- index.ts
+- createTournamentServerAction
 - inspect-and-clean-dummy-data.js
-- manual-cookie-replay-test.js
 
 ## God Nodes (most connected - your core abstractions)
 1. `requireAdminAuth()` - 85 edges
@@ -85,19 +84,19 @@
 ## Import Cycles
 - None detected.
 
-## Communities (49 total, 9 thin omitted)
+## Communities (48 total, 9 thin omitted)
 
 ### Community 0 - "admin-service.ts"
 Cohesion: 0.21
 Nodes (15): AdminRegistrationDetailPage(), RegistrationDetailClient(), RegistrationDetailClientProps, approveRegistrationServerAction(), rejectRegistrationServerAction(), retryBackupServerAction(), approveRegistrationTransaction(), DashboardStats (+7 more)
 
 ### Community 1 - "scoring-actions.ts"
-Cohesion: 0.06
-Nodes (76): dynamic, GET(), pruneExpiredCache(), scorecardCache, dynamic, GET(), dynamic, GET() (+68 more)
+Cohesion: 0.05
+Nodes (77): dynamic, GET(), pruneExpiredCache(), scorecardCache, dynamic, GET(), dynamic, GET() (+69 more)
 
 ### Community 2 - "app/page.tsx"
 Cohesion: 0.06
-Nodes (36): barlowCondensed, inter, jetbrainsMono, metadata, viewport, metadata, dynamic, metadata (+28 more)
+Nodes (35): barlowCondensed, inter, jetbrainsMono, metadata, viewport, metadata, dynamic, metadata (+27 more)
 
 ### Community 3 - "dependencies"
 Cohesion: 0.08
@@ -109,11 +108,11 @@ Nodes (24): dependencies, prisma, @prisma/client, ts-node, @types/node, typescri
 
 ### Community 5 - "RegistrationForm.tsx"
 Cohesion: 0.11
-Nodes (26): POST(), ConfirmationChecklist(), ConfirmationChecklistProps, FormError(), FormErrorProps, PlayerList(), PlayerListProps, PlayerRow() (+18 more)
+Nodes (25): ConfirmationChecklist(), ConfirmationChecklistProps, FormError(), FormErrorProps, PlayerList(), PlayerListProps, PlayerRow(), PlayerRowProps (+17 more)
 
-### Community 6 - "createPerfTracker"
-Cohesion: 0.10
-Nodes (28): AdminDashboardPage(), dynamic, AdminMatchesPage(), dynamic, AdminPlayersPage(), dynamic, getPlayers(), AdminRegistrationsPage() (+20 more)
+### Community 6 - "index.ts"
+Cohesion: 0.09
+Nodes (32): RegisterPage(), AdminDashboardPage(), dynamic, dynamic, AdminMatchesPage(), dynamic, AdminPlayersPage(), dynamic (+24 more)
 
 ### Community 7 - "compilerOptions"
 Cohesion: 0.07
@@ -140,8 +139,8 @@ Cohesion: 0.15
 Nodes (14): actionsSrc, assert(), failures, fs, has(), no(), path, realtimeSrc (+6 more)
 
 ### Community 13 - "admin-auth.ts"
-Cohesion: 0.14
-Nodes (21): AdminLoginClient(), SecretAdminEntryPage(), loginAdminServerAction(), createSessionToken(), getAdminSecrets(), getAdminSession, getClientIp(), getEnvValue() (+13 more)
+Cohesion: 0.13
+Nodes (22): POST(), AdminLoginClient(), SecretAdminEntryPage(), loginAdminServerAction(), createSessionToken(), getAdminSecrets(), getAdminSession, getClientIp() (+14 more)
 
 ### Community 14 - "test-google-sheets-connection.js"
 Cohesion: 0.33
@@ -180,12 +179,12 @@ Cohesion: 0.20
 Nodes (12): dynamic, TeamDetailPage(), DeleteTeamButton(), handleDelete(), DeleteTeamButtonProps, RemovePlayerFromTeamButton(), handleRemove(), RemovePlayerProps (+4 more)
 
 ### Community 37 - "admin-actions.ts"
-Cohesion: 0.16
-Nodes (16): NewTournamentPage(), handleSubmit(), createExceptionServerAction(), createTournamentServerAction(), logoutAdminServerAction(), createException(), logoutAdmin(), createExceptionSchema (+8 more)
+Cohesion: 0.21
+Nodes (13): createExceptionServerAction(), logoutAdminServerAction(), createException(), logoutAdmin(), createExceptionSchema, createPlayerSchema, createTeamSchema, createTournamentSchema (+5 more)
 
-### Community 38 - "ExceptionCard.tsx"
-Cohesion: 0.27
-Nodes (9): ExceptionCard(), handleDelete(), handleToggle(), handleUpdate(), ExceptionCardProps, deleteExceptionServerAction(), toggleExceptionServerAction(), updateExceptionServerAction() (+1 more)
+### Community 38 - "registration-exceptions/page.tsx"
+Cohesion: 0.20
+Nodes (12): dynamic, RegistrationExceptionsPage(), ExceptionCard(), handleDelete(), handleToggle(), handleUpdate(), ExceptionCardProps, deleteExceptionServerAction() (+4 more)
 
 ### Community 39 - "backup-sync.ts"
 Cohesion: 0.30
@@ -193,7 +192,7 @@ Nodes (12): recordFailedBackup(), retryRegistrationBackup(), sanitizeErrorMessag
 
 ### Community 40 - "live-security-recheck.test.js"
 Cohesion: 0.12
-Nodes (12): authCode, crypto, envContent, envPath, errors, fs, match, mockRevokedDb (+4 more)
+Nodes (11): authCode, crypto, envContent, envPath, errors, fs, match, mockRevokedDb (+3 more)
 
 ### Community 42 - "players/[id]/page.tsx"
 Cohesion: 0.33
@@ -211,33 +210,29 @@ Nodes (6): assert(), errors, get(), http, post(), runHttpCheck()
 Cohesion: 0.50
 Nodes (4): DeleteRegistrationButton(), handleDelete(), DeleteRegistrationButtonProps, deleteRegistrationServerAction()
 
-### Community 46 - "index.ts"
-Cohesion: 0.27
-Nodes (7): RegisterPage(), dynamic, dynamic, RegistrationExceptionsPage(), getExceptionsList(), globalForPrisma, prisma
-
-### Community 48 - "manual-cookie-replay-test.js"
-Cohesion: 0.33
-Nodes (4): crypto, http, prisma, { PrismaClient }
+### Community 46 - "createTournamentServerAction"
+Cohesion: 0.67
+Nodes (3): NewTournamentPage(), handleSubmit(), createTournamentServerAction()
 
 ## Knowledge Gaps
-- **345 isolated node(s):** `dynamic`, `dynamic`, `Tournament`, `Team`, `Props` (+340 more)
+- **340 isolated node(s):** `dynamic`, `dynamic`, `Tournament`, `Team`, `Props` (+335 more)
   These have ≤1 connection - possible missing edges or undocumented components.
 - **9 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `requireAdminAuth()` connect `requireAdminAuth` to `admin-service.ts`, `scoring-actions.ts`, `teams/[id]/page.tsx`, `admin-actions.ts`, `createPerfTracker`, `ExceptionCard.tsx`, `(admin)/layout.tsx`, `players/[id]/page.tsx`, `DeleteRegistrationButton.tsx`, `index.ts`, `admin-auth.ts`?**
-  _High betweenness centrality (0.048) - this node is a cross-community bridge._
-- **Why does `prisma` connect `index.ts` to `admin-service.ts`, `scoring-actions.ts`, `requireAdminAuth`, `teams/[id]/page.tsx`, `admin-actions.ts`, `createPerfTracker`, `backup-sync.ts`, `RegistrationForm.tsx`, `players/[id]/page.tsx`?**
+- **Why does `requireAdminAuth()` connect `requireAdminAuth` to `admin-service.ts`, `scoring-actions.ts`, `teams/[id]/page.tsx`, `admin-actions.ts`, `registration-exceptions/page.tsx`, `index.ts`, `(admin)/layout.tsx`, `players/[id]/page.tsx`, `DeleteRegistrationButton.tsx`, `createTournamentServerAction`, `admin-auth.ts`?**
+  _High betweenness centrality (0.049) - this node is a cross-community bridge._
+- **Why does `prisma` connect `index.ts` to `admin-service.ts`, `scoring-actions.ts`, `requireAdminAuth`, `teams/[id]/page.tsx`, `admin-actions.ts`, `registration-exceptions/page.tsx`, `backup-sync.ts`, `RegistrationForm.tsx`, `players/[id]/page.tsx`?**
   _High betweenness centrality (0.027) - this node is a cross-community bridge._
-- **Why does `getAdminEntryPath()` connect `requireAdminAuth` to `admin-service.ts`, `scoring-actions.ts`, `teams/[id]/page.tsx`, `admin-actions.ts`, `createPerfTracker`, `ExceptionCard.tsx`, `(admin)/layout.tsx`, `players/[id]/page.tsx`, `admin-auth.ts`, `index.ts`, `DeleteRegistrationButton.tsx`?**
+- **Why does `getAdminEntryPath()` connect `requireAdminAuth` to `admin-service.ts`, `scoring-actions.ts`, `teams/[id]/page.tsx`, `admin-actions.ts`, `index.ts`, `registration-exceptions/page.tsx`, `(admin)/layout.tsx`, `players/[id]/page.tsx`, `admin-auth.ts`, `createTournamentServerAction`, `DeleteRegistrationButton.tsx`?**
   _High betweenness centrality (0.015) - this node is a cross-community bridge._
 - **What connects `dynamic`, `dynamic`, `Tournament` to the rest of the system?**
-  _345 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _340 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `scoring-actions.ts` be split into smaller, more focused modules?**
-  _Cohesion score 0.05616509926854754 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.05468164794007491 - nodes in this community are weakly interconnected._
 - **Should `app/page.tsx` be split into smaller, more focused modules?**
-  _Cohesion score 0.06093189964157706 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.0633879781420765 - nodes in this community are weakly interconnected._
 - **Should `dependencies` be split into smaller, more focused modules?**
   _Cohesion score 0.08 - nodes in this community are weakly interconnected._
