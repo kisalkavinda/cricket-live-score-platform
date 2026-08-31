@@ -155,6 +155,17 @@ function ScorecardContent() {
   const currentInnings = match.innings?.find((i: any) => i.inningsNumber === match.currentInnings) || allInnings[allInnings.length - 1] || allInnings[0];
   const selectedInnings = match.innings?.find((i: any) => `inn${i.inningsNumber}` === activeTab) || currentInnings || allInnings[0];
 
+  const isFreeHit = (() => {
+    const balls = currentInnings?.ballEvents;
+    if (!balls || balls.length === 0) return false;
+    for (const b of balls) {
+      if (b.extraType === 'NO_BALL') return true;
+      if (b.extraType === 'WIDE') continue;
+      return false;
+    }
+    return false;
+  })();
+
   const ballsPerOver = match.ballsPerOver || match.tournament?.stages?.[0]?.ballsPerOver || 6;
 
   const getRunRate = (runs: number = 0, overs: number = 0, balls: number = 0) => {
@@ -302,6 +313,28 @@ function ScorecardContent() {
               )}
               {match.status}
             </span>
+
+            {match.status === 'LIVE' && isFreeHit && (
+              <span
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  padding: '4px 10px',
+                  borderRadius: '9999px',
+                  background: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)',
+                  color: '#000000',
+                  fontSize: '0.72rem',
+                  fontWeight: 900,
+                  letterSpacing: '0.08em',
+                  textTransform: 'uppercase',
+                  boxShadow: '0 0 10px rgba(245, 158, 11, 0.5)',
+                  fontFamily: 'var(--font-data)',
+                }}
+              >
+                ⚡ Free Hit
+              </span>
+            )}
 
             {lastLivePing && (
               <span style={{ fontSize: '0.72rem', color: 'rgba(255, 255, 255, 0.4)', fontFamily: 'var(--font-data)' }}>

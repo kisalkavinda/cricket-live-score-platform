@@ -51,6 +51,23 @@ export interface RecordDeliveryInput {
   expectedUpdatedAt?: string | Date;
 }
 
+/**
+ * Evaluates whether the next delivery is a Free Hit.
+ * In cricket rules:
+ * - A No Ball triggers a Free Hit on the next delivery.
+ * - If a Wide or another No Ball is bowled on the Free Hit, the Free Hit is retained.
+ * - A legal delivery (or Bye / Leg Bye) consumes the Free Hit.
+ */
+export function isFreeHitActive(ballEvents: Array<{ extraType?: string; isLegal?: boolean }>): boolean {
+  if (!ballEvents || ballEvents.length === 0) return false;
+  for (const b of ballEvents) {
+    if (b.extraType === 'NO_BALL') return true;
+    if (b.extraType === 'WIDE') continue;
+    return false;
+  }
+  return false;
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // 1. QUERY FUNCTIONS (Read-only, Fresh PostgreSQL data)
 // ─────────────────────────────────────────────────────────────────────────────
@@ -371,10 +388,13 @@ export async function buildMatchBroadcastPayload(matchOrId: string | any): Promi
     display: b.isWicket ? 'W' : (b.extraType === 'WIDE' ? 'WD' : (b.extraType === 'NO_BALL' ? 'NB' : `${b.runs ?? 0}`)),
   }));
 
+  const isFreeHit = isFreeHitActive(currentInnings?.ballEvents || []);
+
   return {
     matchId: match.id,
     status: match.status,
     currentInnings: match.currentInnings,
+    isFreeHit,
     match: {
       id: match.id,
       teamA: {
