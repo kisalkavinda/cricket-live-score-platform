@@ -281,12 +281,24 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
     return !isCurrentlyBatting && !isOut;
   });
 
-  // Available bowlers (players who have not yet bowled their 1-over limit in this innings)
+  // Dynamic over calculations
+  const isSuperOver = currentInnings?.inningsNumber >= 3;
+  const maxOvers = isSuperOver ? 1 : (match.oversPerInnings || 20);
+  const matchBallsPerOver = match.ballsPerOver || 6;
+  const maxOversPerBowler = isSuperOver ? 1 : Math.max(1, Math.ceil(maxOvers / 5));
+
+  // Bowler who bowled the last delivery of the previous over (cannot bowl consecutive overs)
+  const lastBowledBall = currentInnings?.ballEvents?.[0];
+  const previousOverBowlerId = (currentInnings?.balls === 0 && (currentInnings?.overs || 0) > 0) ? lastBowledBall?.bowlerId : null;
+
+  // Available bowlers (players who have not exceeded the max overs limit and didn't bowl the immediately preceding over)
   const availableBowlers = bowlingSquad.filter((p: any) => {
+    if (previousOverBowlerId && p.id === previousOverBowlerId) {
+      return false;
+    }
     const score = currentInnings?.bowlingScores?.find((b: any) => b.playerId === p.id);
-    const totalBalls = (score?.overs || 0) * 6 + (score?.balls || 0);
-    const hasBowledFullOver = (score?.overs || 0) >= 1 || totalBalls >= 6;
-    return !hasBowledFullOver;
+    const completedOvers = score?.overs || 0;
+    return completedOvers < maxOversPerBowler;
   });
 
   // Free Hit evaluation: Check whether the current delivery in play is a Free Hit
@@ -403,11 +415,14 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
     const maxOvers = isSuperOver ? 1 : (match.oversPerInnings || 20);
     const matchBallsPerOver = match.ballsPerOver || 6;
 
-    // Check if the previous over finished and a new bowler needs to be chosen for the new over (never for Super Over)
-    const isCurrentBowlerOverDone = (bowlerScore?.overs || 0) >= 1 || ((bowlerScore?.balls || 0) + (bowlerScore?.overs || 0) * matchBallsPerOver) >= matchBallsPerOver;
-    if (!isSuperOver && currentInnings.balls === 0 && currentInnings.overs > 0 && currentInnings.overs < maxOvers && isCurrentBowlerOverDone) {
+    // Check if the previous over finished and a new bowler needs to be chosen for the new over (cannot bowl consecutive overs)
+    const lastBall = currentInnings?.ballEvents?.[0];
+    const isConsecutiveOverForSameBowler = Boolean(
+      lastBall && currentInnings.currentBowlerId === lastBall.bowlerId
+    );
+    if (!isSuperOver && currentInnings.balls === 0 && currentInnings.overs > 0 && currentInnings.overs < maxOvers && isConsecutiveOverForSameBowler) {
       setShowBowlerModal(true);
-      setError(`⚠️ Over ${currentInnings.overs + 1} is starting. Please select the next bowler before scoring.`);
+      setError(`⚠️ Over ${currentInnings.overs + 1} is starting. A bowler cannot bowl consecutive overs. Please select the next bowler.`);
       return;
     }
 
@@ -566,11 +581,14 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
     const isSuperOver = currentInnings.inningsNumber >= 3;
     const maxOvers = isSuperOver ? 1 : (match.oversPerInnings || 20);
 
-    // Check if previous over finished and a new bowler needs to be chosen for the new over (never for Super Over)
-    const isCurrentBowlerOverDone = (bowlerScore?.overs || 0) >= 1 || ((bowlerScore?.balls || 0) + (bowlerScore?.overs || 0) * matchBallsPerOver) >= matchBallsPerOver;
-    if (!isSuperOver && currentInnings.balls === 0 && currentInnings.overs > 0 && currentInnings.overs < maxOvers && isCurrentBowlerOverDone) {
+    // Check if previous over finished and a new bowler needs to be chosen for the new over (cannot bowl consecutive overs)
+    const lastBallWicket = currentInnings?.ballEvents?.[0];
+    const isConsecutiveOverForSameBowlerWicket = Boolean(
+      lastBallWicket && currentInnings.currentBowlerId === lastBallWicket.bowlerId
+    );
+    if (!isSuperOver && currentInnings.balls === 0 && currentInnings.overs > 0 && currentInnings.overs < maxOvers && isConsecutiveOverForSameBowlerWicket) {
       setShowBowlerModal(true);
-      setError(`⚠️ Over ${currentInnings.overs + 1} is starting. Please select the next bowler before recording a wicket.`);
+      setError(`⚠️ Over ${currentInnings.overs + 1} is starting. A bowler cannot bowl consecutive overs. Please select the next bowler before recording a wicket.`);
       return;
     }
 
