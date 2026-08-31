@@ -10,6 +10,7 @@ export interface ScoreBroadcastPayload {
   matchId: string;
   status: 'UPCOMING' | 'LIVE' | 'COMPLETED' | 'ABANDONED';
   currentInnings: number;
+  isFreeHit?: boolean;
   innings: {
     id: string;
     inningsNumber: number;

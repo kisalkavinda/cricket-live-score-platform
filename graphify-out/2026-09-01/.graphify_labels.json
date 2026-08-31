@@ -1,6 +1,6 @@
 {
   "0": "admin-service.ts",
-  "1": "scoring-service.ts",
+  "1": "scoring-actions.ts",
   "2": "app/page.tsx",
   "3": "dependencies",
   "4": "database/package.json",
