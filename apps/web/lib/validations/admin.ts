@@ -29,8 +29,8 @@ export const createTournamentSchema = z.object({
   name: z.string().trim().min(2).max(100),
   season: z.string().trim().min(1).max(20),
   format: z.string().trim().min(1).max(50),
-  oversPerInnings: z.number().int().min(1).max(50).default(20),
-  ballsPerOver: z.number().int().min(1).max(6).default(6),
+  oversPerInnings: z.number().int().min(1).max(100).default(20),
+  ballsPerOver: z.number().int().min(1).max(20).default(6),
 });
 
 export const tournamentStatusEnum = z.enum([

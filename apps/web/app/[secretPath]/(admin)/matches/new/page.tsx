@@ -12,7 +12,12 @@ export default async function NewMatchPage() {
   const [tournaments, teams] = await Promise.all([
     (prisma as any).tournament.findMany({
       orderBy: { createdAt: 'desc' },
-      select: { id: true, name: true, season: true },
+      select: {
+        id: true,
+        name: true,
+        season: true,
+        stages: { select: { oversPerInnings: true, ballsPerOver: true } },
+      },
     }),
     (prisma as any).team.findMany({
       orderBy: { name: 'asc' },

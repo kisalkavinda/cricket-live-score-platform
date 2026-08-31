@@ -53,7 +53,7 @@
       "file_type": "code",
       "norm_label": "props",
       "source_file": "apps/web/app/[secretPath]/(admin)/matches/new/NewMatchForm.tsx",
-      "source_location": "L21"
+      "source_location": "L22"
     },
     {
       "id": "apps_web_app_secretpath_admin_matches_new_newmatchform_team",
@@ -66,7 +66,7 @@
       "file_type": "code",
       "norm_label": "team",
       "source_file": "apps/web/app/[secretPath]/(admin)/matches/new/NewMatchForm.tsx",
-      "source_location": "L13"
+      "source_location": "L14"
     },
     {
       "id": "apps_web_app_secretpath_admin_matches_new_newmatchform_tournament",
@@ -815,7 +815,7 @@
       "file_type": "code",
       "norm_label": "newmatchform()",
       "source_file": "apps/web/app/[secretPath]/(admin)/matches/new/NewMatchForm.tsx",
-      "source_location": "L27"
+      "source_location": "L28"
     },
     {
       "id": "apps_web_components_scoring_scoringconsole_scoringconsole",
@@ -9094,7 +9094,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/app/[secretPath]/(admin)/matches/new/NewMatchForm.tsx",
-      "source_location": "L77",
+      "source_location": "L79",
       "weight": 1.0
     },
     {
@@ -9106,7 +9106,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/app/[secretPath]/(admin)/matches/new/NewMatchForm.tsx",
-      "source_location": "L95",
+      "source_location": "L97",
       "weight": 1.0
     },
     {
@@ -9927,6 +9927,18 @@
     },
     {
       "source": "apps_web_components_scoring_scoringconsole_scoringconsole",
+      "target": "apps_web_lib_scoring_scoring_actions_endinningsaction",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/web/components/scoring/ScoringConsole.tsx",
+      "source_location": "L1005",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_components_scoring_scoringconsole_scoringconsole",
       "target": "apps_web_lib_scoring_scoring_actions_completematchaction",
       "relation": "calls",
       "_origin": "ast",
@@ -9934,7 +9946,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/components/scoring/ScoringConsole.tsx",
-      "source_location": "L1004",
+      "source_location": "L1022",
       "weight": 1.0
     },
     {
@@ -9958,7 +9970,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/components/scoring/ScoringConsole.tsx",
-      "source_location": "L309",
+      "source_location": "L321",
       "weight": 1.0
     },
     {
@@ -9970,7 +9982,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/components/scoring/ScoringConsole.tsx",
-      "source_location": "L360",
+      "source_location": "L372",
       "weight": 1.0
     },
     {
@@ -9982,7 +9994,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/components/scoring/ScoringConsole.tsx",
-      "source_location": "L526",
+      "source_location": "L541",
       "weight": 1.0
     },
     {
@@ -9994,7 +10006,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/components/scoring/ScoringConsole.tsx",
-      "source_location": "L802",
+      "source_location": "L820",
       "weight": 1.0
     },
     {
@@ -10006,7 +10018,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/components/scoring/ScoringConsole.tsx",
-      "source_location": "L840",
+      "source_location": "L858",
       "weight": 1.0
     },
     {
@@ -10018,7 +10030,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/components/scoring/ScoringConsole.tsx",
-      "source_location": "L877",
+      "source_location": "L895",
       "weight": 1.0
     },
     {
@@ -10030,19 +10042,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/components/scoring/ScoringConsole.tsx",
-      "source_location": "L968",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_web_components_scoring_scoringconsole_scoringconsole",
-      "target": "apps_web_lib_scoring_scoring_actions_endinningsaction",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "apps/web/components/scoring/ScoringConsole.tsx",
-      "source_location": "L987",
+      "source_location": "L986",
       "weight": 1.0
     },
     {
@@ -17997,7 +17997,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/app/[secretPath]/(admin)/matches/new/NewMatchForm.tsx",
-      "source_location": "L13",
+      "source_location": "L14",
       "weight": 1.0
     },
     {
@@ -18008,7 +18008,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/app/[secretPath]/(admin)/matches/new/NewMatchForm.tsx",
-      "source_location": "L21",
+      "source_location": "L22",
       "weight": 1.0
     },
     {
@@ -18019,7 +18019,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/app/[secretPath]/(admin)/matches/new/NewMatchForm.tsx",
-      "source_location": "L27",
+      "source_location": "L28",
       "weight": 1.0
     },
     {
@@ -24312,5 +24312,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "028874ee7ac941e1adc60616968e4d8c5797a94a"
+  "built_at_commit": "bc044006942938fa1cb31e896aceadd7e68fb433"
 }

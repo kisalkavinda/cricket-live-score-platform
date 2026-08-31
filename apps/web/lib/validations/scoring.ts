@@ -31,8 +31,8 @@ export const createMatchSchema = z.object({
   teamBId: z.string().trim().min(1, "Team B ID is required").max(64),
   venue: z.string().trim().max(100).optional(),
   scheduledAt: z.union([z.string(), z.date()]).optional(),
-  oversPerInnings: z.number().int().min(1).max(50).default(20),
-  ballsPerOver: z.number().int().min(1).max(6).default(6),
+  oversPerInnings: z.number().int().min(1).max(100).default(20),
+  ballsPerOver: z.number().int().min(1).max(20).default(6),
 }).refine((data) => data.teamAId !== data.teamBId, {
   message: "Team A and Team B cannot be the same team",
   path: ["teamBId"],
@@ -76,10 +76,10 @@ export const editBallDeliverySchema = z.object({
 
 export const startSuperOverSchema = z.object({
   battingFirstTeamId: z.string().trim().min(1).max(64),
-  ballsPerOver: z.number().int().min(1).max(6).optional(),
+  ballsPerOver: z.number().int().min(1).max(20).optional(),
 });
 
 export const updateMatchRulesSchema = z.object({
-  oversPerInnings: z.number().int().min(1).max(50).optional(),
-  ballsPerOver: z.number().int().min(1).max(6).optional(),
+  oversPerInnings: z.number().int().min(1).max(100).optional(),
+  ballsPerOver: z.number().int().min(1).max(20).optional(),
 });
