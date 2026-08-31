@@ -289,6 +289,18 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
     return !hasBowledFullOver;
   });
 
+  // Free Hit evaluation: Check whether the current delivery in play is a Free Hit
+  const isFreeHitActive = (() => {
+    const balls = currentInnings?.ballEvents;
+    if (!balls || balls.length === 0) return false;
+    for (const b of balls) {
+      if (b.extraType === 'NO_BALL') return true;
+      if (b.extraType === 'WIDE') continue;
+      return false;
+    }
+    return false;
+  })();
+
   // Action handlers with INSTANT OPTIMISTIC FEEDBACK
   const handleStartMatch = () => {
     setError(null);
@@ -565,6 +577,14 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
     const dismissedPlayerId = dismissedId || currentInnings.currentStrikerId;
     const incomingBatterId = newBatterId || null;
     const runsScoredOnWicket = wicketRuns || 0;
+
+    if (isFreeHitActive) {
+      const allowedOnFreeHit = ['RUN_OUT', 'TIMED_OUT', 'RETIRED_HURT'];
+      if (!allowedOnFreeHit.includes(wicketType)) {
+        setWicketModalError(`⚡ FREE HIT RULE: Batters CANNOT be dismissed by "${wicketType}". On a Free Hit, only Run Out, Timed Out, or Retired Hurt are allowed.`);
+        return;
+      }
+    }
 
     setWicketModalError(null);
     setError(null);
@@ -2462,6 +2482,48 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                   </div>
                 )}
 
+                {isFreeHitActive && (
+                  <div
+                    style={{
+                      background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.2) 0%, rgba(234, 88, 12, 0.2) 100%)',
+                      border: '1.5px solid #F59E0B',
+                      borderRadius: '10px',
+                      padding: '12px 16px',
+                      marginBottom: '16px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      boxShadow: '0 0 16px rgba(245, 158, 11, 0.25)',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <span style={{ fontSize: '1.4rem' }}>⚡</span>
+                      <div>
+                        <div style={{ fontSize: '0.95rem', fontWeight: 900, color: '#FDE68A', letterSpacing: '0.04em' }}>
+                          FREE HIT DELIVERY IN PLAY
+                        </div>
+                        <div style={{ fontSize: '0.76rem', color: '#FCD34D', marginTop: '2px' }}>
+                          Previous ball was a No Ball. Batter CANNOT be dismissed except by Run Out!
+                        </div>
+                      </div>
+                    </div>
+                    <span
+                      style={{
+                        background: '#F59E0B',
+                        color: '#000',
+                        fontSize: '0.72rem',
+                        fontWeight: 900,
+                        padding: '4px 10px',
+                        borderRadius: '20px',
+                        letterSpacing: '0.06em',
+                        textTransform: 'uppercase',
+                      }}
+                    >
+                      FREE HIT
+                    </span>
+                  </div>
+                )}
+
                 <div style={{ fontSize: '0.82rem', fontWeight: 800, color: '#F59E0B', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: 'monospace', marginBottom: '14px' }}>
                   Runs off the Bat
                 </div>
@@ -2608,7 +2670,7 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                     onClick={() => {
                       setDismissedId(currentInnings.currentStrikerId || '');
                       setWicketRuns(0);
-                      setWicketType('CAUGHT');
+                      setWicketType(isFreeHitActive ? 'RUN_OUT' : 'CAUGHT');
                       setShowWicketModal(true);
                     }}
                     style={{
@@ -3262,6 +3324,23 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
             {wicketModalError && (
               <div style={{ background: 'rgba(239, 68, 68, 0.15)', border: '1px solid #EF4444', color: '#FCA5A5', padding: '10px', borderRadius: '8px', marginBottom: '14px', fontSize: '0.85rem' }}>
                 {wicketModalError}
+              </div>
+            )}
+
+            {isFreeHitActive && (
+              <div
+                style={{
+                  background: 'rgba(245, 158, 11, 0.15)',
+                  border: '1.5px solid #F59E0B',
+                  color: '#FDE68A',
+                  padding: '10px 12px',
+                  borderRadius: '8px',
+                  marginBottom: '14px',
+                  fontSize: '0.82rem',
+                  lineHeight: 1.4,
+                }}
+              >
+                ⚡ <strong>FREE HIT ACTIVE:</strong> Under cricket rules, batters <strong>CANNOT</strong> be dismissed Bowled, Caught, LBW, Stumped, or Hit Wicket. Only <strong>Run Out</strong>, <strong>Timed Out</strong>, or <strong>Retired Hurt</strong> are valid.
               </div>
             )}
 
