@@ -49,7 +49,7 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 1,
-      "community_name": "scoring-actions.ts",
+      "community_name": "scoring-service.ts",
       "file_type": "code",
       "norm_label": "props",
       "source_file": "apps/web/app/[secretPath]/(admin)/matches/new/NewMatchForm.tsx",
@@ -62,7 +62,7 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 1,
-      "community_name": "scoring-actions.ts",
+      "community_name": "scoring-service.ts",
       "file_type": "code",
       "norm_label": "team",
       "source_file": "apps/web/app/[secretPath]/(admin)/matches/new/NewMatchForm.tsx",
@@ -75,7 +75,7 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 1,
-      "community_name": "scoring-actions.ts",
+      "community_name": "scoring-service.ts",
       "file_type": "code",
       "norm_label": "tournament",
       "source_file": "apps/web/app/[secretPath]/(admin)/matches/new/NewMatchForm.tsx",
@@ -88,7 +88,7 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 1,
-      "community_name": "scoring-actions.ts",
+      "community_name": "scoring-service.ts",
       "file_type": "code",
       "norm_label": "props",
       "source_file": "apps/web/components/scoring/ScoringConsole.tsx",
@@ -101,7 +101,7 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 1,
-      "community_name": "scoring-actions.ts",
+      "community_name": "scoring-service.ts",
       "file_type": "code",
       "norm_label": "creatematchinput",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
@@ -114,7 +114,7 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 1,
-      "community_name": "scoring-actions.ts",
+      "community_name": "scoring-service.ts",
       "file_type": "code",
       "norm_label": "extratypevalue",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
@@ -127,7 +127,7 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 1,
-      "community_name": "scoring-actions.ts",
+      "community_name": "scoring-service.ts",
       "file_type": "code",
       "norm_label": "inningsstatustype",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
@@ -140,7 +140,7 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 1,
-      "community_name": "scoring-actions.ts",
+      "community_name": "scoring-service.ts",
       "file_type": "code",
       "norm_label": "matchstatustype",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
@@ -153,7 +153,7 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 1,
-      "community_name": "scoring-actions.ts",
+      "community_name": "scoring-service.ts",
       "file_type": "code",
       "norm_label": "openinglineupinput",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
@@ -166,7 +166,7 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 1,
-      "community_name": "scoring-actions.ts",
+      "community_name": "scoring-service.ts",
       "file_type": "code",
       "norm_label": "recorddeliveryinput",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
@@ -179,7 +179,7 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 1,
-      "community_name": "scoring-actions.ts",
+      "community_name": "scoring-service.ts",
       "file_type": "code",
       "norm_label": "startmatchinput",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
@@ -192,11 +192,11 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 1,
-      "community_name": "scoring-actions.ts",
+      "community_name": "scoring-service.ts",
       "file_type": "code",
       "norm_label": "tournamentstatsresult",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L1954"
+      "source_location": "L1974"
     },
     {
       "id": "apps_web_lib_scoring_scoring_service_wickettypevalue",
@@ -205,7 +205,7 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 1,
-      "community_name": "scoring-actions.ts",
+      "community_name": "scoring-service.ts",
       "file_type": "code",
       "norm_label": "wickettypevalue",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
@@ -751,7 +751,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 1,
-      "community_name": "scoring-actions.ts",
+      "community_name": "scoring-service.ts",
       "file_type": "code",
       "norm_label": "get()",
       "source_file": "apps/web/app/api/matches/[id]/scorecard/route.ts",
@@ -763,7 +763,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 1,
-      "community_name": "scoring-actions.ts",
+      "community_name": "scoring-service.ts",
       "file_type": "code",
       "norm_label": "pruneexpiredcache()",
       "source_file": "apps/web/app/api/matches/[id]/scorecard/route.ts",
@@ -775,7 +775,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 1,
-      "community_name": "scoring-actions.ts",
+      "community_name": "scoring-service.ts",
       "file_type": "code",
       "norm_label": "get()",
       "source_file": "apps/web/app/api/matches/live/route.ts",
@@ -787,7 +787,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 1,
-      "community_name": "scoring-actions.ts",
+      "community_name": "scoring-service.ts",
       "file_type": "code",
       "norm_label": "get()",
       "source_file": "apps/web/app/api/tournament/stats/route.ts",
@@ -799,7 +799,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 1,
-      "community_name": "scoring-actions.ts",
+      "community_name": "scoring-service.ts",
       "file_type": "code",
       "norm_label": "adminscoringpage()",
       "source_file": "apps/web/app/[secretPath]/(admin)/matches/[id]/score/page.tsx",
@@ -811,7 +811,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 1,
-      "community_name": "scoring-actions.ts",
+      "community_name": "scoring-service.ts",
       "file_type": "code",
       "norm_label": "newmatchform()",
       "source_file": "apps/web/app/[secretPath]/(admin)/matches/new/NewMatchForm.tsx",
@@ -823,7 +823,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 1,
-      "community_name": "scoring-actions.ts",
+      "community_name": "scoring-service.ts",
       "file_type": "code",
       "norm_label": "scoringconsole()",
       "source_file": "apps/web/components/scoring/ScoringConsole.tsx",
@@ -835,7 +835,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 1,
-      "community_name": "scoring-actions.ts",
+      "community_name": "scoring-service.ts",
       "file_type": "code",
       "norm_label": "handledeleteball()",
       "source_file": "apps/web/components/scoring/ScoringConsole.tsx",
@@ -847,7 +847,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 1,
-      "community_name": "scoring-actions.ts",
+      "community_name": "scoring-service.ts",
       "file_type": "code",
       "norm_label": "handlesaveeditedball()",
       "source_file": "apps/web/components/scoring/ScoringConsole.tsx",
@@ -859,7 +859,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 1,
-      "community_name": "scoring-actions.ts",
+      "community_name": "scoring-service.ts",
       "file_type": "code",
       "norm_label": "handlestartsuperover()",
       "source_file": "apps/web/components/scoring/ScoringConsole.tsx",
@@ -871,7 +871,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 1,
-      "community_name": "scoring-actions.ts",
+      "community_name": "scoring-service.ts",
       "file_type": "code",
       "norm_label": "handleupdateballsperover()",
       "source_file": "apps/web/components/scoring/ScoringConsole.tsx",
@@ -883,7 +883,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 1,
-      "community_name": "scoring-actions.ts",
+      "community_name": "scoring-service.ts",
       "file_type": "code",
       "norm_label": "openeditballmodal()",
       "source_file": "apps/web/components/scoring/ScoringConsole.tsx",
@@ -895,7 +895,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 1,
-      "community_name": "scoring-actions.ts",
+      "community_name": "scoring-service.ts",
       "file_type": "code",
       "norm_label": "changebowleraction()",
       "source_file": "apps/web/lib/scoring/scoring-actions.ts",
@@ -907,7 +907,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 1,
-      "community_name": "scoring-actions.ts",
+      "community_name": "scoring-service.ts",
       "file_type": "code",
       "norm_label": "completematchaction()",
       "source_file": "apps/web/lib/scoring/scoring-actions.ts",
@@ -919,7 +919,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 1,
-      "community_name": "scoring-actions.ts",
+      "community_name": "scoring-service.ts",
       "file_type": "code",
       "norm_label": "creatematchaction()",
       "source_file": "apps/web/lib/scoring/scoring-actions.ts",
@@ -931,7 +931,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 1,
-      "community_name": "scoring-actions.ts",
+      "community_name": "scoring-service.ts",
       "file_type": "code",
       "norm_label": "deleteballdeliveryaction()",
       "source_file": "apps/web/lib/scoring/scoring-actions.ts",
@@ -943,7 +943,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 1,
-      "community_name": "scoring-actions.ts",
+      "community_name": "scoring-service.ts",
       "file_type": "code",
       "norm_label": "editballdeliveryaction()",
       "source_file": "apps/web/lib/scoring/scoring-actions.ts",
@@ -955,7 +955,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 1,
-      "community_name": "scoring-actions.ts",
+      "community_name": "scoring-service.ts",
       "file_type": "code",
       "norm_label": "endinningsaction()",
       "source_file": "apps/web/lib/scoring/scoring-actions.ts",
@@ -967,7 +967,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 1,
-      "community_name": "scoring-actions.ts",
+      "community_name": "scoring-service.ts",
       "file_type": "code",
       "norm_label": "recorddeliveryaction()",
       "source_file": "apps/web/lib/scoring/scoring-actions.ts",
@@ -979,7 +979,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 1,
-      "community_name": "scoring-actions.ts",
+      "community_name": "scoring-service.ts",
       "file_type": "code",
       "norm_label": "setopeninglineupaction()",
       "source_file": "apps/web/lib/scoring/scoring-actions.ts",
@@ -991,7 +991,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 1,
-      "community_name": "scoring-actions.ts",
+      "community_name": "scoring-service.ts",
       "file_type": "code",
       "norm_label": "startmatchaction()",
       "source_file": "apps/web/lib/scoring/scoring-actions.ts",
@@ -1003,7 +1003,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 1,
-      "community_name": "scoring-actions.ts",
+      "community_name": "scoring-service.ts",
       "file_type": "code",
       "norm_label": "startsuperoveraction()",
       "source_file": "apps/web/lib/scoring/scoring-actions.ts",
@@ -1015,7 +1015,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 1,
-      "community_name": "scoring-actions.ts",
+      "community_name": "scoring-service.ts",
       "file_type": "code",
       "norm_label": "swapstrikeraction()",
       "source_file": "apps/web/lib/scoring/scoring-actions.ts",
@@ -1027,7 +1027,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 1,
-      "community_name": "scoring-actions.ts",
+      "community_name": "scoring-service.ts",
       "file_type": "code",
       "norm_label": "switchbatteraction()",
       "source_file": "apps/web/lib/scoring/scoring-actions.ts",
@@ -1039,7 +1039,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 1,
-      "community_name": "scoring-actions.ts",
+      "community_name": "scoring-service.ts",
       "file_type": "code",
       "norm_label": "undolastdeliveryaction()",
       "source_file": "apps/web/lib/scoring/scoring-actions.ts",
@@ -1051,7 +1051,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 1,
-      "community_name": "scoring-actions.ts",
+      "community_name": "scoring-service.ts",
       "file_type": "code",
       "norm_label": "updatematchrulesaction()",
       "source_file": "apps/web/lib/scoring/scoring-actions.ts",
@@ -1063,11 +1063,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 1,
-      "community_name": "scoring-actions.ts",
+      "community_name": "scoring-service.ts",
       "file_type": "code",
       "norm_label": "broadcastscoreupdate()",
       "source_file": "apps/web/lib/scoring/scoring-realtime.ts",
-      "source_location": "L105"
+      "source_location": "L106"
     },
     {
       "id": "apps_web_lib_scoring_scoring_service_buildmatchbroadcastpayload",
@@ -1075,11 +1075,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 1,
-      "community_name": "scoring-actions.ts",
+      "community_name": "scoring-service.ts",
       "file_type": "code",
       "norm_label": "buildmatchbroadcastpayload()",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L256"
+      "source_location": "L273"
     },
     {
       "id": "apps_web_lib_scoring_scoring_service_changebowler",
@@ -1087,11 +1087,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 1,
-      "community_name": "scoring-actions.ts",
+      "community_name": "scoring-service.ts",
       "file_type": "code",
       "norm_label": "changebowler()",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L1220"
+      "source_location": "L1240"
     },
     {
       "id": "apps_web_lib_scoring_scoring_service_completematch",
@@ -1099,11 +1099,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 1,
-      "community_name": "scoring-actions.ts",
+      "community_name": "scoring-service.ts",
       "file_type": "code",
       "norm_label": "completematch()",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L1567"
+      "source_location": "L1587"
     },
     {
       "id": "apps_web_lib_scoring_scoring_service_creatematch",
@@ -1111,11 +1111,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 1,
-      "community_name": "scoring-actions.ts",
+      "community_name": "scoring-service.ts",
       "file_type": "code",
       "norm_label": "creatematch()",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L449"
+      "source_location": "L469"
     },
     {
       "id": "apps_web_lib_scoring_scoring_service_deleteballdelivery",
@@ -1123,11 +1123,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 1,
-      "community_name": "scoring-actions.ts",
+      "community_name": "scoring-service.ts",
       "file_type": "code",
       "norm_label": "deleteballdelivery()",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L1904"
+      "source_location": "L1924"
     },
     {
       "id": "apps_web_lib_scoring_scoring_service_editballdelivery",
@@ -1135,11 +1135,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 1,
-      "community_name": "scoring-actions.ts",
+      "community_name": "scoring-service.ts",
       "file_type": "code",
       "norm_label": "editballdelivery()",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L1803"
+      "source_location": "L1823"
     },
     {
       "id": "apps_web_lib_scoring_scoring_service_endinnings",
@@ -1147,11 +1147,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 1,
-      "community_name": "scoring-actions.ts",
+      "community_name": "scoring-service.ts",
       "file_type": "code",
       "norm_label": "endinnings()",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L1435"
+      "source_location": "L1455"
     },
     {
       "id": "apps_web_lib_scoring_scoring_service_getlivematches",
@@ -1159,11 +1159,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 1,
-      "community_name": "scoring-actions.ts",
+      "community_name": "scoring-service.ts",
       "file_type": "code",
       "norm_label": "getlivematches()",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L198"
+      "source_location": "L215"
     },
     {
       "id": "apps_web_lib_scoring_scoring_service_getmatchdetail",
@@ -1171,11 +1171,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 1,
-      "community_name": "scoring-actions.ts",
+      "community_name": "scoring-service.ts",
       "file_type": "code",
       "norm_label": "getmatchdetail()",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L107"
+      "source_location": "L124"
     },
     {
       "id": "apps_web_lib_scoring_scoring_service_getpublicmatchscorecard",
@@ -1183,11 +1183,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 1,
-      "community_name": "scoring-actions.ts",
+      "community_name": "scoring-service.ts",
       "file_type": "code",
       "norm_label": "getpublicmatchscorecard()",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L190"
+      "source_location": "L207"
     },
     {
       "id": "apps_web_lib_scoring_scoring_service_gettournamentstats",
@@ -1195,11 +1195,23 @@
       "_callable": true,
       "_origin": "ast",
       "community": 1,
-      "community_name": "scoring-actions.ts",
+      "community_name": "scoring-service.ts",
       "file_type": "code",
       "norm_label": "gettournamentstats()",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L2023"
+      "source_location": "L2043"
+    },
+    {
+      "id": "apps_web_lib_scoring_scoring_service_isfreehitactive",
+      "label": "isFreeHitActive()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 1,
+      "community_name": "scoring-service.ts",
+      "file_type": "code",
+      "norm_label": "isfreehitactive()",
+      "source_file": "apps/web/lib/scoring/scoring-service.ts",
+      "source_location": "L61"
     },
     {
       "id": "apps_web_lib_scoring_scoring_service_recalculateinningsfromballs",
@@ -1207,11 +1219,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 1,
-      "community_name": "scoring-actions.ts",
+      "community_name": "scoring-service.ts",
       "file_type": "code",
       "norm_label": "recalculateinningsfromballs()",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L1607"
+      "source_location": "L1627"
     },
     {
       "id": "apps_web_lib_scoring_scoring_service_recorddelivery",
@@ -1219,11 +1231,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 1,
-      "community_name": "scoring-actions.ts",
+      "community_name": "scoring-service.ts",
       "file_type": "code",
       "norm_label": "recorddelivery()",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L671"
+      "source_location": "L691"
     },
     {
       "id": "apps_web_lib_scoring_scoring_service_setinningsopeninglineup",
@@ -1231,11 +1243,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 1,
-      "community_name": "scoring-actions.ts",
+      "community_name": "scoring-service.ts",
       "file_type": "code",
       "norm_label": "setinningsopeninglineup()",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L586"
+      "source_location": "L606"
     },
     {
       "id": "apps_web_lib_scoring_scoring_service_startmatch",
@@ -1243,11 +1255,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 1,
-      "community_name": "scoring-actions.ts",
+      "community_name": "scoring-service.ts",
       "file_type": "code",
       "norm_label": "startmatch()",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L505"
+      "source_location": "L525"
     },
     {
       "id": "apps_web_lib_scoring_scoring_service_startsuperover",
@@ -1255,11 +1267,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 1,
-      "community_name": "scoring-actions.ts",
+      "community_name": "scoring-service.ts",
       "file_type": "code",
       "norm_label": "startsuperover()",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L1495"
+      "source_location": "L1515"
     },
     {
       "id": "apps_web_lib_scoring_scoring_service_swapstriker",
@@ -1267,11 +1279,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 1,
-      "community_name": "scoring-actions.ts",
+      "community_name": "scoring-service.ts",
       "file_type": "code",
       "norm_label": "swapstriker()",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L1279"
+      "source_location": "L1299"
     },
     {
       "id": "apps_web_lib_scoring_scoring_service_switchbatter",
@@ -1279,11 +1291,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 1,
-      "community_name": "scoring-actions.ts",
+      "community_name": "scoring-service.ts",
       "file_type": "code",
       "norm_label": "switchbatter()",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L1335"
+      "source_location": "L1355"
     },
     {
       "id": "apps_web_lib_scoring_scoring_service_undolastdelivery",
@@ -1291,11 +1303,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 1,
-      "community_name": "scoring-actions.ts",
+      "community_name": "scoring-service.ts",
       "file_type": "code",
       "norm_label": "undolastdelivery()",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L1050"
+      "source_location": "L1070"
     },
     {
       "id": "apps_web_lib_scoring_scoring_service_updatematchrules",
@@ -1303,11 +1315,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 1,
-      "community_name": "scoring-actions.ts",
+      "community_name": "scoring-service.ts",
       "file_type": "code",
       "norm_label": "updatematchrules()",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L167"
+      "source_location": "L184"
     },
     {
       "id": "apps_web_tests_security_cache_scoring_test_assert",
@@ -1416,6 +1428,18 @@
       "norm_label": "runtests()",
       "source_file": "apps/web/tests/realtime-live-scoring.test.js",
       "source_location": "L42"
+    },
+    {
+      "id": "apps_web_app_api_registrations_route_post",
+      "label": "POST()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 13,
+      "community_name": "admin-auth.ts",
+      "file_type": "code",
+      "norm_label": "post()",
+      "source_file": "apps/web/app/api/registrations/route.ts",
+      "source_location": "L7"
     },
     {
       "id": "apps_web_app_secretpath_adminloginclient_adminloginclient",
@@ -1727,7 +1751,7 @@
       "file_type": "code",
       "norm_label": "fullscorecardpage()",
       "source_file": "apps/web/app/scorecard/page.tsx",
-      "source_location": "L1228"
+      "source_location": "L1261"
     },
     {
       "id": "apps_web_app_scorecard_page_scorecardcontent",
@@ -2822,18 +2846,6 @@
       "source_location": "L12"
     },
     {
-      "id": "apps_web_app_api_registrations_route_post",
-      "label": "POST()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 5,
-      "community_name": "RegistrationForm.tsx",
-      "file_type": "code",
-      "norm_label": "post()",
-      "source_file": "apps/web/app/api/registrations/route.ts",
-      "source_location": "L7"
-    },
-    {
       "id": "apps_web_components_registration_confirmationchecklist_confirmationchecklist",
       "label": "ConfirmationChecklist()",
       "_callable": true,
@@ -3179,7 +3191,7 @@
       "file_type": "code",
       "norm_label": "getmatcheslist()",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L61"
+      "source_location": "L78"
     },
     {
       "id": "apps_web_lib_utils_perf_logger_createperftracker",
@@ -3279,7 +3291,7 @@
       "label": "next/cache",
       "_origin": "ast",
       "community": 1,
-      "community_name": "scoring-actions.ts",
+      "community_name": "scoring-service.ts",
       "confidence": "EXTRACTED",
       "file_type": "code",
       "norm_label": "next/cache",
@@ -3290,7 +3302,7 @@
       "label": "scorecard/route.ts",
       "_origin": "ast",
       "community": 1,
-      "community_name": "scoring-actions.ts",
+      "community_name": "scoring-service.ts",
       "file_type": "code",
       "norm_label": "scorecard/route.ts",
       "source_file": "apps/web/app/api/matches/[id]/scorecard/route.ts",
@@ -3301,7 +3313,7 @@
       "label": "dynamic",
       "_origin": "ast",
       "community": 1,
-      "community_name": "scoring-actions.ts",
+      "community_name": "scoring-service.ts",
       "file_type": "code",
       "norm_label": "dynamic",
       "source_file": "apps/web/app/api/matches/[id]/scorecard/route.ts",
@@ -3312,7 +3324,7 @@
       "label": "scorecardCache",
       "_origin": "ast",
       "community": 1,
-      "community_name": "scoring-actions.ts",
+      "community_name": "scoring-service.ts",
       "file_type": "code",
       "norm_label": "scorecardcache",
       "source_file": "apps/web/app/api/matches/[id]/scorecard/route.ts",
@@ -3323,7 +3335,7 @@
       "label": "live/route.ts",
       "_origin": "ast",
       "community": 1,
-      "community_name": "scoring-actions.ts",
+      "community_name": "scoring-service.ts",
       "file_type": "code",
       "norm_label": "live/route.ts",
       "source_file": "apps/web/app/api/matches/live/route.ts",
@@ -3334,7 +3346,7 @@
       "label": "dynamic",
       "_origin": "ast",
       "community": 1,
-      "community_name": "scoring-actions.ts",
+      "community_name": "scoring-service.ts",
       "file_type": "code",
       "norm_label": "dynamic",
       "source_file": "apps/web/app/api/matches/live/route.ts",
@@ -3345,7 +3357,7 @@
       "label": "stats/route.ts",
       "_origin": "ast",
       "community": 1,
-      "community_name": "scoring-actions.ts",
+      "community_name": "scoring-service.ts",
       "file_type": "code",
       "norm_label": "stats/route.ts",
       "source_file": "apps/web/app/api/tournament/stats/route.ts",
@@ -3356,7 +3368,7 @@
       "label": "dynamic",
       "_origin": "ast",
       "community": 1,
-      "community_name": "scoring-actions.ts",
+      "community_name": "scoring-service.ts",
       "file_type": "code",
       "norm_label": "dynamic",
       "source_file": "apps/web/app/api/tournament/stats/route.ts",
@@ -3367,7 +3379,7 @@
       "label": "score/page.tsx",
       "_origin": "ast",
       "community": 1,
-      "community_name": "scoring-actions.ts",
+      "community_name": "scoring-service.ts",
       "file_type": "code",
       "norm_label": "score/page.tsx",
       "source_file": "apps/web/app/[secretPath]/(admin)/matches/[id]/score/page.tsx",
@@ -3378,7 +3390,7 @@
       "label": "dynamic",
       "_origin": "ast",
       "community": 1,
-      "community_name": "scoring-actions.ts",
+      "community_name": "scoring-service.ts",
       "file_type": "code",
       "norm_label": "dynamic",
       "source_file": "apps/web/app/[secretPath]/(admin)/matches/[id]/score/page.tsx",
@@ -3389,7 +3401,7 @@
       "label": "score/ScoringConsole.tsx",
       "_origin": "ast",
       "community": 1,
-      "community_name": "scoring-actions.ts",
+      "community_name": "scoring-service.ts",
       "file_type": "code",
       "norm_label": "score/scoringconsole.tsx",
       "source_file": "apps/web/app/[secretPath]/(admin)/matches/[id]/score/ScoringConsole.tsx",
@@ -3400,7 +3412,7 @@
       "label": "NewMatchForm.tsx",
       "_origin": "ast",
       "community": 1,
-      "community_name": "scoring-actions.ts",
+      "community_name": "scoring-service.ts",
       "file_type": "code",
       "norm_label": "newmatchform.tsx",
       "source_file": "apps/web/app/[secretPath]/(admin)/matches/new/NewMatchForm.tsx",
@@ -3411,7 +3423,7 @@
       "label": "scoring/ScoringConsole.tsx",
       "_origin": "ast",
       "community": 1,
-      "community_name": "scoring-actions.ts",
+      "community_name": "scoring-service.ts",
       "file_type": "code",
       "norm_label": "scoring/scoringconsole.tsx",
       "source_file": "apps/web/components/scoring/ScoringConsole.tsx",
@@ -3422,7 +3434,7 @@
       "label": "scoring-actions.ts",
       "_origin": "ast",
       "community": 1,
-      "community_name": "scoring-actions.ts",
+      "community_name": "scoring-service.ts",
       "file_type": "code",
       "norm_label": "scoring-actions.ts",
       "source_file": "apps/web/lib/scoring/scoring-actions.ts",
@@ -3433,7 +3445,7 @@
       "label": "scoring-service.ts",
       "_origin": "ast",
       "community": 1,
-      "community_name": "scoring-actions.ts",
+      "community_name": "scoring-service.ts",
       "file_type": "code",
       "norm_label": "scoring-service.ts",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
@@ -3444,7 +3456,7 @@
       "label": "scoring.ts",
       "_origin": "ast",
       "community": 1,
-      "community_name": "scoring-actions.ts",
+      "community_name": "scoring-service.ts",
       "file_type": "code",
       "norm_label": "scoring.ts",
       "source_file": "apps/web/lib/validations/scoring.ts",
@@ -3455,7 +3467,7 @@
       "label": "changeBowlerSchema",
       "_origin": "ast",
       "community": 1,
-      "community_name": "scoring-actions.ts",
+      "community_name": "scoring-service.ts",
       "file_type": "code",
       "norm_label": "changebowlerschema",
       "source_file": "apps/web/lib/validations/scoring.ts",
@@ -3466,7 +3478,7 @@
       "label": "completeMatchSchema",
       "_origin": "ast",
       "community": 1,
-      "community_name": "scoring-actions.ts",
+      "community_name": "scoring-service.ts",
       "file_type": "code",
       "norm_label": "completematchschema",
       "source_file": "apps/web/lib/validations/scoring.ts",
@@ -3477,7 +3489,7 @@
       "label": "createMatchSchema",
       "_origin": "ast",
       "community": 1,
-      "community_name": "scoring-actions.ts",
+      "community_name": "scoring-service.ts",
       "file_type": "code",
       "norm_label": "creatematchschema",
       "source_file": "apps/web/lib/validations/scoring.ts",
@@ -3488,7 +3500,7 @@
       "label": "editBallDeliverySchema",
       "_origin": "ast",
       "community": 1,
-      "community_name": "scoring-actions.ts",
+      "community_name": "scoring-service.ts",
       "file_type": "code",
       "norm_label": "editballdeliveryschema",
       "source_file": "apps/web/lib/validations/scoring.ts",
@@ -3499,7 +3511,7 @@
       "label": "extraTypeEnum",
       "_origin": "ast",
       "community": 1,
-      "community_name": "scoring-actions.ts",
+      "community_name": "scoring-service.ts",
       "file_type": "code",
       "norm_label": "extratypeenum",
       "source_file": "apps/web/lib/validations/scoring.ts",
@@ -3510,7 +3522,7 @@
       "label": "openingLineupSchema",
       "_origin": "ast",
       "community": 1,
-      "community_name": "scoring-actions.ts",
+      "community_name": "scoring-service.ts",
       "file_type": "code",
       "norm_label": "openinglineupschema",
       "source_file": "apps/web/lib/validations/scoring.ts",
@@ -3521,7 +3533,7 @@
       "label": "recordDeliverySchema",
       "_origin": "ast",
       "community": 1,
-      "community_name": "scoring-actions.ts",
+      "community_name": "scoring-service.ts",
       "file_type": "code",
       "norm_label": "recorddeliveryschema",
       "source_file": "apps/web/lib/validations/scoring.ts",
@@ -3532,7 +3544,7 @@
       "label": "startMatchSchema",
       "_origin": "ast",
       "community": 1,
-      "community_name": "scoring-actions.ts",
+      "community_name": "scoring-service.ts",
       "file_type": "code",
       "norm_label": "startmatchschema",
       "source_file": "apps/web/lib/validations/scoring.ts",
@@ -3543,7 +3555,7 @@
       "label": "startSuperOverSchema",
       "_origin": "ast",
       "community": 1,
-      "community_name": "scoring-actions.ts",
+      "community_name": "scoring-service.ts",
       "file_type": "code",
       "norm_label": "startsuperoverschema",
       "source_file": "apps/web/lib/validations/scoring.ts",
@@ -3554,7 +3566,7 @@
       "label": "switchBatterSchema",
       "_origin": "ast",
       "community": 1,
-      "community_name": "scoring-actions.ts",
+      "community_name": "scoring-service.ts",
       "file_type": "code",
       "norm_label": "switchbatterschema",
       "source_file": "apps/web/lib/validations/scoring.ts",
@@ -3565,7 +3577,7 @@
       "label": "updateMatchRulesSchema",
       "_origin": "ast",
       "community": 1,
-      "community_name": "scoring-actions.ts",
+      "community_name": "scoring-service.ts",
       "file_type": "code",
       "norm_label": "updatematchrulesschema",
       "source_file": "apps/web/lib/validations/scoring.ts",
@@ -3576,7 +3588,7 @@
       "label": "wicketTypeEnum",
       "_origin": "ast",
       "community": 1,
-      "community_name": "scoring-actions.ts",
+      "community_name": "scoring-service.ts",
       "file_type": "code",
       "norm_label": "wickettypeenum",
       "source_file": "apps/web/lib/validations/scoring.ts",
@@ -4394,6 +4406,17 @@
       "norm_label": "widgetsrc",
       "source_file": "apps/web/tests/realtime-live-scoring.test.js",
       "source_location": "L38"
+    },
+    {
+      "id": "apps_web_app_api_registrations_route",
+      "label": "registrations/route.ts",
+      "_origin": "ast",
+      "community": 13,
+      "community_name": "admin-auth.ts",
+      "file_type": "code",
+      "norm_label": "registrations/route.ts",
+      "source_file": "apps/web/app/api/registrations/route.ts",
+      "source_location": "L1"
     },
     {
       "id": "apps_web_app_secretpath_adminloginclient",
@@ -7510,17 +7533,6 @@
       "source_location": "L7"
     },
     {
-      "id": "apps_web_app_api_registrations_route",
-      "label": "registrations/route.ts",
-      "_origin": "ast",
-      "community": 5,
-      "community_name": "RegistrationForm.tsx",
-      "file_type": "code",
-      "norm_label": "registrations/route.ts",
-      "source_file": "apps/web/app/api/registrations/route.ts",
-      "source_location": "L1"
-    },
-    {
       "id": "apps_web_components_registration_confirmationchecklist",
       "label": "ConfirmationChecklist.tsx",
       "_origin": "ast",
@@ -9915,6 +9927,18 @@
     },
     {
       "source": "apps_web_components_scoring_scoringconsole_scoringconsole",
+      "target": "apps_web_lib_scoring_scoring_actions_completematchaction",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/web/components/scoring/ScoringConsole.tsx",
+      "source_location": "L1004",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_components_scoring_scoringconsole_scoringconsole",
       "target": "apps_web_utils_supabase_client_createclient",
       "relation": "calls",
       "_origin": "ast",
@@ -9934,7 +9958,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/components/scoring/ScoringConsole.tsx",
-      "source_location": "L297",
+      "source_location": "L309",
       "weight": 1.0
     },
     {
@@ -9946,7 +9970,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/components/scoring/ScoringConsole.tsx",
-      "source_location": "L348",
+      "source_location": "L360",
       "weight": 1.0
     },
     {
@@ -9958,7 +9982,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/components/scoring/ScoringConsole.tsx",
-      "source_location": "L514",
+      "source_location": "L526",
       "weight": 1.0
     },
     {
@@ -9970,7 +9994,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/components/scoring/ScoringConsole.tsx",
-      "source_location": "L782",
+      "source_location": "L802",
       "weight": 1.0
     },
     {
@@ -9982,7 +10006,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/components/scoring/ScoringConsole.tsx",
-      "source_location": "L820",
+      "source_location": "L840",
       "weight": 1.0
     },
     {
@@ -9994,7 +10018,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/components/scoring/ScoringConsole.tsx",
-      "source_location": "L857",
+      "source_location": "L877",
       "weight": 1.0
     },
     {
@@ -10006,7 +10030,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/components/scoring/ScoringConsole.tsx",
-      "source_location": "L948",
+      "source_location": "L968",
       "weight": 1.0
     },
     {
@@ -10018,19 +10042,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/components/scoring/ScoringConsole.tsx",
-      "source_location": "L967",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_web_components_scoring_scoringconsole_scoringconsole",
-      "target": "apps_web_lib_scoring_scoring_actions_completematchaction",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "apps/web/components/scoring/ScoringConsole.tsx",
-      "source_location": "L984",
+      "source_location": "L987",
       "weight": 1.0
     },
     {
@@ -11494,7 +11506,19 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L257",
+      "source_location": "L274",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_scoring_scoring_service_buildmatchbroadcastpayload",
+      "target": "apps_web_lib_scoring_scoring_service_isfreehitactive",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/web/lib/scoring/scoring-service.ts",
+      "source_location": "L391",
       "weight": 1.0
     },
     {
@@ -11506,7 +11530,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L1221",
+      "source_location": "L1241",
       "weight": 1.0
     },
     {
@@ -11518,7 +11542,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L1269",
+      "source_location": "L1289",
       "weight": 1.0
     },
     {
@@ -11530,7 +11554,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L1270",
+      "source_location": "L1290",
       "weight": 1.0
     },
     {
@@ -11542,7 +11566,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L1273",
+      "source_location": "L1293",
       "weight": 1.0
     },
     {
@@ -11554,7 +11578,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L1568",
+      "source_location": "L1588",
       "weight": 1.0
     },
     {
@@ -11566,7 +11590,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L1597",
+      "source_location": "L1617",
       "weight": 1.0
     },
     {
@@ -11578,7 +11602,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L1598",
+      "source_location": "L1618",
       "weight": 1.0
     },
     {
@@ -11590,7 +11614,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L1601",
+      "source_location": "L1621",
       "weight": 1.0
     },
     {
@@ -11602,7 +11626,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L450",
+      "source_location": "L470",
       "weight": 1.0
     },
     {
@@ -11614,48 +11638,12 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L1905",
+      "source_location": "L1925",
       "weight": 1.0
     },
     {
       "source": "apps_web_lib_scoring_scoring_service_deleteballdelivery",
       "target": "apps_web_lib_scoring_scoring_service_recalculateinningsfromballs",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L1923",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_web_lib_scoring_scoring_service_deleteballdelivery",
-      "target": "apps_web_lib_scoring_scoring_service_getmatchdetail",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L1940",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_web_lib_scoring_scoring_service_deleteballdelivery",
-      "target": "apps_web_lib_scoring_scoring_service_buildmatchbroadcastpayload",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L1942",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_web_lib_scoring_scoring_service_deleteballdelivery",
-      "target": "apps_web_lib_scoring_scoring_realtime_broadcastscoreupdate",
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -11666,6 +11654,42 @@
       "weight": 1.0
     },
     {
+      "source": "apps_web_lib_scoring_scoring_service_deleteballdelivery",
+      "target": "apps_web_lib_scoring_scoring_service_getmatchdetail",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/web/lib/scoring/scoring-service.ts",
+      "source_location": "L1960",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_scoring_scoring_service_deleteballdelivery",
+      "target": "apps_web_lib_scoring_scoring_service_buildmatchbroadcastpayload",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/web/lib/scoring/scoring-service.ts",
+      "source_location": "L1962",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_scoring_scoring_service_deleteballdelivery",
+      "target": "apps_web_lib_scoring_scoring_realtime_broadcastscoreupdate",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/web/lib/scoring/scoring-service.ts",
+      "source_location": "L1963",
+      "weight": 1.0
+    },
+    {
       "source": "apps_web_lib_scoring_scoring_service_editballdelivery",
       "target": "apps_web_lib_auth_admin_auth_requireadminauth",
       "relation": "calls",
@@ -11674,7 +11698,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L1813",
+      "source_location": "L1833",
       "weight": 1.0
     },
     {
@@ -11686,7 +11710,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L1855",
+      "source_location": "L1875",
       "weight": 1.0
     },
     {
@@ -11698,7 +11722,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L1891",
+      "source_location": "L1911",
       "weight": 1.0
     },
     {
@@ -11710,7 +11734,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L1893",
+      "source_location": "L1913",
       "weight": 1.0
     },
     {
@@ -11722,7 +11746,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L1894",
+      "source_location": "L1914",
       "weight": 1.0
     },
     {
@@ -11734,7 +11758,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L1436",
+      "source_location": "L1456",
       "weight": 1.0
     },
     {
@@ -11746,7 +11770,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L1485",
+      "source_location": "L1505",
       "weight": 1.0
     },
     {
@@ -11758,7 +11782,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L1486",
+      "source_location": "L1506",
       "weight": 1.0
     },
     {
@@ -11770,7 +11794,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L1489",
+      "source_location": "L1509",
       "weight": 1.0
     },
     {
@@ -11782,7 +11806,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L191",
+      "source_location": "L208",
       "weight": 1.0
     },
     {
@@ -11794,7 +11818,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L1034",
+      "source_location": "L1054",
       "weight": 1.0
     },
     {
@@ -11806,7 +11830,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L1038",
+      "source_location": "L1058",
       "weight": 1.0
     },
     {
@@ -11818,7 +11842,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L1039",
+      "source_location": "L1059",
       "weight": 1.0
     },
     {
@@ -11830,7 +11854,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L672",
+      "source_location": "L692",
       "weight": 1.0
     },
     {
@@ -11842,7 +11866,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L587",
+      "source_location": "L607",
       "weight": 1.0
     },
     {
@@ -11854,7 +11878,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L659",
+      "source_location": "L679",
       "weight": 1.0
     },
     {
@@ -11866,7 +11890,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L660",
+      "source_location": "L680",
       "weight": 1.0
     },
     {
@@ -11878,7 +11902,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L663",
+      "source_location": "L683",
       "weight": 1.0
     },
     {
@@ -11890,7 +11914,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L506",
+      "source_location": "L526",
       "weight": 1.0
     },
     {
@@ -11902,7 +11926,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L576",
+      "source_location": "L596",
       "weight": 1.0
     },
     {
@@ -11914,7 +11938,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L577",
+      "source_location": "L597",
       "weight": 1.0
     },
     {
@@ -11926,7 +11950,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L580",
+      "source_location": "L600",
       "weight": 1.0
     },
     {
@@ -11938,7 +11962,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L1496",
+      "source_location": "L1516",
       "weight": 1.0
     },
     {
@@ -11950,7 +11974,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L1554",
+      "source_location": "L1574",
       "weight": 1.0
     },
     {
@@ -11962,7 +11986,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L1556",
+      "source_location": "L1576",
       "weight": 1.0
     },
     {
@@ -11974,7 +11998,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L1557",
+      "source_location": "L1577",
       "weight": 1.0
     },
     {
@@ -11986,7 +12010,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L1280",
+      "source_location": "L1300",
       "weight": 1.0
     },
     {
@@ -11998,7 +12022,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L1324",
+      "source_location": "L1344",
       "weight": 1.0
     },
     {
@@ -12010,7 +12034,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L1325",
+      "source_location": "L1345",
       "weight": 1.0
     },
     {
@@ -12022,7 +12046,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L1328",
+      "source_location": "L1348",
       "weight": 1.0
     },
     {
@@ -12034,7 +12058,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L1336",
+      "source_location": "L1356",
       "weight": 1.0
     },
     {
@@ -12046,7 +12070,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L1425",
+      "source_location": "L1445",
       "weight": 1.0
     },
     {
@@ -12058,7 +12082,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L1426",
+      "source_location": "L1446",
       "weight": 1.0
     },
     {
@@ -12070,7 +12094,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L1429",
+      "source_location": "L1449",
       "weight": 1.0
     },
     {
@@ -12082,7 +12106,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L1051",
+      "source_location": "L1071",
       "weight": 1.0
     },
     {
@@ -12094,7 +12118,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L1206",
+      "source_location": "L1226",
       "weight": 1.0
     },
     {
@@ -12106,7 +12130,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L1209",
+      "source_location": "L1229",
       "weight": 1.0
     },
     {
@@ -12118,7 +12142,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L1210",
+      "source_location": "L1230",
       "weight": 1.0
     },
     {
@@ -12130,7 +12154,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L168",
+      "source_location": "L185",
       "weight": 1.0
     },
     {
@@ -12142,7 +12166,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L177",
+      "source_location": "L194",
       "weight": 1.0
     },
     {
@@ -12154,7 +12178,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L179",
+      "source_location": "L196",
       "weight": 1.0
     },
     {
@@ -12166,7 +12190,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L180",
+      "source_location": "L197",
       "weight": 1.0
     },
     {
@@ -17907,7 +17931,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/app/scorecard/page.tsx",
-      "source_location": "L1228",
+      "source_location": "L1261",
       "weight": 1.0
     },
     {
@@ -20085,7 +20109,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/scoring/scoring-realtime.ts",
-      "source_location": "L105",
+      "source_location": "L106",
       "weight": 1.0
     },
     {
@@ -20118,7 +20142,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L1050",
+      "source_location": "L1070",
       "weight": 1.0
     },
     {
@@ -20129,7 +20153,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L107",
+      "source_location": "L124",
       "weight": 1.0
     },
     {
@@ -20140,7 +20164,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L1220",
+      "source_location": "L1240",
       "weight": 1.0
     },
     {
@@ -20151,7 +20175,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L1279",
+      "source_location": "L1299",
       "weight": 1.0
     },
     {
@@ -20162,7 +20186,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L1335",
+      "source_location": "L1355",
       "weight": 1.0
     },
     {
@@ -20173,7 +20197,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L1435",
+      "source_location": "L1455",
       "weight": 1.0
     },
     {
@@ -20184,7 +20208,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L1495",
+      "source_location": "L1515",
       "weight": 1.0
     },
     {
@@ -20195,7 +20219,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L1567",
+      "source_location": "L1587",
       "weight": 1.0
     },
     {
@@ -20206,18 +20230,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L1607",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_web_lib_scoring_scoring_service",
-      "target": "apps_web_lib_scoring_scoring_service_updatematchrules",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L167",
+      "source_location": "L1627",
       "weight": 1.0
     },
     {
@@ -20228,18 +20241,18 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L1803",
+      "source_location": "L1823",
       "weight": 1.0
     },
     {
       "source": "apps_web_lib_scoring_scoring_service",
-      "target": "apps_web_lib_scoring_scoring_service_getpublicmatchscorecard",
+      "target": "apps_web_lib_scoring_scoring_service_updatematchrules",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L190",
+      "source_location": "L184",
       "weight": 1.0
     },
     {
@@ -20250,7 +20263,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L1904",
+      "source_location": "L1924",
       "weight": 1.0
     },
     {
@@ -20261,18 +20274,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L1954",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_web_lib_scoring_scoring_service",
-      "target": "apps_web_lib_scoring_scoring_service_getlivematches",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L198",
+      "source_location": "L1974",
       "weight": 1.0
     },
     {
@@ -20283,7 +20285,18 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L2023",
+      "source_location": "L2043",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_scoring_scoring_service",
+      "target": "apps_web_lib_scoring_scoring_service_getpublicmatchscorecard",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/lib/scoring/scoring-service.ts",
+      "source_location": "L207",
       "weight": 1.0
     },
     {
@@ -20299,13 +20312,24 @@
     },
     {
       "source": "apps_web_lib_scoring_scoring_service",
+      "target": "apps_web_lib_scoring_scoring_service_getlivematches",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/lib/scoring/scoring-service.ts",
+      "source_location": "L215",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_scoring_scoring_service",
       "target": "apps_web_lib_scoring_scoring_service_buildmatchbroadcastpayload",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L256",
+      "source_location": "L273",
       "weight": 1.0
     },
     {
@@ -20349,7 +20373,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L449",
+      "source_location": "L469",
       "weight": 1.0
     },
     {
@@ -20360,7 +20384,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L505",
+      "source_location": "L525",
       "weight": 1.0
     },
     {
@@ -20371,12 +20395,12 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L586",
+      "source_location": "L606",
       "weight": 1.0
     },
     {
       "source": "apps_web_lib_scoring_scoring_service",
-      "target": "apps_web_lib_scoring_scoring_service_getmatcheslist",
+      "target": "apps_web_lib_scoring_scoring_service_isfreehitactive",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -20393,7 +20417,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L671",
+      "source_location": "L691",
       "weight": 1.0
     },
     {
@@ -20405,6 +20429,17 @@
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
       "source_location": "L7",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_scoring_scoring_service",
+      "target": "apps_web_lib_scoring_scoring_service_getmatcheslist",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/lib/scoring/scoring-service.ts",
+      "source_location": "L78",
       "weight": 1.0
     },
     {
@@ -24277,5 +24312,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "fbf3e0861c0a876ed95b2fbc2a96974da157a7c6"
+  "built_at_commit": "028874ee7ac941e1adc60616968e4d8c5797a94a"
 }

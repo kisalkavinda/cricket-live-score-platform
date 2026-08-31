@@ -8,6 +8,7 @@ interface Tournament {
   id: string;
   name: string;
   season?: string;
+  stages?: Array<{ oversPerInnings?: number; ballsPerOver?: number }>;
 }
 
 interface Team {
@@ -32,8 +33,9 @@ export default function NewMatchForm({ tournaments, teams, entryPath }: Props) {
   const [tournamentId, setTournamentId] = useState<string>(tournaments[0]?.id || '');
   const [teamAId, setTeamAId] = useState<string>('');
   const [teamBId, setTeamBId] = useState<string>('');
-  const [oversPerInnings, setOversPerInnings] = useState<number>(6);
-  const [ballsPerOver, setBallsPerOver] = useState<number>(6);
+  const firstStage = tournaments[0]?.stages?.[0];
+  const [oversPerInnings, setOversPerInnings] = useState<number>(firstStage?.oversPerInnings || 6);
+  const [ballsPerOver, setBallsPerOver] = useState<number>(firstStage?.ballsPerOver || 6);
 
   const [startImmediately, setStartImmediately] = useState<boolean>(true);
   const [tossWinnerChoice, setTossWinnerChoice] = useState<'TEAM_A' | 'TEAM_B'>('TEAM_A');
@@ -183,7 +185,14 @@ export default function NewMatchForm({ tournaments, teams, entryPath }: Props) {
           <div style={{ position: 'relative' }}>
             <select
               value={tournamentId}
-              onChange={(e) => setTournamentId(e.target.value)}
+              onChange={(e) => {
+                const nextId = e.target.value;
+                setTournamentId(nextId);
+                const selectedTourn = tournaments.find((t) => t.id === nextId);
+                const stage = selectedTourn?.stages?.[0];
+                if (stage?.oversPerInnings) setOversPerInnings(stage.oversPerInnings);
+                if (stage?.ballsPerOver) setBallsPerOver(stage.ballsPerOver);
+              }}
               required
               style={{
                 width: '100%',
