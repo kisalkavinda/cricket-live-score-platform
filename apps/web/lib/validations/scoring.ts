@@ -22,7 +22,7 @@ export const recordDeliverySchema = z.object({
   dismissedPlayerId: z.string().trim().min(1).max(64).optional(),
   newBatterId: z.string().trim().min(1).max(64).optional(),
   commentary: z.string().trim().max(500).optional(),
-  expectedUpdatedAt: z.string().optional(),
+  expectedUpdatedAt: z.union([z.string(), z.date()]).optional(),
 });
 
 export const createMatchSchema = z.object({

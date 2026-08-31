@@ -5,7 +5,7 @@
   "3": "dependencies",
   "4": "database/package.json",
   "5": "RegistrationForm.tsx",
-  "6": "createPerfTracker",
+  "6": "index.ts",
   "7": "compilerOptions",
   "8": "security-overhaul.test.js",
   "9": "security-audit.test.js",
@@ -37,7 +37,7 @@
   "35": "requireAdminAuth",
   "36": "teams/[id]/page.tsx",
   "37": "admin-actions.ts",
-  "38": "ExceptionCard.tsx",
+  "38": "registration-exceptions/page.tsx",
   "39": "backup-sync.ts",
   "40": "live-security-recheck.test.js",
   "41": "(admin)/layout.tsx",
@@ -45,7 +45,6 @@
   "43": "e2e-system-verification.test.js",
   "44": "http-smoke-check.test.js",
   "45": "DeleteRegistrationButton.tsx",
-  "46": "index.ts",
-  "47": "inspect-and-clean-dummy-data.js",
-  "48": "manual-cookie-replay-test.js"
+  "46": "createTournamentServerAction",
+  "47": "inspect-and-clean-dummy-data.js"
 }
