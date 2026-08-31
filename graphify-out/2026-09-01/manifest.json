@@ -210,9 +210,9 @@
     "semantic_hash": "a9c61682d0e612308e15b70b59cd96a2"
   },
   "apps/web/app/scorecard/page.tsx": {
-    "mtime": 1788081679.7996602,
-    "seen": 1788200715.6692436,
-    "ast_hash": "30e58f2909d18116e129ca37c91ba0c8",
+    "mtime": 1788202011.2347138,
+    "seen": 1788202094.8546104,
+    "ast_hash": "bd042054fba3d21ddc86ba3eb1868c6a",
     "semantic_hash": ""
   },
   "apps/web/components/EventDetails.tsx": {
@@ -234,9 +234,9 @@
     "semantic_hash": "5b460a5d0df1ea81416652cd74474593"
   },
   "apps/web/components/LiveScoreWidget.tsx": {
-    "mtime": 1788081679.8013275,
-    "seen": 1788200715.6706953,
-    "ast_hash": "6112747e35d00bb2b8723fa430b992e9",
+    "mtime": 1788201972.9735885,
+    "seen": 1788202094.8550131,
+    "ast_hash": "df4d89c6c0ce837e6d84f2e6c2bd4e80",
     "semantic_hash": ""
   },
   "apps/web/components/LottieAnimation.tsx": {
@@ -372,9 +372,9 @@
     "semantic_hash": "86ee0408066c88c00d58cf95dbf5d865"
   },
   "apps/web/components/scoring/ScoringConsole.tsx": {
-    "mtime": 1788079402.5039492,
-    "seen": 1788200715.6794171,
-    "ast_hash": "217dc6323637631f0493fe18b1d8f7a6",
+    "mtime": 1788201963.4924946,
+    "seen": 1788202094.8573422,
+    "ast_hash": "1e60ba11372d25da56b3fcd2b3871c45",
     "semantic_hash": ""
   },
   "apps/web/config/tournament.ts": {
@@ -450,15 +450,15 @@
     "semantic_hash": ""
   },
   "apps/web/lib/scoring/scoring-realtime.ts": {
-    "mtime": 1788079402.5093694,
-    "seen": 1788200715.6830595,
-    "ast_hash": "028f7398aae0cf589474e84d2607a484",
+    "mtime": 1788201852.3383198,
+    "seen": 1788202094.858643,
+    "ast_hash": "5771f71b0db007f6630b8533e71daf2c",
     "semantic_hash": ""
   },
   "apps/web/lib/scoring/scoring-service.ts": {
-    "mtime": 1788200537.7822912,
-    "seen": 1788200715.6830637,
-    "ast_hash": "b6e856a1b2297883319d199f12fdc8d3",
+    "mtime": 1788202058.5050852,
+    "seen": 1788202094.8586442,
+    "ast_hash": "8f86c245d5bd6ee415e149bd4348bbef",
     "semantic_hash": ""
   },
   "apps/web/lib/utils/perf-logger.ts": {
@@ -654,8 +654,8 @@
     "semantic_hash": ""
   },
   "apps/web/lib/validations/scoring.ts": {
-    "mtime": 1788200532.4794393,
-    "seen": 1788200715.6839502,
+    "mtime": 1788200766.7416747,
+    "seen": 1788202094.8591242,
     "ast_hash": "4d0b8497860d5c1eef7c8edae269d47c",
     "semantic_hash": ""
   },
