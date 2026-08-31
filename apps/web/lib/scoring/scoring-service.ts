@@ -48,7 +48,7 @@ export interface RecordDeliveryInput {
   dismissedPlayerId?: string;
   newBatterId?: string;
   commentary?: string;
-  expectedUpdatedAt?: string;
+  expectedUpdatedAt?: string | Date;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

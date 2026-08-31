@@ -40,7 +40,7 @@
       "file_type": "code",
       "norm_label": "registrationsquery",
       "source_file": "apps/web/lib/admin/admin-service.ts",
-      "source_location": "L131"
+      "source_location": "L122"
     },
     {
       "id": "apps_web_app_secretpath_admin_matches_new_newmatchform_props",
@@ -93,6 +93,19 @@
       "norm_label": "props",
       "source_file": "apps/web/components/scoring/ScoringConsole.tsx",
       "source_location": "L22"
+    },
+    {
+      "id": "apps_web_lib_scoring_scoring_realtime_scorebroadcastpayload",
+      "label": "ScoreBroadcastPayload",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 1,
+      "community_name": "scoring-actions.ts",
+      "file_type": "code",
+      "norm_label": "scorebroadcastpayload",
+      "source_file": "apps/web/lib/scoring/scoring-realtime.ts",
+      "source_location": "L9"
     },
     {
       "id": "apps_web_lib_scoring_scoring_service_creatematchinput",
@@ -303,19 +316,6 @@
       "source_location": "L29"
     },
     {
-      "id": "apps_web_lib_scoring_scoring_realtime_scorebroadcastpayload",
-      "label": "ScoreBroadcastPayload",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "app/page.tsx",
-      "file_type": "code",
-      "norm_label": "scorebroadcastpayload",
-      "source_file": "apps/web/lib/scoring/scoring-realtime.ts",
-      "source_location": "L9"
-    },
-    {
       "id": "apps_web_components_admin_deleteteambutton_deleteteambuttonprops",
       "label": "DeleteTeamButtonProps",
       "_callable": true,
@@ -348,7 +348,7 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 38,
-      "community_name": "ExceptionCard.tsx",
+      "community_name": "registration-exceptions/page.tsx",
       "file_type": "code",
       "norm_label": "exceptioncardprops",
       "source_file": "apps/web/components/admin/ExceptionCard.tsx",
@@ -569,7 +569,7 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 6,
-      "community_name": "createPerfTracker",
+      "community_name": "index.ts",
       "file_type": "code",
       "norm_label": "deletematchbuttonprops",
       "source_file": "apps/web/components/admin/DeleteMatchButton.tsx",
@@ -582,7 +582,7 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 6,
-      "community_name": "createPerfTracker",
+      "community_name": "index.ts",
       "file_type": "code",
       "norm_label": "deletetournamentbuttonprops",
       "source_file": "apps/web/components/admin/DeleteTournamentButton.tsx",
@@ -595,7 +595,7 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 6,
-      "community_name": "createPerfTracker",
+      "community_name": "index.ts",
       "file_type": "code",
       "norm_label": "perftracker",
       "source_file": "apps/web/lib/utils/perf-logger.ts",
@@ -671,7 +671,7 @@
       "file_type": "code",
       "norm_label": "approveregistrationtransaction()",
       "source_file": "apps/web/lib/admin/admin-service.ts",
-      "source_location": "L402"
+      "source_location": "L393"
     },
     {
       "id": "apps_web_lib_admin_admin_service_getregistrationdetail",
@@ -683,7 +683,7 @@
       "file_type": "code",
       "norm_label": "getregistrationdetail()",
       "source_file": "apps/web/lib/admin/admin-service.ts",
-      "source_location": "L291"
+      "source_location": "L282"
     },
     {
       "id": "apps_web_lib_admin_admin_service_matchesintakeorindex",
@@ -695,7 +695,7 @@
       "file_type": "code",
       "norm_label": "matchesintakeorindex()",
       "source_file": "apps/web/lib/admin/admin-service.ts",
-      "source_location": "L229"
+      "source_location": "L220"
     },
     {
       "id": "apps_web_lib_admin_admin_service_matchesregistrationexception",
@@ -707,7 +707,7 @@
       "file_type": "code",
       "norm_label": "matchesregistrationexception()",
       "source_file": "apps/web/lib/admin/admin-service.ts",
-      "source_location": "L254"
+      "source_location": "L245"
     },
     {
       "id": "apps_web_lib_admin_admin_service_rejectregistrationaction",
@@ -719,7 +719,7 @@
       "file_type": "code",
       "norm_label": "rejectregistrationaction()",
       "source_file": "apps/web/lib/admin/admin-service.ts",
-      "source_location": "L617"
+      "source_location": "L608"
     },
     {
       "id": "apps_web_lib_admin_admin_service_retrybackupservice",
@@ -731,7 +731,7 @@
       "file_type": "code",
       "norm_label": "retrybackupservice()",
       "source_file": "apps/web/lib/admin/admin-service.ts",
-      "source_location": "L675"
+      "source_location": "L666"
     },
     {
       "id": "apps_web_lib_admin_admin_service_verifyapprovalpreflight",
@@ -743,7 +743,7 @@
       "file_type": "code",
       "norm_label": "verifyapprovalpreflight()",
       "source_file": "apps/web/lib/admin/admin-service.ts",
-      "source_location": "L341"
+      "source_location": "L332"
     },
     {
       "id": "apps_web_app_api_matches_id_scorecard_route_get",
@@ -1418,6 +1418,18 @@
       "source_location": "L42"
     },
     {
+      "id": "apps_web_app_api_registrations_route_post",
+      "label": "POST()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 13,
+      "community_name": "admin-auth.ts",
+      "file_type": "code",
+      "norm_label": "post()",
+      "source_file": "apps/web/app/api/registrations/route.ts",
+      "source_location": "L7"
+    },
+    {
       "id": "apps_web_app_secretpath_adminloginclient_adminloginclient",
       "label": "AdminLoginClient()",
       "_callable": true,
@@ -1463,7 +1475,7 @@
       "file_type": "code",
       "norm_label": "createsessiontoken()",
       "source_file": "apps/web/lib/auth/admin-auth.ts",
-      "source_location": "L149"
+      "source_location": "L126"
     },
     {
       "id": "apps_web_lib_auth_admin_auth_getadminsecrets",
@@ -1475,7 +1487,7 @@
       "file_type": "code",
       "norm_label": "getadminsecrets()",
       "source_file": "apps/web/lib/auth/admin-auth.ts",
-      "source_location": "L75"
+      "source_location": "L70"
     },
     {
       "id": "apps_web_lib_auth_admin_auth_getclientip",
@@ -1487,7 +1499,7 @@
       "file_type": "code",
       "norm_label": "getclientip()",
       "source_file": "apps/web/lib/auth/admin-auth.ts",
-      "source_location": "L210"
+      "source_location": "L187"
     },
     {
       "id": "apps_web_lib_auth_admin_auth_getenvvalue",
@@ -1499,7 +1511,7 @@
       "file_type": "code",
       "norm_label": "getenvvalue()",
       "source_file": "apps/web/lib/auth/admin-auth.ts",
-      "source_location": "L22"
+      "source_location": "L23"
     },
     {
       "id": "apps_web_lib_auth_admin_auth_hashtoken",
@@ -1511,7 +1523,7 @@
       "file_type": "code",
       "norm_label": "hashtoken()",
       "source_file": "apps/web/lib/auth/admin-auth.ts",
-      "source_location": "L142"
+      "source_location": "L119"
     },
     {
       "id": "apps_web_lib_auth_admin_auth_istokenrevokedindb",
@@ -1523,7 +1535,7 @@
       "file_type": "code",
       "norm_label": "istokenrevokedindb()",
       "source_file": "apps/web/lib/auth/admin-auth.ts",
-      "source_location": "L271"
+      "source_location": "L243"
     },
     {
       "id": "apps_web_lib_auth_admin_auth_loginadmin",
@@ -1535,7 +1547,7 @@
       "file_type": "code",
       "norm_label": "loginadmin()",
       "source_file": "apps/web/lib/auth/admin-auth.ts",
-      "source_location": "L222"
+      "source_location": "L199"
     },
     {
       "id": "apps_web_lib_auth_admin_auth_revokesession",
@@ -1547,7 +1559,7 @@
       "file_type": "code",
       "norm_label": "revokesession()",
       "source_file": "apps/web/lib/auth/admin-auth.ts",
-      "source_location": "L302"
+      "source_location": "L272"
     },
     {
       "id": "apps_web_lib_auth_admin_auth_verifycsrforigin",
@@ -1559,7 +1571,7 @@
       "file_type": "code",
       "norm_label": "verifycsrforigin()",
       "source_file": "apps/web/lib/auth/admin-auth.ts",
-      "source_location": "L367"
+      "source_location": "L337"
     },
     {
       "id": "apps_web_lib_auth_admin_auth_verifypassword",
@@ -1571,7 +1583,7 @@
       "file_type": "code",
       "norm_label": "verifypassword()",
       "source_file": "apps/web/lib/auth/admin-auth.ts",
-      "source_location": "L107"
+      "source_location": "L90"
     },
     {
       "id": "apps_web_lib_auth_admin_auth_verifysessiontoken",
@@ -1583,7 +1595,7 @@
       "file_type": "code",
       "norm_label": "verifysessiontoken()",
       "source_file": "apps/web/lib/auth/admin-auth.ts",
-      "source_location": "L164"
+      "source_location": "L141"
     },
     {
       "id": "apps_web_lib_utils_rate_limiter_checkratelimit",
@@ -1727,7 +1739,7 @@
       "file_type": "code",
       "norm_label": "fullscorecardpage()",
       "source_file": "apps/web/app/scorecard/page.tsx",
-      "source_location": "L1228"
+      "source_location": "L1225"
     },
     {
       "id": "apps_web_app_scorecard_page_scorecardcontent",
@@ -2123,7 +2135,7 @@
       "file_type": "code",
       "norm_label": "getadminentrypath()",
       "source_file": "apps/web/lib/auth/admin-auth.ts",
-      "source_location": "L64"
+      "source_location": "L59"
     },
     {
       "id": "apps_web_lib_auth_admin_auth_requireadminauth",
@@ -2135,7 +2147,7 @@
       "file_type": "code",
       "norm_label": "requireadminauth()",
       "source_file": "apps/web/lib/auth/admin-auth.ts",
-      "source_location": "L404"
+      "source_location": "L374"
     },
     {
       "id": "apps_web_app_secretpath_admin_teams_id_page_teamdetailpage",
@@ -2246,30 +2258,6 @@
       "source_location": "L328"
     },
     {
-      "id": "apps_web_app_secretpath_admin_tournaments_new_page_newtournamentpage",
-      "label": "NewTournamentPage()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 37,
-      "community_name": "admin-actions.ts",
-      "file_type": "code",
-      "norm_label": "newtournamentpage()",
-      "source_file": "apps/web/app/[secretPath]/(admin)/tournaments/new/page.tsx",
-      "source_location": "L8"
-    },
-    {
-      "id": "apps_web_app_secretpath_admin_tournaments_new_page_newtournamentpage_handlesubmit",
-      "label": "handleSubmit()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 37,
-      "community_name": "admin-actions.ts",
-      "file_type": "code",
-      "norm_label": "handlesubmit()",
-      "source_file": "apps/web/app/[secretPath]/(admin)/tournaments/new/page.tsx",
-      "source_location": "L14"
-    },
-    {
       "id": "apps_web_lib_admin_admin_actions_createexceptionserveraction",
       "label": "createExceptionServerAction()",
       "_callable": true,
@@ -2280,18 +2268,6 @@
       "norm_label": "createexceptionserveraction()",
       "source_file": "apps/web/lib/admin/admin-actions.ts",
       "source_location": "L104"
-    },
-    {
-      "id": "apps_web_lib_admin_admin_actions_createtournamentserveraction",
-      "label": "createTournamentServerAction()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 37,
-      "community_name": "admin-actions.ts",
-      "file_type": "code",
-      "norm_label": "createtournamentserveraction()",
-      "source_file": "apps/web/lib/admin/admin-actions.ts",
-      "source_location": "L247"
     },
     {
       "id": "apps_web_lib_admin_admin_actions_logoutadminserveraction",
@@ -2315,7 +2291,7 @@
       "file_type": "code",
       "norm_label": "createexception()",
       "source_file": "apps/web/lib/admin/admin-service.ts",
-      "source_location": "L706"
+      "source_location": "L697"
     },
     {
       "id": "apps_web_lib_auth_admin_auth_logoutadmin",
@@ -2327,7 +2303,19 @@
       "file_type": "code",
       "norm_label": "logoutadmin()",
       "source_file": "apps/web/lib/auth/admin-auth.ts",
-      "source_location": "L325"
+      "source_location": "L295"
+    },
+    {
+      "id": "apps_web_app_secretpath_admin_registration_exceptions_page_registrationexceptionspage",
+      "label": "RegistrationExceptionsPage()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 38,
+      "community_name": "registration-exceptions/page.tsx",
+      "file_type": "code",
+      "norm_label": "registrationexceptionspage()",
+      "source_file": "apps/web/app/[secretPath]/(admin)/registration-exceptions/page.tsx",
+      "source_location": "L9"
     },
     {
       "id": "apps_web_components_admin_exceptioncard_exceptioncard",
@@ -2335,7 +2323,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 38,
-      "community_name": "ExceptionCard.tsx",
+      "community_name": "registration-exceptions/page.tsx",
       "file_type": "code",
       "norm_label": "exceptioncard()",
       "source_file": "apps/web/components/admin/ExceptionCard.tsx",
@@ -2347,7 +2335,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 38,
-      "community_name": "ExceptionCard.tsx",
+      "community_name": "registration-exceptions/page.tsx",
       "file_type": "code",
       "norm_label": "handledelete()",
       "source_file": "apps/web/components/admin/ExceptionCard.tsx",
@@ -2359,7 +2347,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 38,
-      "community_name": "ExceptionCard.tsx",
+      "community_name": "registration-exceptions/page.tsx",
       "file_type": "code",
       "norm_label": "handletoggle()",
       "source_file": "apps/web/components/admin/ExceptionCard.tsx",
@@ -2371,7 +2359,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 38,
-      "community_name": "ExceptionCard.tsx",
+      "community_name": "registration-exceptions/page.tsx",
       "file_type": "code",
       "norm_label": "handleupdate()",
       "source_file": "apps/web/components/admin/ExceptionCard.tsx",
@@ -2383,7 +2371,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 38,
-      "community_name": "ExceptionCard.tsx",
+      "community_name": "registration-exceptions/page.tsx",
       "file_type": "code",
       "norm_label": "deleteexceptionserveraction()",
       "source_file": "apps/web/lib/admin/admin-actions.ts",
@@ -2395,7 +2383,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 38,
-      "community_name": "ExceptionCard.tsx",
+      "community_name": "registration-exceptions/page.tsx",
       "file_type": "code",
       "norm_label": "toggleexceptionserveraction()",
       "source_file": "apps/web/lib/admin/admin-actions.ts",
@@ -2407,11 +2395,23 @@
       "_callable": true,
       "_origin": "ast",
       "community": 38,
-      "community_name": "ExceptionCard.tsx",
+      "community_name": "registration-exceptions/page.tsx",
       "file_type": "code",
       "norm_label": "updateexceptionserveraction()",
       "source_file": "apps/web/lib/admin/admin-actions.ts",
       "source_location": "L138"
+    },
+    {
+      "id": "apps_web_lib_admin_admin_service_getexceptionslist",
+      "label": "getExceptionsList()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 38,
+      "community_name": "registration-exceptions/page.tsx",
+      "file_type": "code",
+      "norm_label": "getexceptionslist()",
+      "source_file": "apps/web/lib/admin/admin-service.ts",
+      "source_location": "L688"
     },
     {
       "id": "apps_web_lib_admin_admin_service_toggleexceptionstatus",
@@ -2419,11 +2419,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 38,
-      "community_name": "ExceptionCard.tsx",
+      "community_name": "registration-exceptions/page.tsx",
       "file_type": "code",
       "norm_label": "toggleexceptionstatus()",
       "source_file": "apps/web/lib/admin/admin-service.ts",
-      "source_location": "L739"
+      "source_location": "L730"
     },
     {
       "id": "apps_web_lib_registrations_backup_sync_recordfailedbackup",
@@ -2555,7 +2555,7 @@
       "file_type": "code",
       "norm_label": "mockisrevoked()",
       "source_file": "apps/web/tests/live-security-recheck.test.js",
-      "source_location": "L109"
+      "source_location": "L108"
     },
     {
       "id": "apps_web_tests_live_security_recheck_test_mockrevoke",
@@ -2567,7 +2567,7 @@
       "file_type": "code",
       "norm_label": "mockrevoke()",
       "source_file": "apps/web/tests/live-security-recheck.test.js",
-      "source_location": "L113"
+      "source_location": "L112"
     },
     {
       "id": "apps_web_tests_live_security_recheck_test_simulatecsrfcheck",
@@ -2579,7 +2579,7 @@
       "file_type": "code",
       "norm_label": "simulatecsrfcheck()",
       "source_file": "apps/web/tests/live-security-recheck.test.js",
-      "source_location": "L73"
+      "source_location": "L72"
     },
     {
       "id": "apps_web_components_admin_adminnavlinks_adminnavlinks",
@@ -2762,40 +2762,40 @@
       "source_location": "L70"
     },
     {
-      "id": "apps_web_app_register_page_registerpage",
-      "label": "RegisterPage()",
+      "id": "apps_web_app_secretpath_admin_tournaments_new_page_newtournamentpage",
+      "label": "NewTournamentPage()",
       "_callable": true,
       "_origin": "ast",
       "community": 46,
-      "community_name": "index.ts",
+      "community_name": "createTournamentServerAction",
       "file_type": "code",
-      "norm_label": "registerpage()",
-      "source_file": "apps/web/app/register/page.tsx",
-      "source_location": "L15"
+      "norm_label": "newtournamentpage()",
+      "source_file": "apps/web/app/[secretPath]/(admin)/tournaments/new/page.tsx",
+      "source_location": "L8"
     },
     {
-      "id": "apps_web_app_secretpath_admin_registration_exceptions_page_registrationexceptionspage",
-      "label": "RegistrationExceptionsPage()",
+      "id": "apps_web_app_secretpath_admin_tournaments_new_page_newtournamentpage_handlesubmit",
+      "label": "handleSubmit()",
       "_callable": true,
       "_origin": "ast",
       "community": 46,
-      "community_name": "index.ts",
+      "community_name": "createTournamentServerAction",
       "file_type": "code",
-      "norm_label": "registrationexceptionspage()",
-      "source_file": "apps/web/app/[secretPath]/(admin)/registration-exceptions/page.tsx",
-      "source_location": "L9"
+      "norm_label": "handlesubmit()",
+      "source_file": "apps/web/app/[secretPath]/(admin)/tournaments/new/page.tsx",
+      "source_location": "L14"
     },
     {
-      "id": "apps_web_lib_admin_admin_service_getexceptionslist",
-      "label": "getExceptionsList()",
+      "id": "apps_web_lib_admin_admin_actions_createtournamentserveraction",
+      "label": "createTournamentServerAction()",
       "_callable": true,
       "_origin": "ast",
       "community": 46,
-      "community_name": "index.ts",
+      "community_name": "createTournamentServerAction",
       "file_type": "code",
-      "norm_label": "getexceptionslist()",
-      "source_file": "apps/web/lib/admin/admin-service.ts",
-      "source_location": "L697"
+      "norm_label": "createtournamentserveraction()",
+      "source_file": "apps/web/lib/admin/admin-actions.ts",
+      "source_location": "L247"
     },
     {
       "id": "scripts_inspect_and_clean_dummy_data_main",
@@ -2808,30 +2808,6 @@
       "norm_label": "main()",
       "source_file": "scripts/inspect-and-clean-dummy-data.js",
       "source_location": "L9"
-    },
-    {
-      "id": "scripts_manual_cookie_replay_test_runcookiereplaytest",
-      "label": "runCookieReplayTest()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 48,
-      "community_name": "manual-cookie-replay-test.js",
-      "file_type": "code",
-      "norm_label": "runcookiereplaytest()",
-      "source_file": "scripts/manual-cookie-replay-test.js",
-      "source_location": "L12"
-    },
-    {
-      "id": "apps_web_app_api_registrations_route_post",
-      "label": "POST()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 5,
-      "community_name": "RegistrationForm.tsx",
-      "file_type": "code",
-      "norm_label": "post()",
-      "source_file": "apps/web/app/api/registrations/route.ts",
-      "source_location": "L7"
     },
     {
       "id": "apps_web_components_registration_confirmationchecklist_confirmationchecklist",
@@ -2978,12 +2954,24 @@
       "source_location": "L7"
     },
     {
+      "id": "apps_web_app_register_page_registerpage",
+      "label": "RegisterPage()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "index.ts",
+      "file_type": "code",
+      "norm_label": "registerpage()",
+      "source_file": "apps/web/app/register/page.tsx",
+      "source_location": "L15"
+    },
+    {
       "id": "apps_web_app_secretpath_admin_dashboard_page_admindashboardpage",
       "label": "AdminDashboardPage()",
       "_callable": true,
       "_origin": "ast",
       "community": 6,
-      "community_name": "createPerfTracker",
+      "community_name": "index.ts",
       "file_type": "code",
       "norm_label": "admindashboardpage()",
       "source_file": "apps/web/app/[secretPath]/(admin)/dashboard/page.tsx",
@@ -2995,7 +2983,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 6,
-      "community_name": "createPerfTracker",
+      "community_name": "index.ts",
       "file_type": "code",
       "norm_label": "adminmatchespage()",
       "source_file": "apps/web/app/[secretPath]/(admin)/matches/page.tsx",
@@ -3007,7 +2995,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 6,
-      "community_name": "createPerfTracker",
+      "community_name": "index.ts",
       "file_type": "code",
       "norm_label": "adminplayerspage()",
       "source_file": "apps/web/app/[secretPath]/(admin)/players/page.tsx",
@@ -3019,7 +3007,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 6,
-      "community_name": "createPerfTracker",
+      "community_name": "index.ts",
       "file_type": "code",
       "norm_label": "getplayers()",
       "source_file": "apps/web/app/[secretPath]/(admin)/players/page.tsx",
@@ -3031,7 +3019,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 6,
-      "community_name": "createPerfTracker",
+      "community_name": "index.ts",
       "file_type": "code",
       "norm_label": "adminregistrationspage()",
       "source_file": "apps/web/app/[secretPath]/(admin)/registrations/page.tsx",
@@ -3043,7 +3031,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 6,
-      "community_name": "createPerfTracker",
+      "community_name": "index.ts",
       "file_type": "code",
       "norm_label": "adminteamspage()",
       "source_file": "apps/web/app/[secretPath]/(admin)/teams/page.tsx",
@@ -3055,7 +3043,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 6,
-      "community_name": "createPerfTracker",
+      "community_name": "index.ts",
       "file_type": "code",
       "norm_label": "getteams()",
       "source_file": "apps/web/app/[secretPath]/(admin)/teams/page.tsx",
@@ -3067,7 +3055,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 6,
-      "community_name": "createPerfTracker",
+      "community_name": "index.ts",
       "file_type": "code",
       "norm_label": "admintournamentspage()",
       "source_file": "apps/web/app/[secretPath]/(admin)/tournaments/page.tsx",
@@ -3079,7 +3067,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 6,
-      "community_name": "createPerfTracker",
+      "community_name": "index.ts",
       "file_type": "code",
       "norm_label": "gettournaments()",
       "source_file": "apps/web/app/[secretPath]/(admin)/tournaments/page.tsx",
@@ -3091,7 +3079,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 6,
-      "community_name": "createPerfTracker",
+      "community_name": "index.ts",
       "file_type": "code",
       "norm_label": "deletematchbutton()",
       "source_file": "apps/web/components/admin/DeleteMatchButton.tsx",
@@ -3103,7 +3091,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 6,
-      "community_name": "createPerfTracker",
+      "community_name": "index.ts",
       "file_type": "code",
       "norm_label": "handledelete()",
       "source_file": "apps/web/components/admin/DeleteMatchButton.tsx",
@@ -3115,7 +3103,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 6,
-      "community_name": "createPerfTracker",
+      "community_name": "index.ts",
       "file_type": "code",
       "norm_label": "deletetournamentbutton()",
       "source_file": "apps/web/components/admin/DeleteTournamentButton.tsx",
@@ -3127,7 +3115,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 6,
-      "community_name": "createPerfTracker",
+      "community_name": "index.ts",
       "file_type": "code",
       "norm_label": "handledelete()",
       "source_file": "apps/web/components/admin/DeleteTournamentButton.tsx",
@@ -3139,7 +3127,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 6,
-      "community_name": "createPerfTracker",
+      "community_name": "index.ts",
       "file_type": "code",
       "norm_label": "getdashboardstats()",
       "source_file": "apps/web/lib/admin/admin-service.ts",
@@ -3151,11 +3139,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 6,
-      "community_name": "createPerfTracker",
+      "community_name": "index.ts",
       "file_type": "code",
       "norm_label": "getregistrationslist()",
       "source_file": "apps/web/lib/admin/admin-service.ts",
-      "source_location": "L142"
+      "source_location": "L133"
     },
     {
       "id": "apps_web_lib_scoring_scoring_actions_deletematchaction",
@@ -3163,7 +3151,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 6,
-      "community_name": "createPerfTracker",
+      "community_name": "index.ts",
       "file_type": "code",
       "norm_label": "deletematchaction()",
       "source_file": "apps/web/lib/scoring/scoring-actions.ts",
@@ -3175,7 +3163,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 6,
-      "community_name": "createPerfTracker",
+      "community_name": "index.ts",
       "file_type": "code",
       "norm_label": "getmatcheslist()",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
@@ -3187,7 +3175,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 6,
-      "community_name": "createPerfTracker",
+      "community_name": "index.ts",
       "file_type": "code",
       "norm_label": "createperftracker()",
       "source_file": "apps/web/lib/utils/perf-logger.ts",
@@ -3199,7 +3187,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 6,
-      "community_name": "createPerfTracker",
+      "community_name": "index.ts",
       "file_type": "code",
       "norm_label": "logperfmetric()",
       "source_file": "apps/web/lib/utils/perf-logger.ts",
@@ -3426,6 +3414,17 @@
       "file_type": "code",
       "norm_label": "scoring-actions.ts",
       "source_file": "apps/web/lib/scoring/scoring-actions.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "apps_web_lib_scoring_scoring_realtime",
+      "label": "scoring-realtime.ts",
+      "_origin": "ast",
+      "community": 1,
+      "community_name": "scoring-actions.ts",
+      "file_type": "code",
+      "norm_label": "scoring-realtime.ts",
+      "source_file": "apps/web/lib/scoring/scoring-realtime.ts",
       "source_location": "L1"
     },
     {
@@ -4396,6 +4395,17 @@
       "source_location": "L38"
     },
     {
+      "id": "apps_web_app_api_registrations_route",
+      "label": "registrations/route.ts",
+      "_origin": "ast",
+      "community": 13,
+      "community_name": "admin-auth.ts",
+      "file_type": "code",
+      "norm_label": "registrations/route.ts",
+      "source_file": "apps/web/app/api/registrations/route.ts",
+      "source_location": "L1"
+    },
+    {
       "id": "apps_web_app_secretpath_adminloginclient",
       "label": "AdminLoginClient.tsx",
       "_origin": "ast",
@@ -4437,7 +4447,7 @@
       "file_type": "code",
       "norm_label": "getadminsession",
       "source_file": "apps/web/lib/auth/admin-auth.ts",
-      "source_location": "L342"
+      "source_location": "L312"
     },
     {
       "id": "apps_web_lib_auth_admin_auth_lockout_duration_seconds",
@@ -4459,7 +4469,7 @@
       "file_type": "code",
       "norm_label": "revokedtokenscache",
       "source_file": "apps/web/lib/auth/admin-auth.ts",
-      "source_location": "L265"
+      "source_location": "L18"
     },
     {
       "id": "apps_web_lib_utils_rate_limiter",
@@ -5023,17 +5033,6 @@
       "source_location": "L11"
     },
     {
-      "id": "apps_web_lib_scoring_scoring_realtime",
-      "label": "scoring-realtime.ts",
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "app/page.tsx",
-      "file_type": "code",
-      "norm_label": "scoring-realtime.ts",
-      "source_file": "apps/web/lib/scoring/scoring-realtime.ts",
-      "source_location": "L1"
-    },
-    {
       "id": "apps_web_utils_supabase_client",
       "label": "client.ts",
       "_origin": "ast",
@@ -5108,7 +5107,7 @@
       "file_type": "code",
       "norm_label": "nextconfig",
       "source_file": "apps/web/next.config.ts",
-      "source_location": "L19"
+      "source_location": "L18"
     },
     {
       "id": "apps_web_postcss_config",
@@ -6575,17 +6574,6 @@
       "source_location": "L1"
     },
     {
-      "id": "apps_web_app_secretpath_admin_tournaments_new_page",
-      "label": "tournaments/new/page.tsx",
-      "_origin": "ast",
-      "community": 37,
-      "community_name": "admin-actions.ts",
-      "file_type": "code",
-      "norm_label": "tournaments/new/page.tsx",
-      "source_file": "apps/web/app/[secretPath]/(admin)/tournaments/new/page.tsx",
-      "source_location": "L1"
-    },
-    {
       "id": "apps_web_lib_admin_admin_actions",
       "label": "admin-actions.ts",
       "_origin": "ast",
@@ -6707,11 +6695,33 @@
       "source_location": "L46"
     },
     {
+      "id": "apps_web_app_secretpath_admin_registration_exceptions_page",
+      "label": "registration-exceptions/page.tsx",
+      "_origin": "ast",
+      "community": 38,
+      "community_name": "registration-exceptions/page.tsx",
+      "file_type": "code",
+      "norm_label": "registration-exceptions/page.tsx",
+      "source_file": "apps/web/app/[secretPath]/(admin)/registration-exceptions/page.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "apps_web_app_secretpath_admin_registration_exceptions_page_dynamic",
+      "label": "dynamic",
+      "_origin": "ast",
+      "community": 38,
+      "community_name": "registration-exceptions/page.tsx",
+      "file_type": "code",
+      "norm_label": "dynamic",
+      "source_file": "apps/web/app/[secretPath]/(admin)/registration-exceptions/page.tsx",
+      "source_location": "L7"
+    },
+    {
       "id": "apps_web_components_admin_exceptioncard",
       "label": "ExceptionCard.tsx",
       "_origin": "ast",
       "community": 38,
-      "community_name": "ExceptionCard.tsx",
+      "community_name": "registration-exceptions/page.tsx",
       "file_type": "code",
       "norm_label": "exceptioncard.tsx",
       "source_file": "apps/web/components/admin/ExceptionCard.tsx",
@@ -7045,7 +7055,7 @@
       "file_type": "code",
       "norm_label": "authcode",
       "source_file": "apps/web/tests/live-security-recheck.test.js",
-      "source_location": "L66"
+      "source_location": "L65"
     },
     {
       "id": "apps_web_tests_live_security_recheck_test_crypto",
@@ -7111,7 +7121,7 @@
       "file_type": "code",
       "norm_label": "match",
       "source_file": "apps/web/tests/live-security-recheck.test.js",
-      "source_location": "L40"
+      "source_location": "L41"
     },
     {
       "id": "apps_web_tests_live_security_recheck_test_mockrevokeddb",
@@ -7122,18 +7132,7 @@
       "file_type": "code",
       "norm_label": "mockrevokeddb",
       "source_file": "apps/web/tests/live-security-recheck.test.js",
-      "source_location": "L108"
-    },
-    {
-      "id": "apps_web_tests_live_security_recheck_test_passmatch",
-      "label": "passMatch",
-      "_origin": "ast",
-      "community": 40,
-      "community_name": "live-security-recheck.test.js",
-      "file_type": "code",
-      "norm_label": "passmatch",
-      "source_file": "apps/web/tests/live-security-recheck.test.js",
-      "source_location": "L43"
+      "source_location": "L107"
     },
     {
       "id": "apps_web_tests_live_security_recheck_test_path",
@@ -7155,7 +7154,7 @@
       "file_type": "code",
       "norm_label": "realtimesrc",
       "source_file": "apps/web/tests/live-security-recheck.test.js",
-      "source_location": "L141"
+      "source_location": "L140"
     },
     {
       "id": "apps_web_tests_live_security_recheck_test_rlssql",
@@ -7166,7 +7165,7 @@
       "file_type": "code",
       "norm_label": "rlssql",
       "source_file": "apps/web/tests/live-security-recheck.test.js",
-      "source_location": "L127"
+      "source_location": "L126"
     },
     {
       "id": "apps_web_app_secretpath_admin_layout",
@@ -7345,81 +7344,15 @@
       "source_location": "L1"
     },
     {
-      "id": "apps_web_app_secretpath_admin_matches_new_page",
-      "label": "matches/new/page.tsx",
+      "id": "apps_web_app_secretpath_admin_tournaments_new_page",
+      "label": "tournaments/new/page.tsx",
       "_origin": "ast",
       "community": 46,
-      "community_name": "index.ts",
+      "community_name": "createTournamentServerAction",
       "file_type": "code",
-      "norm_label": "matches/new/page.tsx",
-      "source_file": "apps/web/app/[secretPath]/(admin)/matches/new/page.tsx",
+      "norm_label": "tournaments/new/page.tsx",
+      "source_file": "apps/web/app/[secretPath]/(admin)/tournaments/new/page.tsx",
       "source_location": "L1"
-    },
-    {
-      "id": "apps_web_app_secretpath_admin_matches_new_page_dynamic",
-      "label": "dynamic",
-      "_origin": "ast",
-      "community": 46,
-      "community_name": "index.ts",
-      "file_type": "code",
-      "norm_label": "dynamic",
-      "source_file": "apps/web/app/[secretPath]/(admin)/matches/new/page.tsx",
-      "source_location": "L6"
-    },
-    {
-      "id": "apps_web_app_secretpath_admin_registration_exceptions_page",
-      "label": "registration-exceptions/page.tsx",
-      "_origin": "ast",
-      "community": 46,
-      "community_name": "index.ts",
-      "file_type": "code",
-      "norm_label": "registration-exceptions/page.tsx",
-      "source_file": "apps/web/app/[secretPath]/(admin)/registration-exceptions/page.tsx",
-      "source_location": "L1"
-    },
-    {
-      "id": "apps_web_app_secretpath_admin_registration_exceptions_page_dynamic",
-      "label": "dynamic",
-      "_origin": "ast",
-      "community": 46,
-      "community_name": "index.ts",
-      "file_type": "code",
-      "norm_label": "dynamic",
-      "source_file": "apps/web/app/[secretPath]/(admin)/registration-exceptions/page.tsx",
-      "source_location": "L7"
-    },
-    {
-      "id": "packages_database_index",
-      "label": "index.ts",
-      "_origin": "ast",
-      "community": 46,
-      "community_name": "index.ts",
-      "file_type": "code",
-      "norm_label": "index.ts",
-      "source_file": "packages/database/index.ts",
-      "source_location": "L1"
-    },
-    {
-      "id": "packages_database_index_globalforprisma",
-      "label": "globalForPrisma",
-      "_origin": "ast",
-      "community": 46,
-      "community_name": "index.ts",
-      "file_type": "code",
-      "norm_label": "globalforprisma",
-      "source_file": "packages/database/index.ts",
-      "source_location": "L3"
-    },
-    {
-      "id": "packages_database_index_prisma",
-      "label": "prisma",
-      "_origin": "ast",
-      "community": 46,
-      "community_name": "index.ts",
-      "file_type": "code",
-      "norm_label": "prisma",
-      "source_file": "packages/database/index.ts",
-      "source_location": "L5"
     },
     {
       "id": "scripts_inspect_and_clean_dummy_data",
@@ -7453,72 +7386,6 @@
       "norm_label": "{ prismaclient }",
       "source_file": "scripts/inspect-and-clean-dummy-data.js",
       "source_location": "L6"
-    },
-    {
-      "id": "scripts_manual_cookie_replay_test",
-      "label": "manual-cookie-replay-test.js",
-      "_origin": "ast",
-      "community": 48,
-      "community_name": "manual-cookie-replay-test.js",
-      "file_type": "code",
-      "norm_label": "manual-cookie-replay-test.js",
-      "source_file": "scripts/manual-cookie-replay-test.js",
-      "source_location": "L1"
-    },
-    {
-      "id": "scripts_manual_cookie_replay_test_crypto",
-      "label": "crypto",
-      "_origin": "ast",
-      "community": 48,
-      "community_name": "manual-cookie-replay-test.js",
-      "file_type": "code",
-      "norm_label": "crypto",
-      "source_file": "scripts/manual-cookie-replay-test.js",
-      "source_location": "L9"
-    },
-    {
-      "id": "scripts_manual_cookie_replay_test_http",
-      "label": "http",
-      "_origin": "ast",
-      "community": 48,
-      "community_name": "manual-cookie-replay-test.js",
-      "file_type": "code",
-      "norm_label": "http",
-      "source_file": "scripts/manual-cookie-replay-test.js",
-      "source_location": "L10"
-    },
-    {
-      "id": "scripts_manual_cookie_replay_test_prisma",
-      "label": "prisma",
-      "_origin": "ast",
-      "community": 48,
-      "community_name": "manual-cookie-replay-test.js",
-      "file_type": "code",
-      "norm_label": "prisma",
-      "source_file": "scripts/manual-cookie-replay-test.js",
-      "source_location": "L8"
-    },
-    {
-      "id": "scripts_manual_cookie_replay_test_prismaclient",
-      "label": "{ PrismaClient }",
-      "_origin": "ast",
-      "community": 48,
-      "community_name": "manual-cookie-replay-test.js",
-      "file_type": "code",
-      "norm_label": "{ prismaclient }",
-      "source_file": "scripts/manual-cookie-replay-test.js",
-      "source_location": "L7"
-    },
-    {
-      "id": "apps_web_app_api_registrations_route",
-      "label": "registrations/route.ts",
-      "_origin": "ast",
-      "community": 5,
-      "community_name": "RegistrationForm.tsx",
-      "file_type": "code",
-      "norm_label": "registrations/route.ts",
-      "source_file": "apps/web/app/api/registrations/route.ts",
-      "source_location": "L1"
     },
     {
       "id": "apps_web_components_registration_confirmationchecklist",
@@ -7668,7 +7535,7 @@
       "label": "dashboard/page.tsx",
       "_origin": "ast",
       "community": 6,
-      "community_name": "createPerfTracker",
+      "community_name": "index.ts",
       "file_type": "code",
       "norm_label": "dashboard/page.tsx",
       "source_file": "apps/web/app/[secretPath]/(admin)/dashboard/page.tsx",
@@ -7679,10 +7546,32 @@
       "label": "dynamic",
       "_origin": "ast",
       "community": 6,
-      "community_name": "createPerfTracker",
+      "community_name": "index.ts",
       "file_type": "code",
       "norm_label": "dynamic",
       "source_file": "apps/web/app/[secretPath]/(admin)/dashboard/page.tsx",
+      "source_location": "L6"
+    },
+    {
+      "id": "apps_web_app_secretpath_admin_matches_new_page",
+      "label": "matches/new/page.tsx",
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "index.ts",
+      "file_type": "code",
+      "norm_label": "matches/new/page.tsx",
+      "source_file": "apps/web/app/[secretPath]/(admin)/matches/new/page.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "apps_web_app_secretpath_admin_matches_new_page_dynamic",
+      "label": "dynamic",
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "index.ts",
+      "file_type": "code",
+      "norm_label": "dynamic",
+      "source_file": "apps/web/app/[secretPath]/(admin)/matches/new/page.tsx",
       "source_location": "L6"
     },
     {
@@ -7690,7 +7579,7 @@
       "label": "matches/page.tsx",
       "_origin": "ast",
       "community": 6,
-      "community_name": "createPerfTracker",
+      "community_name": "index.ts",
       "file_type": "code",
       "norm_label": "matches/page.tsx",
       "source_file": "apps/web/app/[secretPath]/(admin)/matches/page.tsx",
@@ -7701,7 +7590,7 @@
       "label": "dynamic",
       "_origin": "ast",
       "community": 6,
-      "community_name": "createPerfTracker",
+      "community_name": "index.ts",
       "file_type": "code",
       "norm_label": "dynamic",
       "source_file": "apps/web/app/[secretPath]/(admin)/matches/page.tsx",
@@ -7712,7 +7601,7 @@
       "label": "players/page.tsx",
       "_origin": "ast",
       "community": 6,
-      "community_name": "createPerfTracker",
+      "community_name": "index.ts",
       "file_type": "code",
       "norm_label": "players/page.tsx",
       "source_file": "apps/web/app/[secretPath]/(admin)/players/page.tsx",
@@ -7723,7 +7612,7 @@
       "label": "dynamic",
       "_origin": "ast",
       "community": 6,
-      "community_name": "createPerfTracker",
+      "community_name": "index.ts",
       "file_type": "code",
       "norm_label": "dynamic",
       "source_file": "apps/web/app/[secretPath]/(admin)/players/page.tsx",
@@ -7734,7 +7623,7 @@
       "label": "registrations/page.tsx",
       "_origin": "ast",
       "community": 6,
-      "community_name": "createPerfTracker",
+      "community_name": "index.ts",
       "file_type": "code",
       "norm_label": "registrations/page.tsx",
       "source_file": "apps/web/app/[secretPath]/(admin)/registrations/page.tsx",
@@ -7745,7 +7634,7 @@
       "label": "dynamic",
       "_origin": "ast",
       "community": 6,
-      "community_name": "createPerfTracker",
+      "community_name": "index.ts",
       "file_type": "code",
       "norm_label": "dynamic",
       "source_file": "apps/web/app/[secretPath]/(admin)/registrations/page.tsx",
@@ -7756,7 +7645,7 @@
       "label": "teams/page.tsx",
       "_origin": "ast",
       "community": 6,
-      "community_name": "createPerfTracker",
+      "community_name": "index.ts",
       "file_type": "code",
       "norm_label": "teams/page.tsx",
       "source_file": "apps/web/app/[secretPath]/(admin)/teams/page.tsx",
@@ -7767,7 +7656,7 @@
       "label": "dynamic",
       "_origin": "ast",
       "community": 6,
-      "community_name": "createPerfTracker",
+      "community_name": "index.ts",
       "file_type": "code",
       "norm_label": "dynamic",
       "source_file": "apps/web/app/[secretPath]/(admin)/teams/page.tsx",
@@ -7778,7 +7667,7 @@
       "label": "tournaments/page.tsx",
       "_origin": "ast",
       "community": 6,
-      "community_name": "createPerfTracker",
+      "community_name": "index.ts",
       "file_type": "code",
       "norm_label": "tournaments/page.tsx",
       "source_file": "apps/web/app/[secretPath]/(admin)/tournaments/page.tsx",
@@ -7789,7 +7678,7 @@
       "label": "dynamic",
       "_origin": "ast",
       "community": 6,
-      "community_name": "createPerfTracker",
+      "community_name": "index.ts",
       "file_type": "code",
       "norm_label": "dynamic",
       "source_file": "apps/web/app/[secretPath]/(admin)/tournaments/page.tsx",
@@ -7800,7 +7689,7 @@
       "label": "DeleteMatchButton.tsx",
       "_origin": "ast",
       "community": 6,
-      "community_name": "createPerfTracker",
+      "community_name": "index.ts",
       "file_type": "code",
       "norm_label": "deletematchbutton.tsx",
       "source_file": "apps/web/components/admin/DeleteMatchButton.tsx",
@@ -7811,7 +7700,7 @@
       "label": "DeleteTournamentButton.tsx",
       "_origin": "ast",
       "community": 6,
-      "community_name": "createPerfTracker",
+      "community_name": "index.ts",
       "file_type": "code",
       "norm_label": "deletetournamentbutton.tsx",
       "source_file": "apps/web/components/admin/DeleteTournamentButton.tsx",
@@ -7822,11 +7711,44 @@
       "label": "perf-logger.ts",
       "_origin": "ast",
       "community": 6,
-      "community_name": "createPerfTracker",
+      "community_name": "index.ts",
       "file_type": "code",
       "norm_label": "perf-logger.ts",
       "source_file": "apps/web/lib/utils/perf-logger.ts",
       "source_location": "L1"
+    },
+    {
+      "id": "packages_database_index",
+      "label": "index.ts",
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "index.ts",
+      "file_type": "code",
+      "norm_label": "index.ts",
+      "source_file": "packages/database/index.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "packages_database_index_globalforprisma",
+      "label": "globalForPrisma",
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "index.ts",
+      "file_type": "code",
+      "norm_label": "globalforprisma",
+      "source_file": "packages/database/index.ts",
+      "source_location": "L3"
+    },
+    {
+      "id": "packages_database_index_prisma",
+      "label": "prisma",
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "index.ts",
+      "file_type": "code",
+      "norm_label": "prisma",
+      "source_file": "packages/database/index.ts",
+      "source_location": "L5"
     },
     {
       "id": "apps_web_tsconfig",
@@ -8926,7 +8848,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/app/scorecard/page.tsx",
-      "source_location": "L90",
+      "source_location": "L87",
       "weight": 1.0
     },
     {
@@ -9886,7 +9808,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/components/LiveScoreWidget.tsx",
-      "source_location": "L88",
+      "source_location": "L86",
       "weight": 1.0
     },
     {
@@ -9898,7 +9820,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/components/Registration.tsx",
-      "source_location": "L8",
+      "source_location": "L6",
       "weight": 1.0
     },
     {
@@ -10678,7 +10600,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/admin/admin-service.ts",
-      "source_location": "L439",
+      "source_location": "L430",
       "weight": 1.0
     },
     {
@@ -10690,7 +10612,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/admin/admin-service.ts",
-      "source_location": "L312",
+      "source_location": "L303",
       "weight": 1.0
     },
     {
@@ -10702,7 +10624,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/admin/admin-service.ts",
-      "source_location": "L266",
+      "source_location": "L257",
       "weight": 1.0
     },
     {
@@ -10714,7 +10636,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/admin/admin-service.ts",
-      "source_location": "L679",
+      "source_location": "L670",
       "weight": 1.0
     },
     {
@@ -10726,7 +10648,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/admin/admin-service.ts",
-      "source_location": "L342",
+      "source_location": "L333",
       "weight": 1.0
     },
     {
@@ -10738,7 +10660,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/auth/admin-auth.ts",
-      "source_location": "L150",
+      "source_location": "L127",
       "weight": 1.0
     },
     {
@@ -10750,7 +10672,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/auth/admin-auth.ts",
-      "source_location": "L65",
+      "source_location": "L60",
       "weight": 1.0
     },
     {
@@ -10762,7 +10684,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/auth/admin-auth.ts",
-      "source_location": "L76",
+      "source_location": "L71",
       "weight": 1.0
     },
     {
@@ -10774,7 +10696,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/auth/admin-auth.ts",
-      "source_location": "L350",
+      "source_location": "L320",
       "weight": 1.0
     },
     {
@@ -10786,7 +10708,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/auth/admin-auth.ts",
-      "source_location": "L356",
+      "source_location": "L326",
       "weight": 1.0
     },
     {
@@ -10798,7 +10720,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/auth/admin-auth.ts",
-      "source_location": "L223",
+      "source_location": "L200",
       "weight": 1.0
     },
     {
@@ -10810,7 +10732,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/auth/admin-auth.ts",
-      "source_location": "L224",
+      "source_location": "L201",
       "weight": 1.0
     },
     {
@@ -10822,7 +10744,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/auth/admin-auth.ts",
-      "source_location": "L236",
+      "source_location": "L213",
       "weight": 1.0
     },
     {
@@ -10834,7 +10756,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/auth/admin-auth.ts",
-      "source_location": "L244",
+      "source_location": "L222",
       "weight": 1.0
     },
     {
@@ -10846,7 +10768,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/auth/admin-auth.ts",
-      "source_location": "L250",
+      "source_location": "L226",
       "weight": 1.0
     },
     {
@@ -10858,7 +10780,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/auth/admin-auth.ts",
-      "source_location": "L330",
+      "source_location": "L300",
       "weight": 1.0
     },
     {
@@ -10870,7 +10792,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/auth/admin-auth.ts",
-      "source_location": "L334",
+      "source_location": "L304",
       "weight": 1.0
     },
     {
@@ -10882,7 +10804,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/auth/admin-auth.ts",
-      "source_location": "L405",
+      "source_location": "L375",
       "weight": 1.0
     },
     {
@@ -10894,7 +10816,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/auth/admin-auth.ts",
-      "source_location": "L410",
+      "source_location": "L380",
       "weight": 1.0
     },
     {
@@ -10906,7 +10828,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/auth/admin-auth.ts",
-      "source_location": "L412",
+      "source_location": "L382",
       "weight": 1.0
     },
     {
@@ -10918,7 +10840,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/auth/admin-auth.ts",
-      "source_location": "L303",
+      "source_location": "L273",
       "weight": 1.0
     },
     {
@@ -10930,7 +10852,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/auth/admin-auth.ts",
-      "source_location": "L166",
+      "source_location": "L143",
       "weight": 1.0
     },
     {
@@ -10942,7 +10864,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/auth/admin-auth.ts",
-      "source_location": "L198",
+      "source_location": "L175",
       "weight": 1.0
     },
     {
@@ -12396,7 +12318,7 @@
       "context": "import",
       "deferred": true,
       "source_file": "apps/web/lib/auth/admin-auth.ts",
-      "source_location": "L277",
+      "source_location": "L249",
       "weight": 1.0
     },
     {
@@ -12409,7 +12331,7 @@
       "context": "import",
       "deferred": true,
       "source_file": "apps/web/lib/auth/admin-auth.ts",
-      "source_location": "L307",
+      "source_location": "L277",
       "weight": 1.0
     },
     {
@@ -17907,7 +17829,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/app/scorecard/page.tsx",
-      "source_location": "L1228",
+      "source_location": "L1225",
       "weight": 1.0
     },
     {
@@ -19370,7 +19292,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/admin/admin-service.ts",
-      "source_location": "L131",
+      "source_location": "L122",
       "weight": 1.0
     },
     {
@@ -19381,7 +19303,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/admin/admin-service.ts",
-      "source_location": "L142",
+      "source_location": "L133",
       "weight": 1.0
     },
     {
@@ -19392,7 +19314,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/admin/admin-service.ts",
-      "source_location": "L229",
+      "source_location": "L220",
       "weight": 1.0
     },
     {
@@ -19403,7 +19325,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/admin/admin-service.ts",
-      "source_location": "L254",
+      "source_location": "L245",
       "weight": 1.0
     },
     {
@@ -19425,7 +19347,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/admin/admin-service.ts",
-      "source_location": "L291",
+      "source_location": "L282",
       "weight": 1.0
     },
     {
@@ -19436,7 +19358,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/admin/admin-service.ts",
-      "source_location": "L341",
+      "source_location": "L332",
       "weight": 1.0
     },
     {
@@ -19447,7 +19369,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/admin/admin-service.ts",
-      "source_location": "L402",
+      "source_location": "L393",
       "weight": 1.0
     },
     {
@@ -19469,7 +19391,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/admin/admin-service.ts",
-      "source_location": "L617",
+      "source_location": "L608",
       "weight": 1.0
     },
     {
@@ -19480,7 +19402,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/admin/admin-service.ts",
-      "source_location": "L675",
+      "source_location": "L666",
       "weight": 1.0
     },
     {
@@ -19491,7 +19413,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/admin/admin-service.ts",
-      "source_location": "L697",
+      "source_location": "L688",
       "weight": 1.0
     },
     {
@@ -19502,7 +19424,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/admin/admin-service.ts",
-      "source_location": "L706",
+      "source_location": "L697",
       "weight": 1.0
     },
     {
@@ -19513,7 +19435,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/admin/admin-service.ts",
-      "source_location": "L739",
+      "source_location": "L730",
       "weight": 1.0
     },
     {
@@ -19540,24 +19462,13 @@
     },
     {
       "source": "apps_web_lib_auth_admin_auth",
-      "target": "apps_web_lib_auth_admin_auth_verifypassword",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "apps/web/lib/auth/admin-auth.ts",
-      "source_location": "L107",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_web_lib_auth_admin_auth",
       "target": "apps_web_lib_auth_admin_auth_hashtoken",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/auth/admin-auth.ts",
-      "source_location": "L142",
+      "source_location": "L119",
       "weight": 1.0
     },
     {
@@ -19568,7 +19479,18 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/auth/admin-auth.ts",
-      "source_location": "L149",
+      "source_location": "L126",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_auth_admin_auth",
+      "target": "apps_web_lib_auth_admin_auth_verifysessiontoken",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/lib/auth/admin-auth.ts",
+      "source_location": "L141",
       "weight": 1.0
     },
     {
@@ -19584,13 +19506,13 @@
     },
     {
       "source": "apps_web_lib_auth_admin_auth",
-      "target": "apps_web_lib_auth_admin_auth_verifysessiontoken",
+      "target": "apps_web_lib_auth_admin_auth_revokedtokenscache",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/auth/admin-auth.ts",
-      "source_location": "L164",
+      "source_location": "L18",
       "weight": 1.0
     },
     {
@@ -19601,18 +19523,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/auth/admin-auth.ts",
-      "source_location": "L210",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_web_lib_auth_admin_auth",
-      "target": "apps_web_lib_auth_admin_auth_getenvvalue",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "apps/web/lib/auth/admin-auth.ts",
-      "source_location": "L22",
+      "source_location": "L187",
       "weight": 1.0
     },
     {
@@ -19623,18 +19534,18 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/auth/admin-auth.ts",
-      "source_location": "L222",
+      "source_location": "L199",
       "weight": 1.0
     },
     {
       "source": "apps_web_lib_auth_admin_auth",
-      "target": "apps_web_lib_auth_admin_auth_revokedtokenscache",
+      "target": "apps_web_lib_auth_admin_auth_getenvvalue",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/auth/admin-auth.ts",
-      "source_location": "L265",
+      "source_location": "L23",
       "weight": 1.0
     },
     {
@@ -19645,7 +19556,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/auth/admin-auth.ts",
-      "source_location": "L271",
+      "source_location": "L243",
       "weight": 1.0
     },
     {
@@ -19656,7 +19567,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/auth/admin-auth.ts",
-      "source_location": "L302",
+      "source_location": "L272",
       "weight": 1.0
     },
     {
@@ -19667,7 +19578,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/auth/admin-auth.ts",
-      "source_location": "L325",
+      "source_location": "L295",
       "weight": 1.0
     },
     {
@@ -19678,7 +19589,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/auth/admin-auth.ts",
-      "source_location": "L342",
+      "source_location": "L312",
       "weight": 1.0
     },
     {
@@ -19689,7 +19600,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/auth/admin-auth.ts",
-      "source_location": "L367",
+      "source_location": "L337",
       "weight": 1.0
     },
     {
@@ -19700,7 +19611,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/auth/admin-auth.ts",
-      "source_location": "L404",
+      "source_location": "L374",
       "weight": 1.0
     },
     {
@@ -19711,7 +19622,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/auth/admin-auth.ts",
-      "source_location": "L64",
+      "source_location": "L59",
       "weight": 1.0
     },
     {
@@ -19722,7 +19633,18 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/auth/admin-auth.ts",
-      "source_location": "L75",
+      "source_location": "L70",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_auth_admin_auth",
+      "target": "apps_web_lib_auth_admin_auth_verifypassword",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/lib/auth/admin-auth.ts",
+      "source_location": "L90",
       "weight": 1.0
     },
     {
@@ -20833,7 +20755,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/next.config.ts",
-      "source_location": "L19",
+      "source_location": "L18",
       "weight": 1.0
     },
     {
@@ -21449,7 +21371,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/tests/live-security-recheck.test.js",
-      "source_location": "L108",
+      "source_location": "L107",
       "weight": 1.0
     },
     {
@@ -21460,7 +21382,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/tests/live-security-recheck.test.js",
-      "source_location": "L109",
+      "source_location": "L108",
       "weight": 1.0
     },
     {
@@ -21471,7 +21393,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/tests/live-security-recheck.test.js",
-      "source_location": "L113",
+      "source_location": "L112",
       "weight": 1.0
     },
     {
@@ -21493,7 +21415,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/tests/live-security-recheck.test.js",
-      "source_location": "L127",
+      "source_location": "L126",
       "weight": 1.0
     },
     {
@@ -21526,7 +21448,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/tests/live-security-recheck.test.js",
-      "source_location": "L141",
+      "source_location": "L140",
       "weight": 1.0
     },
     {
@@ -21581,18 +21503,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/tests/live-security-recheck.test.js",
-      "source_location": "L40",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_web_tests_live_security_recheck_test",
-      "target": "apps_web_tests_live_security_recheck_test_passmatch",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "apps/web/tests/live-security-recheck.test.js",
-      "source_location": "L43",
+      "source_location": "L41",
       "weight": 1.0
     },
     {
@@ -21603,7 +21514,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/tests/live-security-recheck.test.js",
-      "source_location": "L66",
+      "source_location": "L65",
       "weight": 1.0
     },
     {
@@ -21614,7 +21525,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/tests/live-security-recheck.test.js",
-      "source_location": "L73",
+      "source_location": "L72",
       "weight": 1.0
     },
     {
@@ -24181,61 +24092,6 @@
       "weight": 1.0
     },
     {
-      "source": "scripts_manual_cookie_replay_test",
-      "target": "scripts_manual_cookie_replay_test_http",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "scripts/manual-cookie-replay-test.js",
-      "source_location": "L10",
-      "weight": 1.0
-    },
-    {
-      "source": "scripts_manual_cookie_replay_test",
-      "target": "scripts_manual_cookie_replay_test_runcookiereplaytest",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "scripts/manual-cookie-replay-test.js",
-      "source_location": "L12",
-      "weight": 1.0
-    },
-    {
-      "source": "scripts_manual_cookie_replay_test",
-      "target": "scripts_manual_cookie_replay_test_prismaclient",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "scripts/manual-cookie-replay-test.js",
-      "source_location": "L7",
-      "weight": 1.0
-    },
-    {
-      "source": "scripts_manual_cookie_replay_test",
-      "target": "scripts_manual_cookie_replay_test_prisma",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "scripts/manual-cookie-replay-test.js",
-      "source_location": "L8",
-      "weight": 1.0
-    },
-    {
-      "source": "scripts_manual_cookie_replay_test",
-      "target": "scripts_manual_cookie_replay_test_crypto",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "scripts/manual-cookie-replay-test.js",
-      "source_location": "L9",
-      "weight": 1.0
-    },
-    {
       "source": "vercel",
       "target": "vercel_schema",
       "relation": "contains",
@@ -24277,5 +24133,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "fbf3e0861c0a876ed95b2fbc2a96974da157a7c6"
+  "built_at_commit": "8b1f3c78eb27b63ba3725d32a574f180d765adcc"
 }
