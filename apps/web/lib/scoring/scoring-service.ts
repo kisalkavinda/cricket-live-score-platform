@@ -1058,6 +1058,12 @@ export async function recordDelivery(inningsId: string, input: RecordDeliveryInp
     buildMatchBroadcastPayload(updatedMatch)
       .then((p) => { if (p) broadcastScoreUpdate(p); })
       .catch(() => {});
+
+    if (updatedMatch.status === 'COMPLETED' && updatedMatch.tournamentId) {
+      import('@/lib/tournament/tournament-service')
+        .then((m) => m.checkAndAdvanceTournament(updatedMatch.tournamentId))
+        .catch(() => {});
+    }
   }
 
   return { success: true, ...result, updatedMatch };
@@ -1617,6 +1623,12 @@ export async function completeMatch(matchId: string, input: { winnerTeamId?: str
   buildMatchBroadcastPayload(matchId)
     .then((p) => { if (p) broadcastScoreUpdate(p); })
     .catch(() => {});
+
+  if (match.tournamentId) {
+    import('@/lib/tournament/tournament-service')
+      .then((m) => m.checkAndAdvanceTournament(match.tournamentId))
+      .catch(() => {});
+  }
 
   return { success: true, updatedMatch: await getMatchDetail(matchId) };
 }

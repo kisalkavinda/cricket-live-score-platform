@@ -100,6 +100,9 @@ model Team {
   matchesWon      Match[]           @relation("MatchWinner")
   battingInnings  Innings[]         @relation("InningsBattingTeam")
   bowlingInnings  Innings[]         @relation("InningsBowlingTeam")
+  drawCaptainOrders TournamentDrawCaptainOrder[]
+  drawSelectedChits TournamentDrawChit[]
+  drawAudits        TournamentDrawAudit[]
 }
 
 model Player {
@@ -155,6 +158,7 @@ model Tournament {
   registrations          Registration[]
   registrationExceptions RegistrationException[]
   matches                Match[]
+  draws                  TournamentDraw[]
 }
 
 model TournamentStage {
@@ -186,10 +190,16 @@ model TournamentTeam {
   legalBallsFaced  Int        @default(0)
   runsAgainst      Int        @default(0)
   legalBallsBowled Int        @default(0)
+  groupName        String?
+  seed             Int?
+  stage            String?
+  qualificationStatus String?
+  nrr              Float?     @default(0)
   tournament       Tournament @relation(fields: [tournamentId], references: [id])
   team             Team       @relation(fields: [teamId], references: [id])
 
   @@unique([tournamentId, teamId])
+  @@index([tournamentId, groupName])
 }
 
 model TournamentSquad {
@@ -317,6 +327,10 @@ model Match {
   winnerTeamId    String?
   winnerTeam      Team?        @relation("MatchWinner", fields: [winnerTeamId], references: [id])
   resultNote      String?
+  stage           String?
+  groupName       String?
+  matchNumber     Int?
+  bracketSlot     String?
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
   innings         Innings[]
@@ -325,6 +339,8 @@ model Match {
   @@index([status])
   @@index([teamAId])
   @@index([teamBId])
+  @@index([tournamentId, stage])
+  @@index([tournamentId, groupName])
 }
 
 model Innings {
@@ -427,4 +443,84 @@ model InningsBowler {
 
   @@unique([inningsId, playerId])
   @@index([inningsId])
+}
+
+enum TournamentDrawStatus {
+  DRAFT
+  READY
+  IN_PROGRESS
+  PAUSED
+  COMPLETED
+  FINALIZED
+  CANCELLED
+}
+
+model TournamentDraw {
+  id               String                       @id @default(uuid())
+  tournamentId     String
+  status           TournamentDrawStatus         @default(DRAFT)
+  currentPickIndex Int                          @default(0)
+  commitmentHash   String?
+  secretSalt       String?
+  createdAt        DateTime                     @default(now())
+  startedAt        DateTime?
+  pausedAt         DateTime?
+  completedAt      DateTime?
+  finalizedAt      DateTime?
+  createdBy        String?
+  tournament       Tournament                   @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  captainOrders    TournamentDrawCaptainOrder[]
+  chits            TournamentDrawChit[]
+  auditLogs        TournamentDrawAudit[]
+
+  @@index([tournamentId, status])
+}
+
+model TournamentDrawCaptainOrder {
+  id           String         @id @default(uuid())
+  drawId       String
+  position     Int
+  teamId       String
+  captainName  String
+  passcodeHash String
+  createdAt    DateTime       @default(now())
+  draw         TournamentDraw @relation(fields: [drawId], references: [id], onDelete: Cascade)
+  team         Team           @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@unique([drawId, position])
+  @@unique([drawId, teamId])
+  @@index([drawId])
+}
+
+model TournamentDrawChit {
+  id               String         @id @default(uuid())
+  drawId           String
+  position         Int
+  groupName        String
+  isRevealed       Boolean        @default(false)
+  selectedByTeamId String?
+  selectedAt       DateTime?
+  draw             TournamentDraw @relation(fields: [drawId], references: [id], onDelete: Cascade)
+  selectedByTeam   Team?          @relation(fields: [selectedByTeamId], references: [id])
+
+  @@unique([drawId, position])
+  @@index([drawId])
+}
+
+model TournamentDrawAudit {
+  id           String         @id @default(uuid())
+  drawId       String
+  eventType    String
+  teamId       String?
+  captainId    String?
+  chitPosition Int?
+  groupName    String?
+  actor        String?
+  description  String?
+  metadata     Json?
+  createdAt    DateTime       @default(now())
+  draw         TournamentDraw @relation(fields: [drawId], references: [id], onDelete: Cascade)
+  team         Team?          @relation(fields: [teamId], references: [id])
+
+  @@index([drawId, createdAt])
 }
