@@ -64,6 +64,9 @@ enum WicketType {
   HIT_WICKET
   TIMED_OUT
   RETIRED_HURT
+  RETIRED_OUT
+  HIT_BALL_TWICE
+  OBSTRUCTING_FIELD
   OTHER
 }
 
@@ -356,6 +359,8 @@ model Innings {
   wickets             Int             @default(0)
   overs               Int             @default(0)
   balls               Int             @default(0)
+  isAllOut            Boolean         @default(false)
+  maxWickets          Int?
   status              InningsStatus   @default(NOT_STARTED)
   currentStrikerId    String?
   currentStriker      Player?         @relation("InningsCurrentStriker", fields: [currentStrikerId], references: [id])
@@ -387,6 +392,8 @@ model BallEvent {
   runs               Int         @default(0)
   extras             Int         @default(0)
   extraType          ExtraType   @default(NONE)
+  byeRuns            Int         @default(0)
+  legByeRuns         Int         @default(0)
   isLegal            Boolean     @default(true)
   isWicket           Boolean     @default(false)
   wicketType         WicketType?
