@@ -28,6 +28,8 @@ export interface TournamentFormatSettings {
   finalOvers: number;        // e.g. 6
 }
 
+import { getInningsWicketLimit } from '../scoring/scoring-rules';
+
 export interface InningsData {
   id: string;
   inningsNumber: number;
@@ -39,6 +41,9 @@ export interface InningsData {
   balls: number;
   status: string;
   isAllOut?: boolean;
+  maxWickets?: number | null;
+  battingLineupSize?: number | null;
+  battingTeam?: any;
   ballEvents?: Array<{ isLegal: boolean; extraType?: string }>;
 }
 
@@ -134,11 +139,8 @@ export function isInningsAllOut(innings: InningsData, match: MatchData, ballsPer
     return true;
   }
 
-  // 2. Only use wicket-based fallback if scoring model guarantees
-  // that this wicket count represents dismissal of the innings.
-  const isSuperOver = innings.inningsNumber >= 3;
-  const wicketLimit = isSuperOver ? 2 : 10;
-
+  // 2. Authoritative dynamic wicket threshold (eligible batting lineup - 1; 2 for Super Over)
+  const wicketLimit = getInningsWicketLimit(innings as any, match);
   if (innings.wickets >= wicketLimit) {
     return true;
   }
@@ -309,7 +311,7 @@ export function computeStageStandings(
   const relevantMatches = matches.filter((m) => {
     if (m.stage !== stage) return false;
     if (targetGroupName && m.groupName !== targetGroupName) return false;
-    return m.status === 'COMPLETED';
+    return m.status === 'COMPLETED' || m.status === 'NO_RESULT' || m.result === 'NO_RESULT';
   });
 
   // 2. Initialize team aggregates
@@ -393,7 +395,7 @@ export function computeStageStandings(
         statsB.tied += 1;
         statsB.points += 1;
       }
-    } else if (match.result === 'NO_RESULT') {
+    } else if (match.result === 'NO_RESULT' || match.status === 'NO_RESULT') {
       // NO RESULT (abandoned / washout)
       if (statsA) {
         statsA.noResult += 1;
@@ -406,6 +408,11 @@ export function computeStageStandings(
     }
 
     // Process regular innings (innings 1 & 2)
+    // A NO_RESULT match contributes ZERO runs, ZERO overs, and ZERO NRR contribution to both teams
+    if (match.result === 'NO_RESULT' || match.status === 'NO_RESULT') {
+      continue;
+    }
+
     const mainInnings = (match.innings || []).filter((i) => i.inningsNumber === 1 || i.inningsNumber === 2);
     for (const inn of mainInnings) {
       const batStats = teamStats.get(inn.battingTeamId);

@@ -4,6 +4,7 @@ import {
   type TeamStanding,
   type MatchData,
 } from './nrr-engine';
+import { getInningsWicketLimit } from '../scoring/scoring-rules';
 
 export interface TournamentOverview {
   tournament: {
@@ -164,7 +165,7 @@ export async function getTournamentOverview(tournamentId?: string): Promise<Tour
     teamAId: m.teamAId,
     teamBId: m.teamBId,
     status: m.status,
-    result: (m.resultNote && m.resultNote.includes('NO_RESULT')) ? 'NO_RESULT' : (m.status === 'COMPLETED' && !m.winnerTeamId ? 'TIE' : m.winnerTeamId ? 'WIN' : null),
+    result: (m.resultNote && m.resultNote.includes('NO_RESULT')) || m.status === 'ABANDONED' ? 'NO_RESULT' : (m.status === 'COMPLETED' && !m.winnerTeamId ? 'TIE' : m.winnerTeamId ? 'WIN' : null),
     winnerTeamId: m.winnerTeamId || null,
     oversPerInnings: m.oversPerInnings || 4,
     ballsPerOver: m.ballsPerOver || 4,
@@ -178,7 +179,7 @@ export async function getTournamentOverview(tournamentId?: string): Promise<Tour
       overs: i.overs,
       balls: i.balls,
       status: i.status,
-      isAllOut: i.isAllOut ?? (i.wickets >= (i.inningsNumber >= 3 ? 2 : 10)),
+      isAllOut: i.isAllOut ?? (i.wickets >= getInningsWicketLimit(i, m)),
       ballEvents: i.ballEvents || [],
     })),
   }));

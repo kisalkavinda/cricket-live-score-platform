@@ -18,6 +18,12 @@ import {
   deleteBallDeliveryAction,
   startSuperOverAction,
 } from '@/lib/scoring/scoring-actions';
+import {
+  calculateDeliveryRuns,
+  validateDismissalLegality,
+  isBowlerCreditedDismissal,
+  getInningsWicketLimit,
+} from '@/lib/scoring/scoring-rules';
 
 interface Props {
   initialMatch: any;
@@ -41,6 +47,8 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
   const [editRuns, setEditRuns] = useState<number>(0);
   const [editExtraType, setEditExtraType] = useState<string>('NONE');
   const [editExtras, setEditExtras] = useState<number>(0);
+  const [editByeRuns, setEditByeRuns] = useState<number>(0);
+  const [editLegByeRuns, setEditLegByeRuns] = useState<number>(0);
   const [editIsWicket, setEditIsWicket] = useState<boolean>(false);
   const [editWicketType, setEditWicketType] = useState<string>('BOWLED');
   const [isEditingBallSaving, setIsEditingBallSaving] = useState(false);
@@ -69,6 +77,8 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
     setEditRuns(b.runs || 0);
     setEditExtraType(b.extraType || 'NONE');
     setEditExtras(b.extras || 0);
+    setEditByeRuns(b.byeRuns || 0);
+    setEditLegByeRuns(b.legByeRuns || 0);
     setEditIsWicket(Boolean(b.isWicket));
     setEditWicketType(b.wicketType || 'BOWLED');
   }
@@ -81,6 +91,8 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
         runs: editRuns,
         extraType: editExtraType as any,
         extras: editExtras,
+        byeRuns: editByeRuns,
+        legByeRuns: editLegByeRuns,
         isWicket: editIsWicket,
         wicketType: editIsWicket ? editWicketType : undefined,
       });
@@ -196,6 +208,10 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
   };
 
   // Modals state
+  const [showNoBallModal, setShowNoBallModal] = useState(false);
+  const [nbType, setNbType] = useState<'BAT' | 'BYE' | 'LEG_BYE'>('BAT');
+  const [nbRuns, setNbRuns] = useState<number>(0);
+
   const [showWicketModal, setShowWicketModal] = useState(false);
   const [wicketType, setWicketType] = useState<string>('CAUGHT');
   const [dismissedId, setDismissedId] = useState<string>('');
@@ -375,7 +391,7 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
     });
   };
 
-  const handleRecordBall = (runs: number, extraType: any = 'NONE', extraRuns: number = 0) => {
+  const handleRecordBall = (runs: number, extraType: any = 'NONE', extraRuns: number = 0, byeRuns: number = 0, legByeRuns: number = 0) => {
     if (!currentInnings || isPending) return;
 
     // Strict Validation: Striker MUST be selected
@@ -418,14 +434,20 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
 
     setError(null);
 
-    // ⚡ INSTANT OPTIMISTIC UPDATE: Update scoreboard in 0 milliseconds!
-    const isLegal = extraType !== 'WIDE' && extraType !== 'NO_BALL';
-    let totalBallRuns = 0;
-    if (extraType === 'NONE') totalBallRuns = runs;
-    else if (extraType === 'WIDE' || extraType === 'NO_BALL') totalBallRuns = (extraRuns > 0 ? extraRuns : 1) + runs;
-    else if (extraType === 'BYE' || extraType === 'LEG_BYE') totalBallRuns = extraRuns > 0 ? extraRuns : runs > 0 ? runs : 1;
+    // ⚡ Authoritative pure calculation for delivery scoring
+    const deliveryCalc = calculateDeliveryRuns({
+      runs,
+      extraType,
+      extras: extraRuns,
+      byeRuns,
+      legByeRuns,
+    });
 
-    const runsOffBat = (extraType === 'BYE' || extraType === 'LEG_BYE') ? 0 : (extraType === 'WIDE' ? 0 : runs);
+    const isLegal = deliveryCalc.isLegal;
+    const totalBallRuns = deliveryCalc.totalRuns;
+    const runsOffBat = deliveryCalc.batterRuns;
+    const bowlerRunsCharged = deliveryCalc.bowlerRuns;
+
     let nextBalls = currentInnings.balls;
     let nextOvers = currentInnings.overs;
     let isOverComplete = false;
@@ -443,7 +465,7 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
     let nextStrikerId = currentInnings.currentStrikerId;
     let nextNonStrikerId = currentInnings.currentNonStrikerId;
 
-    if (isLegal && (runs % 2 === 1)) {
+    if (isLegal && (runsOffBat % 2 === 1 || (extraType === 'BYE' && byeRuns % 2 === 1) || (extraType === 'LEG_BYE' && legByeRuns % 2 === 1))) {
       const temp = nextStrikerId;
       nextStrikerId = nextNonStrikerId;
       nextNonStrikerId = temp;
@@ -467,14 +489,13 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
             ...b,
             runs: b.runs + runsOffBat,
             balls: extraType !== 'WIDE' ? b.balls + 1 : b.balls,
-            fours: runs === 4 && runsOffBat === 4 ? b.fours + 1 : b.fours,
-            sixes: runs === 6 && runsOffBat === 6 ? b.sixes + 1 : b.sixes,
+            fours: runsOffBat === 4 ? b.fours + 1 : b.fours,
+            sixes: runsOffBat === 6 ? b.sixes + 1 : b.sixes,
           };
         }
         return b;
       });
 
-      const bowlerRunsCharged = (extraType === 'BYE' || extraType === 'LEG_BYE') ? 0 : (extraType === 'WIDE' || extraType === 'NO_BALL' ? (extraRuns > 0 ? extraRuns : 1) + runs : runs);
       const updatedBowlingScores = (curInn.bowlingScores || []).map((bw: any) => {
         if (bw.playerId === currentInnings.currentBowlerId) {
           let bOvers = bw.overs || 0;
@@ -497,9 +518,11 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
         id: `temp-${Date.now()}`,
         overNumber: currentInnings.overs,
         ballNumber: isLegal ? currentInnings.balls + 1 : currentInnings.balls,
-        runs,
-        extras: extraType !== 'NONE' ? (extraRuns > 0 ? extraRuns : 1) : 0,
+        runs: runsOffBat,
+        extras: deliveryCalc.wideRuns + deliveryCalc.noBallPenalty + deliveryCalc.byeRuns + deliveryCalc.legByeRuns,
         extraType,
+        byeRuns: deliveryCalc.byeRuns,
+        legByeRuns: deliveryCalc.legByeRuns,
         isLegal,
         isWicket: false,
         createdAt: new Date().toISOString(),
@@ -529,9 +552,11 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
     startTransition(async () => {
       try {
         const res = await recordDeliveryAction(currentInnings.id, {
-          runs,
+          runs: runsOffBat,
           extraType,
           extraRuns,
+          byeRuns: deliveryCalc.byeRuns,
+          legByeRuns: deliveryCalc.legByeRuns,
           expectedUpdatedAt: currentInnings.updatedAt,
         });
         if (res && res.success) {
@@ -547,6 +572,23 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
         router.refresh();
       }
     });
+  };
+
+  const handleConfirmNoBall = () => {
+    let runsOffBat = 0;
+    let byeRuns = 0;
+    let legByeRuns = 0;
+
+    if (nbType === 'BAT') {
+      runsOffBat = nbRuns;
+    } else if (nbType === 'BYE') {
+      byeRuns = nbRuns;
+    } else if (nbType === 'LEG_BYE') {
+      legByeRuns = nbRuns;
+    }
+
+    handleRecordBall(runsOffBat, 'NO_BALL', 1, byeRuns, legByeRuns);
+    setShowNoBallModal(false);
   };
 
   const handleRecordWicket = () => {
@@ -587,9 +629,14 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
     const runsScoredOnWicket = wicketRuns || 0;
 
     if (isFreeHitActive) {
-      const allowedOnFreeHit = ['RUN_OUT', 'TIMED_OUT', 'RETIRED_HURT'];
-      if (!allowedOnFreeHit.includes(wicketType)) {
-        setWicketModalError(`⚡ FREE HIT RULE: Batters CANNOT be dismissed by "${wicketType}". On a Free Hit, only Run Out, Timed Out, or Retired Hurt are allowed.`);
+      const legality = validateDismissalLegality({
+        extraType: 'NONE',
+        isFreeHit: true,
+        isWicket: true,
+        wicketType,
+      });
+      if (!legality.valid) {
+        setWicketModalError(legality.error || `⚡ FREE HIT RULE: Batters CANNOT be dismissed by "${wicketType}". On a Free Hit, only Run Out, Hit Ball Twice, or Obstructing The Field are allowed.`);
         return;
       }
     }
@@ -732,7 +779,7 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
             overs: bOvers,
             balls: bBalls,
             runsConceded: (bw.runsConceded || 0) + runsScoredOnWicket,
-            wickets: (bw.wickets || 0) + (wicketType !== 'RUN_OUT' && wicketType !== 'TIMED_OUT' && wicketType !== 'RETIRED_HURT' ? 1 : 0),
+            wickets: (bw.wickets || 0) + (isBowlerCreditedDismissal(wicketType) ? 1 : 0),
           };
         }
         return bw;
@@ -1103,7 +1150,7 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                 const tB = b.createdAt ? new Date(b.createdAt).getTime() : (b.id?.startsWith('temp-') ? Number(b.id.replace('temp-', '')) : 0);
                 return tA - tB;
               });
-              const overRuns = overBalls.reduce((sum: number, b: any) => sum + (b.runs || 0) + (b.extras || 0), 0);
+              const overRuns = overBalls.reduce((sum: number, b: any) => sum + calculateDeliveryRuns(b).totalRuns, 0);
               const overWickets = overBalls.filter((b: any) => b.isWicket).length;
               const bowlerName = overBalls[0]?.bowler?.name || 'Bowler';
 
@@ -1128,7 +1175,8 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
 
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                     {overBalls.map((b: any, idx: number) => {
-                      let label = `${b.runs}`;
+                      const bCalc = calculateDeliveryRuns(b);
+                      let label = `${bCalc.batterRuns}`;
                       let bg = '#1E2638';
                       let color = '#FFF';
                       let border = '1px solid rgba(255,255,255,0.15)';
@@ -1137,6 +1185,30 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                         label = 'W';
                         bg = '#EF4444';
                         border = '1px solid #DC2626';
+                      } else if (b.extraType === 'WIDE') {
+                        label = b.extras > 1 ? `WD+${b.extras - 1}` : 'WD';
+                        bg = '#F59E0B';
+                        color = '#000';
+                        border = '1px solid #D97706';
+                      } else if (b.extraType === 'NO_BALL') {
+                        if (bCalc.byeRuns > 0) {
+                          label = `NB+${bCalc.byeRuns}B`;
+                        } else if (bCalc.legByeRuns > 0) {
+                          label = `NB+${bCalc.legByeRuns}LB`;
+                        } else if (bCalc.batterRuns > 0) {
+                          label = `NB+${bCalc.batterRuns}`;
+                        } else {
+                          label = 'NB';
+                        }
+                        bg = '#F97316';
+                        color = '#000';
+                        border = '1px solid #EA580C';
+                      } else if (b.extraType === 'BYE') {
+                        label = `${bCalc.byeRuns || bCalc.totalRuns || 1}B`;
+                        bg = '#1E2638';
+                      } else if (b.extraType === 'LEG_BYE') {
+                        label = `${bCalc.legByeRuns || bCalc.totalRuns || 1}LB`;
+                        bg = '#1E2638';
                       } else if (b.runs === 4) {
                         label = '4';
                         bg = '#10B981';
@@ -1145,22 +1217,6 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                         label = '6';
                         bg = '#8B5CF6';
                         border = '1px solid #7C3AED';
-                      } else if (b.extraType === 'WIDE') {
-                        label = b.extras > 1 ? `WD+${b.extras - 1}` : 'WD';
-                        bg = '#F59E0B';
-                        color = '#000';
-                        border = '1px solid #D97706';
-                      } else if (b.extraType === 'NO_BALL') {
-                        label = b.runs > 0 ? `NB+${b.runs}` : 'NB';
-                        bg = '#F97316';
-                        color = '#000';
-                        border = '1px solid #EA580C';
-                      } else if (b.extraType === 'BYE') {
-                        label = `${b.extras || 1}B`;
-                        bg = '#1E2638';
-                      } else if (b.extraType === 'LEG_BYE') {
-                        label = `${b.extras || 1}LB`;
-                        bg = '#1E2638';
                       }
 
                       return (
@@ -2119,16 +2175,17 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
               return tA - tB;
             });
             const currentOverDeliveries = sortBalls(allDeliveries.filter((b: any) => b.overNumber === currentOverNum));
-            const currentOverRuns = currentOverDeliveries.reduce((sum: number, b: any) => sum + (b.runs || 0) + (b.extras || 0), 0);
+            const currentOverRuns = currentOverDeliveries.reduce((sum: number, b: any) => sum + calculateDeliveryRuns(b).totalRuns, 0);
             const legalBallsInCurrentOver = currentOverDeliveries.filter((b: any) => b.isLegal).length;
             const remainingSlots = Math.max(0, matchBallsPerOver - legalBallsInCurrentOver);
 
             const prevOverNum = currentOverNum - 1;
             const prevOverDeliveries = prevOverNum >= 0 ? sortBalls(allDeliveries.filter((b: any) => b.overNumber === prevOverNum)) : [];
-            const prevOverRuns = prevOverDeliveries.reduce((sum: number, b: any) => sum + (b.runs || 0) + (b.extras || 0), 0);
+            const prevOverRuns = prevOverDeliveries.reduce((sum: number, b: any) => sum + calculateDeliveryRuns(b).totalRuns, 0);
 
             const getBallStyle = (b: any) => {
-              let label = `${b.runs}`;
+              const bCalc = calculateDeliveryRuns(b);
+              let label = `${bCalc.batterRuns}`;
               let bg = '#1E2638';
               let color = '#FFF';
               let border = '1px solid rgba(255,255,255,0.15)';
@@ -2137,6 +2194,30 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                 label = 'W';
                 bg = '#EF4444';
                 border = '1px solid #DC2626';
+              } else if (b.extraType === 'WIDE') {
+                label = b.extras > 1 ? `WD+${b.extras - 1}` : 'WD';
+                bg = '#F59E0B';
+                color = '#000';
+                border = '1px solid #D97706';
+              } else if (b.extraType === 'NO_BALL') {
+                if (bCalc.byeRuns > 0) {
+                  label = `NB+${bCalc.byeRuns}B`;
+                } else if (bCalc.legByeRuns > 0) {
+                  label = `NB+${bCalc.legByeRuns}LB`;
+                } else if (bCalc.batterRuns > 0) {
+                  label = `NB+${bCalc.batterRuns}`;
+                } else {
+                  label = 'NB';
+                }
+                bg = '#F97316';
+                color = '#000';
+                border = '1px solid #EA580C';
+              } else if (b.extraType === 'BYE') {
+                label = `${bCalc.byeRuns || bCalc.totalRuns || 1}B`;
+                bg = '#1E2638';
+              } else if (b.extraType === 'LEG_BYE') {
+                label = `${bCalc.legByeRuns || bCalc.totalRuns || 1}LB`;
+                bg = '#1E2638';
               } else if (b.runs === 4) {
                 label = '4';
                 bg = '#10B981';
@@ -2145,22 +2226,6 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                 label = '6';
                 bg = '#8B5CF6';
                 border = '1px solid #7C3AED';
-              } else if (b.extraType === 'WIDE') {
-                label = b.extras > 1 ? `WD+${b.extras - 1}` : 'WD';
-                bg = '#F59E0B';
-                color = '#000';
-                border = '1px solid #D97706';
-              } else if (b.extraType === 'NO_BALL') {
-                label = b.runs > 0 ? `NB+${b.runs}` : 'NB';
-                bg = '#F97316';
-                color = '#000';
-                border = '1px solid #EA580C';
-              } else if (b.extraType === 'BYE') {
-                label = `${b.extras || 1}B`;
-                bg = '#1E2638';
-              } else if (b.extraType === 'LEG_BYE') {
-                label = `${b.extras || 1}LB`;
-                bg = '#1E2638';
               }
               return { label, bg, color, border };
             };
@@ -2693,7 +2758,11 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
 
                   <button
                     disabled={isScorePadLocked}
-                    onClick={() => handleRecordBall(0, 'NO_BALL', 1)}
+                    onClick={() => {
+                      setNbType('BAT');
+                      setNbRuns(0);
+                      setShowNoBallModal(true);
+                    }}
                     style={{
                       background: 'rgba(249, 115, 22, 0.15)',
                       border: '1px solid rgba(249, 115, 22, 0.4)',
@@ -2705,12 +2774,12 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                       cursor: isScorePadLocked ? 'not-allowed' : 'pointer',
                     }}
                   >
-                    NO BALL (+1)
+                    NO BALL
                   </button>
 
                   <button
                     disabled={isScorePadLocked}
-                    onClick={() => handleRecordBall(1, 'BYE', 1)}
+                    onClick={() => handleRecordBall(0, 'BYE', 1, 1, 0)}
                     style={{
                       background: '#141A26',
                       border: '1px solid #2A364E',
@@ -2727,7 +2796,7 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
 
                   <button
                     disabled={isScorePadLocked}
-                    onClick={() => handleRecordBall(1, 'LEG_BYE', 1)}
+                    onClick={() => handleRecordBall(0, 'LEG_BYE', 1, 0, 1)}
                     style={{
                       background: '#141A26',
                       border: '1px solid #2A364E',
@@ -3436,6 +3505,166 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
       {/* MODALS SECTION                                                */}
       {/* ───────────────────────────────────────────────────────────── */}
 
+      {/* NO-BALL RECORDING MODAL */}
+      {showNoBallModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
+          <div style={{ background: '#10141E', border: '1.5px solid #F97316', borderRadius: '16px', padding: '24px', maxWidth: '460px', width: '100%', boxShadow: '0 8px 32px rgba(249, 115, 22, 0.25)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <div>
+                <h3 style={{ fontSize: '1.25rem', fontWeight: 900, color: '#FB923C', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span>⚠️ Record No-Ball Delivery</span>
+                </h3>
+                <div style={{ fontSize: '0.8rem', color: '#94A3B8', marginTop: '2px' }}>
+                  Automatic +1 No-ball penalty extra + any runs scored
+                </div>
+              </div>
+              <button
+                onClick={() => setShowNoBallModal(false)}
+                style={{ background: 'transparent', border: 'none', color: '#94A3B8', fontSize: '1.2rem', cursor: 'pointer' }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Run Origin Switcher */}
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '8px', color: '#CBD5E1' }}>
+                How Were The Runs Scored?
+              </label>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
+                <button
+                  type="button"
+                  onClick={() => { setNbType('BAT'); setNbRuns(0); }}
+                  style={{
+                    padding: '9px',
+                    borderRadius: '8px',
+                    fontWeight: 800,
+                    fontSize: '0.82rem',
+                    cursor: 'pointer',
+                    background: nbType === 'BAT' ? '#F97316' : '#141A26',
+                    color: nbType === 'BAT' ? '#000' : '#CBD5E1',
+                    border: nbType === 'BAT' ? '1.5px solid #FB923C' : '1px solid #2A364E',
+                  }}
+                >
+                  🏏 Off The Bat
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setNbType('BYE'); setNbRuns(1); }}
+                  style={{
+                    padding: '9px',
+                    borderRadius: '8px',
+                    fontWeight: 800,
+                    fontSize: '0.82rem',
+                    cursor: 'pointer',
+                    background: nbType === 'BYE' ? '#F97316' : '#141A26',
+                    color: nbType === 'BYE' ? '#000' : '#CBD5E1',
+                    border: nbType === 'BYE' ? '1.5px solid #FB923C' : '1px solid #2A364E',
+                  }}
+                >
+                  🏃 Byes (NB+B)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setNbType('LEG_BYE'); setNbRuns(1); }}
+                  style={{
+                    padding: '9px',
+                    borderRadius: '8px',
+                    fontWeight: 800,
+                    fontSize: '0.82rem',
+                    cursor: 'pointer',
+                    background: nbType === 'LEG_BYE' ? '#F97316' : '#141A26',
+                    color: nbType === 'LEG_BYE' ? '#000' : '#CBD5E1',
+                    border: nbType === 'LEG_BYE' ? '1.5px solid #FB923C' : '1px solid #2A364E',
+                  }}
+                >
+                  🛡️ Leg Byes (NB+LB)
+                </button>
+              </div>
+            </div>
+
+            {/* Run Selection Buttons */}
+            <div style={{ marginBottom: '18px' }}>
+              <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '8px', color: '#CBD5E1' }}>
+                {nbType === 'BAT' ? 'Runs Hit by Striker' : (nbType === 'BYE' ? 'Completed Bye Runs' : 'Completed Leg Bye Runs')}
+              </label>
+              <div style={{ display: 'grid', gridTemplateColumns: nbType === 'BAT' ? 'repeat(6, 1fr)' : 'repeat(4, 1fr)', gap: '8px' }}>
+                {(nbType === 'BAT' ? [0, 1, 2, 3, 4, 6] : [1, 2, 3, 4]).map((r) => (
+                  <button
+                    key={r}
+                    type="button"
+                    onClick={() => setNbRuns(r)}
+                    style={{
+                      padding: '12px 0',
+                      borderRadius: '8px',
+                      fontWeight: 900,
+                      fontSize: '1rem',
+                      cursor: 'pointer',
+                      background: nbRuns === r ? '#FB923C' : '#141A26',
+                      color: nbRuns === r ? '#000' : '#FFF',
+                      border: nbRuns === r ? '2px solid #F97316' : '1px solid #2A364E',
+                    }}
+                  >
+                    {r === 0 ? '0 (Dot)' : `+${r}`}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Breakdown & Preview Card */}
+            {(() => {
+              const preview = calculateDeliveryRuns({
+                runs: nbType === 'BAT' ? nbRuns : 0,
+                extraType: 'NO_BALL',
+                extras: 1,
+                byeRuns: nbType === 'BYE' ? nbRuns : 0,
+                legByeRuns: nbType === 'LEG_BYE' ? nbRuns : 0,
+              });
+              return (
+                <div style={{ background: '#141A26', border: '1px solid #2A364E', borderRadius: '10px', padding: '14px', marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                    <span style={{ fontSize: '0.82rem', color: '#94A3B8' }}>Total Team Runs:</span>
+                    <span style={{ fontSize: '1.2rem', fontWeight: 900, color: '#FB923C', fontFamily: 'monospace' }}>
+                      {preview.totalRuns} Run{preview.totalRuns !== 1 ? 's' : ''}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: '0.75rem', color: '#CBD5E1', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <div>• <strong>1 No-Ball Penalty</strong> added to Extras & Bowler</div>
+                    {nbType === 'BAT' && nbRuns > 0 && (
+                      <div>• <strong>+{nbRuns} Runs</strong> credited to Striker ({activeStriker?.name || 'Striker'}) & Bowler</div>
+                    )}
+                    {nbType === 'BYE' && nbRuns > 0 && (
+                      <div>• <strong>+{nbRuns} Byes</strong> added to Extras (NOT charged to Bowler under MCC rules)</div>
+                    )}
+                    {nbType === 'LEG_BYE' && nbRuns > 0 && (
+                      <div>• <strong>+{nbRuns} Leg Byes</strong> added to Extras (NOT charged to Bowler under MCC rules)</div>
+                    )}
+                    <div style={{ color: '#FBBF24', marginTop: '4px' }}>⚡ <strong>Next delivery will be a FREE HIT</strong></div>
+                  </div>
+                </div>
+              );
+            })()}
+
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button
+                type="button"
+                onClick={() => setShowNoBallModal(false)}
+                style={{ flex: 1, background: '#141A26', border: '1px solid #2A364E', color: '#94A3B8', padding: '12px', borderRadius: '8px', fontWeight: 700, cursor: 'pointer' }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmNoBall}
+                style={{ flex: 2, background: 'linear-gradient(135deg, #F97316 0%, #EA580C 100%)', border: 'none', color: '#FFF', padding: '12px', borderRadius: '8px', fontWeight: 900, fontSize: '0.95rem', cursor: 'pointer', boxShadow: '0 4px 14px rgba(249, 115, 22, 0.4)' }}
+              >
+                Confirm No-Ball
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* WICKET RECORDING MODAL */}
       {showWicketModal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
@@ -3463,7 +3692,7 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                   lineHeight: 1.4,
                 }}
               >
-                ⚡ <strong>FREE HIT ACTIVE:</strong> Under cricket rules, batters <strong>CANNOT</strong> be dismissed Bowled, Caught, LBW, Stumped, or Hit Wicket. Only <strong>Run Out</strong>, <strong>Timed Out</strong>, or <strong>Retired Hurt</strong> are valid.
+                ⚡ <strong>FREE HIT ACTIVE:</strong> Under MCC Law, batters <strong>CANNOT</strong> be dismissed Bowled, Caught, LBW, Stumped, or Hit Wicket. Only <strong>Run Out</strong>, <strong>Hit Ball Twice</strong>, or <strong>Obstructing The Field</strong> are permitted.
               </div>
             )}
 
@@ -3491,14 +3720,27 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                   onChange={(e) => setWicketType(e.target.value)}
                   style={{ width: '100%', background: '#141A26', border: '1px solid #2A364E', borderRadius: '8px', padding: '10px', color: '#FFF' }}
                 >
-                  <option value="CAUGHT">Caught</option>
-                  <option value="BOWLED">Bowled</option>
-                  <option value="LBW">LBW</option>
-                  <option value="RUN_OUT">Run Out</option>
-                  <option value="STUMPED">Stumped</option>
-                  <option value="HIT_WICKET">Hit Wicket</option>
-                  <option value="RETIRED_HURT">Retired Hurt</option>
-                  <option value="OTHER">Other</option>
+                  {isFreeHitActive ? (
+                    <>
+                      <option value="RUN_OUT">Run Out</option>
+                      <option value="HIT_BALL_TWICE">Hit Ball Twice</option>
+                      <option value="OBSTRUCTING_FIELD">Obstructing The Field</option>
+                    </>
+                  ) : (
+                    <>
+                      <option value="CAUGHT">Caught</option>
+                      <option value="BOWLED">Bowled</option>
+                      <option value="LBW">LBW</option>
+                      <option value="RUN_OUT">Run Out</option>
+                      <option value="STUMPED">Stumped</option>
+                      <option value="HIT_WICKET">Hit Wicket</option>
+                      <option value="HIT_BALL_TWICE">Hit Ball Twice</option>
+                      <option value="OBSTRUCTING_FIELD">Obstructing The Field</option>
+                      <option value="RETIRED_HURT">Retired Hurt</option>
+                      <option value="RETIRED_OUT">Retired Out</option>
+                      <option value="OTHER">Other</option>
+                    </>
+                  )}
                 </select>
               </div>
 
@@ -3839,9 +4081,53 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                     min="0"
                     max="10"
                     value={editExtras}
-                    onChange={(e) => setEditExtras(Number(e.target.value))}
+                    onChange={(e) => {
+                      const val = Number(e.target.value);
+                      setEditExtras(val);
+                      if (editExtraType === 'BYE') setEditByeRuns(val);
+                      if (editExtraType === 'LEG_BYE') setEditLegByeRuns(val);
+                    }}
                     style={{ width: '100%', background: '#141A26', border: '1px solid #2A364E', borderRadius: '8px', padding: '10px', color: '#FFF' }}
                   />
+                </div>
+              )}
+
+              {editExtraType === 'NO_BALL' && (
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '6px', color: '#CBD5E1' }}>
+                      Bye Runs (on NB)
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="10"
+                      value={editByeRuns}
+                      onChange={(e) => {
+                        const val = Number(e.target.value);
+                        setEditByeRuns(val);
+                        if (val > 0) setEditLegByeRuns(0);
+                      }}
+                      style={{ width: '100%', background: '#141A26', border: '1px solid #2A364E', borderRadius: '8px', padding: '10px', color: '#FFF' }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '6px', color: '#CBD5E1' }}>
+                      Leg Bye Runs (on NB)
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="10"
+                      value={editLegByeRuns}
+                      onChange={(e) => {
+                        const val = Number(e.target.value);
+                        setEditLegByeRuns(val);
+                        if (val > 0) setEditByeRuns(0);
+                      }}
+                      style={{ width: '100%', background: '#141A26', border: '1px solid #2A364E', borderRadius: '8px', padding: '10px', color: '#FFF' }}
+                    />
+                  </div>
                 </div>
               )}
 
@@ -3873,6 +4159,9 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                     <option value="RUN_OUT">Run Out</option>
                     <option value="STUMPED">Stumped</option>
                     <option value="HIT_WICKET">Hit Wicket</option>
+                    <option value="HIT_BALL_TWICE">Hit Ball Twice</option>
+                    <option value="OBSTRUCTING_FIELD">Obstructing The Field</option>
+                    <option value="RETIRED_OUT">Retired Out</option>
                   </select>
                 </div>
               )}

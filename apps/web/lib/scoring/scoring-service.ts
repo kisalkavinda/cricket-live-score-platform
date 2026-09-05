@@ -4,19 +4,36 @@ import { prisma } from 'database';
 import { requireAdminAuth } from '@/lib/auth/admin-auth';
 import { broadcastScoreUpdate, ScoreBroadcastPayload } from './scoring-realtime';
 
+export {
+  type ExtraTypeValue,
+  type WicketTypeValue,
+  BOWLER_CREDITED_WICKETS,
+  isBowlerCreditedDismissal,
+  validateDismissalLegality,
+  isFreeHitActive,
+  calculateDeliveryRuns,
+  calculateBowlerRunsFromDelivery,
+  getInningsWicketLimit,
+  isAuthoritativeAllOut,
+  calculateMaidensMap,
+  calculateBowlerMaidens,
+} from './scoring-rules';
+
+import {
+  ExtraTypeValue,
+  WicketTypeValue,
+  isBowlerCreditedDismissal,
+  validateDismissalLegality,
+  isFreeHitActive,
+  calculateDeliveryRuns,
+  calculateBowlerRunsFromDelivery,
+  getInningsWicketLimit,
+  isAuthoritativeAllOut,
+  calculateMaidensMap,
+} from './scoring-rules';
+
 export type MatchStatusType = 'UPCOMING' | 'LIVE' | 'COMPLETED' | 'ABANDONED';
 export type InningsStatusType = 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED';
-export type ExtraTypeValue = 'NONE' | 'WIDE' | 'NO_BALL' | 'BYE' | 'LEG_BYE';
-export type WicketTypeValue =
-  | 'BOWLED'
-  | 'CAUGHT'
-  | 'LBW'
-  | 'RUN_OUT'
-  | 'STUMPED'
-  | 'HIT_WICKET'
-  | 'TIMED_OUT'
-  | 'RETIRED_HURT'
-  | 'OTHER';
 
 export interface CreateMatchInput {
   tournamentId: string;
@@ -43,29 +60,14 @@ export interface RecordDeliveryInput {
   runs?: number;
   extraType?: ExtraTypeValue;
   extraRuns?: number;
+  byeRuns?: number;
+  legByeRuns?: number;
   isWicket?: boolean;
   wicketType?: WicketTypeValue;
   dismissedPlayerId?: string;
   newBatterId?: string;
   commentary?: string;
   expectedUpdatedAt?: string | Date;
-}
-
-/**
- * Evaluates whether the next delivery is a Free Hit.
- * In cricket rules:
- * - A No Ball triggers a Free Hit on the next delivery.
- * - If a Wide or another No Ball is bowled on the Free Hit, the Free Hit is retained.
- * - A legal delivery (or Bye / Leg Bye) consumes the Free Hit.
- */
-export function isFreeHitActive(ballEvents: Array<{ extraType?: string; isLegal?: boolean }>): boolean {
-  if (!ballEvents || ballEvents.length === 0) return false;
-  for (const b of ballEvents) {
-    if (b.extraType === 'NO_BALL') return true;
-    if (b.extraType === 'WIDE') continue;
-    return false;
-  }
-  return false;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -695,17 +697,20 @@ export async function recordDelivery(inningsId: string, input: RecordDeliveryInp
   const extraType: ExtraTypeValue = input.extraType || 'NONE';
   const extraRuns = Number(input.extraRuns || 0);
   const isWicket = Boolean(input.isWicket);
-  const isLegal = extraType !== 'WIDE' && extraType !== 'NO_BALL';
 
-  // Total runs added to innings total score
-  let totalBallRuns = 0;
-  if (extraType === 'NONE') {
-    totalBallRuns = runs;
-  } else if (extraType === 'WIDE' || extraType === 'NO_BALL') {
-    totalBallRuns = (extraRuns > 0 ? extraRuns : 1) + runs;
-  } else if (extraType === 'BYE' || extraType === 'LEG_BYE') {
-    totalBallRuns = extraRuns > 0 ? extraRuns : runs > 0 ? runs : 1;
-  }
+  // Authoritative calculation of delivery runs, extras, and bowler charged runs
+  const delivery = calculateDeliveryRuns({
+    runs,
+    extraType,
+    extraRuns,
+    byeRuns: input.byeRuns,
+    legByeRuns: input.legByeRuns,
+  });
+
+  const totalBallRuns = delivery.totalRuns;
+  const isLegal = delivery.isLegal;
+  const bowlerRunsCharged = delivery.bowlerRuns;
+  const batterRunsOffBat = delivery.batterRuns;
 
   const result = await prisma.$transaction(async (tx: any) => {
     // 1. Authoritative reload
@@ -715,15 +720,16 @@ export async function recordDelivery(inningsId: string, input: RecordDeliveryInp
         match: {
           include: {
             innings: { orderBy: { inningsNumber: 'asc' } },
-            teamA: true,
-            teamB: true,
+            teamA: { include: { tournamentSquads: true, teamPlayers: true } },
+            teamB: { include: { tournamentSquads: true, teamPlayers: true } },
           },
         },
-        battingTeam: true,
-        bowlingTeam: true,
+        battingTeam: { include: { tournamentSquads: true, teamPlayers: true } },
+        bowlingTeam: { include: { tournamentSquads: true, teamPlayers: true } },
         currentStriker: true,
         currentNonStriker: true,
         currentBowler: true,
+        battingScores: true,
       },
     });
 
@@ -732,6 +738,25 @@ export async function recordDelivery(inningsId: string, input: RecordDeliveryInp
     if (innings.status !== 'IN_PROGRESS') throw new Error(`Innings is ${innings.status}.`);
     if (!innings.currentStrikerId || !innings.currentNonStrikerId || !innings.currentBowlerId) {
       throw new Error('Please set the striker, non-striker, and bowler before recording deliveries.');
+    }
+
+    // Check Free Hit status from recent deliveries in this innings
+    const recentBalls = await tx.ballEvent.findMany({
+      where: { inningsId },
+      orderBy: { createdAt: 'desc' },
+      take: 10,
+    });
+    const isFreeHit = isFreeHitActive(recentBalls);
+
+    // Server-side dismissal legality validation BEFORE mutating state
+    const dismissalCheck = validateDismissalLegality({
+      isWicket,
+      wicketType: input.wicketType,
+      extraType,
+      isFreeHit,
+    });
+    if (!dismissalCheck.valid) {
+      throw new Error(dismissalCheck.error);
     }
 
     const strikerId = innings.currentStrikerId;
@@ -758,9 +783,12 @@ export async function recordDelivery(inningsId: string, input: RecordDeliveryInp
     const teamWicketLost = isWicket && input.wicketType !== 'RETIRED_HURT';
     const nextWickets = innings.wickets + (teamWicketLost ? 1 : 0);
 
+    // Dynamic all-out threshold (actual eligible lineup - 1; exactly 2 for Super Over)
+    const wicketLimit = getInningsWicketLimit(innings, innings.match);
+    const isTeamAllOut = nextWickets >= wicketLimit;
+
     // 3. Update Batter statistics
     if (extraType !== 'WIDE') {
-      const batterRunsOffBat = (extraType === 'BYE' || extraType === 'LEG_BYE') ? 0 : runs;
       const isFour = batterRunsOffBat === 4;
       const isSix = batterRunsOffBat === 6;
 
@@ -785,9 +813,8 @@ export async function recordDelivery(inningsId: string, input: RecordDeliveryInp
       });
     }
 
-    // 4. Update Bowler statistics
-    const bowlerRunsCharged = (extraType === 'BYE' || extraType === 'LEG_BYE') ? 0 : totalBallRuns;
-    const bowlerWicketCredited = isWicket && input.wicketType !== 'RUN_OUT' && input.wicketType !== 'TIMED_OUT' && input.wicketType !== 'RETIRED_HURT';
+    // 4. Update Bowler statistics (Explicit Whitelist for bowler wickets)
+    const bowlerWicketCredited = isWicket && isBowlerCreditedDismissal(input.wicketType);
 
     await tx.inningsBowler.upsert({
       where: { inningsId_playerId: { inningsId, playerId: bowlerId } },
@@ -798,8 +825,8 @@ export async function recordDelivery(inningsId: string, input: RecordDeliveryInp
         balls: isLegal ? (nextBalls === 0 ? 0 : 1) : 0,
         runsConceded: bowlerRunsCharged,
         wickets: bowlerWicketCredited ? 1 : 0,
-        wides: extraType === 'WIDE' ? (extraRuns > 0 ? extraRuns : 1) : 0,
-        noBalls: extraType === 'NO_BALL' ? (extraRuns > 0 ? extraRuns : 1) : 0,
+        wides: extraType === 'WIDE' ? delivery.wideRuns : 0,
+        noBalls: extraType === 'NO_BALL' ? delivery.noBallPenalty : 0,
         isCurrent: true,
       },
       update: {
@@ -807,8 +834,8 @@ export async function recordDelivery(inningsId: string, input: RecordDeliveryInp
         balls: isLegal ? (isOverComplete ? 0 : { increment: 1 }) : undefined,
         runsConceded: { increment: bowlerRunsCharged },
         wickets: bowlerWicketCredited ? { increment: 1 } : undefined,
-        wides: extraType === 'WIDE' ? { increment: extraRuns > 0 ? extraRuns : 1 } : undefined,
-        noBalls: extraType === 'NO_BALL' ? { increment: extraRuns > 0 ? extraRuns : 1 } : undefined,
+        wides: extraType === 'WIDE' ? { increment: delivery.wideRuns } : undefined,
+        noBalls: extraType === 'NO_BALL' ? { increment: delivery.noBallPenalty } : undefined,
         isCurrent: true,
       },
     });
@@ -827,6 +854,12 @@ export async function recordDelivery(inningsId: string, input: RecordDeliveryInp
         dismissalText = 'timed out';
       } else if (input.wicketType === 'RETIRED_HURT') {
         dismissalText = 'retired hurt';
+      } else if (input.wicketType === 'RETIRED_OUT') {
+        dismissalText = 'retired out';
+      } else if (input.wicketType === 'HIT_BALL_TWICE') {
+        dismissalText = 'hit the ball twice';
+      } else if (input.wicketType === 'OBSTRUCTING_FIELD') {
+        dismissalText = 'obstructing the field';
       } else if (input.wicketType === 'BOWLED') {
         dismissalText = `b ${bowlerName}`;
       } else if (input.wicketType === 'LBW') {
@@ -902,8 +935,8 @@ export async function recordDelivery(inningsId: string, input: RecordDeliveryInp
     }
 
     // 6. Strike rotation
-    // Odd runs completed rotates strike
-    const physicalRunsTaken = runs;
+    // Physical runs completed (bat runs, byes, leg-byes) rotate strike on odd runs
+    const physicalRunsTaken = delivery.batterRuns + delivery.byeRuns + delivery.legByeRuns;
     if (physicalRunsTaken % 2 !== 0) {
       const temp = nextStrikerId;
       nextStrikerId = nextNonStrikerId;
@@ -926,8 +959,13 @@ export async function recordDelivery(inningsId: string, input: RecordDeliveryInp
     const battingTeamName = innings.battingTeam?.name || (innings.battingTeamId === innings.match.teamAId ? innings.match.teamA?.name : innings.match.teamB?.name) || 'Batting Team';
     const bowlingTeamName = innings.bowlingTeam?.name || (innings.bowlingTeamId === innings.match.teamAId ? innings.match.teamA?.name : innings.match.teamB?.name) || 'Bowling Team';
 
-    // Innings 2 chase logic
-    if (innings.inningsNumber === 2) {
+    // Innings 1 all-out / over limit logic
+    if (innings.inningsNumber === 1) {
+      if (isTeamAllOut || (isOverComplete && nextOvers >= innings.match.oversPerInnings)) {
+        inningsFinished = true;
+      }
+    } else if (innings.inningsNumber === 2) {
+      // Innings 2 chase logic
       const inn1 = innings.match.innings.find((i: any) => i.inningsNumber === 1);
       const target = (inn1?.runs || 0) + 1;
       if (nextRuns >= target) {
@@ -935,9 +973,9 @@ export async function recordDelivery(inningsId: string, input: RecordDeliveryInp
         matchFinished = true;
         inningsFinished = true;
         winnerTeamId = innings.battingTeamId;
-        const wicketsRemaining = 10 - nextWickets;
+        const wicketsRemaining = wicketLimit - nextWickets;
         resultNote = `${battingTeamName} won by ${wicketsRemaining} wicket${wicketsRemaining === 1 ? '' : 's'}`;
-      } else if (nextWickets >= 10 || (isOverComplete && nextOvers >= innings.match.oversPerInnings)) {
+      } else if (isTeamAllOut || (isOverComplete && nextOvers >= innings.match.oversPerInnings)) {
         // Bowling team wins or Tie
         matchFinished = true;
         inningsFinished = true;
@@ -984,14 +1022,15 @@ export async function recordDelivery(inningsId: string, input: RecordDeliveryInp
         wickets: nextWickets,
         overs: nextOvers,
         balls: nextBalls,
+        isAllOut: isTeamAllOut,
         currentStrikerId: nextStrikerId,
         currentNonStrikerId: nextNonStrikerId,
         currentBowlerId: isOverComplete ? null : bowlerId, // Reset bowler at end of over
-        status: (inningsFinished && (innings.inningsNumber === 2 || innings.inningsNumber === 3 || innings.inningsNumber === 4)) ? 'COMPLETED' : 'IN_PROGRESS',
+        status: inningsFinished ? 'COMPLETED' : 'IN_PROGRESS',
       },
     });
 
-    // 9. Update Match if match finished (Innings 2 chase complete)
+    // 9. Update Match if match finished (Innings 2 or Super Over 2 chase complete)
     if (matchFinished) {
       await tx.match.update({
         where: { id: innings.matchId },
@@ -1012,9 +1051,11 @@ export async function recordDelivery(inningsId: string, input: RecordDeliveryInp
         ballNumber: innings.balls + 1,
         batsmanId: strikerId,
         bowlerId,
-        runs,
-        extras: extraRuns > 0 ? extraRuns : extraType !== 'NONE' ? 1 : 0,
+        runs: delivery.batterRuns,
+        extras: delivery.noBallPenalty > 0 ? delivery.noBallPenalty : (delivery.wideRuns > 0 ? delivery.wideRuns : (delivery.byeRuns > 0 ? delivery.byeRuns : (delivery.legByeRuns > 0 ? delivery.legByeRuns : 0))),
         extraType,
+        byeRuns: delivery.byeRuns,
+        legByeRuns: delivery.legByeRuns,
         isLegal,
         isWicket,
         wicketType: input.wicketType || null,
@@ -1025,6 +1066,39 @@ export async function recordDelivery(inningsId: string, input: RecordDeliveryInp
         bowlerIdBefore: bowlerId,
       },
     });
+
+    // 11. Maiden Over Calculation upon over completion
+    if (isLegal && isOverComplete) {
+      const priorOverBalls = await tx.ballEvent.findMany({
+        where: {
+          inningsId,
+          overNumber: innings.overs,
+        },
+      });
+      const allOverBalls = [
+        ...priorOverBalls,
+        {
+          bowlerId,
+          runs: delivery.batterRuns,
+          extraType,
+          extras: delivery.noBallPenalty > 0 ? delivery.noBallPenalty : (delivery.wideRuns > 0 ? delivery.wideRuns : (delivery.byeRuns > 0 ? delivery.byeRuns : (delivery.legByeRuns > 0 ? delivery.legByeRuns : 0))),
+          byeRuns: delivery.byeRuns,
+          legByeRuns: delivery.legByeRuns,
+          isLegal,
+        },
+      ];
+      const allSameBowler = allOverBalls.every((b: any) => b.bowlerId === bowlerId);
+      const legalCount = allOverBalls.filter((b: any) => b.isLegal).length;
+      if (allSameBowler && legalCount === matchBallsPerOver) {
+        const concededInOver = allOverBalls.reduce((sum: number, b: any) => sum + calculateBowlerRunsFromDelivery(b), 0);
+        if (concededInOver === 0) {
+          await tx.inningsBowler.update({
+            where: { inningsId_playerId: { inningsId, playerId: bowlerId } },
+            data: { maidens: { increment: 1 } },
+          });
+        }
+      }
+    }
 
     return {
       matchId: innings.matchId,
@@ -1640,7 +1714,14 @@ export async function recalculateInningsFromBalls(tx: any, inningsId: string) {
   const innings = await tx.innings.findUnique({
     where: { id: inningsId },
     include: {
-      match: true,
+      match: {
+        include: {
+          innings: true,
+          teamA: { include: { tournamentSquads: true, teamPlayers: true } },
+          teamB: { include: { tournamentSquads: true, teamPlayers: true } },
+        },
+      },
+      battingTeam: { include: { tournamentSquads: true, teamPlayers: true } },
       battingScores: true,
       bowlingScores: true,
     },
@@ -1683,15 +1764,8 @@ export async function recalculateInningsFromBalls(tx: any, inningsId: string) {
       });
     }
 
-    let deliveryRuns = 0;
-    if (b.extraType === 'NONE') {
-      deliveryRuns = b.runs || 0;
-    } else if (b.extraType === 'WIDE' || b.extraType === 'NO_BALL') {
-      deliveryRuns = (b.extras || 1) + (b.runs || 0);
-    } else if (b.extraType === 'BYE' || b.extraType === 'LEG_BYE') {
-      deliveryRuns = b.extras || b.runs || 1;
-    }
-    totalRuns += deliveryRuns;
+    const delivery = calculateDeliveryRuns(b);
+    totalRuns += delivery.totalRuns;
 
     if (b.isWicket && b.wicketType !== 'RETIRED_HURT') {
       totalWickets += 1;
@@ -1707,11 +1781,11 @@ export async function recalculateInningsFromBalls(tx: any, inningsId: string) {
         batterMap[b.batsmanId] = { runs: 0, balls: 0, fours: 0, sixes: 0, isOut: false, dismissal: null };
       }
       if (b.extraType !== 'WIDE') {
-        const offBat = (b.extraType === 'BYE' || b.extraType === 'LEG_BYE') ? 0 : (b.runs || 0);
+        const offBat = delivery.batterRuns;
         batterMap[b.batsmanId].runs += offBat;
         batterMap[b.batsmanId].balls += 1;
-        if (b.runs === 4 && offBat === 4) batterMap[b.batsmanId].fours += 1;
-        if (b.runs === 6 && offBat === 6) batterMap[b.batsmanId].sixes += 1;
+        if (offBat === 4) batterMap[b.batsmanId].fours += 1;
+        if (offBat === 6) batterMap[b.batsmanId].sixes += 1;
       }
     }
 
@@ -1724,7 +1798,7 @@ export async function recalculateInningsFromBalls(tx: any, inningsId: string) {
       batterMap[b.dismissedPlayerId].dismissal = isRetHurt ? 'retired hurt' : (b.wicketType ? `WICKET (${b.wicketType})` : 'OUT');
     }
 
-    // Bowler stats
+    // Bowler stats (Explicit Whitelist for bowler wickets)
     if (b.bowlerId) {
       if (!bowlerMap[b.bowlerId]) {
         bowlerMap[b.bowlerId] = { balls: 0, runsConceded: 0, wickets: 0, wides: 0, noBalls: 0 };
@@ -1732,15 +1806,17 @@ export async function recalculateInningsFromBalls(tx: any, inningsId: string) {
       if (b.isLegal) {
         bowlerMap[b.bowlerId].balls += 1;
       }
-      const bowlerRunsCharged = (b.extraType === 'BYE' || b.extraType === 'LEG_BYE') ? 0 : deliveryRuns;
-      bowlerMap[b.bowlerId].runsConceded += bowlerRunsCharged;
-      if (b.extraType === 'WIDE') bowlerMap[b.bowlerId].wides += (b.extras || 1);
-      if (b.extraType === 'NO_BALL') bowlerMap[b.bowlerId].noBalls += (b.extras || 1);
-      if (b.isWicket && b.wicketType !== 'RUN_OUT' && b.wicketType !== 'TIMED_OUT' && b.wicketType !== 'RETIRED_HURT') {
+      bowlerMap[b.bowlerId].runsConceded += delivery.bowlerRuns;
+      if (b.extraType === 'WIDE') bowlerMap[b.bowlerId].wides += (delivery.wideRuns || 1);
+      if (b.extraType === 'NO_BALL') bowlerMap[b.bowlerId].noBalls += (delivery.noBallPenalty || 1);
+      if (b.isWicket && isBowlerCreditedDismissal(b.wicketType)) {
         bowlerMap[b.bowlerId].wickets += 1;
       }
     }
   }
+
+  // Pure deterministic maidens from raw ball history
+  const maidensMap = calculateMaidensMap(allBalls, matchBallsPerOver);
 
   for (const [playerId, s] of Object.entries(batterMap)) {
     await tx.inningsBatter.updateMany({
@@ -1757,6 +1833,7 @@ export async function recalculateInningsFromBalls(tx: any, inningsId: string) {
       data: {
         overs: bowlerOvers,
         balls: bowlerBalls,
+        maidens: maidensMap[playerId] || 0,
         runsConceded: s.runsConceded,
         wickets: s.wickets,
         wides: s.wides,
@@ -1767,6 +1844,12 @@ export async function recalculateInningsFromBalls(tx: any, inningsId: string) {
 
   const finalOvers = Math.floor(legalBallsCount / matchBallsPerOver);
   const finalBalls = legalBallsCount % matchBallsPerOver;
+
+  // Authoritative dynamic all-out limit
+  const wicketLimit = getInningsWicketLimit(innings, innings.match);
+  const isAllOut = totalWickets >= wicketLimit;
+  const isCompletedOverLimit = finalOvers >= (innings.match?.oversPerInnings || 20);
+  const isInningsFinished = innings.status === 'COMPLETED' || isAllOut || isCompletedOverLimit;
 
   // 3. Re-determine active striker, non-striker, and bowler from the resulting ball sequence
   let activeStrikerId = innings.currentStrikerId;
@@ -1785,7 +1868,10 @@ export async function recalculateInningsFromBalls(tx: any, inningsId: string) {
       else if (lastBall.dismissedPlayerId === ns) ns = null;
     }
 
-    if (s && ns && (lastBall.runs % 2 !== 0)) {
+    const lastBallDelivery = calculateDeliveryRuns(lastBall);
+    const physicalRuns = lastBallDelivery.batterRuns + lastBallDelivery.byeRuns + lastBallDelivery.legByeRuns;
+
+    if (s && ns && (physicalRuns % 2 !== 0)) {
       const temp = s;
       s = ns;
       ns = temp;
@@ -1809,6 +1895,8 @@ export async function recalculateInningsFromBalls(tx: any, inningsId: string) {
       wickets: totalWickets,
       overs: finalOvers,
       balls: finalBalls,
+      isAllOut,
+      status: isInningsFinished ? 'COMPLETED' : innings.status,
       currentStrikerId: activeStrikerId,
       currentNonStrikerId: activeNonStrikerId,
       currentBowlerId: activeBowlerId,
@@ -1838,6 +1926,8 @@ export async function editBallDelivery(
     runs?: number;
     extraType?: ExtraTypeValue;
     extras?: number;
+    byeRuns?: number;
+    legByeRuns?: number;
     isWicket?: boolean;
     wicketType?: string;
   }
@@ -1854,8 +1944,40 @@ export async function editBallDelivery(
   const runs = input.runs !== undefined ? Number(input.runs) : ball.runs;
   const extraType: ExtraTypeValue = input.extraType !== undefined ? input.extraType : ball.extraType;
   const extras = input.extras !== undefined ? Number(input.extras) : ball.extras;
-  const isLegal = extraType !== 'WIDE' && extraType !== 'NO_BALL';
+  const byeRuns = input.byeRuns !== undefined ? Number(input.byeRuns) : ball.byeRuns;
+  const legByeRuns = input.legByeRuns !== undefined ? Number(input.legByeRuns) : ball.legByeRuns;
   const isWicket = input.isWicket !== undefined ? Boolean(input.isWicket) : ball.isWicket;
+  const wicketType = isWicket ? (input.wicketType || ball.wicketType || 'BOWLED') : null;
+
+  // Check if ball delivery was on a Free Hit
+  const previousBalls = await (prisma as any).ballEvent.findMany({
+    where: {
+      inningsId: ball.inningsId,
+      createdAt: { lt: ball.createdAt },
+    },
+    orderBy: { createdAt: 'desc' },
+    take: 10,
+  });
+  const isFreeHit = isFreeHitActive(previousBalls);
+
+  // Server-side dismissal legality validation BEFORE mutating state
+  const dismissalCheck = validateDismissalLegality({
+    isWicket,
+    wicketType,
+    extraType,
+    isFreeHit,
+  });
+  if (!dismissalCheck.valid) {
+    return { success: false, error: dismissalCheck.error };
+  }
+
+  const delivery = calculateDeliveryRuns({
+    runs,
+    extraType,
+    extras,
+    byeRuns,
+    legByeRuns,
+  });
 
   // Check if a previous wicket is being revoked/cancelled into normal score
   const wasWicketCancelled = ball.isWicket && !isWicket;
@@ -1874,12 +1996,14 @@ export async function editBallDelivery(
     await tx.ballEvent.update({
       where: { id: ballId },
       data: {
-        runs,
+        runs: delivery.batterRuns,
         extraType,
-        extras,
-        isLegal,
+        extras: delivery.noBallPenalty > 0 ? delivery.noBallPenalty : (delivery.wideRuns > 0 ? delivery.wideRuns : (delivery.byeRuns > 0 ? delivery.byeRuns : (delivery.legByeRuns > 0 ? delivery.legByeRuns : 0))),
+        byeRuns: delivery.byeRuns,
+        legByeRuns: delivery.legByeRuns,
+        isLegal: delivery.isLegal,
         isWicket,
-        wicketType: isWicket ? (input.wicketType || ball.wicketType || 'BOWLED') : null,
+        wicketType,
         dismissedPlayerId: isWicket ? (ball.dismissedPlayerId || ball.batsmanId) : null,
       },
     });

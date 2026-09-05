@@ -141,6 +141,8 @@ export async function editBallDeliveryAction(
     runs?: number;
     extraType?: any;
     extras?: number;
+    byeRuns?: number;
+    legByeRuns?: number;
     isWicket?: boolean;
     wicketType?: string;
   }
