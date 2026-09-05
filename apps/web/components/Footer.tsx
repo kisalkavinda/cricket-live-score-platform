@@ -106,7 +106,7 @@ export default function Footer() {
               </li>
               <li>
                 <Link
-                  href="/#register"
+                  href="/#fixtures"
                   style={{
                     color: 'rgba(255, 255, 255, 0.8)',
                     textDecoration: 'none',
@@ -114,7 +114,7 @@ export default function Footer() {
                     fontWeight: 500,
                   }}
                 >
-                  Team Registration Portal
+                  Tournament Draw & Fixtures
                 </Link>
               </li>
             </ul>
