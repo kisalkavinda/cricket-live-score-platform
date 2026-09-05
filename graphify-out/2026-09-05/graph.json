@@ -1439,7 +1439,7 @@
       "file_type": "code",
       "norm_label": "post()",
       "source_file": "apps/web/app/api/registrations/route.ts",
-      "source_location": "L8"
+      "source_location": "L7"
     },
     {
       "id": "apps_web_app_secretpath_adminloginclient_adminloginclient",
@@ -8878,7 +8878,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/app/api/registrations/route.ts",
-      "source_location": "L24",
+      "source_location": "L13",
       "weight": 1.0
     },
     {
@@ -8890,7 +8890,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/app/api/registrations/route.ts",
-      "source_location": "L76",
+      "source_location": "L65",
       "weight": 1.0
     },
     {
@@ -12756,18 +12756,6 @@
       "weight": 1.0
     },
     {
-      "source": "apps_web_app_api_registrations_route",
-      "target": "apps_web_config_tournament_tournamentconfig",
-      "relation": "imports",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "import",
-      "source_file": "apps/web/app/api/registrations/route.ts",
-      "source_location": "L4",
-      "weight": 1.0
-    },
-    {
       "source": "apps_web_app_api_tournament_stats_route",
       "target": "apps_web_lib_scoring_scoring_service_gettournamentstats",
       "relation": "imports",
@@ -15900,18 +15888,6 @@
       "weight": 1.0
     },
     {
-      "source": "apps_web_app_api_registrations_route",
-      "target": "apps_web_config_tournament",
-      "relation": "imports_from",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "import",
-      "source_file": "apps/web/app/api/registrations/route.ts",
-      "source_location": "L4",
-      "weight": 1.0
-    },
-    {
       "source": "apps_web_app_api_tournament_stats_route",
       "target": "apps_web_lib_scoring_scoring_service",
       "relation": "imports_from",
@@ -17746,7 +17722,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/app/api/registrations/route.ts",
-      "source_location": "L8",
+      "source_location": "L7",
       "weight": 1.0
     },
     {
@@ -24336,5 +24312,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "42a1bc5e3206d76b459c2aff5df630be9ed53027"
+  "built_at_commit": "bc044006942938fa1cb31e896aceadd7e68fb433"
 }

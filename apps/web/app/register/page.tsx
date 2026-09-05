@@ -56,20 +56,100 @@ export default async function RegisterPage() {
     // Database fallback
   }
 
-  if (isClosed) {
+  if (isClosed || !tournamentConfig.registrationOpen) {
     return (
-      <main style={{ background: 'var(--color-paper-dark)', minHeight: '100vh', color: 'var(--color-paper)' }}>
+      <main
+        style={{
+          background: 'var(--color-paper-dark)',
+          minHeight: '100vh',
+          color: 'var(--color-paper)',
+          display: 'flex',
+          flexDirection: 'column',
+        }}
+      >
         <Navbar />
-        <div style={{ maxWidth: '640px', margin: '140px auto 60px', padding: '0 20px', textAlign: 'center' }}>
-          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '2.5rem', marginBottom: '16px' }}>
-            Registration Closed
-          </h1>
-          <p style={{ color: 'rgba(255, 255, 255, 0.7)', marginBottom: '24px' }}>
-            Registration for this tournament is no longer accepting new submissions.
-          </p>
-          <Link href="/" className="btn-hallmark-primary">
-            Return to Tournament Home
-          </Link>
+        <div
+          style={{
+            flex: 1,
+            padding: '140px 20px 80px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <div
+            style={{
+              background: 'rgba(255, 255, 255, 0.03)',
+              border: '1.5px solid rgba(255, 255, 255, 0.15)',
+              borderRadius: 'var(--radius-lg)',
+              padding: 'var(--space-2xl) var(--space-xl)',
+              textAlign: 'center',
+              maxWidth: '600px',
+              boxShadow: '0 20px 50px rgba(0, 0, 0, 0.4)',
+            }}
+          >
+            <div
+              style={{
+                width: '64px',
+                height: '64px',
+                borderRadius: '50%',
+                background: 'rgba(192, 39, 45, 0.15)',
+                border: '2px solid var(--color-accent)',
+                color: 'var(--color-accent-bright)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '1.8rem',
+                margin: '0 auto var(--space-lg)',
+              }}
+            >
+              🔒
+            </div>
+
+            <span
+              style={{
+                fontFamily: 'var(--font-body)',
+                fontSize: '0.75rem',
+                fontWeight: 700,
+                letterSpacing: '0.14em',
+                textTransform: 'uppercase',
+                color: 'var(--color-accent-bright)',
+                display: 'block',
+                marginBottom: '6px',
+              }}
+            >
+              Entry Window Concluded
+            </span>
+
+            <h1
+              style={{
+                fontFamily: 'var(--font-display)',
+                fontSize: 'clamp(2.2rem, 5vw, 3rem)',
+                fontWeight: 900,
+                color: 'var(--color-paper)',
+                textTransform: 'uppercase',
+                marginBottom: '16px',
+              }}
+            >
+              Team Registration Closed
+            </h1>
+
+            <p
+              style={{
+                fontFamily: 'var(--font-body)',
+                fontSize: '1rem',
+                color: 'rgba(255, 255, 255, 0.75)',
+                lineHeight: 1.6,
+                marginBottom: 'var(--space-xl)',
+              }}
+            >
+              Registration for <strong>{tournamentName}</strong> is officially completed and new squad submissions are closed. Official match fixtures and pitch schedules will be published soon.
+            </p>
+
+            <Link href="/" className="btn-hallmark-primary" style={{ height: '44px', padding: '0 24px' }}>
+              Return to Tournament Home →
+            </Link>
+          </div>
         </div>
         <Footer />
       </main>
