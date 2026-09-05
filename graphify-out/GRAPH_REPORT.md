@@ -1,34 +1,34 @@
 # Graph Report - cricket-platform  (2026-09-06)
 
 ## Corpus Check
-- 134 files · ~148,829 words
+- 137 files · ~154,272 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 921 nodes · 1743 edges · 60 communities (48 shown, 12 thin omitted)
+- 964 nodes · 1848 edges · 51 communities (39 shown, 12 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `9e143a1f`
+- Built from commit: `fe363d80`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
 - draw-service.ts
-- scoring-service.ts
+- requireAdminAuth
 - app/page.tsx
 - dependencies
 - database/package.json
 - RegistrationForm.tsx
-- requireAdminAuth
+- getAdminEntryPath
 - compilerOptions
 - security-overhaul.test.js
 - security-audit.test.js
 - Phase 3 — Match Engine (Express + Cricket Engine)
 - security-cache-scoring.test.js
 - realtime-live-scoring.test.js
-- admin-auth.ts
+- scoring-rules-mcc.test.js
 - test-google-sheets-connection.js
 - web/vercel.json
 - vercel.json
@@ -44,67 +44,58 @@
 - AGENTS.md
 - web/middleware.ts
 - draw-engine.test.js
-- scoring-actions.ts
+- nrr-engine.ts
 - admin-actions.ts
-- scoring/ScoringConsole.tsx
-- teams/[id]/page.tsx
+- backup-sync.ts
 - live-security-recheck.test.js
 - nrr-softball.test.js
-- registration-exceptions/page.tsx
 - e2e-system-verification.test.js
 - http-smoke-check.test.js
-- backup-sync.ts
 - tournament-service.ts
 - inspect-and-clean-dummy-data.js
 - manual-cookie-replay-test.js
 - web/package.json
-- admin-service.ts
 - @lottiefiles/dotlottie-react
 - next
 - @supabase/ssr
 - @vercel/speed-insights
-- RegistrationDetailClient.tsx
-- matches/new/page.tsx
-- players/[id]/page.tsx
-- scorecard/route.ts
-- DeleteTournamentButton.tsx
 
 ## God Nodes (most connected - your core abstractions)
 1. `requireAdminAuth()` - 107 edges
 2. `getAdminEntryPath()` - 71 edges
 3. `Cricket Tournament Platform — Full Consolidated Summary` - 34 edges
-4. `prisma` - 21 edges
-5. `getMatchDetail()` - 20 edges
-6. `buildMatchBroadcastPayload()` - 18 edges
-7. `ScoringConsole()` - 17 edges
+4. `prisma` - 23 edges
+5. `ScoringConsole()` - 20 edges
+6. `getMatchDetail()` - 20 edges
+7. `buildMatchBroadcastPayload()` - 18 edges
 8. `compilerOptions` - 16 edges
 9. `broadcastScoreUpdate()` - 15 edges
 10. `generateDraw()` - 15 edges
 
 ## Surprising Connections (you probably didn't know these)
-- `ManagementLayout()` --calls--> `getAdminEntryPath()`  [EXTRACTED]
-  apps/web/app/[secretPath]/layout.tsx → apps/web/lib/auth/admin-auth.ts
-- `robots()` --calls--> `getAdminEntryPath()`  [EXTRACTED]
-  apps/web/app/robots.ts → apps/web/lib/auth/admin-auth.ts
 - `TournamentPage()` --calls--> `getTournamentOverview()`  [EXTRACTED]
   apps/web/app/tournament/page.tsx → apps/web/lib/tournament/tournament-service.ts
+- `AdminDashboardPage()` --calls--> `requireAdminAuth()`  [EXTRACTED]
+  apps/web/app/[secretPath]/(admin)/dashboard/page.tsx → apps/web/lib/auth/admin-auth.ts
+- `ManagementLayout()` --calls--> `requireAdminAuth()`  [EXTRACTED]
+  apps/web/app/[secretPath]/(admin)/layout.tsx → apps/web/lib/auth/admin-auth.ts
+- `AdminScoringPage()` --calls--> `requireAdminAuth()`  [EXTRACTED]
+  apps/web/app/[secretPath]/(admin)/matches/[id]/score/page.tsx → apps/web/lib/auth/admin-auth.ts
 - `AdminScoringPage()` --calls--> `getMatchDetail()`  [EXTRACTED]
   apps/web/app/[secretPath]/(admin)/matches/[id]/score/page.tsx → apps/web/lib/scoring/scoring-service.ts
-- `NewMatchPage()` --calls--> `getAdminEntryPath()`  [EXTRACTED]
-  apps/web/app/[secretPath]/(admin)/matches/new/page.tsx → apps/web/lib/auth/admin-auth.ts
 
 ## Import Cycles
 - None detected.
 
-## Communities (60 total, 12 thin omitted)
+## Communities (51 total, 12 thin omitted)
 
 ### Community 0 - "draw-service.ts"
 Cohesion: 0.10
-Nodes (47): GroupDrawAdminConsole(), Props, AdminTournamentDrawPage(), dynamic, DrawCeremonyClient(), Props, dynamic, metadata (+39 more)
+Nodes (49): GroupDrawAdminConsole(), Props, AdminTournamentDrawPage(), dynamic, DrawCeremonyClient(), Props, dynamic, metadata (+41 more)
 
-### Community 1 - "scoring-service.ts"
-Cohesion: 0.19
-Nodes (27): dynamic, GET(), broadcastScoreUpdate(), buildMatchBroadcastPayload(), changeBowler(), completeMatch(), deleteBallDelivery(), editBallDelivery() (+19 more)
+### Community 1 - "requireAdminAuth"
+Cohesion: 0.06
+Nodes (89): dynamic, GET(), pruneExpiredCache(), scorecardCache, dynamic, GET(), NewMatchForm(), Props (+81 more)
 
 ### Community 2 - "app/page.tsx"
 Cohesion: 0.05
@@ -119,12 +110,12 @@ Cohesion: 0.08
 Nodes (24): dependencies, prisma, @prisma/client, ts-node, @types/node, typescript, description, exports (+16 more)
 
 ### Community 5 - "RegistrationForm.tsx"
-Cohesion: 0.11
-Nodes (25): ConfirmationChecklist(), ConfirmationChecklistProps, FormError(), FormErrorProps, PlayerList(), PlayerListProps, PlayerRow(), PlayerRowProps (+17 more)
+Cohesion: 0.09
+Nodes (30): POST(), ConfirmationChecklist(), ConfirmationChecklistProps, FormError(), FormErrorProps, PlayerList(), PlayerListProps, PlayerRow() (+22 more)
 
-### Community 6 - "requireAdminAuth"
-Cohesion: 0.14
-Nodes (32): AdminDashboardPage(), dynamic, ManagementLayout(), AdminScoringPage(), dynamic, AdminMatchesPage(), dynamic, AdminPlayersPage() (+24 more)
+### Community 6 - "getAdminEntryPath"
+Cohesion: 0.06
+Nodes (63): robots(), AdminDashboardPage(), dynamic, ManagementLayout(), AdminScoringPage(), dynamic, AdminMatchesPage(), dynamic (+55 more)
 
 ### Community 7 - "compilerOptions"
 Cohesion: 0.07
@@ -150,9 +141,13 @@ Nodes (15): actionsSrc, adminCatchAll, adminRootPage, authSrc, failures, fs, liv
 Cohesion: 0.15
 Nodes (14): actionsSrc, assert(), failures, fs, has(), no(), path, realtimeSrc (+6 more)
 
-### Community 13 - "admin-auth.ts"
-Cohesion: 0.09
-Nodes (28): POST(), robots(), AdminLoginClient(), ManagementLayout(), SecretAdminEntryPage(), AdminNavLinks(), AdminNavLinksProps, loginAdminServerAction() (+20 more)
+### Community 13 - "scoring-rules-mcc.test.js"
+Cohesion: 0.06
+Nodes (31): allowedOnNbAndFh, allowedOnWide, assert, bye1, bye2, completedMatch, {
+  computeStageStandings,
+  calculateInningsEffectiveOvers,
+  isInningsAllOut,
+}, creditedWickets (+23 more)
 
 ### Community 14 - "test-google-sheets-connection.js"
 Cohesion: 0.33
@@ -186,21 +181,17 @@ Nodes (3): Deploy on Vercel, Getting Started, Learn More
 Cohesion: 0.21
 Nodes (10): assert, crypto, envFiles, fs, hashPasscode(), path, prisma, { PrismaClient } (+2 more)
 
-### Community 36 - "scoring-actions.ts"
-Cohesion: 0.13
-Nodes (20): DeleteMatchButton(), handleDelete(), DeleteMatchButtonProps, deleteMatchAction(), CreateMatchInput, OpeningLineupInput, RecordDeliveryInput, StartMatchInput (+12 more)
+### Community 36 - "nrr-engine.ts"
+Cohesion: 0.27
+Nodes (10): calculateInningsEffectiveOvers(), computeStageStandings(), countInningsLegalBalls(), formatDisplayCricketOvers(), InningsData, isInningsAllOut(), legalBallsToEffectiveOvers(), MatchData (+2 more)
 
 ### Community 37 - "admin-actions.ts"
-Cohesion: 0.18
-Nodes (14): NewTournamentPage(), handleSubmit(), createExceptionServerAction(), createTournamentServerAction(), createException(), createExceptionSchema, createPlayerSchema, createTeamSchema (+6 more)
+Cohesion: 0.06
+Nodes (58): dynamic, RegistrationExceptionsPage(), AdminRegistrationDetailPage(), RegistrationDetailClient(), RegistrationDetailClientProps, dynamic, TeamDetailPage(), NewTournamentPage() (+50 more)
 
-### Community 38 - "scoring/ScoringConsole.tsx"
-Cohesion: 0.15
-Nodes (18): Props, ScoringConsole(), handleDeleteBall(), handleSaveEditedBall(), handleStartSuperOver(), handleUpdateBallsPerOver(), changeBowlerAction(), completeMatchAction() (+10 more)
-
-### Community 39 - "teams/[id]/page.tsx"
-Cohesion: 0.20
-Nodes (12): dynamic, TeamDetailPage(), DeleteTeamButton(), handleDelete(), DeleteTeamButtonProps, RemovePlayerFromTeamButton(), handleRemove(), RemovePlayerProps (+4 more)
+### Community 38 - "backup-sync.ts"
+Cohesion: 0.30
+Nodes (12): recordFailedBackup(), retryRegistrationBackup(), sanitizeErrorMessage(), syncRegistrationToGoogleSheets(), SyncResult, getGoogleSheetsClient(), getGoogleSheetsConfig(), getSpreadsheetId() (+4 more)
 
 ### Community 40 - "live-security-recheck.test.js"
 Cohesion: 0.12
@@ -208,11 +199,7 @@ Nodes (12): authCode, crypto, envContent, envPath, errors, fs, match, mockRevoke
 
 ### Community 41 - "nrr-softball.test.js"
 Cohesion: 0.06
-Nodes (41): calculateInningsEffectiveOvers(), computeStageStandings(), countInningsLegalBalls(), formatDisplayCricketOvers(), InningsData, isInningsAllOut(), legalBallsToEffectiveOvers(), MatchData (+33 more)
-
-### Community 42 - "registration-exceptions/page.tsx"
-Cohesion: 0.20
-Nodes (12): dynamic, RegistrationExceptionsPage(), ExceptionCard(), handleDelete(), handleToggle(), handleUpdate(), ExceptionCardProps, deleteExceptionServerAction() (+4 more)
+Nodes (31): assert, emptyStandings, eval10OverAllOut, eval6OverAllOut, evalAllOut, evalNotAllOut13, evalNotAllOut37, formatMatrix (+23 more)
 
 ### Community 43 - "e2e-system-verification.test.js"
 Cohesion: 0.25
@@ -222,13 +209,9 @@ Nodes (8): assert(), envFiles, errors, fs, path, prisma, { PrismaClient }, runE2
 Cohesion: 0.43
 Nodes (6): assert(), errors, get(), http, post(), runHttpCheck()
 
-### Community 45 - "backup-sync.ts"
-Cohesion: 0.32
-Nodes (11): recordFailedBackup(), sanitizeErrorMessage(), syncRegistrationToGoogleSheets(), SyncResult, getGoogleSheetsClient(), getGoogleSheetsConfig(), getSpreadsheetId(), GoogleSheetsConfig (+3 more)
-
 ### Community 46 - "tournament-service.ts"
 Cohesion: 0.10
-Nodes (38): dynamic, GET(), AdminTournamentBracketPage(), dynamic, Props, TournamentAdminConsole(), MobileTournamentHub(), MobileTournamentHubProps (+30 more)
+Nodes (37): dynamic, GET(), AdminTournamentBracketPage(), dynamic, Props, TournamentAdminConsole(), MobileTournamentHub(), MobileTournamentHubProps (+29 more)
 
 ### Community 48 - "manual-cookie-replay-test.js"
 Cohesion: 0.33
@@ -238,49 +221,25 @@ Nodes (4): crypto, http, prisma, { PrismaClient }
 Cohesion: 0.22
 Nodes (8): name, private, scripts, build, dev, lint, start, version
 
-### Community 50 - "admin-service.ts"
-Cohesion: 0.30
-Nodes (10): AdminRegistrationDetailPage(), approveRegistrationTransaction(), DashboardStats, getRegistrationDetail(), matchesIntakeOrIndex(), matchesRegistrationException(), RegistrationsQuery, retryBackupService() (+2 more)
-
-### Community 55 - "RegistrationDetailClient.tsx"
-Cohesion: 0.24
-Nodes (10): RegistrationDetailClient(), RegistrationDetailClientProps, DeleteRegistrationButton(), handleDelete(), DeleteRegistrationButtonProps, approveRegistrationServerAction(), deleteRegistrationServerAction(), rejectRegistrationServerAction() (+2 more)
-
-### Community 56 - "matches/new/page.tsx"
-Cohesion: 0.24
-Nodes (9): NewMatchForm(), Props, Team, Tournament, dynamic, NewMatchPage(), createMatchAction(), startMatchAction() (+1 more)
-
-### Community 57 - "players/[id]/page.tsx"
-Cohesion: 0.33
-Nodes (7): AdminPlayerDetailPage(), dynamic, DeletePlayerButton(), handleDelete(), DeletePlayerButtonProps, deletePlayerServerAction(), updatePlayerServerAction()
-
-### Community 58 - "scorecard/route.ts"
-Cohesion: 0.50
-Nodes (4): dynamic, GET(), pruneExpiredCache(), scorecardCache
-
-### Community 59 - "DeleteTournamentButton.tsx"
-Cohesion: 0.50
-Nodes (4): DeleteTournamentButton(), handleDelete(), DeleteTournamentButtonProps, deleteTournamentServerAction()
-
 ## Knowledge Gaps
-- **404 isolated node(s):** `dynamic`, `dynamic`, `Tournament`, `Team`, `Props` (+399 more)
+- **434 isolated node(s):** `dynamic`, `dynamic`, `Tournament`, `Team`, `Props` (+429 more)
   These have ≤1 connection - possible missing edges or undocumented components.
 - **12 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `requireAdminAuth()` connect `requireAdminAuth` to `draw-service.ts`, `scoring-service.ts`, `app/page.tsx`, `scoring-actions.ts`, `admin-actions.ts`, `scoring/ScoringConsole.tsx`, `teams/[id]/page.tsx`, `registration-exceptions/page.tsx`, `admin-auth.ts`, `tournament-service.ts`, `admin-service.ts`, `RegistrationDetailClient.tsx`, `matches/new/page.tsx`, `players/[id]/page.tsx`, `DeleteTournamentButton.tsx`?**
-  _High betweenness centrality (0.068) - this node is a cross-community bridge._
-- **Why does `prisma` connect `tournament-service.ts` to `draw-service.ts`, `scoring-service.ts`, `admin-actions.ts`, `requireAdminAuth`, `teams/[id]/page.tsx`, `RegistrationForm.tsx`, `registration-exceptions/page.tsx`, `backup-sync.ts`, `admin-service.ts`, `matches/new/page.tsx`, `players/[id]/page.tsx`?**
-  _High betweenness centrality (0.049) - this node is a cross-community bridge._
-- **Why does `getAdminEntryPath()` connect `requireAdminAuth` to `draw-service.ts`, `app/page.tsx`, `scoring-actions.ts`, `admin-actions.ts`, `teams/[id]/page.tsx`, `registration-exceptions/page.tsx`, `admin-auth.ts`, `tournament-service.ts`, `admin-service.ts`, `RegistrationDetailClient.tsx`, `matches/new/page.tsx`, `players/[id]/page.tsx`, `DeleteTournamentButton.tsx`?**
-  _High betweenness centrality (0.020) - this node is a cross-community bridge._
+- **Why does `requireAdminAuth()` connect `requireAdminAuth` to `draw-service.ts`, `app/page.tsx`, `admin-actions.ts`, `getAdminEntryPath`, `tournament-service.ts`?**
+  _High betweenness centrality (0.070) - this node is a cross-community bridge._
+- **Why does `prisma` connect `draw-service.ts` to `requireAdminAuth`, `admin-actions.ts`, `getAdminEntryPath`, `backup-sync.ts`, `RegistrationForm.tsx`, `tournament-service.ts`?**
+  _High betweenness centrality (0.052) - this node is a cross-community bridge._
+- **Why does `getAdminEntryPath()` connect `getAdminEntryPath` to `draw-service.ts`, `requireAdminAuth`, `app/page.tsx`, `admin-actions.ts`, `tournament-service.ts`?**
+  _High betweenness centrality (0.018) - this node is a cross-community bridge._
 - **What connects `dynamic`, `dynamic`, `Tournament` to the rest of the system?**
-  _404 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _434 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `draw-service.ts` be split into smaller, more focused modules?**
-  _Cohesion score 0.1038961038961039 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.1016949152542373 - nodes in this community are weakly interconnected._
+- **Should `requireAdminAuth` be split into smaller, more focused modules?**
+  _Cohesion score 0.057852844107940206 - nodes in this community are weakly interconnected._
 - **Should `app/page.tsx` be split into smaller, more focused modules?**
   _Cohesion score 0.054244306418219465 - nodes in this community are weakly interconnected._
-- **Should `dependencies` be split into smaller, more focused modules?**
-  _Cohesion score 0.11764705882352941 - nodes in this community are weakly interconnected._

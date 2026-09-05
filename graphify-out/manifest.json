@@ -372,9 +372,9 @@
     "semantic_hash": "86ee0408066c88c00d58cf95dbf5d865"
   },
   "apps/web/components/scoring/ScoringConsole.tsx": {
-    "mtime": 1788639238.8244379,
-    "seen": 1788639345.574463,
-    "ast_hash": "5c7b718a8dfd2a768bfcd9b5ae36c0bc",
+    "mtime": 1788643072.6920083,
+    "seen": 1788643133.9543097,
+    "ast_hash": "5f599c8747e4b1f7397f8948f3da492c",
     "semantic_hash": ""
   },
   "apps/web/config/tournament.ts": {
@@ -444,9 +444,9 @@
     "semantic_hash": "c545fda8c62c80f1c29b2d9fe8703f24"
   },
   "apps/web/lib/scoring/scoring-actions.ts": {
-    "mtime": 1788200645.6174388,
-    "seen": 1788200715.6830556,
-    "ast_hash": "5065851970cafc802693fc8db2893c3e",
+    "mtime": 1788642520.5037212,
+    "seen": 1788642888.6943104,
+    "ast_hash": "2afee5a28cc9db5c47e33e65b27c67e0",
     "semantic_hash": ""
   },
   "apps/web/lib/scoring/scoring-realtime.ts": {
@@ -456,9 +456,9 @@
     "semantic_hash": ""
   },
   "apps/web/lib/scoring/scoring-service.ts": {
-    "mtime": 1788589261.1306958,
-    "seen": 1788590501.9824178,
-    "ast_hash": "195190da4e68d2bceaca116ee9c3d1b7",
+    "mtime": 1788642181.5390737,
+    "seen": 1788642888.6944833,
+    "ast_hash": "6ce11516aaf8eca4d5a37d608f1c1d97",
     "semantic_hash": ""
   },
   "apps/web/lib/utils/perf-logger.ts": {
@@ -516,10 +516,10 @@
     "semantic_hash": "0403357dc3161db83817450b482f3a47"
   },
   "apps/web/tsconfig.json": {
-    "mtime": 1786217045.7069824,
-    "seen": 1788034975.222963,
+    "mtime": 1788643362.089435,
+    "seen": 1788643595.0787632,
     "ast_hash": "02fc19ad21338c2ab820a70136310db4",
-    "semantic_hash": "02fc19ad21338c2ab820a70136310db4"
+    "semantic_hash": ""
   },
   "apps/web/utils/supabase/client.ts": {
     "mtime": 1786218603.3610516,
@@ -654,9 +654,9 @@
     "semantic_hash": ""
   },
   "apps/web/lib/validations/scoring.ts": {
-    "mtime": 1788203057.5223184,
-    "seen": 1788588001.961762,
-    "ast_hash": "77893758bc5e9723d778881a139f1398",
+    "mtime": 1788642058.3942034,
+    "seen": 1788642888.6956341,
+    "ast_hash": "334418ec8e385870718a591c5eaf1fb5",
     "semantic_hash": ""
   },
   "apps/web/middleware.ts": {
@@ -726,9 +726,9 @@
     "semantic_hash": ""
   },
   "apps/web/lib/tournament/nrr-engine.ts": {
-    "mtime": 1788589403.6411233,
-    "seen": 1788590501.982421,
-    "ast_hash": "ab0bdd7c6861041f6428d9540b98a3d6",
+    "mtime": 1788643341.2651007,
+    "seen": 1788643595.0740795,
+    "ast_hash": "a6f6b83c92803829dc50100a9a87aed2",
     "semantic_hash": ""
   },
   "apps/web/lib/tournament/tournament-actions.ts": {
@@ -738,9 +738,9 @@
     "semantic_hash": ""
   },
   "apps/web/lib/tournament/tournament-service.ts": {
-    "mtime": 1788632797.7537286,
-    "seen": 1788632843.9464102,
-    "ast_hash": "69a7fd22c6aab00d8e3e59ff11aa3aef",
+    "mtime": 1788643355.5892186,
+    "seen": 1788643595.0742278,
+    "ast_hash": "da41e46e15a13eae233fb51abbeaf461",
     "semantic_hash": ""
   },
   "apps/web/tests/cpl-tournament-simulation.test.js": {
@@ -810,8 +810,8 @@
     "semantic_hash": ""
   },
   "apps/web/lib/tournament/draw-service.ts": {
-    "mtime": 1788638413.6178646,
-    "seen": 1788638991.5709875,
+    "mtime": 1788643336.368889,
+    "seen": 1788643595.0740767,
     "ast_hash": "22bd2635c05f640f441c48dc92ef6313",
     "semantic_hash": ""
   },
@@ -822,15 +822,27 @@
     "semantic_hash": ""
   },
   "apps/web/tests/draw-team-selection.test.ts": {
-    "mtime": 1788637796.3888576,
-    "seen": 1788638037.7880821,
-    "ast_hash": "eff02c3facc5bf92a75d41a59485677f",
+    "mtime": 1788644094.9413931,
+    "seen": 1788644132.8347874,
+    "ast_hash": "17f835408f3b280122b4c722a7e72004",
     "semantic_hash": ""
   },
   "apps/web/tests/draw-revert.test.ts": {
-    "mtime": 1788638844.8969653,
-    "seen": 1788638991.5728133,
-    "ast_hash": "69f1150572403dd18b38e5c0d6f6146e",
+    "mtime": 1788644110.0836806,
+    "seen": 1788644132.8347845,
+    "ast_hash": "0c1e516d38c148a57561faafb6c29fc8",
+    "semantic_hash": ""
+  },
+  "apps/web/lib/scoring/scoring-rules.ts": {
+    "mtime": 1788642638.8591928,
+    "seen": 1788642888.694481,
+    "ast_hash": "8c93fc8c48cdef70407818fac1fa6185",
+    "semantic_hash": ""
+  },
+  "apps/web/tests/scoring-rules-mcc.test.js": {
+    "mtime": 1788642650.550613,
+    "seen": 1788642888.6978827,
+    "ast_hash": "ea353176fc9c2a3c39490f5d51398a43",
     "semantic_hash": ""
   }
 }
