@@ -30,7 +30,9 @@ export default function Navbar() {
     { label: 'Overview', href: '/#overview', id: 'nav-overview' },
     { label: 'Tournament Info', href: '/#details', id: 'nav-details' },
     { label: 'Fixtures & Draw', href: '/#fixtures', id: 'nav-fixtures' },
-    { label: 'Register Squad', href: '/register', id: 'nav-register' },
+    ...(tournamentConfig.registrationOpen
+      ? [{ label: 'Register Squad', href: '/register', id: 'nav-register' }]
+      : []),
   ];
 
   return (
@@ -158,39 +160,75 @@ export default function Navbar() {
 
         {/* Action Button & Mobile Hamburger Toggle */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Link
-            href="/register"
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              height: '30px',
-              padding: '0 14px',
-              background: 'var(--color-accent)',
-              color: 'var(--color-accent-ink)',
-              fontFamily: 'var(--font-display)',
-              fontSize: '0.8rem',
-              fontWeight: 800,
-              letterSpacing: '0.06em',
-              textTransform: 'uppercase',
-              textDecoration: 'none',
-              borderRadius: '9999px',
-              boxShadow: '0 2px 10px rgba(192, 39, 45, 0.4)',
-              border: '1px solid rgba(255, 255, 255, 0.2)',
-              transition: 'all var(--dur-fast) var(--ease-out)',
-              whiteSpace: 'nowrap',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'var(--color-accent-hover)';
-              e.currentTarget.style.transform = 'translateY(-1px)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'var(--color-accent)';
-              e.currentTarget.style.transform = 'none';
-            }}
-          >
-            Register
-          </Link>
+          {tournamentConfig.registrationOpen ? (
+            <Link
+              href="/register"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                height: '30px',
+                padding: '0 14px',
+                background: 'var(--color-accent)',
+                color: 'var(--color-accent-ink)',
+                fontFamily: 'var(--font-display)',
+                fontSize: '0.8rem',
+                fontWeight: 800,
+                letterSpacing: '0.06em',
+                textTransform: 'uppercase',
+                textDecoration: 'none',
+                borderRadius: '9999px',
+                boxShadow: '0 2px 10px rgba(192, 39, 45, 0.4)',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                transition: 'all var(--dur-fast) var(--ease-out)',
+                whiteSpace: 'nowrap',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'var(--color-accent-hover)';
+                e.currentTarget.style.transform = 'translateY(-1px)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'var(--color-accent)';
+                e.currentTarget.style.transform = 'none';
+              }}
+            >
+              Register
+            </Link>
+          ) : (
+            <Link
+              href="/#live-scores"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                height: '30px',
+                padding: '0 14px',
+                background: 'rgba(192, 39, 45, 0.15)',
+                color: 'var(--color-accent-bright)',
+                fontFamily: 'var(--font-display)',
+                fontSize: '0.8rem',
+                fontWeight: 800,
+                letterSpacing: '0.06em',
+                textTransform: 'uppercase',
+                textDecoration: 'none',
+                borderRadius: '9999px',
+                boxShadow: '0 2px 10px rgba(192, 39, 45, 0.2)',
+                border: '1px solid rgba(192, 39, 45, 0.5)',
+                transition: 'all var(--dur-fast) var(--ease-out)',
+                whiteSpace: 'nowrap',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(192, 39, 45, 0.3)';
+                e.currentTarget.style.transform = 'translateY(-1px)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'rgba(192, 39, 45, 0.15)';
+                e.currentTarget.style.transform = 'none';
+              }}
+            >
+              Match Center
+            </Link>
+          )}
 
           {/* Mobile Menu Button - STRICTLY HIDDEN ON DESKTOP */}
           <button

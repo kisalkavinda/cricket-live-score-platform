@@ -1,16 +1,16 @@
-# Graph Report - cricket-platform  (2026-09-05)
+# Graph Report - cricket-platform  (2026-09-01)
 
 ## Corpus Check
-- 114 files · ~102,711 words
+- 114 files · ~102,369 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 765 nodes · 1343 edges · 49 communities (40 shown, 9 thin omitted)
+- 765 nodes · 1341 edges · 49 communities (40 shown, 9 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `42a1bc5e`
+- Built from commit: `bc044006`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -230,7 +230,7 @@ _Questions this graph is uniquely positioned to answer:_
 - **Why does `requireAdminAuth()` connect `requireAdminAuth` to `admin-service.ts`, `scoring-service.ts`, `teams/[id]/page.tsx`, `admin-actions.ts`, `createPerfTracker`, `ExceptionCard.tsx`, `(admin)/layout.tsx`, `players/[id]/page.tsx`, `DeleteRegistrationButton.tsx`, `index.ts`, `admin-auth.ts`?**
   _High betweenness centrality (0.048) - this node is a cross-community bridge._
 - **Why does `prisma` connect `index.ts` to `admin-service.ts`, `scoring-service.ts`, `requireAdminAuth`, `teams/[id]/page.tsx`, `admin-actions.ts`, `createPerfTracker`, `backup-sync.ts`, `RegistrationForm.tsx`, `players/[id]/page.tsx`?**
-  _High betweenness centrality (0.026) - this node is a cross-community bridge._
+  _High betweenness centrality (0.027) - this node is a cross-community bridge._
 - **Why does `getAdminEntryPath()` connect `requireAdminAuth` to `admin-service.ts`, `scoring-service.ts`, `teams/[id]/page.tsx`, `admin-actions.ts`, `createPerfTracker`, `ExceptionCard.tsx`, `(admin)/layout.tsx`, `players/[id]/page.tsx`, `admin-auth.ts`, `index.ts`, `DeleteRegistrationButton.tsx`?**
   _High betweenness centrality (0.015) - this node is a cross-community bridge._
 - **What connects `dynamic`, `dynamic`, `Tournament` to the rest of the system?**

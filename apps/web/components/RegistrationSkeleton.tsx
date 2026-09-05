@@ -1,6 +1,10 @@
 import { tournamentConfig } from '../config/tournament';
 
 export default function RegistrationSkeleton() {
+  if (!tournamentConfig.registrationOpen) {
+    return null;
+  }
+
   const requirements = [
     { id: 'sk-req-1', text: 'Official Team Name' },
     { id: 'sk-req-2', text: "Captain's Contact & WhatsApp Details" },

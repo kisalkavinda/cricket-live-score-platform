@@ -1,11 +1,22 @@
 import { NextResponse } from "next/server";
 import { createRegistration } from "@/lib/registrations/registration-service";
 import { checkRateLimit } from "@/lib/utils/rate-limiter";
+import { tournamentConfig } from "@/config/tournament";
 
 const MAX_PAYLOAD_BYTES = 32 * 1024; // 32 KB limit
 
 export async function POST(request: Request) {
   try {
+    // Check if registration is officially open
+    if (!tournamentConfig.registrationOpen) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Registration is officially closed. New team registrations are no longer accepted.",
+        },
+        { status: 400 }
+      );
+    }
     // 1. IP Rate Limiting: 10 registration submissions per 10 minutes per IP
     const forwardedFor = request.headers.get("x-forwarded-for");
     const ip = forwardedFor ? forwardedFor.split(",")[0].trim() : request.headers.get("x-real-ip") || "127.0.0.1";

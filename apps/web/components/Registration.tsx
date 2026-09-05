@@ -10,7 +10,10 @@ export default async function Registration() {
     console.error('[Registration] Failed to load registered teams count:', err);
   }
 
-  const regOpen = true;
+  const regOpen = tournamentConfig.registrationOpen ?? false;
+  if (!regOpen) {
+    return null;
+  }
 
   const requirements = [
     { id: 'req-1', text: 'Official Team Name' },
