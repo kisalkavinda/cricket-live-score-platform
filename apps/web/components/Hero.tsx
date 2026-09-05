@@ -3,7 +3,7 @@ import { tournamentConfig } from '../config/tournament';
 import LottieAnimation from './LottieAnimation';
 
 export default function Hero() {
-  const regOpen = true;
+  const regOpen = tournamentConfig.registrationOpen ?? false;
 
   return (
     <section
@@ -328,21 +328,16 @@ export default function Hero() {
                 </svg>
               </Link>
             ) : (
-              <button
-                disabled
+              <a
+                href="#fixtures"
                 className="btn-hallmark-primary"
-                style={{
-                  height: 'auto',
-                  minHeight: '48px',
-                  padding: '8px 20px',
-                  maxWidth: '100%',
-                  whiteSpace: 'normal',
-                  fontSize: '0.85rem',
-                  textAlign: 'center',
-                }}
+                style={{ padding: '0 24px', height: '48px', maxWidth: '100%' }}
               >
-                Registration Opening Soon
-              </button>
+                Explore Fixtures & Draw
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <path d="M5 12h14M12 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </a>
             )}
 
             <a
@@ -659,8 +654,8 @@ export default function Hero() {
                 <div style={{ fontSize: '0.62rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--color-ink-subtle)', letterSpacing: '0.06em' }}>
                   Registration
                 </div>
-                <div style={{ fontFamily: 'var(--font-body)', fontSize: '0.82rem', fontWeight: 800, color: 'var(--color-accent-bright)', marginTop: '2px' }}>
-                  Open Now
+                <div style={{ fontFamily: 'var(--font-body)', fontSize: '0.82rem', fontWeight: 800, color: regOpen ? 'var(--color-accent-bright)' : 'rgba(255, 255, 255, 0.7)', marginTop: '2px' }}>
+                  {regOpen ? 'Open Now' : 'Closed'}
                 </div>
               </div>
             </div>
@@ -687,17 +682,23 @@ export default function Hero() {
                 </svg>
               </Link>
             ) : (
-              <button
-                disabled
+              <a
+                href="#fixtures"
                 className="btn-hallmark-primary"
                 style={{
                   width: '100%',
                   height: '48px',
-                  fontSize: '0.88rem',
+                  fontSize: '0.98rem',
+                  fontWeight: 900,
+                  letterSpacing: '0.06em',
+                  boxShadow: '0 8px 24px rgba(192, 39, 45, 0.45)',
                 }}
               >
-                Registration Opening Soon
-              </button>
+                <span>Explore Fixtures & Draw</span>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M5 12h14M12 5l7 7-7 7" />
+                </svg>
+              </a>
             )}
 
             <a

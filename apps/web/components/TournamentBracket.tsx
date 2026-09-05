@@ -99,9 +99,8 @@ export default function TournamentBracket() {
                   borderRadius: '50%',
                   background: 'var(--color-accent)',
                 }}
-                className="animate-pulse-dot"
               />
-              <span>Official Draw Pending Registration Close</span>
+              <span>Registration Closed · Draw Underway</span>
             </div>
           </div>
         </div>
@@ -345,22 +344,11 @@ export default function TournamentBracket() {
                   margin: '0 0 18px 0',
                 }}
               >
-                The official tournament knockout bracket and toss pairings will be published immediately after team registrations close. All registered team captains will receive direct broadcast notifications.
+                Team registrations are officially closed and squad rosters have been locked. The knockout bracket and pitch pairings will be announced here once the tournament draw concludes.
               </p>
 
               {/* Action Buttons */}
               <div className="bracket-overlay-cta-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap', gap: '10px' }}>
-                <Link
-                  href="/register"
-                  className="btn-hallmark-primary"
-                  style={{
-                    height: '42px',
-                    padding: '0 20px',
-                    fontSize: '0.88rem',
-                  }}
-                >
-                  <span>Register Team Squad →</span>
-                </Link>
 
                 <a
                   href="#details"
