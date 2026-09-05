@@ -13,10 +13,10 @@
  */
 
 import assert from 'assert';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from 'database';
 import { generateDraw, getEligibleTournamentTeams, cancelDraw } from '../lib/tournament/draw-service';
 
-const prisma = new PrismaClient();
+const db = prisma as any;
 
 async function runTeamSelectionTests() {
   console.log('=== STARTING DRAW TEAM SELECTION (>9 TEAMS) TEST SUITE ===\n');
@@ -121,7 +121,7 @@ async function runTeamSelectionTests() {
     assert.strictEqual(Object.keys(drawResult.plainPasscodes).length, 9, 'Must generate 9 passcodes');
 
     // Verify DB records
-    const dbDraw = await prisma.tournamentDraw.findUnique({
+    const dbDraw = await db.tournamentDraw.findUnique({
       where: { id: drawResult.drawId },
       include: {
         captainOrders: true,
@@ -133,7 +133,7 @@ async function runTeamSelectionTests() {
     assert.strictEqual(dbDraw.captainOrders.length, 9, 'Must have 9 captain orders');
     assert.strictEqual(dbDraw.chits.length, 9, 'Must have 9 chits');
 
-    const captainOrderTeamIds = new Set(dbDraw.captainOrders.map((co) => co.teamId));
+    const captainOrderTeamIds = new Set(dbDraw.captainOrders.map((co: any) => co.teamId));
 
     // Confirm all chosen 9 are in captain order
     for (const chosenId of chosen9) {
@@ -155,13 +155,13 @@ async function runTeamSelectionTests() {
   } finally {
     console.log('Cleaning up temporary test records...');
     if (testTournamentId) {
-      const draws = await prisma.tournamentDraw.findMany({ where: { tournamentId: testTournamentId } });
+      const draws = await db.tournamentDraw.findMany({ where: { tournamentId: testTournamentId } });
       for (const d of draws) {
-        await prisma.tournamentDrawAudit.deleteMany({ where: { drawId: d.id } });
-        await prisma.tournamentDrawChit.deleteMany({ where: { drawId: d.id } });
-        await prisma.tournamentDrawCaptainOrder.deleteMany({ where: { drawId: d.id } });
+        await db.tournamentDrawAudit.deleteMany({ where: { drawId: d.id } });
+        await db.tournamentDrawChit.deleteMany({ where: { drawId: d.id } });
+        await db.tournamentDrawCaptainOrder.deleteMany({ where: { drawId: d.id } });
       }
-      await prisma.tournamentDraw.deleteMany({ where: { tournamentId: testTournamentId } });
+      await db.tournamentDraw.deleteMany({ where: { tournamentId: testTournamentId } });
       await prisma.registration.deleteMany({ where: { tournamentId: testTournamentId } });
       await prisma.tournamentTeam.deleteMany({ where: { tournamentId: testTournamentId } });
       await prisma.tournament.delete({ where: { id: testTournamentId } });

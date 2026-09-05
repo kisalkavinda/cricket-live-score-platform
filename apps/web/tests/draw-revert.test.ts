@@ -11,7 +11,7 @@
  */
 
 import assert from 'assert';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from 'database';
 import {
   generateDraw,
   startCeremony,
@@ -21,7 +21,7 @@ import {
   cancelDraw,
 } from '../lib/tournament/draw-service';
 
-const prisma = new PrismaClient();
+const db = prisma as any;
 
 async function runRevertTests() {
   console.log('=== STARTING REVERT FINALIZED DRAW TEST SUITE ===\n');
@@ -110,7 +110,7 @@ async function runRevertTests() {
     assert.strictEqual(stillAssigned.length, 0, 'All team groupName assignments must be reset to NULL');
 
     // Verify audit log
-    const auditLogs = await prisma.tournamentDrawAudit.findMany({
+    const auditLogs = await db.tournamentDrawAudit.findMany({
       where: { drawId, eventType: 'DRAW_REVERTED' },
     });
     assert.strictEqual(auditLogs.length, 1, 'DRAW_REVERTED audit log entry must exist');
@@ -161,13 +161,13 @@ async function runRevertTests() {
   } finally {
     console.log('Cleaning up temporary test records...');
     if (testTournamentId) {
-      const draws = await prisma.tournamentDraw.findMany({ where: { tournamentId: testTournamentId } });
+      const draws = await db.tournamentDraw.findMany({ where: { tournamentId: testTournamentId } });
       for (const d of draws) {
-        await prisma.tournamentDrawAudit.deleteMany({ where: { drawId: d.id } });
-        await prisma.tournamentDrawChit.deleteMany({ where: { drawId: d.id } });
-        await prisma.tournamentDrawCaptainOrder.deleteMany({ where: { drawId: d.id } });
+        await db.tournamentDrawAudit.deleteMany({ where: { drawId: d.id } });
+        await db.tournamentDrawChit.deleteMany({ where: { drawId: d.id } });
+        await db.tournamentDrawCaptainOrder.deleteMany({ where: { drawId: d.id } });
       }
-      await prisma.tournamentDraw.deleteMany({ where: { tournamentId: testTournamentId } });
+      await db.tournamentDraw.deleteMany({ where: { tournamentId: testTournamentId } });
       await prisma.match.deleteMany({ where: { tournamentId: testTournamentId } });
       await prisma.registration.deleteMany({ where: { tournamentId: testTournamentId } });
       await prisma.tournamentTeam.deleteMany({ where: { tournamentId: testTournamentId } });
