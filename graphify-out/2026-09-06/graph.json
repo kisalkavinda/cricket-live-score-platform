@@ -12085,6 +12085,18 @@
     },
     {
       "source": "apps_web_components_scoring_scoringconsole_scoringconsole",
+      "target": "apps_web_lib_scoring_scoring_actions_endinningsaction",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/web/components/scoring/ScoringConsole.tsx",
+      "source_location": "L1005",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_components_scoring_scoringconsole_scoringconsole",
       "target": "apps_web_lib_scoring_scoring_actions_completematchaction",
       "relation": "calls",
       "_origin": "ast",
@@ -12092,7 +12104,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/components/scoring/ScoringConsole.tsx",
-      "source_location": "L1012",
+      "source_location": "L1022",
       "weight": 1.0
     },
     {
@@ -12104,7 +12116,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/components/scoring/ScoringConsole.tsx",
-      "source_location": "L226",
+      "source_location": "L236",
       "weight": 1.0
     },
     {
@@ -12116,7 +12128,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/components/scoring/ScoringConsole.tsx",
-      "source_location": "L311",
+      "source_location": "L321",
       "weight": 1.0
     },
     {
@@ -12128,7 +12140,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/components/scoring/ScoringConsole.tsx",
-      "source_location": "L362",
+      "source_location": "L372",
       "weight": 1.0
     },
     {
@@ -12140,7 +12152,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/components/scoring/ScoringConsole.tsx",
-      "source_location": "L531",
+      "source_location": "L541",
       "weight": 1.0
     },
     {
@@ -12152,7 +12164,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/components/scoring/ScoringConsole.tsx",
-      "source_location": "L810",
+      "source_location": "L820",
       "weight": 1.0
     },
     {
@@ -12164,7 +12176,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/components/scoring/ScoringConsole.tsx",
-      "source_location": "L848",
+      "source_location": "L858",
       "weight": 1.0
     },
     {
@@ -12176,7 +12188,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/components/scoring/ScoringConsole.tsx",
-      "source_location": "L885",
+      "source_location": "L895",
       "weight": 1.0
     },
     {
@@ -12188,19 +12200,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/components/scoring/ScoringConsole.tsx",
-      "source_location": "L976",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_web_components_scoring_scoringconsole_scoringconsole",
-      "target": "apps_web_lib_scoring_scoring_actions_endinningsaction",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "apps/web/components/scoring/ScoringConsole.tsx",
-      "source_location": "L995",
+      "source_location": "L986",
       "weight": 1.0
     },
     {

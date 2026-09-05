@@ -1,5 +1,4 @@
 {
-  "0": "admin-service.ts",
   "1": "scoring-service.ts",
   "2": "app/page.tsx",
   "3": "dependencies",
@@ -34,18 +33,17 @@
   "32": "CLAUDE.md",
   "33": "database",
   "34": "web/middleware.ts",
-  "35": "requireAdminAuth",
-  "36": "teams/[id]/page.tsx",
   "37": "admin-actions.ts",
-  "38": "ExceptionCard.tsx",
-  "39": "backup-sync.ts",
   "40": "live-security-recheck.test.js",
-  "41": "(admin)/layout.tsx",
-  "42": "players/[id]/page.tsx",
+  "41": "nrr-softball.test.js",
   "43": "e2e-system-verification.test.js",
   "44": "http-smoke-check.test.js",
-  "45": "DeleteRegistrationButton.tsx",
-  "46": "index.ts",
+  "46": "requireAdminAuth",
   "47": "inspect-and-clean-dummy-data.js",
-  "48": "manual-cookie-replay-test.js"
+  "48": "manual-cookie-replay-test.js",
+  "49": "web/package.json",
+  "51": "@lottiefiles/dotlottie-react",
+  "52": "next",
+  "53": "@supabase/ssr",
+  "54": "@vercel/speed-insights"
 }
