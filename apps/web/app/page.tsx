@@ -14,8 +14,8 @@ export default function Home() {
       <Navbar />
       <Hero />
       <LiveScoreWidget />
-      <EventDetails />
       <TournamentBracket />
+      <EventDetails />
       {/*
         Suspense boundary: Navbar, Hero, LiveScoreWidget, EventDetails render
         immediately. Registration streams in when the cached DB team-count

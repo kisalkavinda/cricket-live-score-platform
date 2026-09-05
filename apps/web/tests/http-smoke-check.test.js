@@ -100,6 +100,10 @@ async function runHttpCheck() {
   });
   assert(invalidRegRes.status === 400, 'HTTP-13: Invalid registration payload rejected with 400 Bad Request');
 
+  // 10. Check /tournament (CPL Tournament Hub)
+  const tournamentRes = await get('/tournament');
+  assert(tournamentRes.status === 200, 'HTTP-14: Public /tournament hub loads (Status 200)');
+
   console.log('\n============================================================');
   console.log(` HTTP VERIFICATION RESULTS: ${passed} passed | ${failed} failed`);
   console.log('============================================================\n');

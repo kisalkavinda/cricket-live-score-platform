@@ -138,79 +138,70 @@ export default function TournamentBracket() {
                 alignItems: 'center',
               }}
             >
-              {/* Column 1: Quarter Finals */}
+              {/* Column 1: Stage 1 Groups */}
               <div>
-                <div style={{ fontFamily: 'var(--font-display)', fontSize: '1rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--color-ink-subtle)', marginBottom: '12px', letterSpacing: '0.06em' }}>
-                  Round of 8 · Quarter-Finals
+                <div style={{ fontFamily: 'var(--font-display)', fontSize: '0.95rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--color-accent)', marginBottom: '12px', letterSpacing: '0.06em' }}>
+                  Stage 1 · Groups A, B, C (M1–M9)
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                  {quarterFinals.map((qf) => (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  {['Group A (3 Teams)', 'Group B (3 Teams)', 'Group C (3 Teams)'].map((grp, i) => (
                     <div
-                      key={qf.id}
+                      key={i}
                       style={{
                         background: 'var(--color-paper-alt)',
                         border: '1px solid var(--color-border)',
                         borderRadius: 'var(--radius-md)',
-                        padding: '12px 16px',
+                        padding: '10px 14px',
                       }}
                     >
-                      <div className="bracket-match-header" style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: 'var(--color-ink-subtle)', fontWeight: 700, textTransform: 'uppercase', marginBottom: '8px' }}>
-                        <span>{qf.title}</span>
-                        <span>{qf.time} · {qf.pitch}</span>
-                      </div>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 8px', background: 'var(--color-paper-card)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--color-border)' }}>
-                          <span className="bracket-team-name" style={{ fontFamily: 'var(--font-body)', fontWeight: 700, color: 'var(--color-ink)' }}>Team Franchise A (Draw TBA)</span>
-                          <span style={{ fontFamily: 'var(--font-data)', fontSize: '0.8rem', color: 'var(--color-ink-subtle)' }}>—</span>
-                        </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 8px', background: 'var(--color-paper-card)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--color-border)' }}>
-                          <span className="bracket-team-name" style={{ fontFamily: 'var(--font-body)', fontWeight: 700, color: 'var(--color-ink)' }}>Team Franchise B (Draw TBA)</span>
-                          <span style={{ fontFamily: 'var(--font-data)', fontSize: '0.8rem', color: 'var(--color-ink-subtle)' }}>—</span>
-                        </div>
+                      <div style={{ fontSize: '0.78rem', fontWeight: 800, color: 'var(--color-ink)' }}>{grp}</div>
+                      <div style={{ fontSize: '0.72rem', color: 'var(--color-ink-muted)', marginTop: '2px' }}>
+                        Top 1 → Final Four · 2nd → Wildcard
                       </div>
                     </div>
                   ))}
                 </div>
               </div>
 
-              {/* Column 2: Semi Finals */}
+              {/* Column 2: Stage 2 Wildcard */}
               <div>
-                <div style={{ fontFamily: 'var(--font-display)', fontSize: '1rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--color-ink-subtle)', marginBottom: '12px', letterSpacing: '0.06em' }}>
-                  Final Four · Semi-Finals
+                <div style={{ fontFamily: 'var(--font-display)', fontSize: '0.95rem', fontWeight: 800, textTransform: 'uppercase', color: '#D97706', marginBottom: '12px', letterSpacing: '0.06em' }}>
+                  Stage 2 · Wildcard (M10–M12)
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                  {semiFinals.map((sf) => (
-                    <div
-                      key={sf.id}
-                      style={{
-                        background: 'var(--color-paper-alt)',
-                        border: '1px solid var(--color-border)',
-                        borderRadius: 'var(--radius-md)',
-                        padding: '16px',
-                      }}
-                    >
-                      <div className="bracket-match-header" style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: 'var(--color-accent)', fontWeight: 700, textTransform: 'uppercase', marginBottom: '8px' }}>
-                        <span>{sf.title}</span>
-                        <span>{sf.time}</span>
-                      </div>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 10px', background: 'var(--color-paper-card)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--color-border)' }}>
-                          <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.85rem', fontWeight: 700, color: 'var(--color-ink)' }}>Winner Match (TBA)</span>
-                          <span style={{ fontFamily: 'var(--font-data)', fontSize: '0.8rem', color: 'var(--color-ink-subtle)' }}>—</span>
-                        </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 10px', background: 'var(--color-paper-card)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--color-border)' }}>
-                          <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.85rem', fontWeight: 700, color: 'var(--color-ink)' }}>Winner Match (TBA)</span>
-                          <span style={{ fontFamily: 'var(--font-data)', fontSize: '0.8rem', color: 'var(--color-ink-subtle)' }}>—</span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+                <div style={{ background: 'var(--color-paper-alt)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', padding: '14px' }}>
+                  <div style={{ fontSize: '0.82rem', fontWeight: 800, color: 'var(--color-ink)', marginBottom: '4px' }}>
+                    3 Group Runners-Up
+                  </div>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--color-ink-muted)', lineHeight: 1.4 }}>
+                    Single Round-Robin (3 matches). Winner advances as <strong>Seed #4</strong> into Final Four.
+                  </div>
                 </div>
               </div>
 
-              {/* Column 3: The Grand Final */}
+              {/* Column 3: Stage 3 Final Four */}
               <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontFamily: 'var(--font-display)', fontSize: '1rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--color-accent)', marginBottom: '12px', letterSpacing: '0.06em' }}>
+                <div style={{ fontFamily: 'var(--font-display)', fontSize: '0.95rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--color-accent)', marginBottom: '12px', letterSpacing: '0.06em' }}>
+                  Stage 3 · Final Four (M13–M15)
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <div style={{ background: 'var(--color-paper-alt)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', padding: '10px 12px' }}>
+                    <div style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--color-accent)' }}>Q1 (M13)</div>
+                    <div style={{ fontSize: '0.78rem', fontWeight: 700 }}>Seed #1 vs Seed #2</div>
+                  </div>
+                  <div style={{ background: 'var(--color-paper-alt)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', padding: '10px 12px' }}>
+                    <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#DC2626' }}>ELIM (M14)</div>
+                    <div style={{ fontSize: '0.78rem', fontWeight: 700 }}>Seed #3 vs Seed #4 [Wildcard]</div>
+                  </div>
+                  <div style={{ background: 'var(--color-paper-alt)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', padding: '10px 12px' }}>
+                    <div style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--color-accent)' }}>Q2 (M15)</div>
+                    <div style={{ fontSize: '0.78rem', fontWeight: 700 }}>Loser Q1 vs Winner Elim</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Column 4: The Grand Final */}
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontFamily: 'var(--font-display)', fontSize: '0.95rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--color-gold)', marginBottom: '12px', letterSpacing: '0.06em' }}>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
                     <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
@@ -218,34 +209,25 @@ export default function TournamentBracket() {
                     <path d="M10 14.66V17c0 .55-.45 1-1 1H7v4h10v-4h-2c-.55 0-1-.45-1-1v-2.34" />
                     <path d="M18 4H6v7a6 6 0 0 0 12 0V4Z" />
                   </svg>
-                  <span>The Championship Final</span>
+                  <span>Grand Final (M16)</span>
                 </div>
                 <div
                   style={{
                     background: 'linear-gradient(135deg, var(--color-accent-soft) 0%, var(--color-paper-card) 100%)',
                     border: '2px solid var(--color-accent)',
                     borderRadius: 'var(--radius-lg)',
-                    padding: '24px 20px',
+                    padding: '20px 16px',
                     textAlign: 'center',
                   }}
                 >
-                  <div style={{ width: '44px', height: '44px', margin: '0 auto 8px', borderRadius: '50%', background: 'var(--color-accent)', color: '#FFF', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
-                      <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
-                      <path d="M4 22h16" />
-                      <path d="M10 14.66V17c0 .55-.45 1-1 1H7v4h10v-4h-2c-.55 0-1-.45-1-1v-2.34" />
-                      <path d="M18 4H6v7a6 6 0 0 0 12 0V4Z" />
-                    </svg>
+                  <div style={{ width: '36px', height: '36px', margin: '0 auto 6px', borderRadius: '50%', background: 'var(--color-accent)', color: '#FFF', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    🏆
                   </div>
-                  <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.4rem', fontWeight: 900, textTransform: 'uppercase', color: 'var(--color-ink)' }}>
-                    CPL 2026 Grand Final
+                  <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.2rem', fontWeight: 900, textTransform: 'uppercase', color: 'var(--color-ink)' }}>
+                    CPL 2026 Final
                   </div>
-                  <div style={{ fontFamily: 'var(--font-data)', fontSize: '0.85rem', color: 'var(--color-accent)', fontWeight: 700, marginTop: '4px' }}>
-                    04:45 PM · Centre Turf Pitch
-                  </div>
-                  <div style={{ marginTop: '16px', padding: '8px 12px', background: 'var(--color-paper-card)', borderRadius: 'var(--radius-md)', border: '1px dashed var(--color-border)' }}>
-                    <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--color-ink-muted)' }}>Finalist 1 vs Finalist 2</span>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--color-ink-muted)', marginTop: '4px' }}>
+                    Winner Q1 vs Winner Q2
                   </div>
                 </div>
               </div>
@@ -349,6 +331,30 @@ export default function TournamentBracket() {
 
               {/* Action Buttons */}
               <div className="bracket-overlay-cta-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap', gap: '10px' }}>
+                <Link
+                  href="/tournament"
+                  style={{
+                    height: '42px',
+                    padding: '0 20px',
+                    borderRadius: 'var(--radius-sm)',
+                    border: 'none',
+                    background: 'var(--color-accent)',
+                    color: '#FFF',
+                    fontFamily: 'var(--font-display)',
+                    fontSize: '0.92rem',
+                    fontWeight: 800,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.04em',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    textDecoration: 'none',
+                    boxShadow: '0 4px 14px rgba(192, 39, 45, 0.3)',
+                    transition: 'all var(--dur-fast)',
+                  }}
+                >
+                  <span>🏆 Open Full Tournament Hub & Standings</span>
+                </Link>
 
                 <a
                   href="#details"

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getTournamentStats } from '@/lib/scoring/scoring-service';
+import { getTournamentOverview } from '@/lib/tournament/tournament-service';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,11 +22,19 @@ export async function GET() {
       );
     }
 
-    const stats = await getTournamentStats();
-    statsCache = { data: stats, expiresAt: now + 3500 };
+    const [stats, overview] = await Promise.all([
+      getTournamentStats(),
+      getTournamentOverview().catch((err) => {
+        console.error('[tournament/stats] overview fetch error:', err);
+        return null;
+      }),
+    ]);
+
+    const data = { ...stats, overview };
+    statsCache = { data, expiresAt: now + 3500 };
 
     return NextResponse.json(
-      { success: true, ...stats },
+      { success: true, ...data },
       {
         headers: {
           'X-Cache': 'MISS',

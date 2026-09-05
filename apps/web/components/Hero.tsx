@@ -328,16 +328,16 @@ export default function Hero() {
                 </svg>
               </Link>
             ) : (
-              <a
-                href="#fixtures"
+              <Link
+                href="/tournament"
                 className="btn-hallmark-primary"
                 style={{ padding: '0 24px', height: '48px', maxWidth: '100%' }}
               >
-                Explore Fixtures & Draw
+                Explore Tournament Hub & Bracket
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                   <path d="M5 12h14M12 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
-              </a>
+              </Link>
             )}
 
             <a
@@ -682,8 +682,8 @@ export default function Hero() {
                 </svg>
               </Link>
             ) : (
-              <a
-                href="#fixtures"
+              <Link
+                href="/tournament"
                 className="btn-hallmark-primary"
                 style={{
                   width: '100%',
@@ -694,11 +694,11 @@ export default function Hero() {
                   boxShadow: '0 8px 24px rgba(192, 39, 45, 0.45)',
                 }}
               >
-                <span>Explore Fixtures & Draw</span>
+                <span>Explore Tournament Hub & Bracket</span>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M5 12h14M12 5l7 7-7 7" />
                 </svg>
-              </a>
+              </Link>
             )}
 
             <a

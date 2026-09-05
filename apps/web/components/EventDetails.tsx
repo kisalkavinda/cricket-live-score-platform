@@ -75,6 +75,7 @@ export default function EventDetails() {
         borderTop: '1px solid var(--color-border)',
         borderBottom: '1px solid var(--color-border)',
         position: 'relative',
+        scrollMarginTop: '90px',
       }}
       aria-label="Event Details"
     >

@@ -48,6 +48,18 @@ export default function AdminNavLinks({ entryPath }: AdminNavLinksProps) {
       badge: null,
     },
     {
+      href: `/${entryPath}/tournament-bracket`,
+      label: 'CPL Bracket & Groups',
+      icon: '🌿',
+      badge: '9-TEAM',
+    },
+    {
+      href: `/${entryPath}/tournament-draw`,
+      label: 'Group Draw Ceremony',
+      icon: '🎲',
+      badge: null,
+    },
+    {
       href: `/${entryPath}/matches`,
       label: 'Live Matches & Scoring',
       icon: '🔴',

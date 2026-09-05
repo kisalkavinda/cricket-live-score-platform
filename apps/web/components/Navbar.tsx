@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { tournamentConfig } from '../config/tournament';
 
 export default function Navbar() {
@@ -25,11 +26,45 @@ export default function Navbar() {
     };
   }, []);
 
+  const pathname = usePathname();
+
+  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    if (href.includes('#')) {
+      const [targetPath, hash] = href.split('#');
+      const isCurrentPage = (targetPath === '' || targetPath === '/' ? pathname === '/' : pathname === targetPath);
+
+      if (isCurrentPage && hash) {
+        e.preventDefault();
+        const el = document.getElementById(hash);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth' });
+          window.history.pushState(null, '', `#${hash}`);
+        } else if (hash === 'overview') {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+          window.history.pushState(null, '', '/');
+        }
+        setMobileOpen(false);
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.location.hash) {
+      const hash = window.location.hash.replace('#', '');
+      const el = document.getElementById(hash);
+      if (el) {
+        setTimeout(() => {
+          el.scrollIntoView({ behavior: 'smooth' });
+        }, 120);
+      }
+    }
+  }, [pathname]);
+
   const navLinks = [
-    { label: '🔴 Live Scores', href: '/#live-scores', id: 'nav-scores' },
+    { label: '🔴 Match Center', href: '/#live-scores', id: 'nav-scores' },
+    { label: '🏆 Tournament Hub', href: '/tournament', id: 'nav-tournament' },
     { label: 'Overview', href: '/#overview', id: 'nav-overview' },
     { label: 'Tournament Info', href: '/#details', id: 'nav-details' },
-    { label: 'Fixtures & Draw', href: '/#fixtures', id: 'nav-fixtures' },
     ...(tournamentConfig.registrationOpen
       ? [{ label: 'Register Squad', href: '/register', id: 'nav-register' }]
       : []),
@@ -131,6 +166,7 @@ export default function Navbar() {
               key={link.id}
               id={link.id}
               href={link.href}
+              onClick={(e) => handleNavClick(e, link.href)}
               style={{
                 padding: '6px 14px',
                 borderRadius: '9999px',
@@ -298,7 +334,7 @@ export default function Navbar() {
             <Link
               key={`mobile-${link.id}`}
               href={link.href}
-              onClick={() => setMobileOpen(false)}
+              onClick={(e) => handleNavClick(e, link.href)}
               style={{
                 height: '42px',
                 display: 'flex',
