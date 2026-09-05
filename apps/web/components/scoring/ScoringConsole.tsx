@@ -151,7 +151,7 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
   const rawTeamAPlayers = getRawTeamPlayers(match.teamAId);
   const rawTeamBPlayers = getRawTeamPlayers(match.teamBId);
 
-  // Match Playing Squad Selection (e.g. 8 vs 8 when one team has 8 and other has 11)
+  // Match Playing Squad Selection (By default, ALL registered players play)
   const [selectedTeamAPlayerIds, setSelectedTeamAPlayerIds] = useState<string[]>(() => {
     if (typeof window !== 'undefined') {
       try {
@@ -159,12 +159,7 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
         if (saved) return JSON.parse(saved);
       } catch (e) {}
     }
-    const aLen = rawTeamAPlayers.length;
-    const bLen = rawTeamBPlayers.length;
-    if (aLen > 0 && bLen > 0 && aLen !== bLen) {
-      const minCount = Math.min(aLen, bLen);
-      return rawTeamAPlayers.slice(0, minCount).map((p: any) => p.id);
-    }
+    // Default to ALL registered players (no forced auto-balancing)
     return rawTeamAPlayers.map((p: any) => p.id);
   });
 
@@ -175,12 +170,7 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
         if (saved) return JSON.parse(saved);
       } catch (e) {}
     }
-    const aLen = rawTeamAPlayers.length;
-    const bLen = rawTeamBPlayers.length;
-    if (aLen > 0 && bLen > 0 && aLen !== bLen) {
-      const minCount = Math.min(aLen, bLen);
-      return rawTeamBPlayers.slice(0, minCount).map((p: any) => p.id);
-    }
+    // Default to ALL registered players (no forced auto-balancing)
     return rawTeamBPlayers.map((p: any) => p.id);
   });
 
@@ -1057,6 +1047,18 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
     }
   };
 
+  const resetToAllRegisteredSquads = () => {
+    setSelectedTeamAPlayerIds(rawTeamAPlayers.map((p: any) => p.id));
+    setSelectedTeamBPlayerIds(rawTeamBPlayers.map((p: any) => p.id));
+  };
+
+  const getMaxWicketsForInnings = (inn: any) => {
+    if (!inn) return 10;
+    if (inn.inningsNumber >= 3) return 2; // Super over: 2 wickets max
+    const squad = getTeamPlayers(inn.battingTeamId);
+    return squad.length > 1 ? squad.length - 1 : 10;
+  };
+
   const renderInningsDeliveryLog = (inn: any) => {
     if (!inn) return null;
     const deliveries = inn.ballEvents || [];
@@ -1347,28 +1349,56 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                   👥 Match Playing Squads ({selectedTeamAPlayerIds.length} vs {selectedTeamBPlayerIds.length})
                 </h3>
                 <p style={{ fontSize: '0.8rem', color: '#94A3B8', margin: '3px 0 0' }}>
-                  Select active players for both teams (e.g. 8 vs 8 if one squad has 8 registered).
+                  All registered players play by default. If opposing captains agree to equalize to the smaller squad, you can equalize below.
                 </p>
               </div>
 
-              {rawTeamAPlayers.length !== rawTeamBPlayers.length && (
-                <button
-                  type="button"
-                  onClick={autoBalanceSquads}
-                  style={{
-                    backgroundColor: '#F59E0B',
-                    color: '#000',
-                    border: 'none',
-                    borderRadius: '6px',
-                    padding: '6px 12px',
-                    fontWeight: 800,
-                    fontSize: '0.8rem',
-                    cursor: 'pointer',
-                  }}
-                >
-                  ⚡ Auto Equal ({Math.min(rawTeamAPlayers.length, rawTeamBPlayers.length)} vs {Math.min(rawTeamAPlayers.length, rawTeamBPlayers.length)})
-                </button>
-              )}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                {rawTeamAPlayers.length !== rawTeamBPlayers.length && (
+                  <button
+                    type="button"
+                    onClick={autoBalanceSquads}
+                    title="If both captains mutually agree, reduce squad size to match the smaller team"
+                    style={{
+                      backgroundColor: 'rgba(245, 158, 11, 0.15)',
+                      color: '#F59E0B',
+                      border: '1px solid #F59E0B',
+                      borderRadius: '6px',
+                      padding: '6px 12px',
+                      fontWeight: 800,
+                      fontSize: '0.8rem',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                    }}
+                  >
+                    <span>🤝 Mutual Agreement: Equalize ({Math.min(rawTeamAPlayers.length, rawTeamBPlayers.length)} vs {Math.min(rawTeamAPlayers.length, rawTeamBPlayers.length)})</span>
+                  </button>
+                )}
+                {(selectedTeamAPlayerIds.length !== rawTeamAPlayers.length || selectedTeamBPlayerIds.length !== rawTeamBPlayers.length) && (
+                  <button
+                    type="button"
+                    onClick={resetToAllRegisteredSquads}
+                    title="Restore full registered squad for both teams"
+                    style={{
+                      backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                      color: '#94A3B8',
+                      border: '1px solid #334155',
+                      borderRadius: '6px',
+                      padding: '6px 12px',
+                      fontWeight: 700,
+                      fontSize: '0.8rem',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                    }}
+                  >
+                    <span>↺ Restore Full Squads ({rawTeamAPlayers.length} vs {rawTeamBPlayers.length})</span>
+                  </button>
+                )}
+              </div>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
@@ -1509,28 +1539,56 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                   👥 Match Playing Squads ({selectedTeamAPlayerIds.length} vs {selectedTeamBPlayerIds.length})
                 </h3>
                 <p style={{ fontSize: '0.8rem', color: '#94A3B8', margin: '3px 0 0' }}>
-                  Select active players for both teams (e.g. 8 vs 8 if one squad has 8 registered).
+                  All registered players play by default. If opposing captains agree to equalize to the smaller squad, you can equalize below.
                 </p>
               </div>
 
-              {rawTeamAPlayers.length !== rawTeamBPlayers.length && (
-                <button
-                  type="button"
-                  onClick={autoBalanceSquads}
-                  style={{
-                    backgroundColor: '#F59E0B',
-                    color: '#000',
-                    border: 'none',
-                    borderRadius: '6px',
-                    padding: '6px 12px',
-                    fontWeight: 800,
-                    fontSize: '0.8rem',
-                    cursor: 'pointer',
-                  }}
-                >
-                  ⚡ Auto Equal ({Math.min(rawTeamAPlayers.length, rawTeamBPlayers.length)} vs {Math.min(rawTeamAPlayers.length, rawTeamBPlayers.length)})
-                </button>
-              )}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                {rawTeamAPlayers.length !== rawTeamBPlayers.length && (
+                  <button
+                    type="button"
+                    onClick={autoBalanceSquads}
+                    title="If both captains mutually agree, reduce squad size to match the smaller team"
+                    style={{
+                      backgroundColor: 'rgba(245, 158, 11, 0.15)',
+                      color: '#F59E0B',
+                      border: '1px solid #F59E0B',
+                      borderRadius: '6px',
+                      padding: '6px 12px',
+                      fontWeight: 800,
+                      fontSize: '0.8rem',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                    }}
+                  >
+                    <span>🤝 Mutual Agreement: Equalize ({Math.min(rawTeamAPlayers.length, rawTeamBPlayers.length)} vs {Math.min(rawTeamAPlayers.length, rawTeamBPlayers.length)})</span>
+                  </button>
+                )}
+                {(selectedTeamAPlayerIds.length !== rawTeamAPlayers.length || selectedTeamBPlayerIds.length !== rawTeamBPlayers.length) && (
+                  <button
+                    type="button"
+                    onClick={resetToAllRegisteredSquads}
+                    title="Restore full registered squad for both teams"
+                    style={{
+                      backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                      color: '#94A3B8',
+                      border: '1px solid #334155',
+                      borderRadius: '6px',
+                      padding: '6px 12px',
+                      fontWeight: 700,
+                      fontSize: '0.8rem',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                    }}
+                  >
+                    <span>↺ Restore Full Squads ({rawTeamAPlayers.length} vs {rawTeamBPlayers.length})</span>
+                  </button>
+                )}
+              </div>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
@@ -2248,7 +2306,8 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
           {(() => {
             const inn1 = match.innings?.find((i: any) => i.inningsNumber === 1);
             const inn2 = match.innings?.find((i: any) => i.inningsNumber === 2);
-            const isTied = Boolean(inn1 && inn2 && inn1.runs === inn2.runs && (inn2.status === 'COMPLETED' || inn2.overs >= match.oversPerInnings || inn2.wickets >= 10 || match.status === 'COMPLETED') && match.currentInnings <= 2);
+            const inn2MaxWickets = getMaxWicketsForInnings(inn2);
+            const isTied = Boolean(inn1 && inn2 && inn1.runs === inn2.runs && (inn2.status === 'COMPLETED' || inn2.overs >= match.oversPerInnings || inn2.wickets >= inn2MaxWickets || match.status === 'COMPLETED') && match.currentInnings <= 2);
             if (!isTied) return null;
 
             return (
@@ -2314,7 +2373,7 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
           })()}
 
           {/* INNINGS 1 QUOTA REACHED BANNER */}
-          {match.currentInnings === 1 && (currentInnings.overs >= match.oversPerInnings || currentInnings.wickets >= 10) && (
+          {match.currentInnings === 1 && (currentInnings.overs >= match.oversPerInnings || currentInnings.wickets >= getMaxWicketsForInnings(currentInnings)) && (
             <div
               style={{
                 background: 'rgba(245, 158, 11, 0.12)',
@@ -2331,7 +2390,7 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                     ⚡ INNINGS 1 QUOTA COMPLETED ({currentInnings.runs}/{currentInnings.wickets} in {currentInnings.overs}.{currentInnings.balls} Overs)
                   </div>
                   <div style={{ fontSize: '0.84rem', color: '#CBD5E1', marginTop: '4px' }}>
-                    All {match.oversPerInnings} overs have been bowled. Review or edit deliveries below, or close Innings 1 to begin the 2nd Innings run chase.
+                    {currentInnings.wickets >= getMaxWicketsForInnings(currentInnings) ? 'All out!' : `All ${match.oversPerInnings} overs have been bowled.`} Review or edit deliveries below, or close Innings 1 to begin the 2nd Innings run chase.
                   </div>
                 </div>
                 <button
@@ -2855,6 +2914,52 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
               <span style={{ fontSize: '0.75rem', color: '#F59E0B', fontFamily: 'monospace' }}>Click to View / Adjust</span>
             </summary>
             <div style={{ padding: '16px', borderTop: '1px solid #1E2638' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
+                <p style={{ fontSize: '0.8rem', color: '#94A3B8', margin: 0 }}>
+                  Adjust active lineup or equalize by mutual agreement:
+                </p>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                  {rawTeamAPlayers.length !== rawTeamBPlayers.length && (
+                    <button
+                      type="button"
+                      onClick={autoBalanceSquads}
+                      title="If opposing team mutually agrees, adjust playing squad to match the smaller team"
+                      style={{
+                        backgroundColor: 'rgba(245, 158, 11, 0.15)',
+                        color: '#F59E0B',
+                        border: '1px solid #F59E0B',
+                        borderRadius: '6px',
+                        padding: '4px 10px',
+                        fontWeight: 800,
+                        fontSize: '0.75rem',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      🤝 Mutual Agreement: Equalize ({Math.min(rawTeamAPlayers.length, rawTeamBPlayers.length)} vs {Math.min(rawTeamAPlayers.length, rawTeamBPlayers.length)})
+                    </button>
+                  )}
+                  {(selectedTeamAPlayerIds.length !== rawTeamAPlayers.length || selectedTeamBPlayerIds.length !== rawTeamBPlayers.length) && (
+                    <button
+                      type="button"
+                      onClick={resetToAllRegisteredSquads}
+                      title="Restore full registered squad for both teams"
+                      style={{
+                        backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                        color: '#94A3B8',
+                        border: '1px solid #334155',
+                        borderRadius: '6px',
+                        padding: '4px 10px',
+                        fontWeight: 700,
+                        fontSize: '0.75rem',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      ↺ Restore Full Squads ({rawTeamAPlayers.length} vs {rawTeamBPlayers.length})
+                    </button>
+                  )}
+                </div>
+              </div>
+
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                 {/* Team A Selection */}
                 <div style={{ background: '#141A26', border: '1px solid #1E2638', borderRadius: '10px', padding: '12px' }}>
