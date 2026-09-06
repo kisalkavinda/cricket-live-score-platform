@@ -822,15 +822,15 @@
     "semantic_hash": ""
   },
   "apps/web/tests/draw-team-selection.test.ts": {
-    "mtime": 1788643792.5341294,
-    "seen": 1788643829.1641185,
-    "ast_hash": "718271573eceda52f8336a21b58b5813",
+    "mtime": 1788644094.9413931,
+    "seen": 1788644132.8347874,
+    "ast_hash": "17f835408f3b280122b4c722a7e72004",
     "semantic_hash": ""
   },
   "apps/web/tests/draw-revert.test.ts": {
-    "mtime": 1788643809.2943015,
-    "seen": 1788643829.1641152,
-    "ast_hash": "05eadcc7798b3917ea30addee2129061",
+    "mtime": 1788644110.0836806,
+    "seen": 1788644132.8347845,
+    "ast_hash": "0c1e516d38c148a57561faafb6c29fc8",
     "semantic_hash": ""
   },
   "apps/web/lib/scoring/scoring-rules.ts": {

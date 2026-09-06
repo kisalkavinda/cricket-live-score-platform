@@ -41,8 +41,7 @@ for (const envFile of envFiles) {
   }
 }
 
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
+const { prisma } = require('database');
 
 const PASSCODE_SALT = process.env.DRAW_PASSCODE_SALT || 'cpl-ceremony-passcode-salt-2026';
 

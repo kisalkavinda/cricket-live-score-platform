@@ -1,4 +1,4 @@
-process.env.NODE_ENV = 'test';
+(process.env as any).NODE_ENV = 'test';
 import fs from 'fs';
 import path from 'path';
 
@@ -223,8 +223,7 @@ async function runSecurityRegressionSuite() {
     for (let i = 0; i < 5; i++) {
       deliveryPromises.push(
         recordDelivery(innings.id, {
-          runsScored: 1,
-          isExtra: true,
+          runs: 1,
           extraType: 'WIDE',
           isWicket: false,
         })

@@ -40,8 +40,7 @@ for (const envFile of envFiles) {
   }
 }
 
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
+const { prisma } = require('database');
 
 const {
   assignTeamsToGroups,
