@@ -16,6 +16,28 @@ function pruneExpiredCache(now: number) {
   }
 }
 
+export function sanitizePublicScorecard(obj: any): any {
+  if (!obj || typeof obj !== 'object') return obj;
+  if (Array.isArray(obj)) return obj.map(sanitizePublicScorecard);
+  const sanitized: any = {};
+  for (const [key, val] of Object.entries(obj)) {
+    if (
+      key === 'indexNumber' ||
+      key === 'dateOfBirth' ||
+      key === 'studentId' ||
+      key === 'whatsappNumber' ||
+      key === 'contactNumber' ||
+      key === 'nic' ||
+      key === 'email' ||
+      key === 'registrationId'
+    ) {
+      continue;
+    }
+    sanitized[key] = sanitizePublicScorecard(val);
+  }
+  return sanitized;
+}
+
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -48,12 +70,15 @@ export async function GET(
       return NextResponse.json({ success: false, error: 'Match not found' }, { status: 404 });
     }
 
+    // Defense-in-depth sanitization: recursively ensure no student PII leaks publicly
+    const cleanMatch = sanitizePublicScorecard(match);
+
     // Prune stale cache entries before inserting
     pruneExpiredCache(now);
-    scorecardCache.set(cleanId, { data: match, expiresAt: now + 2500 });
+    scorecardCache.set(cleanId, { data: cleanMatch, expiresAt: now + 2500 });
 
     return NextResponse.json(
-      { success: true, match },
+      { success: true, match: cleanMatch },
       {
         headers: {
           'X-Cache': 'MISS',

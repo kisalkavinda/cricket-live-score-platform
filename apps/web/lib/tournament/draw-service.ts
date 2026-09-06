@@ -935,6 +935,9 @@ export async function selectChit(
 ) {
   const client = getDb();
   return await client.$transaction(async (tx: any) => {
+    // 0. Concurrency serialization: Acquire exclusive PostgreSQL row-level lock on TournamentDraw
+    await tx.$executeRaw`SELECT id FROM "TournamentDraw" WHERE id = ${drawId} FOR UPDATE;`;
+
     let draw: any = null;
 
     if (tx?.tournamentDraw?.findUnique) {
@@ -973,6 +976,12 @@ export async function selectChit(
       throw new Error('Current captain turn could not be determined.');
     }
 
+    // Verify team has not already selected a chit in this draw
+    const teamAlreadySelected = draw.chits.some((c: any) => c.selectedByTeamId === currentCaptain.teamId);
+    if (teamAlreadySelected) {
+      throw new Error(`Team has already selected a chit in this draw.`);
+    }
+
     // Validate authorization
     if (!auth.isAdmin) {
       if (!auth.passcode) {
@@ -1006,15 +1015,23 @@ export async function selectChit(
     const isCompleted = newPickIndex === 9;
     const nextStatus = isCompleted ? 'COMPLETED' : 'IN_PROGRESS';
 
-    if (tx?.tournamentDrawChit?.update) {
-      await tx.tournamentDrawChit.update({
-        where: { id: targetChit.id },
+    if (tx?.tournamentDrawChit?.updateMany) {
+      const updateRes = await tx.tournamentDrawChit.updateMany({
+        where: {
+          id: targetChit.id,
+          isRevealed: false,
+          selectedByTeamId: null,
+        },
         data: {
           isRevealed: true,
           selectedByTeamId: currentCaptain.teamId,
           selectedAt: now,
         },
       });
+
+      if (updateRes.count === 0) {
+        throw new Error(`Chit #${chitPosition} has already been opened.`);
+      }
 
       await tx.tournamentDraw.update({
         where: { id: drawId },

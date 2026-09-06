@@ -4,11 +4,11 @@ const isDev = process.env.NODE_ENV !== "production";
 
 const cspHeader = `
   default-src 'self';
-  script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' ${isDev ? "'unsafe-eval'" : ""} https:;
+  script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' ${isDev ? "'unsafe-eval'" : ""} https://va.vercel-scripts.com;
   style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
   font-src 'self' https://fonts.gstatic.com data:;
-  img-src 'self' data: https: blob:;
-  connect-src 'self' https://*.supabase.co wss://*.supabase.co https: unpkg.com cdn.jsdelivr.net;
+  img-src 'self' data: blob: https://*.supabase.co https://*.googleusercontent.com;
+  connect-src 'self' https://*.supabase.co wss://*.supabase.co https://va.vercel-scripts.com https://vitals.vercel-insights.com;
   frame-src 'self' https://maps.google.com https://www.google.com https://*.google.com https://*.google.lk;
   frame-ancestors 'none';
   object-src 'none';

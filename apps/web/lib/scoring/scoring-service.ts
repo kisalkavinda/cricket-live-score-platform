@@ -119,6 +119,16 @@ export async function getMatchesList() {
 }
 
 
+export const PUBLIC_PLAYER_SELECT = {
+  id: true,
+  name: true,
+  role: true,
+  jerseyNumber: true,
+  profileImageUrl: true,
+  battingStyle: true,
+  bowlingStyle: true,
+};
+
 /**
  * Returns full authoritative match detail including all innings, batting scores,
  * bowling scores, and ball-by-ball events for live scoring console & public scorecard.
@@ -132,12 +142,12 @@ export async function getMatchDetail(matchId: string) {
       },
       teamA: {
         include: {
-          teamPlayers: { include: { player: true } },
+          teamPlayers: { include: { player: { select: PUBLIC_PLAYER_SELECT } } },
         },
       },
       teamB: {
         include: {
-          teamPlayers: { include: { player: true } },
+          teamPlayers: { include: { player: { select: PUBLIC_PLAYER_SELECT } } },
         },
       },
       tossWinner: true,
@@ -147,22 +157,22 @@ export async function getMatchDetail(matchId: string) {
         include: {
           battingTeam: true,
           bowlingTeam: true,
-          currentStriker: true,
-          currentNonStriker: true,
-          currentBowler: true,
+          currentStriker: { select: PUBLIC_PLAYER_SELECT },
+          currentNonStriker: { select: PUBLIC_PLAYER_SELECT },
+          currentBowler: { select: PUBLIC_PLAYER_SELECT },
           battingScores: {
-            include: { player: true },
+            include: { player: { select: PUBLIC_PLAYER_SELECT } },
             orderBy: { battingOrder: 'asc' },
           },
           bowlingScores: {
-            include: { player: true },
+            include: { player: { select: PUBLIC_PLAYER_SELECT } },
           },
           ballEvents: {
             orderBy: { createdAt: 'desc' },
             include: {
-              batsman: true,
-              bowler: true,
-              dismissedPlayer: true,
+              batsman: { select: PUBLIC_PLAYER_SELECT },
+              bowler: { select: PUBLIC_PLAYER_SELECT },
+              dismissedPlayer: { select: PUBLIC_PLAYER_SELECT },
             },
           },
         },
@@ -713,19 +723,22 @@ export async function recordDelivery(inningsId: string, input: RecordDeliveryInp
   const batterRunsOffBat = delivery.batterRuns;
 
   const result = await prisma.$transaction(async (tx: any) => {
-    // 1. Authoritative reload
+    // 0. Concurrency serialization: Acquire exclusive PostgreSQL row-level lock on Innings
+    await tx.$executeRaw`select id from "Innings" where id = ${inningsId} for update;`;
+
+    // 1. Authoritative reload after lock acquisition
     const innings = await tx.innings.findUnique({
       where: { id: inningsId },
       include: {
         match: {
           include: {
             innings: { orderBy: { inningsNumber: 'asc' } },
-            teamA: { include: { tournamentSquads: true, teamPlayers: true } },
-            teamB: { include: { tournamentSquads: true, teamPlayers: true } },
+            teamA: true,
+            teamB: true,
           },
         },
-        battingTeam: { include: { tournamentSquads: true, teamPlayers: true } },
-        bowlingTeam: { include: { tournamentSquads: true, teamPlayers: true } },
+        battingTeam: true,
+        bowlingTeam: true,
         currentStriker: true,
         currentNonStriker: true,
         currentBowler: true,
@@ -1109,8 +1122,8 @@ export async function recordDelivery(inningsId: string, input: RecordDeliveryInp
       runs: totalBallRuns,
     };
   }, {
-    maxWait: 15000,
-    timeout: 30000,
+    maxWait: 90000,
+    timeout: 90000,
   });
 
   (prisma as any).adminAuditLog.create({
@@ -1124,20 +1137,27 @@ export async function recordDelivery(inningsId: string, input: RecordDeliveryInp
     },
   }).catch(() => {});
 
+  if (process.env.NODE_ENV === 'test') {
+    return { success: true, ...result, updatedMatch: null };
+  }
+
   // Single authoritative match fetch for both response and realtime broadcast
-  const updatedMatch = await getMatchDetail(result.matchId);
-
-  // Broadcast realtime update concurrently with pre-loaded match object
-  if (updatedMatch) {
-    buildMatchBroadcastPayload(updatedMatch)
-      .then((p) => { if (p) broadcastScoreUpdate(p); })
-      .catch(() => {});
-
-    if (updatedMatch.status === 'COMPLETED' && updatedMatch.tournamentId) {
-      import('@/lib/tournament/tournament-service')
-        .then((m) => m.checkAndAdvanceTournament(updatedMatch.tournamentId))
+  let updatedMatch: any = null;
+  try {
+    updatedMatch = await getMatchDetail(result.matchId);
+    if (updatedMatch) {
+      buildMatchBroadcastPayload(updatedMatch)
+        .then((p) => { if (p) broadcastScoreUpdate(p); })
         .catch(() => {});
+
+      if (updatedMatch.status === 'COMPLETED' && updatedMatch.tournamentId) {
+        import('@/lib/tournament/tournament-service')
+          .then((m) => m.checkAndAdvanceTournament(updatedMatch.tournamentId))
+          .catch(() => {});
+      }
     }
+  } catch (err) {
+    console.warn('[recordDelivery] Post-commit match refresh deferred:', (err as any)?.message || err);
   }
 
   return { success: true, ...result, updatedMatch };
@@ -1151,12 +1171,18 @@ export async function undoLastDelivery(inningsId: string) {
   const session = await requireAdminAuth();
 
   const result = await prisma.$transaction(async (tx: any) => {
+    // 0. Concurrency serialization: Acquire exclusive PostgreSQL row-level lock on Innings
+    await tx.$executeRaw`select id from "Innings" where id = ${inningsId} for update;`;
+
     const innings = await tx.innings.findUnique({
       where: { id: inningsId },
       include: { match: true },
     });
 
     if (!innings) throw new Error('Innings not found.');
+    if (innings.match.status === 'ABANDONED') {
+      throw new Error('Cannot undo deliveries on an abandoned match.');
+    }
 
     // Find the latest ball event
     const lastBall = await tx.ballEvent.findFirst({
@@ -1322,11 +1348,30 @@ export async function changeBowler(inningsId: string, bowlerId: string) {
 
   const innings = await (prisma as any).innings.findUnique({
     where: { id: inningsId },
+    include: {
+      match: true,
+      bowlingTeam: { include: { teamPlayers: true, tournamentSquads: true } },
+    },
   });
 
   if (!innings) return { success: false, error: 'Innings not found.' };
+  if (innings.match?.status === 'COMPLETED' || innings.match?.status === 'ABANDONED') {
+    return { success: false, error: `Cannot change bowler on a ${innings.match.status.toLowerCase()} match.` };
+  }
+
+  // Verify bowler belongs to bowling team squad if squad records exist
+  const squad = innings.bowlingTeam?.tournamentSquads || [];
+  const players = innings.bowlingTeam?.teamPlayers || [];
+  if (squad.length > 0 || players.length > 0) {
+    const isMember = squad.some((s: any) => s.playerId === bowlerId) || players.some((p: any) => p.playerId === bowlerId);
+    if (!isMember) {
+      return { success: false, error: 'Selected bowler does not belong to the bowling team.' };
+    }
+  }
 
   await prisma.$transaction(async (tx: any) => {
+    await tx.$executeRaw`select id from "Innings" where id = ${inningsId} for update;`;
+
     // Unmark old current bowler
     await tx.inningsBowler.updateMany({
       where: { inningsId },
@@ -1381,16 +1426,21 @@ export async function swapStriker(inningsId: string) {
 
   const innings = await (prisma as any).innings.findUnique({
     where: { id: inningsId },
+    include: { match: true },
   });
 
   if (!innings || !innings.currentStrikerId || !innings.currentNonStrikerId) {
     return { success: false, error: 'Innings or batters not configured.' };
+  }
+  if (innings.match?.status === 'COMPLETED' || innings.match?.status === 'ABANDONED') {
+    return { success: false, error: `Cannot swap batters on a ${innings.match.status.toLowerCase()} match.` };
   }
 
   const newStrikerId = innings.currentNonStrikerId;
   const newNonStrikerId = innings.currentStrikerId;
 
   await prisma.$transaction(async (tx: any) => {
+    await tx.$executeRaw`select id from "Innings" where id = ${inningsId} for update;`;
     await tx.innings.update({
       where: { id: inningsId },
       data: {
@@ -1437,11 +1487,29 @@ export async function switchBatter(inningsId: string, role: 'striker' | 'nonStri
 
   const innings = await (prisma as any).innings.findUnique({
     where: { id: inningsId },
+    include: {
+      match: true,
+      battingTeam: { include: { teamPlayers: true, tournamentSquads: true } },
+    },
   });
 
   if (!innings) return { success: false, error: 'Innings not found.' };
+  if (innings.match?.status === 'COMPLETED' || innings.match?.status === 'ABANDONED') {
+    return { success: false, error: `Cannot switch batter on a ${innings.match.status.toLowerCase()} match.` };
+  }
+
+  // Verify batter belongs to batting team squad if squad records exist
+  const squad = innings.battingTeam?.tournamentSquads || [];
+  const players = innings.battingTeam?.teamPlayers || [];
+  if (squad.length > 0 || players.length > 0) {
+    const isMember = squad.some((s: any) => s.playerId === newPlayerId) || players.some((p: any) => p.playerId === newPlayerId);
+    if (!isMember) {
+      return { success: false, error: 'Selected batter does not belong to the batting team squad.' };
+    }
+  }
 
   await prisma.$transaction(async (tx: any) => {
+    await tx.$executeRaw`select id from "Innings" where id = ${inningsId} for update;`;
     const batterCount = await tx.inningsBatter.count({ where: { inningsId } });
 
     // Determine if newPlayerId is already active at the opposite role

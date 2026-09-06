@@ -511,6 +511,7 @@ model TournamentDrawChit {
   selectedByTeam   Team?          @relation(fields: [selectedByTeamId], references: [id])
 
   @@unique([drawId, position])
+  @@unique([drawId, selectedByTeamId])
   @@index([drawId])
 }
 

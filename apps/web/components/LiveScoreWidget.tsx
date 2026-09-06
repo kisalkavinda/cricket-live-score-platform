@@ -97,19 +97,9 @@ export default function LiveScoreWidget() {
     const liveChannel = supabase.channel('matches:live');
 
     liveChannel
-      .on('broadcast', { event: 'score_update' }, ({ payload }: { payload: ScoreBroadcastPayload }) => {
-        if (!payload || !payload.matchId) return;
-
-        setMatches((prevMatches) => {
-          const exists = prevMatches.some((m) => m.matchId === payload.matchId);
-          if (exists) {
-            return prevMatches.map((m) => (m.matchId === payload.matchId ? payload : m));
-          } else {
-            return [payload, ...prevMatches];
-          }
-        });
-
-        setActiveMatchId((prev) => prev || payload.matchId);
+      .on('broadcast', { event: 'score_update' }, () => {
+        // Broadcast serves as an instant cache-invalidation signal; immediately re-sync from authoritative DB
+        fetchLiveMatches();
         setLastUpdated(new Date().toLocaleTimeString());
       })
       .subscribe((status) => {
@@ -125,9 +115,8 @@ export default function LiveScoreWidget() {
     if (activeMatchId) {
       matchChannel = supabase.channel(`match:${activeMatchId}`);
       matchChannel
-        .on('broadcast', { event: 'score_update' }, ({ payload }: { payload: ScoreBroadcastPayload }) => {
-          if (!payload) return;
-          setMatches((prev) => prev.map((m) => (m.matchId === payload.matchId ? payload : m)));
+        .on('broadcast', { event: 'score_update' }, () => {
+          fetchLiveMatches();
           setLastUpdated(new Date().toLocaleTimeString());
         })
         .subscribe();

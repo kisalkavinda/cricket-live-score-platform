@@ -91,12 +91,15 @@ async function createMatchRecord(data: {
 async function updateTeamsQualification(tournamentId: string, teamIds: string[], status: string) {
   for (const tid of teamIds) {
     if (!tid) continue;
-    await (prisma as any).$executeRawUnsafe(
-      `UPDATE "TournamentTeam" SET "qualificationStatus" = $1 WHERE "tournamentId" = $2 AND "teamId" = $3`,
-      status,
-      tournamentId,
-      tid
-    );
+    await (prisma as any).tournamentTeam.updateMany({
+      where: {
+        tournamentId,
+        teamId: tid,
+      },
+      data: {
+        qualificationStatus: status,
+      },
+    });
   }
 }
 
