@@ -3,6 +3,7 @@ import { Barlow_Condensed, Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { tournamentConfig } from "../config/tournament";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import { Analytics } from "@vercel/analytics/next";
 
 
 const barlowCondensed = Barlow_Condensed({
@@ -52,6 +53,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="min-h-full flex flex-col antialiased">
         {children}
         <SpeedInsights />
+        <Analytics />
         <ServiceWorkerRegistration />
       </body>
     </html>
