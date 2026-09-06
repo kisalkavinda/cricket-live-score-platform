@@ -14,6 +14,7 @@ export default function LiveScoreWidget() {
   const [loading, setLoading] = useState<boolean>(true);
   const [lastUpdated, setLastUpdated] = useState<string>('');
   const inFlightRef = useRef<boolean>(false);
+  const inFlightStatsRef = useRef<boolean>(false);
 
   // Points Table active stage selector (Group A, B, C or Wildcard)
   const [tableGroup, setTableGroup] = useState<'A' | 'B' | 'C' | 'wildcard'>('A');
@@ -36,8 +37,11 @@ export default function LiveScoreWidget() {
   const [matchFilter, setMatchFilter] = useState<'ALL' | 'COMPLETED' | 'LIVE' | 'UPCOMING'>('ALL');
 
   // 1. Fetch initial live matches from database
-  const fetchLiveMatches = useCallback(async () => {
-    if (inFlightRef.current) return;
+  const fetchLiveMatches = useCallback(async (force = false) => {
+    if (inFlightRef.current && !force) {
+      setTimeout(() => fetchLiveMatches(true), 250);
+      return;
+    }
     inFlightRef.current = true;
     try {
       const res = await fetch(`/api/matches/live?_t=${Date.now()}`, {
@@ -61,6 +65,8 @@ export default function LiveScoreWidget() {
 
   // 2. Fetch tournament stats (All Matches, Top Batters, Top Bowlers, MVP)
   const fetchTournamentStats = useCallback(async () => {
+    if (inFlightStatsRef.current) return;
+    inFlightStatsRef.current = true;
     setStatsLoading(true);
     try {
       const res = await fetch(`/api/tournament/stats?_t=${Date.now()}`, {
@@ -80,6 +86,7 @@ export default function LiveScoreWidget() {
     } catch (err) {
       console.error('[LiveScoreWidget] Stats error:', err);
     } finally {
+      inFlightStatsRef.current = false;
       setStatsLoading(false);
     }
   }, []);
@@ -93,18 +100,31 @@ export default function LiveScoreWidget() {
   useEffect(() => {
     const supabase = createClient();
 
+    const handleBroadcastUpdate = (msg?: any) => {
+      if (msg?.payload?.matchId) {
+        // Instant 0ms in-memory update directly from the broadcast payload
+        setMatches((prevMatches) => {
+          const index = prevMatches.findIndex((m) => m.matchId === msg.payload.matchId);
+          if (index !== -1) {
+            const updated = [...prevMatches];
+            updated[index] = { ...updated[index], ...msg.payload };
+            return updated;
+          }
+          return [msg.payload, ...prevMatches];
+        });
+        setLastUpdated(new Date().toLocaleTimeString());
+      }
+      // Authoritative re-sync in background to ensure all nested relations are current
+      fetchLiveMatches(true);
+    };
+
     // Global live matches channel
     const liveChannel = supabase.channel('matches:live');
 
     liveChannel
-      .on('broadcast', { event: 'score_update' }, () => {
-        // Broadcast serves as an instant cache-invalidation signal; immediately re-sync from authoritative DB
-        fetchLiveMatches();
-        setLastUpdated(new Date().toLocaleTimeString());
-      })
+      .on('broadcast', { event: 'score_update' }, handleBroadcastUpdate)
       .subscribe((status) => {
         if (status === 'SUBSCRIBED') {
-          // Re-sync on fresh subscription / reconnect
           fetchLiveMatches();
           fetchTournamentStats();
         }
@@ -115,18 +135,15 @@ export default function LiveScoreWidget() {
     if (activeMatchId) {
       matchChannel = supabase.channel(`match:${activeMatchId}`);
       matchChannel
-        .on('broadcast', { event: 'score_update' }, () => {
-          fetchLiveMatches();
-          setLastUpdated(new Date().toLocaleTimeString());
-        })
+        .on('broadcast', { event: 'score_update' }, handleBroadcastUpdate)
         .subscribe();
     }
 
-    // Relaxed 12s safety sync (Supabase Realtime handles instant 0ms score updates)
+    // Rapid 3.5s safety sync fallback (ensures score is never stale even if connection drops)
     const interval = setInterval(() => {
       fetchLiveMatches();
       if (navTab !== 'LIVE') fetchTournamentStats();
-    }, 12000);
+    }, 3500);
 
     return () => {
       try {
@@ -724,117 +741,284 @@ export default function LiveScoreWidget() {
                 );
               })()
             ) : (
-              <div style={{ padding: '24px' }}>
-                {/* Dual Team Score Header Bar */}
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    gap: '24px',
-                    paddingBottom: '20px',
-                    borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-                    flexWrap: 'wrap',
-                  }}
-                >
-                  {/* Team A Score Block */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                    {currentMatch.match.teamA.logoUrl ? (
-                      <img
-                        src={currentMatch.match.teamA.logoUrl}
-                        alt={currentMatch.match.teamA.name}
-                        style={{ width: '48px', height: '48px', borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(255, 255, 255, 0.2)' }}
-                      />
-                    ) : (
-                      <div
-                        style={{
-                          width: '48px',
-                          height: '48px',
-                          borderRadius: '50%',
-                          background: 'rgba(255, 255, 255, 0.1)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontSize: '1.4rem',
-                        }}
-                      >
-                        🏏
-                      </div>
-                    )}
-                    <div>
-                      <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#FFF' }}>
-                        {currentMatch.match.teamA.name}
-                      </div>
-                      <div style={{ fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.5)' }}>
-                        {currentInnings?.battingTeam?.id === currentMatch.match.teamA.id ? 'Batting' : 'Fielding'}
-                      </div>
-                    </div>
-                  </div>
+              <div className="scorecard-widget-body">
+                {/* Scoreboard Layout: Desktop 3-column / Mobile Google Cricket 2-row Stack */}
+                {(() => {
+                  const isPreMatch = currentMatch.status === 'UPCOMING' && !currentMatch.match.tossWinnerId;
+                  const inn1 = (currentMatch.allInningsSummary || []).find((i: any) => i.inningsNumber === 1);
+                  const inn1BattingTeamId = inn1?.battingTeamId || (
+                    currentMatch.match.tossWinnerId
+                      ? (currentMatch.match.tossDecision === 'BAT' ? currentMatch.match.tossWinnerId : (currentMatch.match.tossWinnerId === currentMatch.match.teamA.id ? currentMatch.match.teamB.id : currentMatch.match.teamA.id))
+                      : currentMatch.match.teamA.id
+                  );
+                  const inn2BattingTeamId = inn1BattingTeamId === currentMatch.match.teamA.id ? currentMatch.match.teamB.id : currentMatch.match.teamA.id;
 
-                  {/* Center Score & Overs */}
-                  <div style={{ textAlign: 'center' }}>
-                    <div
-                      style={{
-                        fontFamily: 'var(--font-data, monospace)',
-                        fontSize: '2.4rem',
-                        fontWeight: 900,
-                        color: 'var(--color-gold, #FFB800)',
-                        letterSpacing: '-0.02em',
-                        lineHeight: 1,
-                      }}
-                    >
-                      {currentInnings ? `${currentInnings.runs}/${currentInnings.wickets}` : '0/0'}
-                    </div>
-                    <div style={{ fontSize: '0.9rem', color: 'rgba(255, 255, 255, 0.7)', marginTop: '4px', fontWeight: 600 }}>
-                      {currentInnings ? `Overs: ${currentInnings.overs}.${currentInnings.balls}` : '0.0 Overs'}
-                      {currentMatch.match.oversPerInnings ? ` / ${currentMatch.match.oversPerInnings} ov` : ''}
-                    </div>
-                    {currentMatch.currentInnings >= 3 && (
-                      <div style={{ marginTop: '4px', display: 'inline-block', background: 'rgba(245, 158, 11, 0.2)', border: '1px solid #F59E0B', color: '#FBBF24', fontSize: '0.72rem', fontWeight: 800, padding: '2px 8px', borderRadius: '4px' }}>
-                        ⚡ SUPER OVER
-                      </div>
-                    )}
-                    {currentMatch.isFreeHit && (
-                      <div style={{ marginTop: '6px', display: 'inline-flex', alignItems: 'center', gap: '4px', background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.3) 0%, rgba(234, 88, 12, 0.3) 100%)', border: '1.5px solid #F59E0B', color: '#FEF08A', fontSize: '0.72rem', fontWeight: 900, padding: '3px 10px', borderRadius: '20px', letterSpacing: '0.06em', textTransform: 'uppercase', boxShadow: '0 0 10px rgba(245, 158, 11, 0.4)' }}>
-                        ⚡ FREE HIT
-                      </div>
-                    )}
-                  </div>
+                  const leftTeam = isPreMatch ? currentMatch.match.teamA : (inn1BattingTeamId === currentMatch.match.teamB.id ? currentMatch.match.teamB : currentMatch.match.teamA);
+                  const rightTeam = isPreMatch ? currentMatch.match.teamB : (inn2BattingTeamId === currentMatch.match.teamB.id ? currentMatch.match.teamB : currentMatch.match.teamA);
 
-                  {/* Team B Score Block */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexDirection: 'row-reverse' }}>
-                    {currentMatch.match.teamB.logoUrl ? (
-                      <img
-                        src={currentMatch.match.teamB.logoUrl}
-                        alt={currentMatch.match.teamB.name}
-                        style={{ width: '48px', height: '48px', borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(255, 255, 255, 0.2)' }}
-                      />
-                    ) : (
-                      <div
-                        style={{
-                          width: '48px',
-                          height: '48px',
-                          borderRadius: '50%',
-                          background: 'rgba(255, 255, 255, 0.1)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontSize: '1.4rem',
-                        }}
-                      >
-                        🦁
+                  const isLeftBatting = currentMatch.status === 'LIVE' && currentInnings?.battingTeam?.id === leftTeam.id;
+                  const isRightBatting = currentMatch.status === 'LIVE' && currentInnings?.battingTeam?.id === rightTeam.id;
+
+                  const leftInningsSummary = (currentMatch.allInningsSummary || []).find((i: any) => i.battingTeamId === leftTeam.id && !i.isSuperOver);
+                  const rightInningsSummary = (currentMatch.allInningsSummary || []).find((i: any) => i.battingTeamId === rightTeam.id && !i.isSuperOver);
+
+                  return (
+                    <div style={{ paddingBottom: '16px', borderBottom: '1px solid rgba(255, 255, 255, 0.08)' }}>
+                      {/* Desktop View (>= 768px): 3-Column Grid */}
+                      <div className="scorecard-desktop-view">
+                        <div className="scorecard-match-header-grid">
+                          {/* Left Team (Batting 1st) */}
+                          <div className="scorecard-team-a-box">
+                            {leftTeam.logoUrl ? (
+                              <img
+                                src={leftTeam.logoUrl}
+                                alt={leftTeam.name}
+                                style={{ width: '48px', height: '48px', borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(255, 255, 255, 0.2)', flexShrink: 0 }}
+                              />
+                            ) : (
+                              <div
+                                style={{
+                                  width: '48px',
+                                  height: '48px',
+                                  borderRadius: '50%',
+                                  background: 'rgba(255, 255, 255, 0.1)',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  fontSize: '1.4rem',
+                                  flexShrink: 0,
+                                }}
+                              >
+                                🏏
+                              </div>
+                            )}
+                            <div>
+                              <div style={{ fontSize: '1.15rem', fontWeight: 800, color: '#FFF', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                                <span>{leftTeam.name}</span>
+                                {isLeftBatting && (
+                                  <span
+                                    style={{
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      gap: '3px',
+                                      padding: '2px 7px',
+                                      borderRadius: '4px',
+                                      background: 'rgba(239, 68, 68, 0.2)',
+                                      border: '1px solid #EF4444',
+                                      color: '#FCA5A5',
+                                      fontSize: '0.68rem',
+                                      fontWeight: 800,
+                                      letterSpacing: '0.04em',
+                                    }}
+                                  >
+                                    🏏 BATTING
+                                  </span>
+                                )}
+                              </div>
+                              <div style={{ fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.5)' }}>
+                                {leftInningsSummary
+                                  ? `${leftInningsSummary.runs}/${leftInningsSummary.wickets} (${leftInningsSummary.overs}.${leftInningsSummary.balls} ov)`
+                                  : isLeftBatting
+                                  ? `${currentInnings?.runs ?? 0}/${currentInnings?.wickets ?? 0} (Batting)`
+                                  : !isPreMatch
+                                  ? 'Yet to bat'
+                                  : leftTeam.shortName || 'Team 1'}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Center Score & Overs */}
+                          <div className="scorecard-center-score-box">
+                            <div
+                              style={{
+                                fontFamily: 'var(--font-data, monospace)',
+                                fontSize: '2.4rem',
+                                fontWeight: 900,
+                                color: 'var(--color-gold, #FFB800)',
+                                letterSpacing: '-0.02em',
+                                lineHeight: 1,
+                              }}
+                            >
+                              {currentInnings ? `${currentInnings.runs}/${currentInnings.wickets}` : '0/0'}
+                            </div>
+                            <div style={{ fontSize: '0.9rem', color: 'rgba(255, 255, 255, 0.7)', marginTop: '4px', fontWeight: 600 }}>
+                              {currentInnings ? `Overs: ${currentInnings.overs}.${currentInnings.balls}` : '0.0 Overs'}
+                              {currentMatch.match.oversPerInnings ? ` / ${currentMatch.match.oversPerInnings} ov` : ''}
+                            </div>
+                            {currentMatch.currentInnings >= 3 && (
+                              <div style={{ marginTop: '4px', display: 'inline-block', background: 'rgba(245, 158, 11, 0.2)', border: '1px solid #F59E0B', color: '#FBBF24', fontSize: '0.72rem', fontWeight: 800, padding: '2px 8px', borderRadius: '4px' }}>
+                                ⚡ SUPER OVER
+                              </div>
+                            )}
+                            {currentMatch.isFreeHit && (
+                              <div style={{ marginTop: '6px', display: 'inline-flex', alignItems: 'center', gap: '4px', background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.3) 0%, rgba(234, 88, 12, 0.3) 100%)', border: '1.5px solid #F59E0B', color: '#FEF08A', fontSize: '0.72rem', fontWeight: 900, padding: '3px 10px', borderRadius: '20px', letterSpacing: '0.06em', textTransform: 'uppercase', boxShadow: '0 0 10px rgba(245, 158, 11, 0.4)' }}>
+                                ⚡ FREE HIT
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Right Team (Batting 2nd) */}
+                          <div className="scorecard-team-b-box">
+                            <div style={{ textAlign: 'right' }}>
+                              <div style={{ fontSize: '1.15rem', fontWeight: 800, color: '#FFF', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '8px', flexWrap: 'wrap' }}>
+                                {isRightBatting && (
+                                  <span
+                                    style={{
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      gap: '3px',
+                                      padding: '2px 7px',
+                                      borderRadius: '4px',
+                                      background: 'rgba(239, 68, 68, 0.2)',
+                                      border: '1px solid #EF4444',
+                                      color: '#FCA5A5',
+                                      fontSize: '0.68rem',
+                                      fontWeight: 800,
+                                      letterSpacing: '0.04em',
+                                    }}
+                                  >
+                                    🏏 BATTING
+                                  </span>
+                                )}
+                                <span>{rightTeam.name}</span>
+                              </div>
+                              <div style={{ fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.5)' }}>
+                                {rightInningsSummary
+                                  ? `${rightInningsSummary.runs}/${rightInningsSummary.wickets} (${rightInningsSummary.overs}.${rightInningsSummary.balls} ov)`
+                                  : isRightBatting
+                                  ? `${currentInnings?.runs ?? 0}/${currentInnings?.wickets ?? 0} (Batting)`
+                                  : !isPreMatch
+                                  ? 'Yet to bat'
+                                  : rightTeam.shortName || 'Team 2'}
+                              </div>
+                            </div>
+                            {rightTeam.logoUrl ? (
+                              <img
+                                src={rightTeam.logoUrl}
+                                alt={rightTeam.name}
+                                style={{ width: '48px', height: '48px', borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(255, 255, 255, 0.2)', flexShrink: 0 }}
+                              />
+                            ) : (
+                              <div
+                                style={{
+                                  width: '48px',
+                                  height: '48px',
+                                  borderRadius: '50%',
+                                  background: 'rgba(255, 255, 255, 0.1)',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  fontSize: '1.4rem',
+                                  flexShrink: 0,
+                                }}
+                              >
+                                🦁
+                              </div>
+                            )}
+                          </div>
+                        </div>
                       </div>
-                    )}
-                    <div style={{ textAlign: 'right' }}>
-                      <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#FFF' }}>
-                        {currentMatch.match.teamB.name}
-                      </div>
-                      <div style={{ fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.5)' }}>
-                        {currentInnings?.battingTeam?.id === currentMatch.match.teamB.id ? 'Batting' : 'Fielding'}
+
+                      {/* Mobile View (< 768px): Google Cricket Standard Side-by-Side Dual Team View */}
+                      <div className="scorecard-mobile-view">
+                        <div className="scorecard-mobile-dual-grid">
+                          {/* Left Team Card (Batting 1st) */}
+                          <div className={`scorecard-mobile-team-card left ${isLeftBatting ? 'is-batting' : ''}`}>
+                            <div className="scorecard-mobile-card-header">
+                              {leftTeam.logoUrl ? (
+                                <img src={leftTeam.logoUrl} alt={leftTeam.name} className="scorecard-mobile-logo" />
+                              ) : (
+                                <div className="scorecard-mobile-logo-placeholder">🏏</div>
+                              )}
+                              <div className="scorecard-mobile-card-names">
+                                <span className="scorecard-mobile-card-title">{leftTeam.name}</span>
+                                {isLeftBatting && <span className="scorecard-mobile-batting-badge">🏏 BATTING</span>}
+                                <span className="scorecard-mobile-shortname">{leftTeam.shortName}</span>
+                              </div>
+                            </div>
+
+                            <div className="scorecard-mobile-card-scores left">
+                              {leftInningsSummary ? (
+                                <>
+                                  <span className="scorecard-mobile-big-score">{leftInningsSummary.runs}/{leftInningsSummary.wickets}</span>
+                                  <span className="scorecard-mobile-overs-tag">({leftInningsSummary.overs}.{leftInningsSummary.balls} ov)</span>
+                                </>
+                              ) : isLeftBatting ? (
+                                <>
+                                  <span className="scorecard-mobile-big-score">{currentInnings?.runs ?? 0}/{currentInnings?.wickets ?? 0}</span>
+                                  <span className="scorecard-mobile-overs-tag">({currentInnings?.overs ?? 0}.{currentInnings?.balls ?? 0} ov)</span>
+                                </>
+                              ) : (
+                                <span className="scorecard-mobile-yet-text">{isPreMatch ? leftTeam.shortName : 'Yet to bat'}</span>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Center Divider / VS Badge */}
+                          <div className="scorecard-mobile-vs-divider">
+                            <span className="scorecard-mobile-vs-badge">VS</span>
+                          </div>
+
+                          {/* Right Team Card (Batting 2nd) */}
+                          <div className={`scorecard-mobile-team-card right ${isRightBatting ? 'is-batting' : ''}`}>
+                            <div className="scorecard-mobile-card-header right">
+                              {rightTeam.logoUrl ? (
+                                <img src={rightTeam.logoUrl} alt={rightTeam.name} className="scorecard-mobile-logo" />
+                              ) : (
+                                <div className="scorecard-mobile-logo-placeholder">🦁</div>
+                              )}
+                              <div className="scorecard-mobile-card-names right">
+                                <span className="scorecard-mobile-card-title">{rightTeam.name}</span>
+                                {isRightBatting && <span className="scorecard-mobile-batting-badge">🏏 BATTING</span>}
+                                <span className="scorecard-mobile-shortname">{rightTeam.shortName}</span>
+                              </div>
+                            </div>
+
+                            <div className="scorecard-mobile-card-scores right">
+                              {rightInningsSummary ? (
+                                <>
+                                  <span className="scorecard-mobile-big-score">{rightInningsSummary.runs}/{rightInningsSummary.wickets}</span>
+                                  <span className="scorecard-mobile-overs-tag">({rightInningsSummary.overs}.{rightInningsSummary.balls} ov)</span>
+                                </>
+                              ) : isRightBatting ? (
+                                <>
+                                  <span className="scorecard-mobile-big-score">{currentInnings?.runs ?? 0}/{currentInnings?.wickets ?? 0}</span>
+                                  <span className="scorecard-mobile-overs-tag">({currentInnings?.overs ?? 0}.{currentInnings?.balls ?? 0} ov)</span>
+                                </>
+                              ) : (
+                                <span className="scorecard-mobile-yet-text">{isPreMatch ? rightTeam.shortName : 'Yet to bat'}</span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Mobile Status Strip */}
+                        <div className="scorecard-mobile-status-strip">
+                          <div className="scorecard-mobile-status-live">
+                            <span className="scorecard-live-dot" />
+                            <span>
+                              {currentMatch.currentInnings >= 3
+                                ? `SUPER OVER ${currentMatch.currentInnings - 2}`
+                                : `INNINGS ${currentMatch.currentInnings}`}
+                              {currentInnings ? ` (${currentInnings.overs}.${currentInnings.balls}/${currentMatch.match.oversPerInnings || 4} OV)` : ''}
+                            </span>
+                            {currentMatch.isFreeHit && (
+                              <span style={{ color: '#FEF08A', fontWeight: 900, background: 'rgba(245, 158, 11, 0.25)', padding: '1px 5px', borderRadius: '3px' }}>
+                                FREE HIT
+                              </span>
+                            )}
+                          </div>
+                          <div className="scorecard-mobile-rates">
+                            <span>CRR: <strong>{currentMatch.chase?.crr || currentInnings?.crr || '0.00'}</strong></span>
+                            {currentMatch.chase?.isChase && currentMatch.chase?.target ? (
+                              <span> • Target: <strong style={{ color: 'var(--color-gold)' }}>{currentMatch.chase.target}</strong></span>
+                            ) : null}
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </div>
+                  );
+                })()}
 
                 {/* Match Situation & Run Rates Bar */}
                 <div
@@ -879,7 +1063,7 @@ export default function LiveScoreWidget() {
                 <div
                   style={{
                     display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
                     gap: '16px',
                     marginTop: '16px',
                   }}
@@ -1034,7 +1218,7 @@ export default function LiveScoreWidget() {
         {/* TAB: POINTS TABLE & NRR                                       */}
         {/* ───────────────────────────────────────────────────────────── */}
         {navTab === 'POINTS_TABLE' && (
-          <div style={{ padding: '24px' }}>
+          <div className="scorecard-widget-body">
             {/* Header & Stage Progress Pill */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px', flexWrap: 'wrap', gap: '14px' }}>
               <div>
@@ -1305,7 +1489,7 @@ export default function LiveScoreWidget() {
         {/* TAB 2: ALL MATCHES / PAST RESULTS                             */}
         {/* ───────────────────────────────────────────────────────────── */}
         {navTab === 'ALL_MATCHES' && (
-          <div style={{ padding: '24px' }}>
+          <div className="scorecard-widget-body">
             {/* Filter Bar */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
               <div>
@@ -1349,7 +1533,7 @@ export default function LiveScoreWidget() {
                 No matches found under this filter.
               </div>
             ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '16px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px' }}>
                 {filteredMatches.map((m) => {
                   const teamAReg = m.innings.find((i: any) => i.battingTeamId === m.teamA.id && !i.isSuperOver);
                   const teamASO = m.innings.find((i: any) => i.battingTeamId === m.teamA.id && i.isSuperOver);
@@ -1470,7 +1654,7 @@ export default function LiveScoreWidget() {
         {/* TAB 3: TOP RUN SCORERS (BATTING LEADERBOARD)                  */}
         {/* ───────────────────────────────────────────────────────────── */}
         {navTab === 'TOP_BATTERS' && (
-          <div style={{ padding: '24px' }}>
+          <div className="scorecard-widget-body">
             <div style={{ marginBottom: '20px' }}>
               <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 900, color: '#FFF' }}>
                 🏏 Top Run Scorers (Orange Cap Race)
@@ -1604,7 +1788,7 @@ export default function LiveScoreWidget() {
         {/* TAB 4: TOP WICKET TAKERS (BOWLING LEADERBOARD)                */}
         {/* ───────────────────────────────────────────────────────────── */}
         {navTab === 'TOP_BOWLERS' && (
-          <div style={{ padding: '24px' }}>
+          <div className="scorecard-widget-body">
             <div style={{ marginBottom: '20px' }}>
               <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 900, color: '#FFF' }}>
                 🎯 Top Wicket Takers (Purple Cap Race)

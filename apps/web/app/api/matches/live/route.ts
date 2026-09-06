@@ -5,6 +5,18 @@ export const dynamic = 'force-dynamic';
 
 // In-Memory RAM cache to protect database from hundreds of concurrent viewers
 let liveMatchesCache: { data: any; expiresAt: number } | null = null;
+let inFlightLivePromise: Promise<any> | null = null;
+
+async function fetchFreshLiveMatches() {
+  const rawMatches = await getLiveMatches();
+  const payloads = await Promise.all(
+    rawMatches.map((m: any) => buildMatchBroadcastPayload(m))
+  );
+
+  const validPayloads = payloads.filter(Boolean);
+  liveMatchesCache = { data: validPayloads, expiresAt: Date.now() + 1000 };
+  return validPayloads;
+}
 
 export async function GET() {
   try {
@@ -21,16 +33,17 @@ export async function GET() {
       );
     }
 
-    const rawMatches = await getLiveMatches();
-    const payloads = await Promise.all(
-      rawMatches.map((m: any) => buildMatchBroadcastPayload(m))
-    );
+    // Coalesce concurrent requests
+    if (!inFlightLivePromise) {
+      inFlightLivePromise = fetchFreshLiveMatches().finally(() => {
+        inFlightLivePromise = null;
+      });
+    }
 
-    const validPayloads = payloads.filter(Boolean);
-    liveMatchesCache = { data: validPayloads, expiresAt: now + 2500 };
+    const matches = await inFlightLivePromise;
 
     return NextResponse.json(
-      { success: true, matches: validPayloads },
+      { success: true, matches },
       {
         headers: {
           'X-Cache': 'MISS',

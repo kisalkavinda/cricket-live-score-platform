@@ -532,3 +532,18 @@ model TournamentDrawAudit {
 
   @@index([drawId, createdAt])
 }
+
+model ScoringOperation {
+  id          String   @id @default(uuid())
+  operationId String   @unique
+  matchId     String
+  inningsId   String
+  status      String   @default("PROCESSED")
+  result      Json?
+  clientId    String?
+  createdAt   DateTime @default(now())
+  processedAt DateTime @default(now())
+
+  @@index([matchId])
+  @@index([inningsId])
+}

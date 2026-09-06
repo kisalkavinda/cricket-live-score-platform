@@ -27,9 +27,12 @@ const jetbrainsMono = JetBrains_Mono({
   display: "swap",
 });
 
+import ServiceWorkerRegistration from "@/components/offline/ServiceWorkerRegistration";
+
 export const metadata: Metadata = {
   title: tournamentConfig.name,
   description: tournamentConfig.tagline,
+  manifest: "/manifest.webmanifest",
 };
 
 export const viewport: Viewport = {
@@ -49,8 +52,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="min-h-full flex flex-col antialiased">
         {children}
         <SpeedInsights />
+        <ServiceWorkerRegistration />
       </body>
-
     </html>
   );
 }

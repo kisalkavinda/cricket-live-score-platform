@@ -1,0 +1,18 @@
+{
+  "name": "CPL Cricket Live Scorer",
+  "short_name": "CPL Scorer",
+  "description": "Production Offline-Resilient Cricket Live Scoring Platform",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0F0C0C",
+  "theme_color": "#0F0C0C",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/globe.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

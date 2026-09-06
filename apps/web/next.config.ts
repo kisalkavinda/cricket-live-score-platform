@@ -4,11 +4,12 @@ const isDev = process.env.NODE_ENV !== "production";
 
 const cspHeader = `
   default-src 'self';
-  script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' ${isDev ? "'unsafe-eval'" : ""} https://va.vercel-scripts.com;
+  script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' ${isDev ? "'unsafe-eval'" : ""} https://va.vercel-scripts.com https://maps.googleapis.com;
   style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
   font-src 'self' https://fonts.gstatic.com data:;
-  img-src 'self' data: blob: https://*.supabase.co https://*.googleusercontent.com;
-  connect-src 'self' https://*.supabase.co wss://*.supabase.co https://va.vercel-scripts.com https://vitals.vercel-insights.com;
+  img-src 'self' data: blob: https://*.supabase.co https://*.googleusercontent.com https://drive.google.com https://*.googleapis.com https://*.gstatic.com;
+  connect-src 'self' https://*.supabase.co wss://*.supabase.co https://va.vercel-scripts.com https://vitals.vercel-insights.com https://cdn.jsdelivr.net https://unpkg.com https://*.googleapis.com https://maps.googleapis.com;
+  worker-src 'self' blob:;
   frame-src 'self' https://maps.google.com https://www.google.com https://*.google.com https://*.google.lk;
   frame-ancestors 'none';
   object-src 'none';
@@ -45,7 +46,7 @@ const nextConfig: NextConfig = {
           },
           {
             key: "Permissions-Policy",
-            value: "camera=(), microphone=(), geolocation=(), browsing-topics=()",
+            value: "camera=(), microphone=(), geolocation=()",
           },
         ],
       },

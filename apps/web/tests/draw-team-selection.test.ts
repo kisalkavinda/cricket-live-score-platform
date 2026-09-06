@@ -38,34 +38,44 @@ async function runTeamSelectionTests() {
     });
     testTournamentId = tournament.id;
 
-    // 2. Create 11 teams
-    for (let i = 1; i <= 11; i++) {
-      const team = await prisma.team.create({
-        data: {
-          name: `${testPrefix} Squad ${i}`,
-          shortName: `SQ${i}`,
-        },
-      });
-      createdTeamIds.push(team.id);
+    // 2. Create 11 teams in batches of 3 (connection_limit friendly)
+    for (let batch = 0; batch < 4; batch++) {
+      const batchPromises = [];
+      for (let i = batch * 3 + 1; i <= Math.min((batch + 1) * 3, 11); i++) {
+        batchPromises.push(
+          (async () => {
+            const team = await prisma.team.create({
+              data: {
+                name: `${testPrefix} Squad ${i}`,
+                shortName: `SQ${i}`,
+              },
+            });
 
-      await prisma.tournamentTeam.create({
-        data: {
-          tournamentId: testTournamentId,
-          teamId: team.id,
-        },
-      });
+            await prisma.tournamentTeam.create({
+              data: {
+                tournamentId: testTournamentId!,
+                teamId: team.id,
+              },
+            });
 
-      await prisma.registration.create({
-        data: {
-          registrationCode: `REG_${testPrefix}_${i}`,
-          tournamentId: testTournamentId,
-          teamName: `${testPrefix} Squad ${i}`,
-          leaderName: `Captain ${i}`,
-          leaderWhatsapp: `077111111${i.toString().padStart(2, '0')}`,
-          leaderIndexNumber: `INDEX_${testPrefix}_${i}`,
-          status: 'APPROVED',
-        },
-      });
+            await prisma.registration.create({
+              data: {
+                registrationCode: `REG_${testPrefix}_${i}`,
+                tournamentId: testTournamentId!,
+                teamName: `${testPrefix} Squad ${i}`,
+                leaderName: `Captain ${i}`,
+                leaderWhatsapp: `077111111${i.toString().padStart(2, '0')}`,
+                leaderIndexNumber: `INDEX_${testPrefix}_${i}`,
+                status: 'APPROVED',
+              },
+            });
+
+            return team.id;
+          })()
+        );
+      }
+      const batchResults = await Promise.all(batchPromises);
+      createdTeamIds.push(...batchResults);
     }
 
     // 3. Check eligibility

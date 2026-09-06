@@ -3,6 +3,18 @@ import "server-only";
 import { prisma } from 'database';
 import { requireAdminAuth } from '@/lib/auth/admin-auth';
 import { broadcastScoreUpdate, ScoreBroadcastPayload } from './scoring-realtime';
+import { normalizeImageUrl } from '@/lib/utils/image-utils';
+import { warmScorecardCache } from './scorecard-cache';
+
+export function notifyMatchUpdated(updatedMatch: any) {
+  if (!updatedMatch) return;
+  try {
+    warmScorecardCache(updatedMatch.id, updatedMatch, 4000);
+  } catch {}
+  buildMatchBroadcastPayload(updatedMatch)
+    .then((p) => { if (p) broadcastScoreUpdate(p); })
+    .catch(() => {});
+}
 
 export {
   type ExtraTypeValue,
@@ -68,6 +80,8 @@ export interface RecordDeliveryInput {
   newBatterId?: string;
   commentary?: string;
   expectedUpdatedAt?: string | Date;
+  operationId?: string;
+  clientId?: string;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -143,11 +157,13 @@ export async function getMatchDetail(matchId: string) {
       teamA: {
         include: {
           teamPlayers: { include: { player: { select: PUBLIC_PLAYER_SELECT } } },
+          tournamentSquads: { include: { player: { select: PUBLIC_PLAYER_SELECT } } },
         },
       },
       teamB: {
         include: {
           teamPlayers: { include: { player: { select: PUBLIC_PLAYER_SELECT } } },
+          tournamentSquads: { include: { player: { select: PUBLIC_PLAYER_SELECT } } },
         },
       },
       tossWinner: true,
@@ -413,19 +429,21 @@ export async function buildMatchBroadcastPayload(matchOrId: string | any): Promi
         id: match.teamA.id,
         name: match.teamA.name,
         shortName: match.teamA.shortName,
-        logoUrl: match.teamA.logoUrl,
+        logoUrl: normalizeImageUrl(match.teamA.logoUrl),
       },
       teamB: {
         id: match.teamB.id,
         name: match.teamB.name,
         shortName: match.teamB.shortName,
-        logoUrl: match.teamB.logoUrl,
+        logoUrl: normalizeImageUrl(match.teamB.logoUrl),
       },
       venue: match.venue || 'Ratmalana Ground',
       oversPerInnings: match.oversPerInnings,
       ballsPerOver: matchBallsPerOver,
       resultNote: match.resultNote,
       winnerTeamId: match.winnerTeamId,
+      tossWinnerId: match.tossWinnerId,
+      tossDecision: match.tossDecision,
     },
     innings: currentInnings
       ? {
@@ -604,12 +622,12 @@ export async function startMatch(matchId: string, input: StartMatchInput) {
     },
   }).catch(() => {});
 
-  // Broadcast realtime update concurrently
-  buildMatchBroadcastPayload(matchId)
-    .then((p) => { if (p) broadcastScoreUpdate(p); })
-    .catch(() => {});
+  const updatedMatch = await getMatchDetail(matchId);
+  if (updatedMatch) {
+    notifyMatchUpdated(updatedMatch);
+  }
 
-  return { success: true, inningsId: inn1.id, updatedMatch: await getMatchDetail(matchId) };
+  return { success: true, inningsId: inn1.id, updatedMatch };
 }
 
 /**
@@ -687,12 +705,12 @@ export async function setInningsOpeningLineup(inningsId: string, input: OpeningL
     },
   }).catch(() => {});
 
-  // Broadcast realtime update concurrently
-  buildMatchBroadcastPayload(innings.matchId)
-    .then((p) => { if (p) broadcastScoreUpdate(p); })
-    .catch(() => {});
+  const updatedMatch = await getMatchDetail(innings.matchId);
+  if (updatedMatch) {
+    notifyMatchUpdated(updatedMatch);
+  }
 
-  return { success: true, updatedMatch: await getMatchDetail(innings.matchId) };
+  return { success: true, updatedMatch };
 }
 
 /**
@@ -702,6 +720,27 @@ export async function setInningsOpeningLineup(inningsId: string, input: OpeningL
  */
 export async function recordDelivery(inningsId: string, input: RecordDeliveryInput) {
   const session = await requireAdminAuth();
+
+  // Pre-transaction idempotency check: If this operationId was already committed, return cached result immediately
+  if (input.operationId) {
+    const existingOp = await (prisma as any).scoringOperation.findUnique({
+      where: { operationId: input.operationId },
+    });
+    if (existingOp && existingOp.status === 'PROCESSED' && existingOp.result) {
+      let updatedMatch: any = null;
+      if (process.env.NODE_ENV !== 'test') {
+        try {
+          updatedMatch = await getMatchDetail(existingOp.matchId);
+        } catch {}
+      }
+      return {
+        success: true,
+        ...(existingOp.result as any),
+        updatedMatch,
+        idempotentReplay: true,
+      };
+    }
+  }
 
   const runs = Number(input.runs || 0);
   const extraType: ExtraTypeValue = input.extraType || 'NONE';
@@ -726,6 +765,16 @@ export async function recordDelivery(inningsId: string, input: RecordDeliveryInp
     // 0. Concurrency serialization: Acquire exclusive PostgreSQL row-level lock on Innings
     await tx.$executeRaw`select id from "Innings" where id = ${inningsId} for update;`;
 
+    // 0.1 In-transaction idempotency check (handles concurrent duplicate race condition under lock)
+    if (input.operationId) {
+      const existingOp = await tx.scoringOperation.findUnique({
+        where: { operationId: input.operationId },
+      });
+      if (existingOp && existingOp.status === 'PROCESSED' && existingOp.result) {
+        return existingOp.result;
+      }
+    }
+
     // 1. Authoritative reload after lock acquisition
     const innings = await tx.innings.findUnique({
       where: { id: inningsId },
@@ -733,12 +782,12 @@ export async function recordDelivery(inningsId: string, input: RecordDeliveryInp
         match: {
           include: {
             innings: { orderBy: { inningsNumber: 'asc' } },
-            teamA: true,
-            teamB: true,
+            teamA: { include: { teamPlayers: true, tournamentSquads: true } },
+            teamB: { include: { teamPlayers: true, tournamentSquads: true } },
           },
         },
-        battingTeam: true,
-        bowlingTeam: true,
+        battingTeam: { include: { teamPlayers: true, tournamentSquads: true } },
+        bowlingTeam: { include: { teamPlayers: true, tournamentSquads: true } },
         currentStriker: true,
         currentNonStriker: true,
         currentBowler: true,
@@ -1113,7 +1162,7 @@ export async function recordDelivery(inningsId: string, input: RecordDeliveryInp
       }
     }
 
-    return {
+    const opResult = {
       matchId: innings.matchId,
       ballEventId: ballEvent.id,
       isOverComplete,
@@ -1121,6 +1170,35 @@ export async function recordDelivery(inningsId: string, input: RecordDeliveryInp
       matchFinished,
       runs: totalBallRuns,
     };
+
+    // 12. Record operationId for database-backed idempotency
+    if (input.operationId) {
+      try {
+        await tx.scoringOperation.create({
+          data: {
+            operationId: input.operationId,
+            matchId: innings.matchId,
+            inningsId,
+            status: 'PROCESSED',
+            result: opResult,
+            clientId: input.clientId || null,
+          },
+        });
+      } catch (err: any) {
+        // Handle concurrent race: if unique constraint was violated, return the race winner's result
+        if (err?.code === 'P2002' || err?.message?.includes('Unique constraint') || err?.message?.includes('scoringOperation_operationId_key')) {
+          const raceOp = await tx.scoringOperation.findUnique({
+            where: { operationId: input.operationId },
+          });
+          if (raceOp?.result) {
+            return raceOp.result;
+          }
+        }
+        throw err;
+      }
+    }
+
+    return opResult;
   }, {
     maxWait: 90000,
     timeout: 90000,
@@ -1146,9 +1224,7 @@ export async function recordDelivery(inningsId: string, input: RecordDeliveryInp
   try {
     updatedMatch = await getMatchDetail(result.matchId);
     if (updatedMatch) {
-      buildMatchBroadcastPayload(updatedMatch)
-        .then((p) => { if (p) broadcastScoreUpdate(p); })
-        .catch(() => {});
+      notifyMatchUpdated(updatedMatch);
 
       if (updatedMatch.status === 'COMPLETED' && updatedMatch.tournamentId) {
         import('@/lib/tournament/tournament-service')
@@ -1167,12 +1243,41 @@ export async function recordDelivery(inningsId: string, input: RecordDeliveryInp
  * 1-Click Deterministic Undo:
  * Rolls back the latest delivery recorded on the innings, restoring exact prior state.
  */
-export async function undoLastDelivery(inningsId: string) {
+export async function undoLastDelivery(inningsId: string, operationId?: string, clientId?: string) {
   const session = await requireAdminAuth();
+
+  if (operationId) {
+    const existingOp = await (prisma as any).scoringOperation.findUnique({
+      where: { operationId },
+    });
+    if (existingOp && existingOp.status === 'PROCESSED' && existingOp.result) {
+      let updatedMatch: any = null;
+      if (process.env.NODE_ENV !== 'test') {
+        try {
+          updatedMatch = await getMatchDetail(existingOp.matchId);
+        } catch {}
+      }
+      return {
+        success: true,
+        ...(existingOp.result as any),
+        updatedMatch,
+        idempotentReplay: true,
+      };
+    }
+  }
 
   const result = await prisma.$transaction(async (tx: any) => {
     // 0. Concurrency serialization: Acquire exclusive PostgreSQL row-level lock on Innings
     await tx.$executeRaw`select id from "Innings" where id = ${inningsId} for update;`;
+
+    if (operationId) {
+      const existingOp = await tx.scoringOperation.findUnique({
+        where: { operationId },
+      });
+      if (existingOp && existingOp.status === 'PROCESSED' && existingOp.result) {
+        return existingOp.result;
+      }
+    }
 
     const innings = await tx.innings.findUnique({
       where: { id: inningsId },
@@ -1309,10 +1414,37 @@ export async function undoLastDelivery(inningsId: string) {
       where: { id: lastBall.id },
     });
 
-    return {
+    const undoResult = {
       matchId: innings.matchId,
       undoneBallId: lastBall.id,
     };
+
+    if (operationId) {
+      try {
+        await tx.scoringOperation.create({
+          data: {
+            operationId,
+            matchId: innings.matchId,
+            inningsId,
+            status: 'PROCESSED',
+            result: undoResult,
+            clientId: clientId || null,
+          },
+        });
+      } catch (err: any) {
+        if (err?.code === 'P2002' || err?.message?.includes('Unique constraint')) {
+          const raceOp = await tx.scoringOperation.findUnique({
+            where: { operationId },
+          });
+          if (raceOp?.result) {
+            return raceOp.result;
+          }
+        }
+        throw err;
+      }
+    }
+
+    return undoResult;
   }, {
     maxWait: 15000,
     timeout: 30000,
@@ -1330,11 +1462,8 @@ export async function undoLastDelivery(inningsId: string) {
   }).catch(() => {});
 
   const updatedMatch = await getMatchDetail(result.matchId);
-
   if (updatedMatch) {
-    buildMatchBroadcastPayload(updatedMatch)
-      .then((p) => { if (p) broadcastScoreUpdate(p); })
-      .catch(() => {});
+    notifyMatchUpdated(updatedMatch);
   }
 
   return { success: true, updatedMatch };
@@ -1343,8 +1472,28 @@ export async function undoLastDelivery(inningsId: string) {
 /**
  * Changes the active bowler on an innings.
  */
-export async function changeBowler(inningsId: string, bowlerId: string) {
+export async function changeBowler(inningsId: string, bowlerId: string, operationId?: string, clientId?: string) {
   const session = await requireAdminAuth();
+
+  if (operationId) {
+    const existingOp = await (prisma as any).scoringOperation.findUnique({
+      where: { operationId },
+    });
+    if (existingOp && existingOp.status === 'PROCESSED' && existingOp.result) {
+      let updatedMatch: any = null;
+      if (process.env.NODE_ENV !== 'test') {
+        try {
+          updatedMatch = await getMatchDetail(existingOp.matchId);
+        } catch {}
+      }
+      return {
+        success: true,
+        ...(existingOp.result as any),
+        updatedMatch,
+        idempotentReplay: true,
+      };
+    }
+  }
 
   const innings = await (prisma as any).innings.findUnique({
     where: { id: inningsId },
@@ -1372,6 +1521,15 @@ export async function changeBowler(inningsId: string, bowlerId: string) {
   await prisma.$transaction(async (tx: any) => {
     await tx.$executeRaw`select id from "Innings" where id = ${inningsId} for update;`;
 
+    if (operationId) {
+      const existingOp = await tx.scoringOperation.findUnique({
+        where: { operationId },
+      });
+      if (existingOp && existingOp.status === 'PROCESSED' && existingOp.result) {
+        return existingOp.result;
+      }
+    }
+
     // Unmark old current bowler
     await tx.inningsBowler.updateMany({
       where: { inningsId },
@@ -1395,6 +1553,31 @@ export async function changeBowler(inningsId: string, bowlerId: string) {
       where: { id: inningsId },
       data: { currentBowlerId: bowlerId },
     });
+
+    if (operationId) {
+      try {
+        await tx.scoringOperation.create({
+          data: {
+            operationId,
+            matchId: innings.matchId,
+            inningsId,
+            status: 'PROCESSED',
+            result: { matchId: innings.matchId, bowlerId },
+            clientId: clientId || null,
+          },
+        });
+      } catch (err: any) {
+        if (err?.code === 'P2002' || err?.message?.includes('Unique constraint')) {
+          const raceOp = await tx.scoringOperation.findUnique({
+            where: { operationId },
+          });
+          if (raceOp?.result) {
+            return raceOp.result;
+          }
+        }
+        throw err;
+      }
+    }
   }, {
     maxWait: 15000,
     timeout: 30000,
@@ -1411,18 +1594,39 @@ export async function changeBowler(inningsId: string, bowlerId: string) {
     },
   }).catch(() => {});
 
-  buildMatchBroadcastPayload(innings.matchId)
-    .then((p) => { if (p) broadcastScoreUpdate(p); })
-    .catch(() => {});
+  const updatedMatch = await getMatchDetail(innings.matchId);
+  if (updatedMatch) {
+    notifyMatchUpdated(updatedMatch);
+  }
 
-  return { success: true, updatedMatch: await getMatchDetail(innings.matchId) };
+  return { success: true, updatedMatch };
 }
 
 /**
  * Manually swaps the striker and non-striker.
  */
-export async function swapStriker(inningsId: string) {
+export async function swapStriker(inningsId: string, operationId?: string, clientId?: string) {
   const session = await requireAdminAuth();
+
+  if (operationId) {
+    const existingOp = await (prisma as any).scoringOperation.findUnique({
+      where: { operationId },
+    });
+    if (existingOp && existingOp.status === 'PROCESSED' && existingOp.result) {
+      let updatedMatch: any = null;
+      if (process.env.NODE_ENV !== 'test') {
+        try {
+          updatedMatch = await getMatchDetail(existingOp.matchId);
+        } catch {}
+      }
+      return {
+        success: true,
+        ...(existingOp.result as any),
+        updatedMatch,
+        idempotentReplay: true,
+      };
+    }
+  }
 
   const innings = await (prisma as any).innings.findUnique({
     where: { id: inningsId },
@@ -1441,6 +1645,16 @@ export async function swapStriker(inningsId: string) {
 
   await prisma.$transaction(async (tx: any) => {
     await tx.$executeRaw`select id from "Innings" where id = ${inningsId} for update;`;
+
+    if (operationId) {
+      const existingOp = await tx.scoringOperation.findUnique({
+        where: { operationId },
+      });
+      if (existingOp && existingOp.status === 'PROCESSED' && existingOp.result) {
+        return existingOp.result;
+      }
+    }
+
     await tx.innings.update({
       where: { id: inningsId },
       data: {
@@ -1458,6 +1672,31 @@ export async function swapStriker(inningsId: string) {
       where: { inningsId, playerId: newNonStrikerId },
       data: { isStriker: false },
     });
+
+    if (operationId) {
+      try {
+        await tx.scoringOperation.create({
+          data: {
+            operationId,
+            matchId: innings.matchId,
+            inningsId,
+            status: 'PROCESSED',
+            result: { matchId: innings.matchId, strikerId: newStrikerId, nonStrikerId: newNonStrikerId },
+            clientId: clientId || null,
+          },
+        });
+      } catch (err: any) {
+        if (err?.code === 'P2002' || err?.message?.includes('Unique constraint')) {
+          const raceOp = await tx.scoringOperation.findUnique({
+            where: { operationId },
+          });
+          if (raceOp?.result) {
+            return raceOp.result;
+          }
+        }
+        throw err;
+      }
+    }
   });
 
   (prisma as any).adminAuditLog.create({
@@ -1471,19 +1710,40 @@ export async function swapStriker(inningsId: string) {
     },
   }).catch(() => {});
 
-  buildMatchBroadcastPayload(innings.matchId)
-    .then((p) => { if (p) broadcastScoreUpdate(p); })
-    .catch(() => {});
+  const updatedMatch = await getMatchDetail(innings.matchId);
+  if (updatedMatch) {
+    notifyMatchUpdated(updatedMatch);
+  }
 
-  return { success: true, updatedMatch: await getMatchDetail(innings.matchId) };
+  return { success: true, updatedMatch };
 }
 
 /**
  * Replaces a batter (e.g. after a wicket, injury, or correction).
  * If the selected player is already active at the other role, it automatically swaps roles.
  */
-export async function switchBatter(inningsId: string, role: 'striker' | 'nonStriker', newPlayerId: string) {
+export async function switchBatter(inningsId: string, role: 'striker' | 'nonStriker', newPlayerId: string, operationId?: string, clientId?: string) {
   const session = await requireAdminAuth();
+
+  if (operationId) {
+    const existingOp = await (prisma as any).scoringOperation.findUnique({
+      where: { operationId },
+    });
+    if (existingOp && existingOp.status === 'PROCESSED' && existingOp.result) {
+      let updatedMatch: any = null;
+      if (process.env.NODE_ENV !== 'test') {
+        try {
+          updatedMatch = await getMatchDetail(existingOp.matchId);
+        } catch {}
+      }
+      return {
+        success: true,
+        ...(existingOp.result as any),
+        updatedMatch,
+        idempotentReplay: true,
+      };
+    }
+  }
 
   const innings = await (prisma as any).innings.findUnique({
     where: { id: inningsId },
@@ -1510,6 +1770,16 @@ export async function switchBatter(inningsId: string, role: 'striker' | 'nonStri
 
   await prisma.$transaction(async (tx: any) => {
     await tx.$executeRaw`select id from "Innings" where id = ${inningsId} for update;`;
+
+    if (operationId) {
+      const existingOp = await tx.scoringOperation.findUnique({
+        where: { operationId },
+      });
+      if (existingOp && existingOp.status === 'PROCESSED' && existingOp.result) {
+        return existingOp.result;
+      }
+    }
+
     const batterCount = await tx.inningsBatter.count({ where: { inningsId } });
 
     // Determine if newPlayerId is already active at the opposite role
@@ -1577,6 +1847,31 @@ export async function switchBatter(inningsId: string, role: 'striker' | 'nonStri
         currentNonStrikerId: nextNonStrikerId,
       },
     });
+
+    if (operationId) {
+      try {
+        await tx.scoringOperation.create({
+          data: {
+            operationId,
+            matchId: innings.matchId,
+            inningsId,
+            status: 'PROCESSED',
+            result: { matchId: innings.matchId, role, newPlayerId, nextStrikerId, nextNonStrikerId },
+            clientId: clientId || null,
+          },
+        });
+      } catch (err: any) {
+        if (err?.code === 'P2002' || err?.message?.includes('Unique constraint')) {
+          const raceOp = await tx.scoringOperation.findUnique({
+            where: { operationId },
+          });
+          if (raceOp?.result) {
+            return raceOp.result;
+          }
+        }
+        throw err;
+      }
+    }
   });
 
   (prisma as any).adminAuditLog.create({
@@ -1590,11 +1885,12 @@ export async function switchBatter(inningsId: string, role: 'striker' | 'nonStri
     },
   }).catch(() => {});
 
-  buildMatchBroadcastPayload(innings.matchId)
-    .then((p) => { if (p) broadcastScoreUpdate(p); })
-    .catch(() => {});
+  const updatedMatch = await getMatchDetail(innings.matchId);
+  if (updatedMatch) {
+    notifyMatchUpdated(updatedMatch);
+  }
 
-  return { success: true, updatedMatch: await getMatchDetail(innings.matchId) };
+  return { success: true, updatedMatch };
 }
 
 /**
@@ -1721,9 +2017,7 @@ export async function startSuperOver(matchId: string, input: { battingFirstTeamI
 
   const updatedMatch = await getMatchDetail(matchId);
   if (updatedMatch) {
-    buildMatchBroadcastPayload(updatedMatch)
-      .then((p) => { if (p) broadcastScoreUpdate(p); })
-      .catch(() => {});
+    notifyMatchUpdated(updatedMatch);
   }
 
   return { success: true, inningsId: superOverInn.id, updatedMatch };
@@ -1762,9 +2056,10 @@ export async function completeMatch(matchId: string, input: { winnerTeamId?: str
     },
   }).catch(() => {});
 
-  buildMatchBroadcastPayload(matchId)
-    .then((p) => { if (p) broadcastScoreUpdate(p); })
-    .catch(() => {});
+  const updatedMatch = await getMatchDetail(matchId);
+  if (updatedMatch) {
+    notifyMatchUpdated(updatedMatch);
+  }
 
   if (match.tournamentId) {
     import('@/lib/tournament/tournament-service')
@@ -1772,7 +2067,7 @@ export async function completeMatch(matchId: string, input: { winnerTeamId?: str
       .catch(() => {});
   }
 
-  return { success: true, updatedMatch: await getMatchDetail(matchId) };
+  return { success: true, updatedMatch };
 }
 
 /**
@@ -2272,13 +2567,13 @@ export async function getTournamentStats(): Promise<TournamentStatsResult> {
       id: m.teamA.id,
       name: m.teamA.name,
       shortName: m.teamA.shortName,
-      logoUrl: m.teamA.logoUrl,
+      logoUrl: normalizeImageUrl(m.teamA.logoUrl),
     },
     teamB: {
       id: m.teamB.id,
       name: m.teamB.name,
       shortName: m.teamB.shortName,
-      logoUrl: m.teamB.logoUrl,
+      logoUrl: normalizeImageUrl(m.teamB.logoUrl),
     },
     innings: (m.innings || []).map((inn: any) => ({
       inningsNumber: inn.inningsNumber,

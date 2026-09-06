@@ -27,7 +27,9 @@ export const recordDeliverySchema = z.object({
   dismissedPlayerId: z.string().trim().min(1).max(64).optional(),
   newBatterId: z.string().trim().min(1).max(64).optional(),
   commentary: z.string().trim().max(500).optional(),
-  expectedUpdatedAt: z.union([z.string(), z.date()]).optional(),
+  expectedUpdatedAt: z.any().optional(),
+  operationId: z.string().trim().min(1).max(128).optional(),
+  clientId: z.string().trim().min(1).max(128).optional(),
 });
 
 export const createMatchSchema = z.object({
@@ -59,11 +61,15 @@ export const openingLineupSchema = z.object({
 
 export const changeBowlerSchema = z.object({
   bowlerId: z.string().trim().min(1).max(64),
+  operationId: z.string().trim().min(1).max(128).optional(),
+  clientId: z.string().trim().min(1).max(128).optional(),
 });
 
 export const switchBatterSchema = z.object({
   role: z.enum(["striker", "nonStriker"]),
   newPlayerId: z.string().trim().min(1).max(64),
+  operationId: z.string().trim().min(1).max(128).optional(),
+  clientId: z.string().trim().min(1).max(128).optional(),
 });
 
 export const completeMatchSchema = z.object({

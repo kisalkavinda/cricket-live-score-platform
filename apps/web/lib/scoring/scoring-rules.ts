@@ -121,9 +121,40 @@ export function validateDismissalLegality(params: {
  *
  * @param ballEvents Array of ball events ordered newest-first (createdAt desc)
  */
-export function isFreeHitActive(ballEvents: Array<{ extraType?: string; isLegal?: boolean }>): boolean {
+export function isFreeHitActive(ballEvents: Array<{ extraType?: string; isLegal?: boolean; createdAt?: any; overNumber?: number; ballNumber?: number }>): boolean {
   if (!ballEvents || ballEvents.length === 0) return false;
-  for (const b of ballEvents) {
+
+  const getBallTimestamp = (b: any): number => {
+    if (!b) return 0;
+    if (b.createdAt instanceof Date) {
+      const t = b.createdAt.getTime();
+      if (!isNaN(t)) return t;
+    }
+    if (typeof b.createdAt === 'string') {
+      const t = new Date(b.createdAt).getTime();
+      if (!isNaN(t)) return t;
+    }
+    if (typeof b.createdAt === 'number' && !isNaN(b.createdAt)) {
+      return b.createdAt;
+    }
+    if (typeof b.id === 'string' && b.id.startsWith('temp-')) {
+      const t = Number(b.id.replace('temp-', ''));
+      if (!isNaN(t)) return t;
+    }
+    return 0;
+  };
+
+  // Sort newest first (highest timestamp / latest over & ball)
+  const sorted = [...ballEvents].sort((a, b) => {
+    const tA = getBallTimestamp(a);
+    const tB = getBallTimestamp(b);
+    if (tA && tB && tA !== tB) return tB - tA;
+    const ovDiff = (b.overNumber ?? 0) - (a.overNumber ?? 0);
+    if (ovDiff !== 0) return ovDiff;
+    return (b.ballNumber ?? 0) - (a.ballNumber ?? 0);
+  });
+
+  for (const b of sorted) {
     if (b.extraType === 'NO_BALL') return true;
     if (b.extraType === 'WIDE') continue;
     return false;

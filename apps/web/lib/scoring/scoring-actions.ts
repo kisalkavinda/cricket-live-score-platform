@@ -75,44 +75,44 @@ export async function recordDeliveryAction(inningsId: string, input: RecordDeliv
   return await recordDelivery(inningsId.trim(), parsed.data);
 }
 
-export async function undoLastDeliveryAction(inningsId: string) {
+export async function undoLastDeliveryAction(inningsId: string, operationId?: string, clientId?: string) {
   await requireAdminAuth();
   if (!inningsId || typeof inningsId !== 'string') {
     throw new Error('Invalid innings ID.');
   }
-  return await undoLastDelivery(inningsId.trim());
+  return await undoLastDelivery(inningsId.trim(), operationId?.trim(), clientId?.trim());
 }
 
-export async function changeBowlerAction(inningsId: string, bowlerId: string) {
+export async function changeBowlerAction(inningsId: string, bowlerId: string, operationId?: string, clientId?: string) {
   await requireAdminAuth();
   if (!inningsId || typeof inningsId !== 'string') {
     throw new Error('Invalid innings ID.');
   }
-  const parsed = changeBowlerSchema.safeParse({ bowlerId });
+  const parsed = changeBowlerSchema.safeParse({ bowlerId, operationId, clientId });
   if (!parsed.success) {
     throw new Error(`Invalid bowler: ${parsed.error.issues[0]?.message}`);
   }
-  return await changeBowler(inningsId.trim(), parsed.data.bowlerId);
+  return await changeBowler(inningsId.trim(), parsed.data.bowlerId, parsed.data.operationId, parsed.data.clientId);
 }
 
-export async function swapStrikerAction(inningsId: string) {
+export async function swapStrikerAction(inningsId: string, operationId?: string, clientId?: string) {
   await requireAdminAuth();
   if (!inningsId || typeof inningsId !== 'string') {
     throw new Error('Invalid innings ID.');
   }
-  return await swapStriker(inningsId.trim());
+  return await swapStriker(inningsId.trim(), operationId?.trim(), clientId?.trim());
 }
 
-export async function switchBatterAction(inningsId: string, role: 'striker' | 'nonStriker', newPlayerId: string) {
+export async function switchBatterAction(inningsId: string, role: 'striker' | 'nonStriker', newPlayerId: string, operationId?: string, clientId?: string) {
   await requireAdminAuth();
   if (!inningsId || typeof inningsId !== 'string') {
     throw new Error('Invalid innings ID.');
   }
-  const parsed = switchBatterSchema.safeParse({ role, newPlayerId });
+  const parsed = switchBatterSchema.safeParse({ role, newPlayerId, operationId, clientId });
   if (!parsed.success) {
     throw new Error(`Invalid batter switch: ${parsed.error.issues[0]?.message}`);
   }
-  return await switchBatter(inningsId.trim(), parsed.data.role, parsed.data.newPlayerId);
+  return await switchBatter(inningsId.trim(), parsed.data.role, parsed.data.newPlayerId, parsed.data.operationId, parsed.data.clientId);
 }
 
 export async function endInningsAction(inningsId: string) {

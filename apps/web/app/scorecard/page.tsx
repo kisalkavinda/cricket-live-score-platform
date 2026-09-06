@@ -6,6 +6,9 @@ import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { createClient } from '@/utils/supabase/client';
+import MatchWormChart from '@/components/analytics/MatchWormChart';
+import LiveEquationTicker, { HeadToHeadBoundaryCounter } from '@/components/analytics/LiveEquationTicker';
+import BallTimelineFilter from '@/components/analytics/BallTimelineFilter';
 
 function ScorecardContent() {
   const searchParams = useSearchParams();
@@ -14,12 +17,13 @@ function ScorecardContent() {
   const [match, setMatch] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [activeTab, setActiveTab] = useState<string>('inn1');
+  const [viewMode, setViewMode] = useState<'SCORECARD' | 'WORM' | 'COMMENTARY'>('SCORECARD');
   const [lastLivePing, setLastLivePing] = useState<string>('');
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const inFlightRef = useRef<boolean>(false);
 
-  const fetchScorecard = useCallback(async (manual = false) => {
-    if (inFlightRef.current) return;
+  const fetchScorecard = useCallback(async (manual = false, force = false) => {
+    if (inFlightRef.current && !force) return;
     inFlightRef.current = true;
     if (manual) setIsRefreshing(true);
 
@@ -75,41 +79,45 @@ function ScorecardContent() {
   }, [requestedMatchId]);
 
   useEffect(() => {
-    fetchScorecard();
+    fetchScorecard(false, true);
+    // Reliable fallback polling (5s) in case WebSocket drops
     const interval = setInterval(() => {
-      fetchScorecard();
-    }, 8000);
+      fetchScorecard(false, false);
+    }, 5000);
     return () => clearInterval(interval);
   }, [fetchScorecard]);
 
   // Realtime Supabase Broadcast Subscription
+  const activeMatchId = requestedMatchId || match?.id;
   useEffect(() => {
-    if (!match?.id) return;
-    let channel: any = null;
+    if (!activeMatchId) return;
+    let matchChannel: any = null;
+
     try {
       const supabase = createClient();
-      channel = supabase.channel(`match:${match.id}`);
-      channel
+      matchChannel = supabase.channel(`match:${activeMatchId}`);
+      matchChannel
         .on('broadcast', { event: 'score_update' }, (msg: any) => {
           if (msg?.payload?.currentInnings) {
             setActiveTab(`inn${msg.payload.currentInnings}`);
           }
-          fetchScorecard(false);
+          // Fast refresh from in-memory warm cache
+          fetchScorecard(false, true);
         })
         .subscribe();
-    } catch (e) {
-      console.warn('[Scorecard] Realtime channel error:', e);
+    } catch (err) {
+      console.warn('[Scorecard] Realtime subscription error:', err);
     }
 
     return () => {
-      if (channel) {
+      if (matchChannel) {
         try {
           const supabase = createClient();
-          supabase.removeChannel(channel);
-        } catch (e) {}
+          supabase.removeChannel(matchChannel);
+        } catch {}
       }
     };
-  }, [match?.id, fetchScorecard]);
+  }, [activeMatchId, fetchScorecard]);
 
   if (loading) {
     return (
@@ -249,8 +257,45 @@ function ScorecardContent() {
     }
   }
 
-  const teamAInnings = match.innings?.find((i: any) => i.battingTeamId === match.teamAId);
-  const teamBInnings = match.innings?.find((i: any) => i.battingTeamId === match.teamBId);
+  // Google Cricket Standard:
+  // Pre-match (before toss): Show Team A (Left) vs Team B (Right)
+  // Once match starts / toss decided:
+  // Left: The team batting in Innings 1 (with their 1st innings score)
+  // Right: The team batting in Innings 2 (with their 2nd innings score)
+  // Indicator: A badge or 🏏 next to the team currently batting
+  const isPreMatch = match.status === 'UPCOMING' && !match.tossWinnerId;
+  const inn1 = match.innings?.find((i: any) => i.inningsNumber === 1);
+  const inn2 = match.innings?.find((i: any) => i.inningsNumber === 2);
+
+  let leftTeam = match.teamA;
+  let rightTeam = match.teamB;
+  let leftTeamInnings: any = null;
+  let rightTeamInnings: any = null;
+  let isLeftBattingCurrent = false;
+  let isRightBattingCurrent = false;
+
+  if (isPreMatch) {
+    leftTeam = match.teamA;
+    rightTeam = match.teamB;
+  } else {
+    const inn1BattingTeamId = inn1?.battingTeamId || (
+      match.tossWinnerId
+        ? (match.tossDecision === 'BAT' ? match.tossWinnerId : (match.tossWinnerId === match.teamAId ? match.teamBId : match.teamAId))
+        : match.teamAId
+    );
+    const inn2BattingTeamId = inn1BattingTeamId === match.teamAId ? match.teamBId : match.teamAId;
+
+    leftTeam = inn1BattingTeamId === match.teamBId ? match.teamB : match.teamA;
+    rightTeam = inn2BattingTeamId === match.teamBId ? match.teamB : match.teamA;
+
+    leftTeamInnings = inn1 || match.innings?.find((i: any) => i.battingTeamId === leftTeam?.id && i.inningsNumber === 1);
+    rightTeamInnings = inn2 || match.innings?.find((i: any) => i.battingTeamId === rightTeam?.id && i.inningsNumber === 2);
+
+    if (match.status === 'LIVE' && currentInnings) {
+      isLeftBattingCurrent = currentInnings.battingTeamId === leftTeam?.id;
+      isRightBattingCurrent = currentInnings.battingTeamId === rightTeam?.id;
+    }
+  }
 
   return (
     <main style={{ paddingTop: '86px', paddingBottom: 'var(--space-3xl)' }}>
@@ -411,137 +456,285 @@ function ScorecardContent() {
             )}
           </div>
 
-          {/* Unified Scoreboard Layout (Grid that never breaks on mobile) */}
-          <div style={{ padding: '20px 16px' }}>
-            <div className="scorecard-match-header-grid">
-              {/* Team A */}
-              <div className="scorecard-team-a-box">
-                {match.teamA?.logoUrl ? (
-                  <img
-                    src={match.teamA.logoUrl}
-                    alt={match.teamA.name}
-                    style={{
-                      width: '44px',
-                      height: '44px',
-                      borderRadius: '50%',
-                      objectFit: 'cover',
-                      border: '1.5px solid rgba(255, 255, 255, 0.2)',
-                      backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                      flexShrink: 0,
-                    }}
-                  />
-                ) : (
-                  <div
-                    style={{
-                      width: '44px',
-                      height: '44px',
-                      borderRadius: '50%',
-                      background: 'rgba(255, 255, 255, 0.1)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: '1.2rem',
-                      fontWeight: 900,
-                      border: '1px solid rgba(255, 255, 255, 0.15)',
-                      flexShrink: 0,
-                    }}
-                  >
-                    🏏
-                  </div>
-                )}
-                <div>
-                  <div className="scorecard-team-title" style={{ fontFamily: 'var(--font-display)', fontSize: '1.25rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--color-paper)', lineHeight: 1.1 }}>
-                    {match.teamA?.name}
-                  </div>
-                  <div style={{ fontFamily: 'var(--font-data)', fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.5)', fontWeight: 600 }}>
-                    {match.teamA?.shortName}
-                  </div>
-                  {teamAInnings && (
-                    <div style={{ fontFamily: 'var(--font-data)', fontSize: '0.85rem', color: 'var(--color-gold)', fontWeight: 700, marginTop: '2px' }}>
-                      {teamAInnings.runs}/{teamAInnings.wickets} ({teamAInnings.overs}.{teamAInnings.balls} ov)
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Score in Center */}
-              <div className="scorecard-center-score-box">
-                {currentInnings ? (
-                  <div>
-                    <div
-                      className="scorecard-main-score"
+          {/* Unified Scoreboard Layout (Desktop 3-Column / Mobile Google Cricket Stacked) */}
+          <div style={{ padding: '16px' }}>
+            {/* Desktop View (>= 768px) */}
+            <div className="scorecard-desktop-view">
+              <div className="scorecard-match-header-grid">
+                {/* Left Team (Batting 1st - Google Cricket Standard) */}
+                <div className="scorecard-team-a-box">
+                  {leftTeam?.logoUrl ? (
+                    <img
+                      src={leftTeam.logoUrl}
+                      alt={leftTeam.name}
                       style={{
-                        fontFamily: 'var(--font-data)',
-                        fontSize: '2.2rem',
+                        width: '44px',
+                        height: '44px',
+                        borderRadius: '50%',
+                        objectFit: 'cover',
+                        border: '1.5px solid rgba(255, 255, 255, 0.2)',
+                        backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                        flexShrink: 0,
+                      }}
+                    />
+                  ) : (
+                    <div
+                      style={{
+                        width: '44px',
+                        height: '44px',
+                        borderRadius: '50%',
+                        background: 'rgba(255, 255, 255, 0.1)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '1.2rem',
                         fontWeight: 900,
-                        color: 'var(--color-gold)',
-                        letterSpacing: '-0.02em',
-                        lineHeight: 1,
-                        marginBottom: '4px',
+                        border: '1px solid rgba(255, 255, 255, 0.15)',
+                        flexShrink: 0,
                       }}
                     >
-                      {currentInnings.runs} / {currentInnings.wickets}
+                      🏏
                     </div>
-                    <div className="scorecard-overs-text" style={{ fontFamily: 'var(--font-data)', fontSize: '0.85rem', fontWeight: 700, color: 'var(--color-paper)', whiteSpace: 'nowrap' }}>
-                      {currentInnings.overs}.{currentInnings.balls} / {match.oversPerInnings} Overs
+                  )}
+                  <div>
+                    <div className="scorecard-team-title" style={{ fontFamily: 'var(--font-display)', fontSize: '1.25rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--color-paper)', lineHeight: 1.1, display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                      <span>{leftTeam?.name}</span>
+                      {isLeftBattingCurrent && (
+                        <span
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '3px',
+                            padding: '2px 7px',
+                            borderRadius: '4px',
+                            background: 'rgba(239, 68, 68, 0.2)',
+                            border: '1px solid #EF4444',
+                            color: '#FCA5A5',
+                            fontSize: '0.68rem',
+                            fontWeight: 800,
+                            letterSpacing: '0.04em',
+                            fontFamily: 'var(--font-data)',
+                          }}
+                        >
+                          🏏 BATTING
+                        </span>
+                      )}
                     </div>
-                    <div style={{ fontFamily: 'var(--font-body)', fontSize: '0.72rem', color: 'rgba(255, 255, 255, 0.5)', marginTop: '2px', whiteSpace: 'nowrap' }}>
-                      CRR: {getRunRate(currentInnings.runs, currentInnings.overs, currentInnings.balls)} {requiredRunRate !== '0.00' ? `• RRR: ${requiredRunRate}` : ''}
+                    <div style={{ fontFamily: 'var(--font-data)', fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.5)', fontWeight: 600 }}>
+                      {leftTeam?.shortName}
                     </div>
+                    {leftTeamInnings ? (
+                      <div style={{ fontFamily: 'var(--font-data)', fontSize: '0.85rem', color: 'var(--color-gold)', fontWeight: 700, marginTop: '2px' }}>
+                        {leftTeamInnings.runs}/{leftTeamInnings.wickets} ({leftTeamInnings.overs}.{leftTeamInnings.balls} ov)
+                      </div>
+                    ) : !isPreMatch ? (
+                      <div style={{ fontFamily: 'var(--font-data)', fontSize: '0.78rem', color: 'rgba(255, 255, 255, 0.4)', marginTop: '2px' }}>
+                        Yet to bat
+                      </div>
+                    ) : null}
                   </div>
-                ) : (
-                  <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.2rem', fontWeight: 800, color: 'rgba(255, 255, 255, 0.5)' }}>
-                    VS
-                  </div>
-                )}
-              </div>
+                </div>
 
-              {/* Team B */}
-              <div className="scorecard-team-b-box">
-                <div>
-                  <div className="scorecard-team-title" style={{ fontFamily: 'var(--font-display)', fontSize: '1.25rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--color-paper)', lineHeight: 1.1 }}>
-                    {match.teamB?.name}
-                  </div>
-                  <div style={{ fontFamily: 'var(--font-data)', fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.5)', fontWeight: 600 }}>
-                    {match.teamB?.shortName}
-                  </div>
-                  {teamBInnings && (
-                    <div style={{ fontFamily: 'var(--font-data)', fontSize: '0.85rem', color: 'var(--color-gold)', fontWeight: 700, marginTop: '2px' }}>
-                      {teamBInnings.runs}/{teamBInnings.wickets} ({teamBInnings.overs}.{teamBInnings.balls} ov)
+                {/* Score in Center */}
+                <div className="scorecard-center-score-box">
+                  {currentInnings && match.status === 'LIVE' ? (
+                    <div>
+                      <div
+                        className="scorecard-main-score"
+                        style={{
+                          fontFamily: 'var(--font-data)',
+                          fontSize: '2.2rem',
+                          fontWeight: 900,
+                          color: 'var(--color-gold)',
+                          letterSpacing: '-0.02em',
+                          lineHeight: 1,
+                          marginBottom: '4px',
+                        }}
+                      >
+                        {currentInnings.runs} / {currentInnings.wickets}
+                      </div>
+                      <div className="scorecard-overs-text" style={{ fontFamily: 'var(--font-data)', fontSize: '0.85rem', fontWeight: 700, color: 'var(--color-paper)', whiteSpace: 'nowrap' }}>
+                        {currentInnings.overs}.{currentInnings.balls} / {match.oversPerInnings} Overs
+                      </div>
+                      <div style={{ fontFamily: 'var(--font-body)', fontSize: '0.72rem', color: 'rgba(255, 255, 255, 0.5)', marginTop: '2px', whiteSpace: 'nowrap' }}>
+                        CRR: {getRunRate(currentInnings.runs, currentInnings.overs, currentInnings.balls)} {requiredRunRate !== '0.00' ? `• RRR: ${requiredRunRate}` : ''}
+                      </div>
+                    </div>
+                  ) : (
+                    <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.2rem', fontWeight: 800, color: 'rgba(255, 255, 255, 0.5)' }}>
+                      {match.status === 'UPCOMING' ? 'NOT STARTED' : match.status}
                     </div>
                   )}
                 </div>
-                {match.teamB?.logoUrl ? (
-                  <img
-                    src={match.teamB.logoUrl}
-                    alt={match.teamB.name}
-                    style={{
-                      width: '44px',
-                      height: '44px',
-                      borderRadius: '50%',
-                      objectFit: 'cover',
-                      border: '1.5px solid rgba(255, 255, 255, 0.2)',
-                      backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                      flexShrink: 0,
-                    }}
-                  />
-                ) : (
-                  <div
-                    style={{
-                      width: '44px',
-                      height: '44px',
-                      borderRadius: '50%',
-                      background: 'rgba(255, 255, 255, 0.1)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: '1.2rem',
-                      fontWeight: 900,
-                      border: '1px solid rgba(255, 255, 255, 0.15)',
-                      flexShrink: 0,
-                    }}
-                  >
-                    🦁
+
+                {/* Right Team (Batting 2nd - Google Cricket Standard) */}
+                <div className="scorecard-team-b-box">
+                  <div>
+                    <div className="scorecard-team-title" style={{ fontFamily: 'var(--font-display)', fontSize: '1.25rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--color-paper)', lineHeight: 1.1, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '8px', flexWrap: 'wrap' }}>
+                      {isRightBattingCurrent && (
+                        <span
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '3px',
+                            padding: '2px 7px',
+                            borderRadius: '4px',
+                            background: 'rgba(239, 68, 68, 0.2)',
+                            border: '1px solid #EF4444',
+                            color: '#FCA5A5',
+                            fontSize: '0.68rem',
+                            fontWeight: 800,
+                            letterSpacing: '0.04em',
+                            fontFamily: 'var(--font-data)',
+                          }}
+                        >
+                          🏏 BATTING
+                        </span>
+                      )}
+                      <span>{rightTeam?.name}</span>
+                    </div>
+                    <div style={{ fontFamily: 'var(--font-data)', fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.5)', fontWeight: 600 }}>
+                      {rightTeam?.shortName}
+                    </div>
+                    {rightTeamInnings ? (
+                      <div style={{ fontFamily: 'var(--font-data)', fontSize: '0.85rem', color: 'var(--color-gold)', fontWeight: 700, marginTop: '2px' }}>
+                        {rightTeamInnings.runs}/{rightTeamInnings.wickets} ({rightTeamInnings.overs}.{rightTeamInnings.balls} ov)
+                      </div>
+                    ) : !isPreMatch ? (
+                      <div style={{ fontFamily: 'var(--font-data)', fontSize: '0.78rem', color: 'rgba(255, 255, 255, 0.4)', marginTop: '2px' }}>
+                        Yet to bat
+                      </div>
+                    ) : null}
+                  </div>
+                  {rightTeam?.logoUrl ? (
+                    <img
+                      src={rightTeam.logoUrl}
+                      alt={rightTeam.name}
+                      style={{
+                        width: '44px',
+                        height: '44px',
+                        borderRadius: '50%',
+                        objectFit: 'cover',
+                        border: '1.5px solid rgba(255, 255, 255, 0.2)',
+                        backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                        flexShrink: 0,
+                      }}
+                    />
+                  ) : (
+                    <div
+                      style={{
+                        width: '44px',
+                        height: '44px',
+                        borderRadius: '50%',
+                        background: 'rgba(255, 255, 255, 0.1)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '1.2rem',
+                        fontWeight: 900,
+                        border: '1px solid rgba(255, 255, 255, 0.15)',
+                        flexShrink: 0,
+                      }}
+                    >
+                      🦁
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Mobile View (< 768px): Google Cricket Standard Side-by-Side Dual Team View */}
+            <div className="scorecard-mobile-view">
+              <div className="scorecard-mobile-dual-grid">
+                {/* Left Team Card (Batting 1st) */}
+                <div className={`scorecard-mobile-team-card left ${isLeftBattingCurrent ? 'is-batting' : ''}`}>
+                  <div className="scorecard-mobile-card-header">
+                    {leftTeam?.logoUrl ? (
+                      <img src={leftTeam.logoUrl} alt={leftTeam.name} className="scorecard-mobile-logo" />
+                    ) : (
+                      <div className="scorecard-mobile-logo-placeholder">🏏</div>
+                    )}
+                    <div className="scorecard-mobile-card-names">
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexWrap: 'wrap' }}>
+                        <span className="scorecard-mobile-card-title">{leftTeam?.name || 'Team 1'}</span>
+                      </div>
+                      {isLeftBattingCurrent && <span className="scorecard-mobile-batting-badge">🏏 BATTING</span>}
+                      <span className="scorecard-mobile-shortname">{leftTeam?.shortName}</span>
+                    </div>
+                  </div>
+
+                  <div className="scorecard-mobile-card-scores left">
+                    {leftTeamInnings ? (
+                      <>
+                        <span className="scorecard-mobile-big-score">{leftTeamInnings.runs}/{leftTeamInnings.wickets}</span>
+                        <span className="scorecard-mobile-overs-tag">({leftTeamInnings.overs}.{leftTeamInnings.balls} ov)</span>
+                      </>
+                    ) : isLeftBattingCurrent && currentInnings ? (
+                      <>
+                        <span className="scorecard-mobile-big-score">{currentInnings.runs}/{currentInnings.wickets}</span>
+                        <span className="scorecard-mobile-overs-tag">({currentInnings.overs}.{currentInnings.balls} ov)</span>
+                      </>
+                    ) : (
+                      <span className="scorecard-mobile-yet-text">{isPreMatch ? leftTeam?.shortName : 'Yet to bat'}</span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Center Divider / VS Badge */}
+                <div className="scorecard-mobile-vs-divider">
+                  <span className="scorecard-mobile-vs-badge">VS</span>
+                </div>
+
+                {/* Right Team Card (Batting 2nd) */}
+                <div className={`scorecard-mobile-team-card right ${isRightBattingCurrent ? 'is-batting' : ''}`}>
+                  <div className="scorecard-mobile-card-header right">
+                    {rightTeam?.logoUrl ? (
+                      <img src={rightTeam.logoUrl} alt={rightTeam.name} className="scorecard-mobile-logo" />
+                    ) : (
+                      <div className="scorecard-mobile-logo-placeholder">🦁</div>
+                    )}
+                    <div className="scorecard-mobile-card-names right">
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '4px', flexWrap: 'wrap' }}>
+                        <span className="scorecard-mobile-card-title">{rightTeam?.name || 'Team 2'}</span>
+                      </div>
+                      {isRightBattingCurrent && <span className="scorecard-mobile-batting-badge">🏏 BATTING</span>}
+                      <span className="scorecard-mobile-shortname">{rightTeam?.shortName}</span>
+                    </div>
+                  </div>
+
+                  <div className="scorecard-mobile-card-scores right">
+                    {rightTeamInnings ? (
+                      <>
+                        <span className="scorecard-mobile-big-score">{rightTeamInnings.runs}/{rightTeamInnings.wickets}</span>
+                        <span className="scorecard-mobile-overs-tag">({rightTeamInnings.overs}.{rightTeamInnings.balls} ov)</span>
+                      </>
+                    ) : isRightBattingCurrent && currentInnings ? (
+                      <>
+                        <span className="scorecard-mobile-big-score">{currentInnings.runs}/{currentInnings.wickets}</span>
+                        <span className="scorecard-mobile-overs-tag">({currentInnings.overs}.{currentInnings.balls} ov)</span>
+                      </>
+                    ) : (
+                      <span className="scorecard-mobile-yet-text">{isPreMatch ? rightTeam?.shortName : 'Yet to bat'}</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Mobile Match Status & Equation Strip */}
+              <div className="scorecard-mobile-status-strip">
+                <div className="scorecard-mobile-status-live">
+                  {match.status === 'LIVE' ? (
+                    <>
+                      <span className="dot" />
+                      <span>INNINGS {match.currentInnings} • {currentInnings?.overs}.{currentInnings?.balls}/{match.oversPerInnings} OV</span>
+                    </>
+                  ) : (
+                    <span>{match.status === 'UPCOMING' ? 'UPCOMING FIXTURE' : match.status}</span>
+                  )}
+                </div>
+                {currentInnings && (
+                  <div className="scorecard-mobile-rates">
+                    CRR: {getRunRate(currentInnings.runs, currentInnings.overs, currentInnings.balls)} {requiredRunRate !== '0.00' ? `• RRR: ${requiredRunRate}` : ''}
                   </div>
                 )}
               </div>
@@ -846,59 +1039,199 @@ function ScorecardContent() {
           </div>
         )}
 
-        {/* INNINGS SELECTOR TABS */}
+        {/* 1. LIVE EQUATION TICKER & BOUNDARY COUNTER */}
+        <div style={{ marginBottom: '18px' }}>
+          <LiveEquationTicker match={match} ballsPerOver={ballsPerOver} />
+        </div>
+
+        {/* 2. VIEW SELECTOR TABS */}
         <div
           style={{
             display: 'flex',
-            gap: '8px',
-            marginBottom: '16px',
+            background: 'rgba(255, 255, 255, 0.05)',
+            padding: '5px',
+            borderRadius: '12px',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            gap: '6px',
+            marginBottom: '18px',
             flexWrap: 'wrap',
           }}
         >
-          {allInnings.map((inn: any) => {
-            const isSelected = activeTab ? activeTab === `inn${inn.inningsNumber}` : inn.id === selectedInnings?.id;
-            const isSuperOver = inn.inningsNumber >= 3;
-            const label = inn.inningsNumber === 1 ? '1st Inn' : inn.inningsNumber === 2 ? '2nd Inn' : inn.inningsNumber === 3 ? '⚡ Super Over 1' : `⚡ Super Over ${inn.inningsNumber - 2}`;
-            return (
-              <button
-                key={inn.id}
-                onClick={() => setActiveTab(`inn${inn.inningsNumber}`)}
-                style={{
-                  flex: '1 1 auto',
-                  minWidth: '130px',
-                  minHeight: '38px',
-                  padding: '8px 14px',
-                  fontSize: '0.82rem',
-                  fontWeight: 800,
-                  fontFamily: 'var(--font-display)',
-                  letterSpacing: '0.03em',
-                  textTransform: 'uppercase',
-                  borderRadius: 'var(--radius-pill)',
-                  cursor: 'pointer',
-                  whiteSpace: 'nowrap',
-                  transition: 'all 0.2s ease',
-                  background: isSelected ? (isSuperOver ? '#F59E0B' : 'var(--color-accent)') : 'rgba(255, 255, 255, 0.05)',
-                  color: isSelected ? (isSuperOver ? '#000000' : 'var(--color-accent-ink)') : 'rgba(255, 255, 255, 0.75)',
-                  border: isSelected ? (isSuperOver ? '1.5px solid #FBBF24' : '1.5px solid var(--color-accent-bright)') : '1.5px solid rgba(255, 255, 255, 0.15)',
-                  boxShadow: isSelected ? (isSuperOver ? '0 4px 14px rgba(245, 158, 11, 0.35)' : '0 4px 14px rgba(192, 39, 45, 0.35)') : 'none',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '6px',
-                }}
-              >
-                <span>{label}:</span>
-                <span style={{ fontFamily: 'var(--font-data)', fontWeight: 700 }}>
-                  {inn.battingTeam?.shortName || 'BAT'} ({inn.runs}/{inn.wickets} in {inn.overs}.{inn.balls} ov)
-                </span>
-              </button>
-            );
-          })}
+          <button
+            onClick={() => setViewMode('SCORECARD')}
+            style={{
+              flex: '1 1 auto',
+              minHeight: '40px',
+              padding: '8px 16px',
+              borderRadius: '9px',
+              border: 'none',
+              background: viewMode === 'SCORECARD' ? 'var(--color-accent, #C0272D)' : 'transparent',
+              color: viewMode === 'SCORECARD' ? '#FFFFFF' : 'rgba(255, 255, 255, 0.7)',
+              fontWeight: 800,
+              fontSize: '0.85rem',
+              fontFamily: 'var(--font-display)',
+              textTransform: 'uppercase',
+              letterSpacing: '0.04em',
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+              transition: 'all 0.2s ease',
+            }}
+          >
+            <span>📋</span> Full Scorecard
+          </button>
+
+          <button
+            onClick={() => setViewMode('WORM')}
+            style={{
+              flex: '1 1 auto',
+              minHeight: '40px',
+              padding: '8px 16px',
+              borderRadius: '9px',
+              border: 'none',
+              background: viewMode === 'WORM' ? 'var(--color-accent, #C0272D)' : 'transparent',
+              color: viewMode === 'WORM' ? '#FFFFFF' : 'rgba(255, 255, 255, 0.7)',
+              fontWeight: 800,
+              fontSize: '0.85rem',
+              fontFamily: 'var(--font-display)',
+              textTransform: 'uppercase',
+              letterSpacing: '0.04em',
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+              transition: 'all 0.2s ease',
+            }}
+          >
+            <span>📈</span> Match Worm & Graph
+          </button>
+
+          <button
+            onClick={() => setViewMode('COMMENTARY')}
+            style={{
+              flex: '1 1 auto',
+              minHeight: '40px',
+              padding: '8px 16px',
+              borderRadius: '9px',
+              border: 'none',
+              background: viewMode === 'COMMENTARY' ? 'var(--color-accent, #C0272D)' : 'transparent',
+              color: viewMode === 'COMMENTARY' ? '#FFFFFF' : 'rgba(255, 255, 255, 0.7)',
+              fontWeight: 800,
+              fontSize: '0.85rem',
+              fontFamily: 'var(--font-display)',
+              textTransform: 'uppercase',
+              letterSpacing: '0.04em',
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+              transition: 'all 0.2s ease',
+            }}
+          >
+            <span>🎙️</span> Ball-by-Ball Timeline
+          </button>
         </div>
 
-        {/* ACTIVE INNINGS SCORECARD DETAILS */}
-        {selectedInnings ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+        {/* VIEW 1: MATCH WORM & GRAPH */}
+        {viewMode === 'WORM' && (
+          <div style={{ marginBottom: '24px' }}>
+            <MatchWormChart match={match} ballsPerOver={ballsPerOver} />
+          </div>
+        )}
+
+        {/* VIEW 2: BALL-BY-BALL COMMENTARY */}
+        {viewMode === 'COMMENTARY' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
+            {/* Innings selector inside commentary */}
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              {allInnings.map((inn: any) => {
+                const isSelected = activeTab ? activeTab === `inn${inn.inningsNumber}` : inn.id === selectedInnings?.id;
+                const label = inn.inningsNumber === 1 ? '1st Inn' : inn.inningsNumber === 2 ? '2nd Inn' : `Super Over ${inn.inningsNumber - 2}`;
+                return (
+                  <button
+                    key={`comm-${inn.id}`}
+                    onClick={() => setActiveTab(`inn${inn.inningsNumber}`)}
+                    style={{
+                      padding: '7px 14px',
+                      fontSize: '0.8rem',
+                      fontWeight: 800,
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      border: isSelected ? '1.5px solid var(--color-gold, #F59E0B)' : '1px solid rgba(255,255,255,0.15)',
+                      background: isSelected ? 'rgba(245, 158, 11, 0.15)' : 'rgba(255,255,255,0.05)',
+                      color: isSelected ? '#F59E0B' : 'rgba(255,255,255,0.7)',
+                    }}
+                  >
+                    {label}: {inn.battingTeam?.shortName || 'BAT'} ({inn.runs}/{inn.wickets})
+                  </button>
+                );
+              })}
+            </div>
+
+            <BallTimelineFilter innings={selectedInnings} ballsPerOver={ballsPerOver} match={match} />
+          </div>
+        )}
+
+        {/* VIEW 3: FULL SCORECARD */}
+        {viewMode === 'SCORECARD' && (
+          <>
+            {/* INNINGS SELECTOR TABS */}
+            <div
+              style={{
+                display: 'flex',
+                gap: '8px',
+                marginBottom: '16px',
+                flexWrap: 'wrap',
+              }}
+            >
+              {allInnings.map((inn: any) => {
+                const isSelected = activeTab ? activeTab === `inn${inn.inningsNumber}` : inn.id === selectedInnings?.id;
+                const isSuperOver = inn.inningsNumber >= 3;
+                const label = inn.inningsNumber === 1 ? '1st Inn' : inn.inningsNumber === 2 ? '2nd Inn' : inn.inningsNumber === 3 ? '⚡ Super Over 1' : `⚡ Super Over ${inn.inningsNumber - 2}`;
+                return (
+                  <button
+                    key={inn.id}
+                    onClick={() => setActiveTab(`inn${inn.inningsNumber}`)}
+                    style={{
+                      flex: '1 1 auto',
+                      minWidth: '130px',
+                      minHeight: '38px',
+                      padding: '8px 14px',
+                      fontSize: '0.82rem',
+                      fontWeight: 800,
+                      fontFamily: 'var(--font-display)',
+                      letterSpacing: '0.03em',
+                      textTransform: 'uppercase',
+                      borderRadius: 'var(--radius-pill)',
+                      cursor: 'pointer',
+                      whiteSpace: 'nowrap',
+                      transition: 'all 0.2s ease',
+                      background: isSelected ? (isSuperOver ? '#F59E0B' : 'var(--color-accent)') : 'rgba(255, 255, 255, 0.05)',
+                      color: isSelected ? (isSuperOver ? '#000000' : 'var(--color-accent-ink)') : 'rgba(255, 255, 255, 0.75)',
+                      border: isSelected ? (isSuperOver ? '1.5px solid #FBBF24' : '1.5px solid var(--color-accent-bright)') : '1.5px solid rgba(255, 255, 255, 0.15)',
+                      boxShadow: isSelected ? (isSuperOver ? '0 4px 14px rgba(245, 158, 11, 0.35)' : '0 4px 14px rgba(192, 39, 45, 0.35)') : 'none',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '6px',
+                    }}
+                  >
+                    <span>{label}:</span>
+                    <span style={{ fontFamily: 'var(--font-data)', fontWeight: 700 }}>
+                      {inn.battingTeam?.shortName || 'BAT'} ({inn.runs}/{inn.wickets} in {inn.overs}.{inn.balls} ov)
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* ACTIVE INNINGS SCORECARD DETAILS */}
+            {selectedInnings ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
 
             {/* THIS OVER BREAKDOWN CARD */}
             {(() => {
@@ -1252,6 +1585,13 @@ function ScorecardContent() {
             This innings has not commenced yet.
           </div>
         )}
+          </>
+        )}
+
+        {/* 3. HEAD-TO-HEAD BOUNDARY COUNTER (TOURNAMENT TIE-BREAK REGULATIONS AT THE BOTTOM) */}
+        <div style={{ marginTop: '24px' }}>
+          <HeadToHeadBoundaryCounter match={match} />
+        </div>
 
       </div>
     </main>

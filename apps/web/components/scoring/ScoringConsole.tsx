@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useTransition } from 'react';
+import { useState, useEffect, useTransition, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
 import {
@@ -24,6 +24,9 @@ import {
   isBowlerCreditedDismissal,
   getInningsWicketLimit,
 } from '@/lib/scoring/scoring-rules';
+import { useOfflineScorer } from '@/lib/offline/useOfflineScorer';
+import { getPersistentClientId } from '@/lib/offline/offline-db';
+import LiveEquationTicker, { HeadToHeadBoundaryCounter } from '@/components/analytics/LiveEquationTicker';
 
 interface Props {
   initialMatch: any;
@@ -36,6 +39,60 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [activeInningsTabNumber, setActiveInningsTabNumber] = useState<number>(initialMatch?.currentInnings || 1);
+
+  const currentInnings = match.innings?.find((i: any) => i.inningsNumber === (match.currentInnings || 1)) || match.innings?.[0];
+
+  const {
+    syncStatus,
+    projectedMatch,
+    clientId,
+    recordOfflineOperation,
+    syncNow,
+    retryFailed,
+    updateAuthoritativeSnapshot,
+    isOffline,
+  } = useOfflineScorer(match.id, currentInnings?.id, initialMatch);
+
+  // Sync projected match from offline engine whenever updated
+  useEffect(() => {
+    if (projectedMatch && projectedMatch.id === match.id) {
+      setMatch((prev: any) => {
+        // Guard: Never downgrade a LIVE match to UPCOMING based on stale offline snapshot
+        if (prev?.status === 'LIVE' && projectedMatch.status === 'UPCOMING') {
+          return prev;
+        }
+        // Guard: Never strip existing innings
+        if (prev?.innings && prev.innings.length > 0 && (!projectedMatch.innings || projectedMatch.innings.length === 0)) {
+          return prev;
+        }
+
+        return {
+          ...projectedMatch,
+          teamA: {
+            ...projectedMatch.teamA,
+            teamPlayers: projectedMatch.teamA?.teamPlayers || prev?.teamA?.teamPlayers || initialMatch?.teamA?.teamPlayers,
+            tournamentSquads: projectedMatch.teamA?.tournamentSquads || prev?.teamA?.tournamentSquads || initialMatch?.teamA?.tournamentSquads,
+            players: projectedMatch.teamA?.players || prev?.teamA?.players || initialMatch?.teamA?.players,
+          },
+          teamB: {
+            ...projectedMatch.teamB,
+            teamPlayers: projectedMatch.teamB?.teamPlayers || prev?.teamB?.teamPlayers || initialMatch?.teamB?.teamPlayers,
+            tournamentSquads: projectedMatch.teamB?.tournamentSquads || prev?.teamB?.tournamentSquads || initialMatch?.teamB?.tournamentSquads,
+            players: projectedMatch.teamB?.players || prev?.teamB?.players || initialMatch?.teamB?.players,
+          },
+        };
+      });
+    }
+  }, [projectedMatch, match.id, initialMatch]);
+
+  // Sync active innings tab whenever the authoritative currentInnings changes
+  // (handles both direct server response AND realtime-broadcast-driven updates)
+  useEffect(() => {
+    if (match.currentInnings && match.currentInnings !== activeInningsTabNumber) {
+      setActiveInningsTabNumber(match.currentInnings);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [match.currentInnings]);
 
   // Super Over State
   const [showSuperOverModal, setShowSuperOverModal] = useState(false);
@@ -143,20 +200,40 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
   // Sync state if initialMatch prop changes from server revalidation
   useEffect(() => {
     if (initialMatch) {
-      setMatch(initialMatch);
+      setMatch((prev: any) => {
+        if (prev?.status === 'LIVE' && initialMatch?.status === 'UPCOMING') {
+          return prev;
+        }
+        return initialMatch;
+      });
     }
   }, [initialMatch]);
 
   // Extract all registered squad players for Team A and Team B
   const getRawTeamPlayers = (teamId: string) => {
-    const team = teamId === match.teamAId ? match.teamA : match.teamB;
-    if (!team) return [];
-    if (team.tournamentSquads && team.tournamentSquads.length > 0) {
-      return team.tournamentSquads.map((ts: any) => ts.player);
+    const team = teamId === match?.teamAId ? match?.teamA : match?.teamB;
+    const initialTeam = teamId === initialMatch?.teamAId ? initialMatch?.teamA : initialMatch?.teamB;
+    const targetTeam = team || initialTeam;
+    if (!targetTeam) return [];
+
+    const squads = targetTeam.tournamentSquads || initialTeam?.tournamentSquads;
+    if (Array.isArray(squads) && squads.length > 0) {
+      const list = squads.map((ts: any) => ts.player || ts).filter((p: any) => p && p.id && p.name);
+      if (list.length > 0) return list;
     }
-    if (team.teamPlayers && team.teamPlayers.length > 0) {
-      return team.teamPlayers.map((tp: any) => tp.player);
+
+    const teamPlayers = targetTeam.teamPlayers || initialTeam?.teamPlayers;
+    if (Array.isArray(teamPlayers) && teamPlayers.length > 0) {
+      const list = teamPlayers.map((tp: any) => tp.player || tp).filter((p: any) => p && p.id && p.name);
+      if (list.length > 0) return list;
     }
+
+    const players = targetTeam.players || initialTeam?.players;
+    if (Array.isArray(players) && players.length > 0) {
+      const list = players.filter((p: any) => p && p.id && p.name);
+      if (list.length > 0) return list;
+    }
+
     return [];
   };
 
@@ -164,28 +241,48 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
   const rawTeamBPlayers = getRawTeamPlayers(match.teamBId);
 
   // Match Playing Squad Selection (By default, ALL registered players play)
-  const [selectedTeamAPlayerIds, setSelectedTeamAPlayerIds] = useState<string[]>(() => {
-    if (typeof window !== 'undefined') {
+  const [selectedTeamAPlayerIds, setSelectedTeamAPlayerIds] = useState<string[]>(() =>
+    rawTeamAPlayers.map((p: any) => p.id)
+  );
+
+  const [selectedTeamBPlayerIds, setSelectedTeamBPlayerIds] = useState<string[]>(() =>
+    rawTeamBPlayers.map((p: any) => p.id)
+  );
+
+  // Restore saved squad selections from localStorage on client mount (avoids SSR hydration mismatch)
+  useEffect(() => {
+    if (typeof window !== 'undefined' && initialMatch?.id) {
       try {
-        const saved = localStorage.getItem(`cpl_squad_${initialMatch.id}_a`);
-        if (saved) return JSON.parse(saved);
+        const savedA = localStorage.getItem(`cpl_squad_${initialMatch.id}_a`);
+        if (savedA) {
+          const parsedA = JSON.parse(savedA);
+          if (Array.isArray(parsedA) && parsedA.length > 0) {
+            setSelectedTeamAPlayerIds(parsedA);
+          }
+        }
+        const savedB = localStorage.getItem(`cpl_squad_${initialMatch.id}_b`);
+        if (savedB) {
+          const parsedB = JSON.parse(savedB);
+          if (Array.isArray(parsedB) && parsedB.length > 0) {
+            setSelectedTeamBPlayerIds(parsedB);
+          }
+        }
       } catch (e) {}
     }
-    // Default to ALL registered players (no forced auto-balancing)
-    return rawTeamAPlayers.map((p: any) => p.id);
-  });
+  }, [initialMatch?.id]);
 
-  const [selectedTeamBPlayerIds, setSelectedTeamBPlayerIds] = useState<string[]>(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const saved = localStorage.getItem(`cpl_squad_${initialMatch.id}_b`);
-        if (saved) return JSON.parse(saved);
-      } catch (e) {}
+  // Re-sync squad IDs if initially empty or if raw players load
+  useEffect(() => {
+    if (rawTeamAPlayers.length > 0 && selectedTeamAPlayerIds.length === 0) {
+      setSelectedTeamAPlayerIds(rawTeamAPlayers.map((p: any) => p.id));
     }
-    // Default to ALL registered players (no forced auto-balancing)
-    return rawTeamBPlayers.map((p: any) => p.id);
-  });
+  }, [rawTeamAPlayers, selectedTeamAPlayerIds.length]);
 
+  useEffect(() => {
+    if (rawTeamBPlayers.length > 0 && selectedTeamBPlayerIds.length === 0) {
+      setSelectedTeamBPlayerIds(rawTeamBPlayers.map((p: any) => p.id));
+    }
+  }, [rawTeamBPlayers, selectedTeamBPlayerIds.length]);
 
   // Persist squad selection in localStorage
   useEffect(() => {
@@ -209,6 +306,7 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
 
   // Modals state
   const [showNoBallModal, setShowNoBallModal] = useState(false);
+  const [nbReason, setNbReason] = useState<'OVERSTEP' | 'FULL_TOSS' | 'HEIGHT'>('OVERSTEP');
   const [nbType, setNbType] = useState<'BAT' | 'BYE' | 'LEG_BYE'>('BAT');
   const [nbRuns, setNbRuns] = useState<number>(0);
 
@@ -236,6 +334,7 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
   const [lineupStrikerId, setLineupStrikerId] = useState<string>('');
   const [lineupNonStrikerId, setLineupNonStrikerId] = useState<string>('');
   const [lineupBowlerId, setLineupBowlerId] = useState<string>('');
+  const lastLocalActionRef = useRef<number>(0);
 
   // Supabase Realtime Subscription (Syncs entire match state on live score events)
   useEffect(() => {
@@ -244,14 +343,37 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
 
     channel
       .on('broadcast', { event: 'score_update' }, async () => {
+        // Skip redundant refetch if the current operator executed an action locally in the last 3.5s
+        if (Date.now() - lastLocalActionRef.current < 3500) {
+          return;
+        }
         try {
-          const res = await fetch(`/api/matches/${match.id}/scorecard?_t=${Date.now()}`, {
+          const res = await fetch(`/api/matches/${match.id}/scorecard`, {
             cache: 'no-store',
             headers: { 'Cache-Control': 'no-cache', Pragma: 'no-cache' },
           });
           const data = await res.json();
           if (data && data.success && data.match) {
-            setMatch(data.match);
+            setMatch((prev: any) => {
+              if (prev?.status === 'LIVE' && data.match.status === 'UPCOMING') {
+                return prev;
+              }
+              return {
+                ...data.match,
+                teamA: {
+                  ...data.match.teamA,
+                  teamPlayers: data.match.teamA?.teamPlayers || prev?.teamA?.teamPlayers || initialMatch?.teamA?.teamPlayers,
+                  tournamentSquads: data.match.teamA?.tournamentSquads || prev?.teamA?.tournamentSquads || initialMatch?.teamA?.tournamentSquads,
+                  players: data.match.teamA?.players || prev?.teamA?.players || initialMatch?.teamA?.players,
+                },
+                teamB: {
+                  ...data.match.teamB,
+                  teamPlayers: data.match.teamB?.teamPlayers || prev?.teamB?.teamPlayers || initialMatch?.teamB?.teamPlayers,
+                  tournamentSquads: data.match.teamB?.tournamentSquads || prev?.teamB?.tournamentSquads || initialMatch?.teamB?.tournamentSquads,
+                  players: data.match.teamB?.players || prev?.teamB?.players || initialMatch?.teamB?.players,
+                },
+              };
+            });
           }
         } catch (e) {}
       })
@@ -261,8 +383,6 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
       supabase.removeChannel(channel);
     };
   }, [match.id]);
-
-  const currentInnings = match.innings?.find((i: any) => i.inningsNumber === match.currentInnings) || match.innings?.[0];
 
   const battingSquad = currentInnings ? getTeamPlayers(currentInnings.battingTeamId) : [];
   const bowlingSquad = currentInnings ? getTeamPlayers(currentInnings.bowlingTeamId) : [];
@@ -321,6 +441,10 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
 
   // Action handlers with INSTANT OPTIMISTIC FEEDBACK
   const handleStartMatch = () => {
+    if (!tossWinnerId || !tossDecision) {
+      setError('Please select both the toss winner and their decision.');
+      return;
+    }
     setError(null);
     startTransition(async () => {
       try {
@@ -329,7 +453,25 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
           setError(res.error || 'Failed to start match.');
         } else {
           if ((res as any).updatedMatch) {
-            setMatch((res as any).updatedMatch);
+            const updated = (res as any).updatedMatch;
+            const fullUpdated = {
+              ...updated,
+              teamA: {
+                ...updated.teamA,
+                teamPlayers: updated.teamA?.teamPlayers || match?.teamA?.teamPlayers || initialMatch?.teamA?.teamPlayers,
+                tournamentSquads: updated.teamA?.tournamentSquads || match?.teamA?.tournamentSquads || initialMatch?.teamA?.tournamentSquads,
+                players: updated.teamA?.players || match?.teamA?.players || initialMatch?.teamA?.players,
+              },
+              teamB: {
+                ...updated.teamB,
+                teamPlayers: updated.teamB?.teamPlayers || match?.teamB?.teamPlayers || initialMatch?.teamB?.teamPlayers,
+                tournamentSquads: updated.teamB?.tournamentSquads || match?.teamB?.tournamentSquads || initialMatch?.teamB?.tournamentSquads,
+                players: updated.teamB?.players || match?.teamB?.players || initialMatch?.teamB?.players,
+              },
+            };
+            setMatch(fullUpdated);
+            await updateAuthoritativeSnapshot(fullUpdated);
+            router.refresh();
           }
         }
       } catch (err: any) {
@@ -383,7 +525,25 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
         if (!res.success) {
           setError(res.error || 'Failed to set lineup.');
         } else if ((res as any).updatedMatch) {
-          setMatch((res as any).updatedMatch);
+          const updated = (res as any).updatedMatch;
+          const fullUpdated = {
+            ...updated,
+            teamA: {
+              ...updated.teamA,
+              teamPlayers: updated.teamA?.teamPlayers || match?.teamA?.teamPlayers || initialMatch?.teamA?.teamPlayers,
+              tournamentSquads: updated.teamA?.tournamentSquads || match?.teamA?.tournamentSquads || initialMatch?.teamA?.tournamentSquads,
+              players: updated.teamA?.players || match?.teamA?.players || initialMatch?.teamA?.players,
+            },
+            teamB: {
+              ...updated.teamB,
+              teamPlayers: updated.teamB?.teamPlayers || match?.teamB?.teamPlayers || initialMatch?.teamB?.teamPlayers,
+              tournamentSquads: updated.teamB?.tournamentSquads || match?.teamB?.tournamentSquads || initialMatch?.teamB?.tournamentSquads,
+              players: updated.teamB?.players || match?.teamB?.players || initialMatch?.teamB?.players,
+            },
+          };
+          setMatch(fullUpdated);
+          await updateAuthoritativeSnapshot(fullUpdated);
+          router.refresh();
         }
       } catch (err: any) {
         setError(err.message || 'An error occurred.');
@@ -391,7 +551,7 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
     });
   };
 
-  const handleRecordBall = (runs: number, extraType: any = 'NONE', extraRuns: number = 0, byeRuns: number = 0, legByeRuns: number = 0) => {
+  const handleRecordBall = (runs: number, extraType: any = 'NONE', extraRuns: number = 0, byeRuns: number = 0, legByeRuns: number = 0, commentary?: string) => {
     if (!currentInnings || isPending) return;
 
     // Strict Validation: Striker MUST be selected
@@ -525,6 +685,7 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
         legByeRuns: deliveryCalc.legByeRuns,
         isLegal,
         isWicket: false,
+        commentary: commentary || undefined,
         createdAt: new Date().toISOString(),
       };
 
@@ -548,28 +709,53 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
       return { ...prev, innings: nextInnings };
     });
 
-    // Background server action dispatch
+    const operationId = typeof crypto !== 'undefined' && crypto.randomUUID
+      ? crypto.randomUUID()
+      : `op-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+    const effectiveClientId = clientId || getPersistentClientId();
+
+    const deliveryPayload: any = {
+      runs: runsOffBat,
+      extraType,
+      extraRuns,
+      byeRuns: deliveryCalc.byeRuns,
+      legByeRuns: deliveryCalc.legByeRuns,
+      expectedUpdatedAt: currentInnings.updatedAt,
+      operationId,
+      clientId: effectiveClientId,
+      commentary: commentary || undefined,
+    };
+
+    // If offline or queue has pending operations, route through IndexedDB outbox
+    if (isOffline || syncStatus.pendingCount > 0 || syncStatus.blockedCount > 0) {
+      recordOfflineOperation('RECORD_DELIVERY', deliveryPayload).catch((err: any) => {
+        setError(`⚠️ Local Save Failed: ${err?.message || 'Storage write rejected'}`);
+        alert(`⚠️ Failed to save delivery locally: ${err?.message}`);
+      });
+      return;
+    }
+
+    // Direct Online Route with idempotent operationId
+    lastLocalActionRef.current = Date.now();
     startTransition(async () => {
       try {
-        const res = await recordDeliveryAction(currentInnings.id, {
-          runs: runsOffBat,
-          extraType,
-          extraRuns,
-          byeRuns: deliveryCalc.byeRuns,
-          legByeRuns: deliveryCalc.legByeRuns,
-          expectedUpdatedAt: currentInnings.updatedAt,
-        });
+        const res = await recordDeliveryAction(currentInnings.id, deliveryPayload);
         if (res && res.success) {
           if ((res as any).updatedMatch) {
             setMatch((res as any).updatedMatch);
           }
         } else {
           setError((res as any)?.error || 'Failed to record delivery.');
-          router.refresh();
+          if (typeof navigator !== 'undefined' && !navigator.onLine) {
+            recordOfflineOperation('RECORD_DELIVERY', deliveryPayload).catch(() => {});
+          }
         }
       } catch (err: any) {
-        setError(err.message || 'An error occurred.');
-        router.refresh();
+        // Fallback to IndexedDB outbox on network drop mid-flight with IDENTICAL operationId
+        console.warn('[Online Route] Failed, falling back to IndexedDB outbox:', err);
+        recordOfflineOperation('RECORD_DELIVERY', deliveryPayload).catch((storeErr: any) => {
+          setError(`⚠️ Network failed and local backup failed: ${storeErr?.message}`);
+        });
       }
     });
   };
@@ -587,7 +773,44 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
       legByeRuns = nbRuns;
     }
 
-    handleRecordBall(runsOffBat, 'NO_BALL', 1, byeRuns, legByeRuns);
+    const bowlerName = activeBowler?.name || 'Bowler';
+    const strikerName = activeStriker?.name || 'Striker';
+    let commentary = '';
+
+    if (nbReason === 'FULL_TOSS') {
+      if (nbType === 'BAT' && runsOffBat === 6) {
+        commentary = `NO BALL (Full Toss) & SIX! Dangerous waist-high full toss punished with absolute disdain! ${strikerName} launches ${bowlerName}'s beamer deep into the stands! 7 runs and FREE HIT awarded!`;
+      } else if (nbType === 'BAT' && runsOffBat === 4) {
+        commentary = `NO BALL (Full Toss) & FOUR! Smashed away to the boundary! High full toss from ${bowlerName} crunched away to the fence by ${strikerName}! 5 runs added and FREE HIT follows!`;
+      } else if (nbType === 'BAT' && runsOffBat > 0) {
+        commentary = `NO BALL (Full Toss) + ${runsOffBat} RUNS! Above-waist full toss called on ${bowlerName}! ${strikerName} works it away for ${runsOffBat} runs off the bat, penalty run added, and a FREE HIT is awarded!`;
+      } else if (nbType === 'BYE' || nbType === 'LEG_BYE') {
+        commentary = `NO BALL (Full Toss) + ${nbRuns} ${nbType === 'BYE' ? 'BYES' : 'LEG BYES'}! High beamer from ${bowlerName} evades everyone! Batters scamper for ${nbRuns} extra runs, and a FREE HIT is signaled!`;
+      } else {
+        commentary = `NO BALL (Full Toss)! Dangerous delivery above waist height called on ${bowlerName}! Umpire signals no-ball, penalty run awarded and FREE HIT next for ${strikerName}!`;
+      }
+    } else if (nbReason === 'HEIGHT') {
+      if (runsOffBat > 0) {
+        commentary = `NO BALL (Height) + ${runsOffBat} RUNS! Sharp bouncer flying way over the head of ${strikerName}! Signaled no-ball for excessive height, ${runsOffBat} runs taken, and a FREE HIT coming up!`;
+      } else {
+        commentary = `NO BALL (Height)! Bouncer sails way over ${strikerName}'s head! Umpire signals no-ball for dangerous height from ${bowlerName}, penalty run awarded and FREE HIT next!`;
+      }
+    } else {
+      // Default: OVERSTEP / Missing Crease Mark
+      if (nbType === 'BAT' && runsOffBat === 6) {
+        commentary = `NO BALL (Overstep) & SIX! ${bowlerName} misses the crease mark and oversteps! ${strikerName} launches it into the stands for a colossal maximum! 7 runs added and FREE HIT coming up!`;
+      } else if (nbType === 'BAT' && runsOffBat === 4) {
+        commentary = `NO BALL (Overstep) & FOUR! ${bowlerName} oversteps the bowling crease mark, and ${strikerName} crunches it through the covers for four! 5 runs total and a FREE HIT follows!`;
+      } else if (nbType === 'BAT' && runsOffBat > 0) {
+        commentary = `NO BALL (Overstep) + ${runsOffBat} RUNS! Front-foot no-ball called as ${bowlerName} misses the mark! ${strikerName} hustles for ${runsOffBat} runs, penalty added, and a FREE HIT is awarded!`;
+      } else if (nbType === 'BYE' || nbType === 'LEG_BYE') {
+        commentary = `NO BALL (Overstep) + ${nbRuns} ${nbType === 'BYE' ? 'BYES' : 'LEG BYES'}! ${bowlerName} misses the crease line, batters take ${nbRuns} runs, plus 1 penalty, and FREE HIT coming up!`;
+      } else {
+        commentary = `NO BALL (Overstep)! ${bowlerName} misses the mark and oversteps the bowling crease! Umpire signals no-ball, penalty run conceded and FREE HIT coming up for ${strikerName}!`;
+      }
+    }
+
+    handleRecordBall(runsOffBat, 'NO_BALL', 1, byeRuns, legByeRuns, commentary);
     setShowNoBallModal(false);
   };
 
@@ -820,16 +1043,36 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
       return { ...prev, innings: nextInnings };
     });
 
+    const operationId = typeof crypto !== 'undefined' && crypto.randomUUID
+      ? crypto.randomUUID()
+      : `op-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+    const effectiveClientId = clientId || getPersistentClientId();
+
+    const wicketPayload = {
+      runs: runsScoredOnWicket,
+      isWicket: true,
+      wicketType: wicketType as any,
+      dismissedPlayerId,
+      newBatterId: incomingBatterId || undefined,
+      expectedUpdatedAt: currentInnings.updatedAt,
+      operationId,
+      clientId: effectiveClientId,
+    };
+
+    if (isOffline || syncStatus.pendingCount > 0 || syncStatus.blockedCount > 0) {
+      recordOfflineOperation('RECORD_DELIVERY', wicketPayload).catch((err: any) => {
+        setError(`⚠️ Local Save Failed: ${err?.message || 'Storage write rejected'}`);
+        alert(`⚠️ Failed to save wicket locally: ${err?.message}`);
+      });
+      setNewBatterId('');
+      setWicketRuns(0);
+      return;
+    }
+
+    lastLocalActionRef.current = Date.now();
     startTransition(async () => {
       try {
-        const res = await recordDeliveryAction(currentInnings.id, {
-          runs: runsScoredOnWicket,
-          isWicket: true,
-          wicketType: wicketType as any,
-          dismissedPlayerId,
-          newBatterId: incomingBatterId || undefined,
-          expectedUpdatedAt: currentInnings.updatedAt,
-        });
+        const res = await recordDeliveryAction(currentInnings.id, wicketPayload);
         if (res && res.success) {
           setNewBatterId('');
           setWicketRuns(0);
@@ -839,12 +1082,17 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
         } else {
           const errMsg = (res as any)?.error || 'Database rejected wicket recording.';
           setError(`❌ Wicket NOT recorded: ${errMsg}`);
-          alert(`❌ Wicket was NOT recorded: ${errMsg}`);
+          if (typeof navigator !== 'undefined' && !navigator.onLine) {
+            recordOfflineOperation('RECORD_DELIVERY', wicketPayload).catch(() => {});
+          }
         }
       } catch (err: any) {
-        const errMsg = err.message || 'Network or server error occurred.';
-        setError(`❌ Wicket NOT recorded: ${errMsg}`);
-        alert(`❌ Wicket was NOT recorded: ${errMsg}`);
+        console.warn('[Online Route Wicket] Failed, falling back to IndexedDB outbox:', err);
+        recordOfflineOperation('RECORD_DELIVERY', wicketPayload).catch((storeErr: any) => {
+          setError(`⚠️ Network failed and local backup failed: ${storeErr?.message}`);
+        });
+        setNewBatterId('');
+        setWicketRuns(0);
       }
     });
   };
@@ -852,9 +1100,22 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
   const handleUndo = () => {
     if (!currentInnings || isPending) return;
     setError(null);
+
+    const operationId = typeof crypto !== 'undefined' && crypto.randomUUID
+      ? crypto.randomUUID()
+      : `op-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+    const effectiveClientId = clientId || getPersistentClientId();
+
+    if (isOffline || syncStatus.pendingCount > 0 || syncStatus.blockedCount > 0) {
+      recordOfflineOperation('UNDO_DELIVERY', { inningsId: currentInnings.id, operationId, clientId: effectiveClientId }).catch((err: any) => {
+        setError(`⚠️ Local Undo Save Failed: ${err?.message}`);
+      });
+      return;
+    }
+
     startTransition(async () => {
       try {
-        const res = await undoLastDeliveryAction(currentInnings.id);
+        const res = await undoLastDeliveryAction(currentInnings.id, operationId, effectiveClientId);
         if (res && res.success) {
           if ((res as any).updatedMatch) {
             setMatch((res as any).updatedMatch);
@@ -863,7 +1124,8 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
           setError((res as any)?.error || 'Failed to undo.');
         }
       } catch (err: any) {
-        setError(err.message || 'An error occurred.');
+        console.warn('[Online Route Undo] Failed, falling back to outbox:', err);
+        recordOfflineOperation('UNDO_DELIVERY', { inningsId: currentInnings.id, operationId, clientId: effectiveClientId }).catch(() => {});
       }
     });
   };
@@ -890,9 +1152,21 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
       return { ...prev, innings: nextInnings };
     });
 
+    const operationId = typeof crypto !== 'undefined' && crypto.randomUUID
+      ? crypto.randomUUID()
+      : `op-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+    const effectiveClientId = clientId || getPersistentClientId();
+
+    if (isOffline || syncStatus.pendingCount > 0 || syncStatus.blockedCount > 0) {
+      recordOfflineOperation('SWAP_STRIKER', { operationId, clientId: effectiveClientId }).catch((err: any) => {
+        setError(`⚠️ Local Strike Swap Failed: ${err?.message}`);
+      });
+      return;
+    }
+
     startTransition(async () => {
       try {
-        const res = await swapStrikerAction(currentInnings.id);
+        const res = await swapStrikerAction(currentInnings.id, operationId, effectiveClientId);
         if (res && res.success) {
           if ((res as any).updatedMatch) {
             setMatch((res as any).updatedMatch);
@@ -901,7 +1175,8 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
           setError((res as any)?.error || 'Failed to swap strike.');
         }
       } catch (err: any) {
-        setError(err.message || 'An error occurred.');
+        console.warn('[Online Route Swap] Failed, falling back to outbox:', err);
+        recordOfflineOperation('SWAP_STRIKER', { operationId, clientId: effectiveClientId }).catch(() => {});
       }
     });
   };
@@ -927,16 +1202,30 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
       return { ...prev, innings: nextInnings };
     });
 
+    const operationId = typeof crypto !== 'undefined' && crypto.randomUUID
+      ? crypto.randomUUID()
+      : `op-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+    const effectiveClientId = clientId || getPersistentClientId();
+
+    if (isOffline || syncStatus.pendingCount > 0 || syncStatus.blockedCount > 0) {
+      recordOfflineOperation('CHANGE_BOWLER', { bowlerId: selectedBowlerId, operationId, clientId: effectiveClientId }).catch((err: any) => {
+        setError(`⚠️ Local Bowler Change Failed: ${err?.message}`);
+      });
+      return;
+    }
+
+    lastLocalActionRef.current = Date.now();
     startTransition(async () => {
       try {
-        const res = await changeBowlerAction(currentInnings.id, selectedBowlerId);
+        const res = await changeBowlerAction(currentInnings.id, selectedBowlerId, operationId, effectiveClientId);
         if (!res.success) {
           setError(res.error || 'Failed to change bowler.');
         } else if ((res as any).updatedMatch) {
           setMatch((res as any).updatedMatch);
         }
       } catch (err: any) {
-        setError(err.message || 'An error occurred.');
+        console.warn('[Online Route Bowler] Failed, falling back to outbox:', err);
+        recordOfflineOperation('CHANGE_BOWLER', { bowlerId: selectedBowlerId, operationId, clientId: effectiveClientId }).catch(() => {});
       }
     });
   };
@@ -1018,9 +1307,23 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
       return { ...prev, innings: nextInnings };
     });
 
+    const operationId = typeof crypto !== 'undefined' && crypto.randomUUID
+      ? crypto.randomUUID()
+      : `op-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+    const effectiveClientId = clientId || getPersistentClientId();
+
+    if (isOffline || syncStatus.pendingCount > 0 || syncStatus.blockedCount > 0) {
+      recordOfflineOperation('SWITCH_BATTER', { role: targetRole, newPlayerId: selectedBatterId, operationId, clientId: effectiveClientId }).catch((err: any) => {
+        setError(`⚠️ Local Batter Switch Failed: ${err?.message}`);
+      });
+      setSelectedBatterId('');
+      return;
+    }
+
+    lastLocalActionRef.current = Date.now();
     startTransition(async () => {
       try {
-        const res = await switchBatterAction(currentInnings.id, targetRole, selectedBatterId);
+        const res = await switchBatterAction(currentInnings.id, targetRole, selectedBatterId, operationId, effectiveClientId);
         if (!res.success) {
           setError(res.error || 'Failed to assign incoming batter.');
         } else if ((res as any).updatedMatch) {
@@ -1028,7 +1331,9 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
         }
         setSelectedBatterId('');
       } catch (err: any) {
-        setError(err.message || 'An error occurred.');
+        console.warn('[Online Route Switch Batter] Failed, falling back to outbox:', err);
+        recordOfflineOperation('SWITCH_BATTER', { role: targetRole, newPlayerId: selectedBatterId, operationId, clientId: effectiveClientId }).catch(() => {});
+        setSelectedBatterId('');
       }
     });
   };
@@ -1043,7 +1348,12 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
         if (!res.success) setError(res.error || 'Failed to end innings.');
         else {
           if ((res as any).updatedMatch) {
-            setMatch((res as any).updatedMatch);
+            const updated = (res as any).updatedMatch;
+            setMatch(updated);
+            // Advance the tab to the new innings immediately
+            if (updated.currentInnings) {
+              setActiveInningsTabNumber(updated.currentInnings);
+            }
           }
         }
       } catch (err: any) {
@@ -1219,12 +1529,15 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                         border = '1px solid #7C3AED';
                       }
 
+                      const isLocal = Boolean(b.isLocalPending || b.id?.startsWith('offline-') || b.id?.startsWith('temp-'));
+                      const effectiveBorder = isLocal ? '2px dashed #F59E0B' : border;
+
                       return (
                         <button
                           key={b.id || idx}
                           type="button"
                           onClick={() => openEditBallModal(b)}
-                          title={`Click to edit: Over ${ovNum + 1}.${b.ballNumber || idx + 1} (${b.batsman?.name || 'Batter'} vs ${b.bowler?.name || 'Bowler'})`}
+                          title={`${isLocal ? '[Saved Offline / Pending Sync] ' : ''}Over ${ovNum + 1}.${b.ballNumber || idx + 1}`}
                           style={{
                             display: 'inline-flex',
                             flexDirection: 'column',
@@ -1244,7 +1557,7 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                               borderRadius: '50%',
                               background: bg,
                               color: color,
-                              border: border,
+                              border: effectiveBorder,
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'center',
@@ -1259,8 +1572,8 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                           >
                             {label}
                           </span>
-                          <span style={{ fontSize: '0.62rem', color: '#94A3B8', fontWeight: 700, fontFamily: 'monospace' }}>
-                            {b.isLegal ? `.${b.ballNumber || idx + 1}` : 'ext'} ✏️
+                          <span style={{ fontSize: '0.62rem', color: isLocal ? '#FBBF24' : '#94A3B8', fontWeight: 700, fontFamily: 'monospace' }}>
+                            {b.isLegal ? `.${b.ballNumber || idx + 1}` : 'ext'} {isLocal ? '⚡LOCAL' : '✏️'}
                           </span>
                         </button>
                       );
@@ -1277,6 +1590,98 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      {/* PWA OFFLINE RESILIENT STATUS BAR */}
+      <div
+        id="offline-sync-status-bar"
+        suppressHydrationWarning
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          padding: '10px 16px',
+          borderRadius: '12px',
+          background: syncStatus.state === 'OFFLINE'
+            ? 'rgba(245, 158, 11, 0.12)'
+            : syncStatus.state === 'SYNCING'
+            ? 'rgba(59, 130, 246, 0.12)'
+            : syncStatus.state === 'SYNC_ERROR' || syncStatus.state === 'BLOCKED'
+            ? 'rgba(239, 68, 68, 0.15)'
+            : 'rgba(16, 185, 129, 0.1)',
+          border: `1px solid ${
+            syncStatus.state === 'OFFLINE'
+              ? 'rgba(245, 158, 11, 0.4)'
+              : syncStatus.state === 'SYNCING'
+              ? 'rgba(59, 130, 246, 0.4)'
+              : syncStatus.state === 'SYNC_ERROR' || syncStatus.state === 'BLOCKED'
+              ? 'rgba(239, 68, 68, 0.45)'
+              : 'rgba(16, 185, 129, 0.25)'
+          }`,
+          fontSize: '0.84rem',
+          fontWeight: 600,
+          color: '#F8FAFC',
+          flexWrap: 'wrap',
+          gap: '10px',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span
+            suppressHydrationWarning
+            style={{
+              display: 'inline-block',
+              width: '10px',
+              height: '10px',
+              borderRadius: '50%',
+              background: syncStatus.state === 'OFFLINE'
+                ? '#F59E0B'
+                : syncStatus.state === 'SYNCING'
+                ? '#3B82F6'
+                : syncStatus.state === 'SYNC_ERROR' || syncStatus.state === 'BLOCKED'
+                ? '#EF4444'
+                : '#10B981',
+              boxShadow: syncStatus.state === 'ONLINE' ? '0 0 8px #10B981' : undefined,
+            }}
+          />
+          <span suppressHydrationWarning style={{ letterSpacing: '0.04em', fontWeight: 800 }}>
+            {syncStatus.state === 'OFFLINE' && `OFFLINE • ${syncStatus.pendingCount} saved locally`}
+            {syncStatus.state === 'SYNCING' && `SYNCING (${syncStatus.pendingCount} remaining)`}
+            {syncStatus.state === 'SYNCED' && `SYNCED`}
+            {syncStatus.state === 'ONLINE' && `ONLINE • 0 pending`}
+            {syncStatus.state === 'SYNC_ERROR' && `SYNC ERROR • ${syncStatus.failedCount || 1} delivery requires attention`}
+            {syncStatus.state === 'BLOCKED' && `${syncStatus.blockedCount} deliveries waiting for authorization`}
+          </span>
+          {syncStatus.pendingCount > 0 && syncStatus.state !== 'SYNCING' && (
+            <span style={{ fontSize: '0.75rem', color: '#94A3B8' }}>
+              ({syncStatus.pendingCount} delivery queued locally)
+            </span>
+          )}
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          {(syncStatus.pendingCount > 0 || syncStatus.state === 'SYNC_ERROR' || syncStatus.state === 'BLOCKED') && (
+            <button
+              id="sync-now-button"
+              type="button"
+              onClick={() => syncNow()}
+              style={{
+                background: '#3B82F6',
+                color: '#FFF',
+                border: 'none',
+                padding: '5px 12px',
+                borderRadius: '6px',
+                fontSize: '0.75rem',
+                fontWeight: 700,
+                cursor: 'pointer',
+              }}
+            >
+              Sync now ↻
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* LIVE EQUATION & BOUNDARY COUNTER TICKER */}
+      <LiveEquationTicker match={match} ballsPerOver={matchBallsPerOver} compact={true} />
+
       {/* ERROR ALERT */}
       {error && (
         <div
@@ -1353,39 +1758,252 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
           </div>
         </div>
 
-        {/* Teams and Score Line */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', gap: '20px' }}>
-          <div>
-            <div style={{ fontSize: '1.3rem', fontWeight: 900, color: '#FFF' }}>{match.teamA.name}</div>
-            <div style={{ fontSize: '0.85rem', color: '#94A3B8', fontFamily: 'monospace' }}>
-              {match.teamA.shortName} • ({selectedTeamAPlayerIds.length} players selected)
-            </div>
-          </div>
+        {/* Teams and Score Line - Google Cricket Standard */}
+        {(() => {
+          const isPreMatch = match.status === 'UPCOMING' && !match.tossWinnerId;
+          const inn1 = match.innings?.find((i: any) => i.inningsNumber === 1);
+          const inn2 = match.innings?.find((i: any) => i.inningsNumber === 2);
 
-          <div style={{ textAlign: 'center' }}>
-            {currentInnings ? (
-              <div>
-                <div style={{ fontSize: '2.4rem', fontWeight: 900, color: '#FBBF24', fontFamily: 'monospace' }}>
-                  {currentInnings.runs} / {currentInnings.wickets}
-                </div>
-                <div style={{ fontSize: '0.95rem', fontWeight: 700, color: 'rgba(255, 255, 255, 0.8)' }}>
-                  {currentInnings.overs}.{currentInnings.balls} / {match.oversPerInnings} Overs
+          let leftTeam: any;
+          let rightTeam: any;
+          let leftInnings: any = null;
+          let rightInnings: any = null;
+          let leftSquadCount = 0;
+          let rightSquadCount = 0;
+          let isLeftBattingCurrent = false;
+          let isRightBattingCurrent = false;
+
+          if (isPreMatch) {
+            // Pre-match (before toss): Show Team A (Left) vs Team B (Right)
+            leftTeam = match.teamA;
+            rightTeam = match.teamB;
+            leftSquadCount = selectedTeamAPlayerIds.length;
+            rightSquadCount = selectedTeamBPlayerIds.length;
+          } else {
+            // Once match starts / toss decided:
+            // Left: The team batting in Innings 1 (with their 1st innings score)
+            // Right: The team batting in Innings 2 (with their 2nd innings score)
+            const inn1BattingTeamId = inn1?.battingTeamId || (
+              match.tossWinnerId
+                ? (match.tossDecision === 'BAT' ? match.tossWinnerId : (match.tossWinnerId === match.teamAId ? match.teamBId : match.teamAId))
+                : match.teamAId
+            );
+            const inn2BattingTeamId = inn1BattingTeamId === match.teamAId ? match.teamBId : match.teamAId;
+
+            leftTeam = inn1BattingTeamId === match.teamBId ? match.teamB : match.teamA;
+            rightTeam = inn2BattingTeamId === match.teamBId ? match.teamB : match.teamA;
+
+            leftSquadCount = inn1BattingTeamId === match.teamBId ? selectedTeamBPlayerIds.length : selectedTeamAPlayerIds.length;
+            rightSquadCount = inn2BattingTeamId === match.teamBId ? selectedTeamBPlayerIds.length : selectedTeamAPlayerIds.length;
+
+            leftInnings = inn1 || match.innings?.find((i: any) => i.battingTeamId === leftTeam?.id && i.inningsNumber === 1);
+            rightInnings = inn2 || match.innings?.find((i: any) => i.battingTeamId === rightTeam?.id && i.inningsNumber === 2);
+
+            // Indicator: A badge or 🏏 next to the team currently batting
+            if (match.status === 'LIVE' && currentInnings) {
+              isLeftBattingCurrent = currentInnings.battingTeamId === leftTeam?.id;
+              isRightBattingCurrent = currentInnings.battingTeamId === rightTeam?.id;
+            }
+          }
+
+          return (
+            <div>
+              {/* Desktop View (>= 768px): 3-Column Grid */}
+              <div className="scorecard-desktop-view">
+                <div className="scorecard-match-header-grid">
+                  {/* Left Team: Team A pre-match, or Innings 1 batting team post-toss */}
+                  <div className="scorecard-team-a-box">
+                    <div>
+                      <div style={{ fontSize: '1.25rem', fontWeight: 900, color: '#FFF', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                        <span>{leftTeam?.name || 'Team 1'}</span>
+                        {isLeftBattingCurrent && (
+                          <span
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                              padding: '2px 8px',
+                              borderRadius: '4px',
+                              background: 'rgba(239, 68, 68, 0.2)',
+                              border: '1px solid #EF4444',
+                              color: '#FCA5A5',
+                              fontSize: '0.72rem',
+                              fontWeight: 800,
+                              letterSpacing: '0.04em',
+                            }}
+                          >
+                            🏏 BATTING
+                          </span>
+                        )}
+                      </div>
+                      <div style={{ fontSize: '0.82rem', color: '#94A3B8', fontFamily: 'monospace' }}>
+                        {leftTeam?.shortName} • ({leftSquadCount} players)
+                      </div>
+                      {leftInnings ? (
+                        <div style={{ fontSize: '0.95rem', color: '#FBBF24', fontFamily: 'monospace', fontWeight: 700, marginTop: '2px' }}>
+                          {leftInnings.runs}/{leftInnings.wickets} ({leftInnings.overs}.{leftInnings.balls} ov)
+                        </div>
+                      ) : !isPreMatch ? (
+                        <div style={{ fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.4)', fontFamily: 'monospace', marginTop: '2px' }}>
+                          Yet to bat
+                        </div>
+                      ) : null}
+                    </div>
+                  </div>
+
+                  {/* Center Box */}
+                  <div className="scorecard-center-score-box">
+                    {currentInnings && match.status === 'LIVE' ? (
+                      <div>
+                        <div style={{ fontSize: '2.4rem', fontWeight: 900, color: '#FBBF24', fontFamily: 'monospace', lineHeight: 1 }}>
+                          {currentInnings.runs} / {currentInnings.wickets}
+                        </div>
+                        <div style={{ fontSize: '0.92rem', fontWeight: 700, color: 'rgba(255, 255, 255, 0.8)', marginTop: '4px' }}>
+                          {currentInnings.overs}.{currentInnings.balls} / {match.oversPerInnings} Overs
+                        </div>
+                      </div>
+                    ) : (
+                      <div style={{ fontSize: '1.2rem', fontWeight: 800, color: 'rgba(255, 255, 255, 0.5)' }}>
+                        {match.status === 'UPCOMING' ? 'NOT STARTED' : match.status}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Right Team: Team B pre-match, or Innings 2 batting team post-toss */}
+                  <div className="scorecard-team-b-box">
+                    <div style={{ textAlign: 'right' }}>
+                      <div style={{ fontSize: '1.25rem', fontWeight: 900, color: '#FFF', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '8px', flexWrap: 'wrap' }}>
+                        {isRightBattingCurrent && (
+                          <span
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                              padding: '2px 8px',
+                              borderRadius: '4px',
+                              background: 'rgba(239, 68, 68, 0.2)',
+                              border: '1px solid #EF4444',
+                              color: '#FCA5A5',
+                              fontSize: '0.72rem',
+                              fontWeight: 800,
+                              letterSpacing: '0.04em',
+                            }}
+                          >
+                            🏏 BATTING
+                          </span>
+                        )}
+                        <span>{rightTeam?.name || 'Team 2'}</span>
+                      </div>
+                      <div style={{ fontSize: '0.82rem', color: '#94A3B8', fontFamily: 'monospace' }}>
+                        {rightTeam?.shortName} • ({rightSquadCount} players)
+                      </div>
+                      {rightInnings ? (
+                        <div style={{ fontSize: '0.95rem', color: '#FBBF24', fontFamily: 'monospace', fontWeight: 700, marginTop: '2px' }}>
+                          {rightInnings.runs}/{rightInnings.wickets} ({rightInnings.overs}.{rightInnings.balls} ov)
+                        </div>
+                      ) : !isPreMatch ? (
+                        <div style={{ fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.4)', fontFamily: 'monospace', marginTop: '2px' }}>
+                          Yet to bat
+                        </div>
+                      ) : null}
+                    </div>
+                  </div>
                 </div>
               </div>
-            ) : (
-              <div style={{ fontSize: '1.2rem', fontWeight: 800, color: 'rgba(255, 255, 255, 0.5)' }}>
-                NOT STARTED
-              </div>
-            )}
-          </div>
 
-          <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: '1.3rem', fontWeight: 900, color: '#FFF' }}>{match.teamB.name}</div>
-            <div style={{ fontSize: '0.85rem', color: '#94A3B8', fontFamily: 'monospace' }}>
-              {match.teamB.shortName} • ({selectedTeamBPlayerIds.length} players selected)
+              {/* Mobile View (< 768px): Google Cricket Standard Side-by-Side Dual Team View */}
+              <div className="scorecard-mobile-view">
+                <div className="scorecard-mobile-dual-grid">
+                  {/* Left Team Card (Batting 1st) */}
+                  <div className={`scorecard-mobile-team-card left ${isLeftBattingCurrent ? 'is-batting' : ''}`}>
+                    <div className="scorecard-mobile-card-header">
+                      {leftTeam?.logoUrl ? (
+                        <img src={leftTeam.logoUrl} alt={leftTeam.name} className="scorecard-mobile-logo" />
+                      ) : (
+                        <div className="scorecard-mobile-logo-placeholder">🏏</div>
+                      )}
+                      <div className="scorecard-mobile-card-names">
+                        <span className="scorecard-mobile-card-title">{leftTeam?.name || 'Team 1'}</span>
+                        {isLeftBattingCurrent && <span className="scorecard-mobile-batting-badge">🏏 BATTING</span>}
+                        <span className="scorecard-mobile-shortname">{leftTeam?.shortName} • ({leftSquadCount}p)</span>
+                      </div>
+                    </div>
+
+                    <div className="scorecard-mobile-card-scores left">
+                      {leftInnings ? (
+                        <>
+                          <span className="scorecard-mobile-big-score">{leftInnings.runs}/{leftInnings.wickets}</span>
+                          <span className="scorecard-mobile-overs-tag">({leftInnings.overs}.{leftInnings.balls} ov)</span>
+                        </>
+                      ) : isLeftBattingCurrent && currentInnings ? (
+                        <>
+                          <span className="scorecard-mobile-big-score">{currentInnings.runs}/{currentInnings.wickets}</span>
+                          <span className="scorecard-mobile-overs-tag">({currentInnings.overs}.{currentInnings.balls} ov)</span>
+                        </>
+                      ) : (
+                        <span className="scorecard-mobile-yet-text">{isPreMatch ? leftTeam?.shortName : 'Yet to bat'}</span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Center Divider / VS Badge */}
+                  <div className="scorecard-mobile-vs-divider">
+                    <span className="scorecard-mobile-vs-badge">VS</span>
+                  </div>
+
+                  {/* Right Team Card (Batting 2nd) */}
+                  <div className={`scorecard-mobile-team-card right ${isRightBattingCurrent ? 'is-batting' : ''}`}>
+                    <div className="scorecard-mobile-card-header right">
+                      {rightTeam?.logoUrl ? (
+                        <img src={rightTeam.logoUrl} alt={rightTeam.name} className="scorecard-mobile-logo" />
+                      ) : (
+                        <div className="scorecard-mobile-logo-placeholder">🦁</div>
+                      )}
+                      <div className="scorecard-mobile-card-names right">
+                        <span className="scorecard-mobile-card-title">{rightTeam?.name || 'Team 2'}</span>
+                        {isRightBattingCurrent && <span className="scorecard-mobile-batting-badge">🏏 BATTING</span>}
+                        <span className="scorecard-mobile-shortname">{rightTeam?.shortName} • ({rightSquadCount}p)</span>
+                      </div>
+                    </div>
+
+                    <div className="scorecard-mobile-card-scores right">
+                      {rightInnings ? (
+                        <>
+                          <span className="scorecard-mobile-big-score">{rightInnings.runs}/{rightInnings.wickets}</span>
+                          <span className="scorecard-mobile-overs-tag">({rightInnings.overs}.{rightInnings.balls} ov)</span>
+                        </>
+                      ) : isRightBattingCurrent && currentInnings ? (
+                        <>
+                          <span className="scorecard-mobile-big-score">{currentInnings.runs}/{currentInnings.wickets}</span>
+                          <span className="scorecard-mobile-overs-tag">({currentInnings.overs}.{currentInnings.balls} ov)</span>
+                        </>
+                      ) : (
+                        <span className="scorecard-mobile-yet-text">{isPreMatch ? rightTeam?.shortName : 'Yet to bat'}</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Mobile Status Strip */}
+                <div className="scorecard-mobile-status-strip">
+                  <div className="scorecard-mobile-status-live">
+                    <span className="scorecard-live-dot" />
+                    <span>
+                      {match.status === 'LIVE' && currentInnings
+                        ? `INNINGS ${currentInnings.inningsNumber} (${currentInnings.overs}.${currentInnings.balls}/${match.oversPerInnings} OV)`
+                        : match.status}
+                    </span>
+                  </div>
+                  {currentInnings && (
+                    <div className="scorecard-mobile-rates">
+                      CRR: {currentInnings.overs + currentInnings.balls / 6 > 0 ? (currentInnings.runs / (currentInnings.overs + currentInnings.balls / 6)).toFixed(2) : '0.00'}
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
+          );
+        })()}
 
         {match.resultNote && (
           <div style={{ textAlign: 'center', marginTop: '16px', background: 'rgba(245, 158, 11, 0.1)', color: '#FBBF24', padding: '8px', borderRadius: '8px', fontWeight: 700 }}>
@@ -1467,7 +2085,9 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                   </span>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '6px', maxHeight: '180px', overflowY: 'auto' }}>
-                  {rawTeamAPlayers.map((p: any) => {
+                  {rawTeamAPlayers.length === 0 ? (
+                    <div style={{ color: '#64748B', fontSize: '0.8rem', fontStyle: 'italic', padding: '8px', gridColumn: '1 / -1' }}>No registered players found</div>
+                  ) : rawTeamAPlayers.map((p: any) => {
                     const checked = selectedTeamAPlayerIds.includes(p.id);
                     return (
                       <label
@@ -1508,7 +2128,9 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                   </span>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '6px', maxHeight: '180px', overflowY: 'auto' }}>
-                  {rawTeamBPlayers.map((p: any) => {
+                  {rawTeamBPlayers.length === 0 ? (
+                    <div style={{ color: '#64748B', fontSize: '0.8rem', fontStyle: 'italic', padding: '8px', gridColumn: '1 / -1' }}>No registered players found</div>
+                  ) : rawTeamBPlayers.map((p: any) => {
                     const checked = selectedTeamBPlayerIds.includes(p.id);
                     return (
                       <label
@@ -1647,7 +2269,7 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
               </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
               {/* Team A Selection */}
               <div style={{ background: '#141A26', border: '1px solid #1E2638', borderRadius: '10px', padding: '14px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
@@ -1657,7 +2279,9 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                   </span>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '6px', maxHeight: '180px', overflowY: 'auto' }}>
-                  {rawTeamAPlayers.map((p: any) => {
+                  {rawTeamAPlayers.length === 0 ? (
+                    <div style={{ color: '#64748B', fontSize: '0.8rem', fontStyle: 'italic', padding: '8px', gridColumn: '1 / -1' }}>No registered players found</div>
+                  ) : rawTeamAPlayers.map((p: any) => {
                     const checked = selectedTeamAPlayerIds.includes(p.id);
                     return (
                       <label
@@ -1698,7 +2322,9 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                   </span>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '6px', maxHeight: '180px', overflowY: 'auto' }}>
-                  {rawTeamBPlayers.map((p: any) => {
+                  {rawTeamBPlayers.length === 0 ? (
+                    <div style={{ color: '#64748B', fontSize: '0.8rem', fontStyle: 'italic', padding: '8px', gridColumn: '1 / -1' }}>No registered players found</div>
+                  ) : rawTeamBPlayers.map((p: any) => {
                     const checked = selectedTeamBPlayerIds.includes(p.id);
                     return (
                       <label
@@ -1778,7 +2404,7 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
             );
           })()}
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', marginBottom: '20px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginBottom: '20px' }}>
             <div>
               <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '6px', color: '#CBD5E1' }}>
                 Striker Batter *
@@ -1936,7 +2562,7 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
           })()}
 
           {/* CURRENT BATTERS & BOWLER BAR */}
-          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '16px', marginBottom: '20px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px', marginBottom: '20px' }}>
             {/* Batters */}
             <div style={{ background: '#10141E', border: '1px solid #1E2638', borderRadius: '12px', padding: '16px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
@@ -1962,7 +2588,7 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                 </button>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
                 {/* Striker */}
                 {activeStriker ? (
                   <div style={{ background: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.4)', borderRadius: '8px', padding: '12px' }}>
@@ -2671,7 +3297,7 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                 </div>
 
                 {/* Standard Runs */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '12px', marginBottom: '20px' }}>
+                <div className="scoring-runs-grid">
                   {[0, 1, 2, 3].map((r) => (
                     <button
                       key={r}
@@ -2738,7 +3364,7 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                   Extras & Wickets
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '12px' }}>
+                <div className="scoring-extras-grid">
                   <button
                     disabled={isScorePadLocked}
                     onClick={() => handleRecordBall(0, 'WIDE', 1)}
@@ -3039,7 +3665,9 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                     </span>
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: '6px', maxHeight: '140px', overflowY: 'auto' }}>
-                    {rawTeamAPlayers.map((p: any) => {
+                    {rawTeamAPlayers.length === 0 ? (
+                      <div style={{ color: '#64748B', fontSize: '0.75rem', fontStyle: 'italic', padding: '6px', gridColumn: '1 / -1' }}>No registered players found</div>
+                    ) : rawTeamAPlayers.map((p: any) => {
                       const checked = selectedTeamAPlayerIds.includes(p.id);
                       return (
                         <label
@@ -3078,7 +3706,9 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                     </span>
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: '6px', maxHeight: '140px', overflowY: 'auto' }}>
-                    {rawTeamBPlayers.map((p: any) => {
+                    {rawTeamBPlayers.length === 0 ? (
+                      <div style={{ color: '#64748B', fontSize: '0.75rem', fontStyle: 'italic', padding: '6px', gridColumn: '1 / -1' }}>No registered players found</div>
+                    ) : rawTeamBPlayers.map((p: any) => {
                       const checked = selectedTeamBPlayerIds.includes(p.id);
                       return (
                         <label
@@ -3110,6 +3740,11 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
               </div>
             </div>
           </details>
+
+          {/* HEAD-TO-HEAD BOUNDARY COUNTER (TOURNAMENT TIE-BREAK REGULATIONS AT THE BOTTOM) */}
+          <div style={{ marginTop: '16px' }}>
+            <HeadToHeadBoundaryCounter match={match} compact={true} />
+          </div>
         </div>
       )}
 
@@ -3526,6 +4161,78 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
               </button>
             </div>
 
+            {/* Reason / Infraction Switcher */}
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '8px', color: '#CBD5E1' }}>
+                No-Ball Reason / Infraction
+              </label>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
+                <button
+                  type="button"
+                  onClick={() => setNbReason('OVERSTEP')}
+                  style={{
+                    padding: '10px 6px',
+                    borderRadius: '8px',
+                    fontWeight: 800,
+                    fontSize: '0.78rem',
+                    cursor: 'pointer',
+                    background: nbReason === 'OVERSTEP' ? '#F97316' : '#141A26',
+                    color: nbReason === 'OVERSTEP' ? '#000' : '#CBD5E1',
+                    border: nbReason === 'OVERSTEP' ? '1.5px solid #FB923C' : '1px solid #2A364E',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: '2px',
+                  }}
+                >
+                  <span>🦶 Overstep</span>
+                  <span style={{ fontSize: '0.65rem', opacity: 0.85 }}>Missing Mark</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setNbReason('FULL_TOSS')}
+                  style={{
+                    padding: '10px 6px',
+                    borderRadius: '8px',
+                    fontWeight: 800,
+                    fontSize: '0.78rem',
+                    cursor: 'pointer',
+                    background: nbReason === 'FULL_TOSS' ? '#F97316' : '#141A26',
+                    color: nbReason === 'FULL_TOSS' ? '#000' : '#CBD5E1',
+                    border: nbReason === 'FULL_TOSS' ? '1.5px solid #FB923C' : '1px solid #2A364E',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: '2px',
+                  }}
+                >
+                  <span>🚀 Full Toss</span>
+                  <span style={{ fontSize: '0.65rem', opacity: 0.85 }}>Above Waist</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setNbReason('HEIGHT')}
+                  style={{
+                    padding: '10px 6px',
+                    borderRadius: '8px',
+                    fontWeight: 800,
+                    fontSize: '0.78rem',
+                    cursor: 'pointer',
+                    background: nbReason === 'HEIGHT' ? '#F97316' : '#141A26',
+                    color: nbReason === 'HEIGHT' ? '#000' : '#CBD5E1',
+                    border: nbReason === 'HEIGHT' ? '1.5px solid #FB923C' : '1px solid #2A364E',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: '2px',
+                  }}
+                >
+                  <span>⬆️ Bouncer</span>
+                  <span style={{ fontSize: '0.65rem', opacity: 0.85 }}>Over Head</span>
+                </button>
+              </div>
+            </div>
+
             {/* Run Origin Switcher */}
             <div style={{ marginBottom: '16px' }}>
               <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '8px', color: '#CBD5E1' }}>
@@ -3629,6 +4336,7 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                     </span>
                   </div>
                   <div style={{ fontSize: '0.75rem', color: '#CBD5E1', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <div>• Reason: <strong style={{ color: '#FB923C' }}>{nbReason === 'OVERSTEP' ? 'Crease Overstep (Missing Mark)' : nbReason === 'FULL_TOSS' ? 'Waist-High Full Toss (Beamer)' : 'Bouncer Height Violation'}</strong></div>
                     <div>• <strong>1 No-Ball Penalty</strong> added to Extras & Bowler</div>
                     {nbType === 'BAT' && nbRuns > 0 && (
                       <div>• <strong>+{nbRuns} Runs</strong> credited to Striker ({activeStriker?.name || 'Striker'}) & Bowler</div>

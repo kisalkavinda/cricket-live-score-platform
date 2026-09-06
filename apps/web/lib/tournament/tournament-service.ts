@@ -5,6 +5,7 @@ import {
   type MatchData,
 } from './nrr-engine';
 import { getInningsWicketLimit } from '../scoring/scoring-rules';
+import { normalizeImageUrl } from '@/lib/utils/image-utils';
 
 export interface TournamentOverview {
   tournament: {
@@ -152,7 +153,7 @@ export async function getTournamentOverview(tournamentId?: string): Promise<Tour
     id: tt.team.id,
     name: tt.team.name,
     shortName: tt.team.shortName,
-    logoUrl: tt.team.logoUrl,
+    logoUrl: normalizeImageUrl(tt.team.logoUrl),
     groupName: tt.groupName || null,
     seed: tt.seed || null,
     qualificationStatus: tt.qualificationStatus || 'PENDING',
