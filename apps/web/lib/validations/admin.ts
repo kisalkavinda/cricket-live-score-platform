@@ -1,17 +1,38 @@
 import { z } from "zod";
 
+export const safeImageUrlSchema = z
+  .string()
+  .trim()
+  .url()
+  .refine(
+    (url) => {
+      if (!url) return true;
+      try {
+        const parsed = new URL(url);
+        if (!['http:', 'https:'].includes(parsed.protocol)) return false;
+        if (parsed.pathname.toLowerCase().endsWith('.svg')) return false;
+        return true;
+      } catch {
+        return false;
+      }
+    },
+    { message: 'Only valid HTTP(S) image URLs are permitted (SVGs are rejected)' }
+  )
+  .optional()
+  .or(z.literal(''));
+
 export const createTeamSchema = z.object({
   name: z.string().trim().min(2, "Team name must be at least 2 characters").max(100),
   shortName: z.string().trim().min(1).max(10).toUpperCase(),
   city: z.string().trim().max(50).optional(),
-  logoUrl: z.string().trim().url().optional().or(z.literal("")),
+  logoUrl: safeImageUrlSchema,
 });
 
 export const updateTeamSchema = z.object({
   name: z.string().trim().min(2).max(100).optional(),
   shortName: z.string().trim().min(1).max(10).toUpperCase().optional(),
   city: z.string().trim().max(50).optional(),
-  logoUrl: z.string().trim().url().optional().or(z.literal("")),
+  logoUrl: safeImageUrlSchema,
 });
 
 export const playerRoleEnum = z.enum(["BATTER", "BOWLER", "ALL_ROUNDER", "WICKET_KEEPER"]);
@@ -22,7 +43,7 @@ export const createPlayerSchema = z.object({
   role: playerRoleEnum.default("ALL_ROUNDER"),
   battingStyle: z.string().trim().max(50).optional(),
   bowlingStyle: z.string().trim().max(50).optional(),
-  profileImageUrl: z.string().trim().url().optional().or(z.literal("")),
+  profileImageUrl: safeImageUrlSchema,
 });
 
 export const createTournamentSchema = z.object({

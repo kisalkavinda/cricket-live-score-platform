@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { createClient } from '@/utils/supabase/client';
 import { ScoreBroadcastPayload } from '@/lib/scoring/scoring-realtime';
 
-type NavTab = 'LIVE' | 'ALL_MATCHES' | 'TOP_BATTERS' | 'TOP_BOWLERS' | 'MVP';
+type NavTab = 'LIVE' | 'POINTS_TABLE' | 'ALL_MATCHES' | 'TOP_BATTERS' | 'TOP_BOWLERS' | 'MVP';
 
 export default function LiveScoreWidget() {
   const [navTab, setNavTab] = useState<NavTab>('LIVE');
@@ -14,25 +14,34 @@ export default function LiveScoreWidget() {
   const [loading, setLoading] = useState<boolean>(true);
   const [lastUpdated, setLastUpdated] = useState<string>('');
   const inFlightRef = useRef<boolean>(false);
+  const inFlightStatsRef = useRef<boolean>(false);
 
-  // Tournament stats for All Matches & Leaderboards
+  // Points Table active stage selector (Group A, B, C or Wildcard)
+  const [tableGroup, setTableGroup] = useState<'A' | 'B' | 'C' | 'wildcard'>('A');
+
+  // Tournament stats for Points Table, All Matches & Leaderboards
   const [statsData, setStatsData] = useState<{
     allMatches: any[];
     topBatters: any[];
     topBowlers: any[];
     mvpLeaderboard: any[];
+    overview?: any;
   }>({
     allMatches: [],
     topBatters: [],
     topBowlers: [],
     mvpLeaderboard: [],
+    overview: null,
   });
   const [statsLoading, setStatsLoading] = useState<boolean>(false);
   const [matchFilter, setMatchFilter] = useState<'ALL' | 'COMPLETED' | 'LIVE' | 'UPCOMING'>('ALL');
 
   // 1. Fetch initial live matches from database
-  const fetchLiveMatches = useCallback(async () => {
-    if (inFlightRef.current) return;
+  const fetchLiveMatches = useCallback(async (force = false) => {
+    if (inFlightRef.current && !force) {
+      setTimeout(() => fetchLiveMatches(true), 250);
+      return;
+    }
     inFlightRef.current = true;
     try {
       const res = await fetch(`/api/matches/live?_t=${Date.now()}`, {
@@ -56,6 +65,8 @@ export default function LiveScoreWidget() {
 
   // 2. Fetch tournament stats (All Matches, Top Batters, Top Bowlers, MVP)
   const fetchTournamentStats = useCallback(async () => {
+    if (inFlightStatsRef.current) return;
+    inFlightStatsRef.current = true;
     setStatsLoading(true);
     try {
       const res = await fetch(`/api/tournament/stats?_t=${Date.now()}`, {
@@ -69,11 +80,13 @@ export default function LiveScoreWidget() {
           topBatters: data.topBatters || [],
           topBowlers: data.topBowlers || [],
           mvpLeaderboard: data.mvpLeaderboard || [],
+          overview: data.overview || null,
         });
       }
     } catch (err) {
       console.error('[LiveScoreWidget] Stats error:', err);
     } finally {
+      inFlightStatsRef.current = false;
       setStatsLoading(false);
     }
   }, []);
@@ -87,28 +100,31 @@ export default function LiveScoreWidget() {
   useEffect(() => {
     const supabase = createClient();
 
+    const handleBroadcastUpdate = (msg?: any) => {
+      if (msg?.payload?.matchId) {
+        // Instant 0ms in-memory update directly from the broadcast payload
+        setMatches((prevMatches) => {
+          const index = prevMatches.findIndex((m) => m.matchId === msg.payload.matchId);
+          if (index !== -1) {
+            const updated = [...prevMatches];
+            updated[index] = { ...updated[index], ...msg.payload };
+            return updated;
+          }
+          return [msg.payload, ...prevMatches];
+        });
+        setLastUpdated(new Date().toLocaleTimeString());
+      }
+      // Authoritative re-sync in background to ensure all nested relations are current
+      fetchLiveMatches(true);
+    };
+
     // Global live matches channel
     const liveChannel = supabase.channel('matches:live');
 
     liveChannel
-      .on('broadcast', { event: 'score_update' }, ({ payload }: { payload: ScoreBroadcastPayload }) => {
-        if (!payload || !payload.matchId) return;
-
-        setMatches((prevMatches) => {
-          const exists = prevMatches.some((m) => m.matchId === payload.matchId);
-          if (exists) {
-            return prevMatches.map((m) => (m.matchId === payload.matchId ? payload : m));
-          } else {
-            return [payload, ...prevMatches];
-          }
-        });
-
-        setActiveMatchId((prev) => prev || payload.matchId);
-        setLastUpdated(new Date().toLocaleTimeString());
-      })
+      .on('broadcast', { event: 'score_update' }, handleBroadcastUpdate)
       .subscribe((status) => {
         if (status === 'SUBSCRIBED') {
-          // Re-sync on fresh subscription / reconnect
           fetchLiveMatches();
           fetchTournamentStats();
         }
@@ -119,19 +135,15 @@ export default function LiveScoreWidget() {
     if (activeMatchId) {
       matchChannel = supabase.channel(`match:${activeMatchId}`);
       matchChannel
-        .on('broadcast', { event: 'score_update' }, ({ payload }: { payload: ScoreBroadcastPayload }) => {
-          if (!payload) return;
-          setMatches((prev) => prev.map((m) => (m.matchId === payload.matchId ? payload : m)));
-          setLastUpdated(new Date().toLocaleTimeString());
-        })
+        .on('broadcast', { event: 'score_update' }, handleBroadcastUpdate)
         .subscribe();
     }
 
-    // Relaxed 12s safety sync (Supabase Realtime handles instant 0ms score updates)
+    // Rapid 3.5s safety sync fallback (ensures score is never stale even if connection drops)
     const interval = setInterval(() => {
       fetchLiveMatches();
       if (navTab !== 'LIVE') fetchTournamentStats();
-    }, 12000);
+    }, 3500);
 
     return () => {
       try {
@@ -158,6 +170,7 @@ export default function LiveScoreWidget() {
         maxWidth: '1200px',
         margin: '0 auto',
         padding: 'var(--space-md) var(--space-md)',
+        scrollMarginTop: '90px',
       }}
     >
       {/* Container Card */}
@@ -212,6 +225,30 @@ export default function LiveScoreWidget() {
               }}
             />
             Match Center
+          </button>
+
+          <button
+            onClick={() => {
+              setNavTab('POINTS_TABLE');
+              fetchTournamentStats();
+            }}
+            style={{
+              padding: '10px 18px',
+              border: 'none',
+              background: 'none',
+              borderBottom: navTab === 'POINTS_TABLE' ? '3px solid var(--color-gold, #FFB800)' : '3px solid transparent',
+              color: navTab === 'POINTS_TABLE' ? '#FFB800' : 'rgba(255, 255, 255, 0.6)',
+              fontSize: '0.86rem',
+              fontWeight: 800,
+              cursor: 'pointer',
+              whiteSpace: 'nowrap',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              transition: 'all 0.15s ease',
+            }}
+          >
+            📊 Points Table & NRR
           </button>
 
           <button
@@ -382,6 +419,31 @@ export default function LiveScoreWidget() {
                     (Live: {lastUpdated})
                   </span>
                 )}
+
+                {/* Points Table & NRR Quick Pill */}
+                <button
+                  onClick={() => {
+                    setNavTab('POINTS_TABLE');
+                    fetchTournamentStats();
+                  }}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '5px',
+                    padding: '4px 10px',
+                    borderRadius: '6px',
+                    background: 'rgba(255, 184, 0, 0.12)',
+                    border: '1px solid rgba(255, 184, 0, 0.35)',
+                    color: '#FFB800',
+                    fontSize: '0.72rem',
+                    fontWeight: 800,
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease',
+                  }}
+                  title="View CPL Stage Standings & Net Run Rate"
+                >
+                  📊 Points Table & NRR
+                </button>
               </div>
 
               {/* Match Switcher Tabs if multiple matches */}
@@ -415,12 +477,84 @@ export default function LiveScoreWidget() {
                 Loading live match data...
               </div>
             ) : !currentMatch ? (
-              <div style={{ padding: '40px 20px', textAlign: 'center', color: 'rgba(255,255,255,0.6)' }}>
-                <div style={{ fontSize: '2rem', marginBottom: '8px' }}>🏏</div>
-                <h3 style={{ fontSize: '1.2rem', fontWeight: 800, margin: '0 0 6px', color: '#FFF' }}>CPL Live Match Center</h3>
-                <p style={{ fontSize: '0.9rem', color: 'rgba(255, 255, 255, 0.6)', margin: 0 }}>
+              <div style={{ padding: '44px 20px', textAlign: 'center', color: 'rgba(255,255,255,0.6)' }}>
+                <div style={{ fontSize: '2.4rem', marginBottom: '10px' }}>🏏</div>
+                <h3 style={{ fontSize: '1.28rem', fontWeight: 900, margin: '0 0 8px', color: '#FFF', letterSpacing: '-0.01em' }}>
+                  CPL Live Match Center
+                </h3>
+                <p style={{ fontSize: '0.9rem', color: 'rgba(255, 255, 255, 0.65)', margin: '0 auto 20px', maxWidth: '520px', lineHeight: 1.5 }}>
                   No matches currently in progress. Select another tab above to see past results and tournament leaderboards!
                 </p>
+
+                {/* Quick Action Navigation Buttons */}
+                <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                  <button
+                    onClick={() => {
+                      setNavTab('POINTS_TABLE');
+                      fetchTournamentStats();
+                    }}
+                    style={{
+                      padding: '10px 20px',
+                      borderRadius: '8px',
+                      background: 'linear-gradient(135deg, rgba(255, 184, 0, 0.22) 0%, rgba(255, 184, 0, 0.08) 100%)',
+                      border: '1px solid rgba(255, 184, 0, 0.45)',
+                      color: '#FFB800',
+                      fontSize: '0.86rem',
+                      fontWeight: 800,
+                      cursor: 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      boxShadow: '0 4px 14px rgba(255, 184, 0, 0.15)',
+                      transition: 'all 0.15s ease',
+                    }}
+                  >
+                    📊 Points Table & NRR
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setNavTab('ALL_MATCHES');
+                      fetchTournamentStats();
+                    }}
+                    style={{
+                      padding: '10px 18px',
+                      borderRadius: '8px',
+                      background: 'rgba(255, 255, 255, 0.07)',
+                      border: '1px solid rgba(255, 255, 255, 0.15)',
+                      color: '#FFFFFF',
+                      fontSize: '0.86rem',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      transition: 'all 0.15s ease',
+                    }}
+                  >
+                    📋 All Matches
+                  </button>
+
+                  <Link
+                    href="/tournament"
+                    style={{
+                      padding: '10px 18px',
+                      borderRadius: '8px',
+                      background: 'rgba(192, 39, 45, 0.18)',
+                      border: '1px solid rgba(192, 39, 45, 0.35)',
+                      color: '#FCA5A5',
+                      fontSize: '0.86rem',
+                      fontWeight: 700,
+                      textDecoration: 'none',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      transition: 'all 0.15s ease',
+                    }}
+                  >
+                    🏆 Tournament Hub ↗
+                  </Link>
+                </div>
               </div>
             ) : currentMatch.status === 'COMPLETED' ? (
               (() => {
@@ -555,121 +689,336 @@ export default function LiveScoreWidget() {
                     <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.35)', marginTop: '4px' }}>
                       {currentMatch.match.venue || 'Ratmalana Ground'}
                     </div>
+
+                    {/* Quick navigation after completed match */}
+                    <div style={{ marginTop: '14px', display: 'flex', justifyContent: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                      <button
+                        onClick={() => {
+                          setNavTab('POINTS_TABLE');
+                          fetchTournamentStats();
+                        }}
+                        style={{
+                          padding: '7px 14px',
+                          borderRadius: '8px',
+                          background: 'rgba(255, 184, 0, 0.14)',
+                          border: '1px solid rgba(255, 184, 0, 0.4)',
+                          color: '#FFB800',
+                          fontSize: '0.8rem',
+                          fontWeight: 800,
+                          cursor: 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          transition: 'all 0.15s ease',
+                        }}
+                      >
+                        📊 Points Table & NRR
+                      </button>
+                      <button
+                        onClick={() => {
+                          setNavTab('ALL_MATCHES');
+                          fetchTournamentStats();
+                        }}
+                        style={{
+                          padding: '7px 14px',
+                          borderRadius: '8px',
+                          background: 'rgba(255, 255, 255, 0.08)',
+                          border: '1px solid rgba(255, 255, 255, 0.15)',
+                          color: '#FFF',
+                          fontSize: '0.8rem',
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          transition: 'all 0.15s ease',
+                        }}
+                      >
+                        📋 All Matches
+                      </button>
+                    </div>
                   </div>
                 );
               })()
             ) : (
-              <div style={{ padding: '24px' }}>
-                {/* Dual Team Score Header Bar */}
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    gap: '24px',
-                    paddingBottom: '20px',
-                    borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-                    flexWrap: 'wrap',
-                  }}
-                >
-                  {/* Team A Score Block */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                    {currentMatch.match.teamA.logoUrl ? (
-                      <img
-                        src={currentMatch.match.teamA.logoUrl}
-                        alt={currentMatch.match.teamA.name}
-                        style={{ width: '48px', height: '48px', borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(255, 255, 255, 0.2)' }}
-                      />
-                    ) : (
-                      <div
-                        style={{
-                          width: '48px',
-                          height: '48px',
-                          borderRadius: '50%',
-                          background: 'rgba(255, 255, 255, 0.1)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontSize: '1.4rem',
-                        }}
-                      >
-                        🏏
-                      </div>
-                    )}
-                    <div>
-                      <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#FFF' }}>
-                        {currentMatch.match.teamA.name}
-                      </div>
-                      <div style={{ fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.5)' }}>
-                        {currentInnings?.battingTeam?.id === currentMatch.match.teamA.id ? 'Batting' : 'Fielding'}
-                      </div>
-                    </div>
-                  </div>
+              <div className="scorecard-widget-body">
+                {/* Scoreboard Layout: Desktop 3-column / Mobile Google Cricket 2-row Stack */}
+                {(() => {
+                  const isPreMatch = currentMatch.status === 'UPCOMING' && !currentMatch.match.tossWinnerId;
+                  const inn1 = (currentMatch.allInningsSummary || []).find((i: any) => i.inningsNumber === 1);
+                  const inn1BattingTeamId = inn1?.battingTeamId || (
+                    currentMatch.match.tossWinnerId
+                      ? (currentMatch.match.tossDecision === 'BAT' ? currentMatch.match.tossWinnerId : (currentMatch.match.tossWinnerId === currentMatch.match.teamA.id ? currentMatch.match.teamB.id : currentMatch.match.teamA.id))
+                      : currentMatch.match.teamA.id
+                  );
+                  const inn2BattingTeamId = inn1BattingTeamId === currentMatch.match.teamA.id ? currentMatch.match.teamB.id : currentMatch.match.teamA.id;
 
-                  {/* Center Score & Overs */}
-                  <div style={{ textAlign: 'center' }}>
-                    <div
-                      style={{
-                        fontFamily: 'var(--font-data, monospace)',
-                        fontSize: '2.4rem',
-                        fontWeight: 900,
-                        color: 'var(--color-gold, #FFB800)',
-                        letterSpacing: '-0.02em',
-                        lineHeight: 1,
-                      }}
-                    >
-                      {currentInnings ? `${currentInnings.runs}/${currentInnings.wickets}` : '0/0'}
-                    </div>
-                    <div style={{ fontSize: '0.9rem', color: 'rgba(255, 255, 255, 0.7)', marginTop: '4px', fontWeight: 600 }}>
-                      {currentInnings ? `Overs: ${currentInnings.overs}.${currentInnings.balls}` : '0.0 Overs'}
-                      {currentMatch.match.oversPerInnings ? ` / ${currentMatch.match.oversPerInnings} ov` : ''}
-                    </div>
-                    {currentMatch.currentInnings >= 3 && (
-                      <div style={{ marginTop: '4px', display: 'inline-block', background: 'rgba(245, 158, 11, 0.2)', border: '1px solid #F59E0B', color: '#FBBF24', fontSize: '0.72rem', fontWeight: 800, padding: '2px 8px', borderRadius: '4px' }}>
-                        ⚡ SUPER OVER
-                      </div>
-                    )}
-                    {currentMatch.isFreeHit && (
-                      <div style={{ marginTop: '6px', display: 'inline-flex', alignItems: 'center', gap: '4px', background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.3) 0%, rgba(234, 88, 12, 0.3) 100%)', border: '1.5px solid #F59E0B', color: '#FEF08A', fontSize: '0.72rem', fontWeight: 900, padding: '3px 10px', borderRadius: '20px', letterSpacing: '0.06em', textTransform: 'uppercase', boxShadow: '0 0 10px rgba(245, 158, 11, 0.4)' }}>
-                        ⚡ FREE HIT
-                      </div>
-                    )}
-                  </div>
+                  const leftTeam = isPreMatch ? currentMatch.match.teamA : (inn1BattingTeamId === currentMatch.match.teamB.id ? currentMatch.match.teamB : currentMatch.match.teamA);
+                  const rightTeam = isPreMatch ? currentMatch.match.teamB : (inn2BattingTeamId === currentMatch.match.teamB.id ? currentMatch.match.teamB : currentMatch.match.teamA);
 
-                  {/* Team B Score Block */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexDirection: 'row-reverse' }}>
-                    {currentMatch.match.teamB.logoUrl ? (
-                      <img
-                        src={currentMatch.match.teamB.logoUrl}
-                        alt={currentMatch.match.teamB.name}
-                        style={{ width: '48px', height: '48px', borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(255, 255, 255, 0.2)' }}
-                      />
-                    ) : (
-                      <div
-                        style={{
-                          width: '48px',
-                          height: '48px',
-                          borderRadius: '50%',
-                          background: 'rgba(255, 255, 255, 0.1)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontSize: '1.4rem',
-                        }}
-                      >
-                        🦁
+                  const isLeftBatting = currentMatch.status === 'LIVE' && currentInnings?.battingTeam?.id === leftTeam.id;
+                  const isRightBatting = currentMatch.status === 'LIVE' && currentInnings?.battingTeam?.id === rightTeam.id;
+
+                  const leftInningsSummary = (currentMatch.allInningsSummary || []).find((i: any) => i.battingTeamId === leftTeam.id && !i.isSuperOver);
+                  const rightInningsSummary = (currentMatch.allInningsSummary || []).find((i: any) => i.battingTeamId === rightTeam.id && !i.isSuperOver);
+
+                  return (
+                    <div style={{ paddingBottom: '16px', borderBottom: '1px solid rgba(255, 255, 255, 0.08)' }}>
+                      {/* Desktop View (>= 768px): 3-Column Grid */}
+                      <div className="scorecard-desktop-view">
+                        <div className="scorecard-match-header-grid">
+                          {/* Left Team (Batting 1st) */}
+                          <div className="scorecard-team-a-box">
+                            {leftTeam.logoUrl ? (
+                              <img
+                                src={leftTeam.logoUrl}
+                                alt={leftTeam.name}
+                                style={{ width: '48px', height: '48px', borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(255, 255, 255, 0.2)', flexShrink: 0 }}
+                              />
+                            ) : (
+                              <div
+                                style={{
+                                  width: '48px',
+                                  height: '48px',
+                                  borderRadius: '50%',
+                                  background: 'rgba(255, 255, 255, 0.1)',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  fontSize: '1.4rem',
+                                  flexShrink: 0,
+                                }}
+                              >
+                                🏏
+                              </div>
+                            )}
+                            <div>
+                              <div style={{ fontSize: '1.15rem', fontWeight: 800, color: '#FFF', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                                <span>{leftTeam.name}</span>
+                                {isLeftBatting && (
+                                  <span
+                                    style={{
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      gap: '3px',
+                                      padding: '2px 7px',
+                                      borderRadius: '4px',
+                                      background: 'rgba(239, 68, 68, 0.2)',
+                                      border: '1px solid #EF4444',
+                                      color: '#FCA5A5',
+                                      fontSize: '0.68rem',
+                                      fontWeight: 800,
+                                      letterSpacing: '0.04em',
+                                    }}
+                                  >
+                                    🏏 BATTING
+                                  </span>
+                                )}
+                              </div>
+                              <div style={{ fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.5)' }}>
+                                {leftInningsSummary
+                                  ? `${leftInningsSummary.runs}/${leftInningsSummary.wickets} (${leftInningsSummary.overs}.${leftInningsSummary.balls} ov)`
+                                  : isLeftBatting
+                                  ? `${currentInnings?.runs ?? 0}/${currentInnings?.wickets ?? 0} (Batting)`
+                                  : !isPreMatch
+                                  ? 'Yet to bat'
+                                  : leftTeam.shortName || 'Team 1'}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Center Score & Overs */}
+                          <div className="scorecard-center-score-box">
+                            <div
+                              style={{
+                                fontFamily: 'var(--font-data, monospace)',
+                                fontSize: '2.4rem',
+                                fontWeight: 900,
+                                color: 'var(--color-gold, #FFB800)',
+                                letterSpacing: '-0.02em',
+                                lineHeight: 1,
+                              }}
+                            >
+                              {currentInnings ? `${currentInnings.runs}/${currentInnings.wickets}` : '0/0'}
+                            </div>
+                            <div style={{ fontSize: '0.9rem', color: 'rgba(255, 255, 255, 0.7)', marginTop: '4px', fontWeight: 600 }}>
+                              {currentInnings ? `Overs: ${currentInnings.overs}.${currentInnings.balls}` : '0.0 Overs'}
+                              {currentMatch.match.oversPerInnings ? ` / ${currentMatch.match.oversPerInnings} ov` : ''}
+                            </div>
+                            {currentMatch.currentInnings >= 3 && (
+                              <div style={{ marginTop: '4px', display: 'inline-block', background: 'rgba(245, 158, 11, 0.2)', border: '1px solid #F59E0B', color: '#FBBF24', fontSize: '0.72rem', fontWeight: 800, padding: '2px 8px', borderRadius: '4px' }}>
+                                ⚡ SUPER OVER
+                              </div>
+                            )}
+                            {currentMatch.isFreeHit && (
+                              <div style={{ marginTop: '6px', display: 'inline-flex', alignItems: 'center', gap: '4px', background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.3) 0%, rgba(234, 88, 12, 0.3) 100%)', border: '1.5px solid #F59E0B', color: '#FEF08A', fontSize: '0.72rem', fontWeight: 900, padding: '3px 10px', borderRadius: '20px', letterSpacing: '0.06em', textTransform: 'uppercase', boxShadow: '0 0 10px rgba(245, 158, 11, 0.4)' }}>
+                                ⚡ FREE HIT
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Right Team (Batting 2nd) */}
+                          <div className="scorecard-team-b-box">
+                            <div style={{ textAlign: 'right' }}>
+                              <div style={{ fontSize: '1.15rem', fontWeight: 800, color: '#FFF', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '8px', flexWrap: 'wrap' }}>
+                                {isRightBatting && (
+                                  <span
+                                    style={{
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      gap: '3px',
+                                      padding: '2px 7px',
+                                      borderRadius: '4px',
+                                      background: 'rgba(239, 68, 68, 0.2)',
+                                      border: '1px solid #EF4444',
+                                      color: '#FCA5A5',
+                                      fontSize: '0.68rem',
+                                      fontWeight: 800,
+                                      letterSpacing: '0.04em',
+                                    }}
+                                  >
+                                    🏏 BATTING
+                                  </span>
+                                )}
+                                <span>{rightTeam.name}</span>
+                              </div>
+                              <div style={{ fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.5)' }}>
+                                {rightInningsSummary
+                                  ? `${rightInningsSummary.runs}/${rightInningsSummary.wickets} (${rightInningsSummary.overs}.${rightInningsSummary.balls} ov)`
+                                  : isRightBatting
+                                  ? `${currentInnings?.runs ?? 0}/${currentInnings?.wickets ?? 0} (Batting)`
+                                  : !isPreMatch
+                                  ? 'Yet to bat'
+                                  : rightTeam.shortName || 'Team 2'}
+                              </div>
+                            </div>
+                            {rightTeam.logoUrl ? (
+                              <img
+                                src={rightTeam.logoUrl}
+                                alt={rightTeam.name}
+                                style={{ width: '48px', height: '48px', borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(255, 255, 255, 0.2)', flexShrink: 0 }}
+                              />
+                            ) : (
+                              <div
+                                style={{
+                                  width: '48px',
+                                  height: '48px',
+                                  borderRadius: '50%',
+                                  background: 'rgba(255, 255, 255, 0.1)',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  fontSize: '1.4rem',
+                                  flexShrink: 0,
+                                }}
+                              >
+                                🦁
+                              </div>
+                            )}
+                          </div>
+                        </div>
                       </div>
-                    )}
-                    <div style={{ textAlign: 'right' }}>
-                      <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#FFF' }}>
-                        {currentMatch.match.teamB.name}
-                      </div>
-                      <div style={{ fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.5)' }}>
-                        {currentInnings?.battingTeam?.id === currentMatch.match.teamB.id ? 'Batting' : 'Fielding'}
+
+                      {/* Mobile View (< 768px): Google Cricket Standard Side-by-Side Dual Team View */}
+                      <div className="scorecard-mobile-view">
+                        <div className="scorecard-mobile-dual-grid">
+                          {/* Left Team Card (Batting 1st) */}
+                          <div className={`scorecard-mobile-team-card left ${isLeftBatting ? 'is-batting' : ''}`}>
+                            <div className="scorecard-mobile-card-header">
+                              {leftTeam.logoUrl ? (
+                                <img src={leftTeam.logoUrl} alt={leftTeam.name} className="scorecard-mobile-logo" />
+                              ) : (
+                                <div className="scorecard-mobile-logo-placeholder">🏏</div>
+                              )}
+                              <div className="scorecard-mobile-card-names">
+                                <span className="scorecard-mobile-card-title">{leftTeam.name}</span>
+                                {isLeftBatting && <span className="scorecard-mobile-batting-badge">🏏 BATTING</span>}
+                                <span className="scorecard-mobile-shortname">{leftTeam.shortName}</span>
+                              </div>
+                            </div>
+
+                            <div className="scorecard-mobile-card-scores left">
+                              {leftInningsSummary ? (
+                                <>
+                                  <span className="scorecard-mobile-big-score">{leftInningsSummary.runs}/{leftInningsSummary.wickets}</span>
+                                  <span className="scorecard-mobile-overs-tag">({leftInningsSummary.overs}.{leftInningsSummary.balls} ov)</span>
+                                </>
+                              ) : isLeftBatting ? (
+                                <>
+                                  <span className="scorecard-mobile-big-score">{currentInnings?.runs ?? 0}/{currentInnings?.wickets ?? 0}</span>
+                                  <span className="scorecard-mobile-overs-tag">({currentInnings?.overs ?? 0}.{currentInnings?.balls ?? 0} ov)</span>
+                                </>
+                              ) : (
+                                <span className="scorecard-mobile-yet-text">{isPreMatch ? leftTeam.shortName : 'Yet to bat'}</span>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Center Divider / VS Badge */}
+                          <div className="scorecard-mobile-vs-divider">
+                            <span className="scorecard-mobile-vs-badge">VS</span>
+                          </div>
+
+                          {/* Right Team Card (Batting 2nd) */}
+                          <div className={`scorecard-mobile-team-card right ${isRightBatting ? 'is-batting' : ''}`}>
+                            <div className="scorecard-mobile-card-header right">
+                              {rightTeam.logoUrl ? (
+                                <img src={rightTeam.logoUrl} alt={rightTeam.name} className="scorecard-mobile-logo" />
+                              ) : (
+                                <div className="scorecard-mobile-logo-placeholder">🦁</div>
+                              )}
+                              <div className="scorecard-mobile-card-names right">
+                                <span className="scorecard-mobile-card-title">{rightTeam.name}</span>
+                                {isRightBatting && <span className="scorecard-mobile-batting-badge">🏏 BATTING</span>}
+                                <span className="scorecard-mobile-shortname">{rightTeam.shortName}</span>
+                              </div>
+                            </div>
+
+                            <div className="scorecard-mobile-card-scores right">
+                              {rightInningsSummary ? (
+                                <>
+                                  <span className="scorecard-mobile-big-score">{rightInningsSummary.runs}/{rightInningsSummary.wickets}</span>
+                                  <span className="scorecard-mobile-overs-tag">({rightInningsSummary.overs}.{rightInningsSummary.balls} ov)</span>
+                                </>
+                              ) : isRightBatting ? (
+                                <>
+                                  <span className="scorecard-mobile-big-score">{currentInnings?.runs ?? 0}/{currentInnings?.wickets ?? 0}</span>
+                                  <span className="scorecard-mobile-overs-tag">({currentInnings?.overs ?? 0}.{currentInnings?.balls ?? 0} ov)</span>
+                                </>
+                              ) : (
+                                <span className="scorecard-mobile-yet-text">{isPreMatch ? rightTeam.shortName : 'Yet to bat'}</span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Mobile Status Strip */}
+                        <div className="scorecard-mobile-status-strip">
+                          <div className="scorecard-mobile-status-live">
+                            <span className="scorecard-live-dot" />
+                            <span>
+                              {currentMatch.currentInnings >= 3
+                                ? `SUPER OVER ${currentMatch.currentInnings - 2}`
+                                : `INNINGS ${currentMatch.currentInnings}`}
+                              {currentInnings ? ` (${currentInnings.overs}.${currentInnings.balls}/${currentMatch.match.oversPerInnings || 4} OV)` : ''}
+                            </span>
+                            {currentMatch.isFreeHit && (
+                              <span style={{ color: '#FEF08A', fontWeight: 900, background: 'rgba(245, 158, 11, 0.25)', padding: '1px 5px', borderRadius: '3px' }}>
+                                FREE HIT
+                              </span>
+                            )}
+                          </div>
+                          <div className="scorecard-mobile-rates">
+                            <span>CRR: <strong>{currentMatch.chase?.crr || currentInnings?.crr || '0.00'}</strong></span>
+                            {currentMatch.chase?.isChase && currentMatch.chase?.target ? (
+                              <span> • Target: <strong style={{ color: 'var(--color-gold)' }}>{currentMatch.chase.target}</strong></span>
+                            ) : null}
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </div>
+                  );
+                })()}
 
                 {/* Match Situation & Run Rates Bar */}
                 <div
@@ -714,7 +1063,7 @@ export default function LiveScoreWidget() {
                 <div
                   style={{
                     display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
                     gap: '16px',
                     marginTop: '16px',
                   }}
@@ -866,10 +1215,281 @@ export default function LiveScoreWidget() {
         )}
 
         {/* ───────────────────────────────────────────────────────────── */}
+        {/* TAB: POINTS TABLE & NRR                                       */}
+        {/* ───────────────────────────────────────────────────────────── */}
+        {navTab === 'POINTS_TABLE' && (
+          <div className="scorecard-widget-body">
+            {/* Header & Stage Progress Pill */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px', flexWrap: 'wrap', gap: '14px' }}>
+              <div>
+                <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 900, color: '#FFF', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  📊 Points Table & Net Run Rate (NRR)
+                </h3>
+                <p style={{ margin: '4px 0 0', fontSize: '0.82rem', color: 'rgba(255,255,255,0.5)' }}>
+                  Stage standings computed from completed match data using official ball-based NRR
+                </p>
+              </div>
+
+              {/* Badges / Links */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                {statsData.overview?.progress && (
+                  <span
+                    style={{
+                      padding: '5px 12px',
+                      borderRadius: '9999px',
+                      background: 'rgba(192, 39, 45, 0.15)',
+                      border: '1px solid rgba(192, 39, 45, 0.35)',
+                      color: '#FCA5A5',
+                      fontSize: '0.74rem',
+                      fontWeight: 800,
+                      letterSpacing: '0.04em',
+                      textTransform: 'uppercase',
+                    }}
+                  >
+                    STAGE: {statsData.overview.progress.currentStage || 'GROUP'} ({statsData.overview.progress.completedMatches || 0}/{statsData.overview.progress.totalMatches || 16})
+                  </span>
+                )}
+                <Link
+                  href="/tournament"
+                  style={{
+                    padding: '5px 12px',
+                    borderRadius: '9999px',
+                    background: 'rgba(255, 255, 255, 0.08)',
+                    border: '1px solid rgba(255, 255, 255, 0.15)',
+                    color: '#FFF',
+                    fontSize: '0.74rem',
+                    fontWeight: 700,
+                    textDecoration: 'none',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                  }}
+                >
+                  🏆 Bracket Hub ↗
+                </Link>
+              </div>
+            </div>
+
+            {/* Stage Selector Sub-tabs (Group A, B, C, Wildcard) */}
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '18px', overflowX: 'auto', paddingBottom: '4px' }}>
+              {(['A', 'B', 'C', 'wildcard'] as const).map((g) => {
+                const isSelected = tableGroup === g;
+                return (
+                  <button
+                    key={g}
+                    onClick={() => setTableGroup(g)}
+                    style={{
+                      padding: '7px 16px',
+                      borderRadius: '9999px',
+                      border: isSelected ? '1px solid var(--color-gold, #FFB800)' : '1px solid rgba(255, 255, 255, 0.1)',
+                      background: isSelected ? 'rgba(255, 184, 0, 0.18)' : 'rgba(255, 255, 255, 0.04)',
+                      color: isSelected ? '#FFB800' : 'rgba(255, 255, 255, 0.7)',
+                      fontWeight: 800,
+                      fontSize: '0.8rem',
+                      cursor: 'pointer',
+                      whiteSpace: 'nowrap',
+                      transition: 'all 0.15s ease',
+                    }}
+                  >
+                    {g === 'wildcard' ? '⚡ Wildcard Stage' : `Group ${g}`}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Points Table Render */}
+            {(() => {
+              const overview = statsData.overview;
+              let activeStandings: any[] = [];
+              let groupTitle = 'Group A Standings';
+              let groupSubtitle = '1st qualifies for Final Four; 2nd advances to Wildcard; 3rd eliminated.';
+
+              if (tableGroup === 'A') {
+                activeStandings = overview?.groups?.groupA?.standings || [];
+                groupTitle = 'Group A Standings';
+                groupSubtitle = 'Top team qualifies directly for Final Four (Seed #1-#3). 2nd advances to Wildcard. 3rd eliminated.';
+              } else if (tableGroup === 'B') {
+                activeStandings = overview?.groups?.groupB?.standings || [];
+                groupTitle = 'Group B Standings';
+                groupSubtitle = 'Top team qualifies directly for Final Four (Seed #1-#3). 2nd advances to Wildcard. 3rd eliminated.';
+              } else if (tableGroup === 'C') {
+                activeStandings = overview?.groups?.groupC?.standings || [];
+                groupTitle = 'Group C Standings';
+                groupSubtitle = 'Top team qualifies directly for Final Four (Seed #1-#3). 2nd advances to Wildcard. 3rd eliminated.';
+              } else {
+                activeStandings = overview?.wildcard?.standings || [];
+                groupTitle = 'Wildcard Stage Standings';
+                groupSubtitle = 'Round-robin between the 3 runners-up. Top team qualifies as Final Four Seed #4.';
+              }
+
+              return (
+                <div>
+                  <div style={{ marginBottom: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+                    <div style={{ fontSize: '0.84rem', color: 'rgba(255, 255, 255, 0.65)' }}>
+                      <strong style={{ color: '#FFF' }}>{groupTitle}:</strong> {groupSubtitle}
+                    </div>
+                  </div>
+
+                  {statsLoading && !overview ? (
+                    <div style={{ padding: '40px', textAlign: 'center', color: 'rgba(255,255,255,0.5)' }}>
+                      Loading tournament standings & NRR...
+                    </div>
+                  ) : activeStandings.length === 0 ? (
+                    <div style={{ padding: '36px 20px', textAlign: 'center', color: 'rgba(255,255,255,0.6)', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.06)' }}>
+                      <div style={{ fontSize: '1.8rem', marginBottom: '8px' }}>📊</div>
+                      <div style={{ fontSize: '1rem', fontWeight: 800, color: '#FFF', marginBottom: '4px' }}>
+                        Standings Pending Match Data
+                      </div>
+                      <p style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.5)', margin: 0, maxWidth: '520px', marginLeft: 'auto', marginRight: 'auto' }}>
+                        {tableGroup === 'wildcard'
+                          ? 'Wildcard standings will generate once the 3 Group Stage runners-up are determined.'
+                          : `Standings for ${groupTitle} will update automatically as matches in this group are completed.`}
+                      </p>
+                    </div>
+                  ) : (
+                    <div style={{ overflowX: 'auto', borderRadius: '10px', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+                      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem', textAlign: 'left' }}>
+                        <thead>
+                          <tr style={{ background: 'rgba(255, 255, 255, 0.04)', color: 'rgba(255, 255, 255, 0.5)', fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                            <th style={{ padding: '10px 14px', width: '40px' }}>POS</th>
+                            <th style={{ padding: '10px 14px' }}>TEAM</th>
+                            <th style={{ padding: '10px 10px', textAlign: 'center', width: '40px' }}>P</th>
+                            <th style={{ padding: '10px 10px', textAlign: 'center', width: '40px' }}>W</th>
+                            <th style={{ padding: '10px 10px', textAlign: 'center', width: '40px' }}>L</th>
+                            <th style={{ padding: '10px 10px', textAlign: 'center', width: '40px' }}>T</th>
+                            <th style={{ padding: '10px 10px', textAlign: 'center', width: '40px' }}>NR</th>
+                            <th style={{ padding: '10px 12px', textAlign: 'center', width: '55px', fontWeight: 900, color: 'var(--color-gold, #FFB800)' }}>PTS</th>
+                            <th style={{ padding: '10px 12px', textAlign: 'center' }}>RUNS FOR (OV)</th>
+                            <th style={{ padding: '10px 12px', textAlign: 'center' }}>RUNS AGN (OV)</th>
+                            <th style={{ padding: '10px 14px', textAlign: 'center', width: '85px', fontWeight: 900, color: '#10B981' }}>NRR</th>
+                            <th style={{ padding: '10px 14px', textAlign: 'center', width: '110px' }}>STATUS</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {activeStandings.map((s: any, idx: number) => {
+                            const isQual = idx === 0;
+                            const isWild = idx === 1 && tableGroup !== 'wildcard';
+                            const isElim = (idx === 2 && tableGroup !== 'wildcard') || (idx > 0 && tableGroup === 'wildcard');
+
+                            return (
+                              <tr
+                                key={s.teamId || idx}
+                                style={{
+                                  borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+                                  background: isQual ? 'rgba(16, 185, 129, 0.05)' : isWild ? 'rgba(245, 158, 11, 0.04)' : 'transparent',
+                                }}
+                              >
+                                <td style={{ padding: '12px 14px', fontWeight: 800, color: isQual ? '#10B981' : isWild ? '#F59E0B' : '#EF4444' }}>
+                                  {s.pos || idx + 1}
+                                </td>
+                                <td style={{ padding: '12px 14px', fontWeight: 700, color: '#FFF' }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    {s.teamLogoUrl ? (
+                                      <img src={s.teamLogoUrl} alt={s.teamName} style={{ width: '22px', height: '22px', borderRadius: '50%', objectFit: 'cover' }} />
+                                    ) : (
+                                      <span style={{ fontSize: '0.95rem' }}>🏏</span>
+                                    )}
+                                    <span>{s.teamName}</span>
+                                    <span style={{ color: 'rgba(255, 255, 255, 0.45)', fontSize: '0.76rem', fontWeight: 600 }}>({s.teamShortName})</span>
+                                  </div>
+                                </td>
+                                <td style={{ padding: '12px 10px', textAlign: 'center', fontFamily: 'var(--font-data, monospace)', color: 'rgba(255, 255, 255, 0.8)' }}>{s.played}</td>
+                                <td style={{ padding: '12px 10px', textAlign: 'center', fontFamily: 'var(--font-data, monospace)', color: '#10B981', fontWeight: 700 }}>{s.won}</td>
+                                <td style={{ padding: '12px 10px', textAlign: 'center', fontFamily: 'var(--font-data, monospace)', color: 'rgba(255, 255, 255, 0.6)' }}>{s.lost}</td>
+                                <td style={{ padding: '12px 10px', textAlign: 'center', fontFamily: 'var(--font-data, monospace)', color: 'rgba(255, 255, 255, 0.6)' }}>{s.tied}</td>
+                                <td style={{ padding: '12px 10px', textAlign: 'center', fontFamily: 'var(--font-data, monospace)', color: 'rgba(255, 255, 255, 0.6)' }}>{s.noResult}</td>
+                                <td style={{ padding: '12px 12px', textAlign: 'center', fontFamily: 'var(--font-data, monospace)', fontWeight: 900, fontSize: '1rem', color: 'var(--color-gold, #FFB800)' }}>
+                                  {s.points}
+                                </td>
+                                <td style={{ padding: '12px 12px', textAlign: 'center', fontFamily: 'var(--font-data, monospace)', fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.75)' }}>
+                                  {s.runsFor} / {s.displayOversFor}
+                                </td>
+                                <td style={{ padding: '12px 12px', textAlign: 'center', fontFamily: 'var(--font-data, monospace)', fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.75)' }}>
+                                  {s.runsAgainst} / {s.displayOversAgainst}
+                                </td>
+                                <td style={{ padding: '12px 14px', textAlign: 'center', fontFamily: 'var(--font-data, monospace)', fontWeight: 900, color: s.nrr >= 0 ? '#10B981' : '#EF4444' }}>
+                                  {s.displayNRR}
+                                </td>
+                                <td style={{ padding: '12px 14px', textAlign: 'center' }}>
+                                  <span
+                                    style={{
+                                      padding: '3px 8px',
+                                      borderRadius: '9999px',
+                                      fontSize: '0.7rem',
+                                      fontWeight: 800,
+                                      letterSpacing: '0.04em',
+                                      background: isQual ? 'rgba(16, 185, 129, 0.18)' : isWild ? 'rgba(245, 158, 11, 0.18)' : 'rgba(239, 68, 68, 0.18)',
+                                      color: isQual ? '#10B981' : isWild ? '#F59E0B' : '#EF4444',
+                                      border: `1px solid ${isQual ? 'rgba(16, 185, 129, 0.35)' : isWild ? 'rgba(245, 158, 11, 0.35)' : 'rgba(239, 68, 68, 0.35)'}`,
+                                    }}
+                                  >
+                                    {isQual ? (tableGroup === 'wildcard' ? 'SEED #4' : 'QUALIFIED') : isWild ? 'WILDCARD' : 'ELIMINATED'}
+                                  </span>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+
+                  {/* NRR Formula & Rules Note */}
+                  <div
+                    style={{
+                      marginTop: '20px',
+                      background: 'rgba(255, 255, 255, 0.025)',
+                      border: '1px solid rgba(255, 255, 255, 0.07)',
+                      borderRadius: '10px',
+                      padding: '14px 18px',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      flexWrap: 'wrap',
+                      gap: '12px',
+                    }}
+                  >
+                    <div>
+                      <div style={{ fontSize: '0.78rem', fontWeight: 800, color: 'var(--color-gold, #FFB800)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '4px' }}>
+                        📐 Official CPL Softball Net Run Rate Formula
+                      </div>
+                      <div style={{ fontSize: '0.82rem', color: 'rgba(255, 255, 255, 0.7)', lineHeight: 1.4 }}>
+                        NRR = (Runs Scored ÷ Effective Overs Faced) − (Runs Conceded ÷ Effective Overs Bowled).<br />
+                        Effective overs = legal balls ÷ ballsPerOver. In an all-out innings, the team is debited with the full allotted overs.
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <Link
+                        href="/tournament"
+                        style={{
+                          padding: '7px 12px',
+                          borderRadius: '6px',
+                          background: 'rgba(192, 39, 45, 0.2)',
+                          border: '1px solid rgba(192, 39, 45, 0.4)',
+                          color: '#FCA5A5',
+                          fontSize: '0.78rem',
+                          fontWeight: 700,
+                          textDecoration: 'none',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                        }}
+                      >
+                        🏆 Tournament Hub ↗
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+          </div>
+        )}
+
+        {/* ───────────────────────────────────────────────────────────── */}
         {/* TAB 2: ALL MATCHES / PAST RESULTS                             */}
         {/* ───────────────────────────────────────────────────────────── */}
         {navTab === 'ALL_MATCHES' && (
-          <div style={{ padding: '24px' }}>
+          <div className="scorecard-widget-body">
             {/* Filter Bar */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
               <div>
@@ -913,7 +1533,7 @@ export default function LiveScoreWidget() {
                 No matches found under this filter.
               </div>
             ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '16px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px' }}>
                 {filteredMatches.map((m) => {
                   const teamAReg = m.innings.find((i: any) => i.battingTeamId === m.teamA.id && !i.isSuperOver);
                   const teamASO = m.innings.find((i: any) => i.battingTeamId === m.teamA.id && i.isSuperOver);
@@ -1034,7 +1654,7 @@ export default function LiveScoreWidget() {
         {/* TAB 3: TOP RUN SCORERS (BATTING LEADERBOARD)                  */}
         {/* ───────────────────────────────────────────────────────────── */}
         {navTab === 'TOP_BATTERS' && (
-          <div style={{ padding: '24px' }}>
+          <div className="scorecard-widget-body">
             <div style={{ marginBottom: '20px' }}>
               <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 900, color: '#FFF' }}>
                 🏏 Top Run Scorers (Orange Cap Race)
@@ -1168,7 +1788,7 @@ export default function LiveScoreWidget() {
         {/* TAB 4: TOP WICKET TAKERS (BOWLING LEADERBOARD)                */}
         {/* ───────────────────────────────────────────────────────────── */}
         {navTab === 'TOP_BOWLERS' && (
-          <div style={{ padding: '24px' }}>
+          <div className="scorecard-widget-body">
             <div style={{ marginBottom: '20px' }}>
               <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 900, color: '#FFF' }}>
                 🎯 Top Wicket Takers (Purple Cap Race)

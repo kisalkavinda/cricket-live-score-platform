@@ -19,6 +19,7 @@ import {
   createExceptionSchema,
 } from '@/lib/validations/admin';
 import { prisma } from 'database';
+import { normalizeImageUrl } from '@/lib/utils/image-utils';
 
 export async function loginAdminServerAction(password: string) {
   if (!password || typeof password !== 'string') {
@@ -203,7 +204,7 @@ export async function createTeamServerAction(formData: FormData) {
       name: parsed.data.name,
       shortName: parsed.data.shortName,
       city: parsed.data.city || null,
-      logoUrl: parsed.data.logoUrl || null,
+      logoUrl: normalizeImageUrl(parsed.data.logoUrl) || null,
     },
   });
 
@@ -350,7 +351,7 @@ export async function updateTeamServerAction(teamId: string, formData: FormData)
       name: parsed.data.name,
       shortName: parsed.data.shortName,
       city: parsed.data.city || null,
-      logoUrl: parsed.data.logoUrl || null,
+      logoUrl: normalizeImageUrl(parsed.data.logoUrl) || null,
     },
   });
 

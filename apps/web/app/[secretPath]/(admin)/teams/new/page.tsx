@@ -42,12 +42,29 @@ export default function NewTeamPage() {
       }
 
       if (file) {
+        const allowedMimes = ['image/jpeg', 'image/png', 'image/webp'];
+        const allowedExts = ['jpg', 'jpeg', 'png', 'webp'];
+        const maxSizeBytes = 5 * 1024 * 1024; // 5MB
+
+        const fileExt = (file.name.split('.').pop() || '').toLowerCase();
+        if (!allowedMimes.includes(file.type) || !allowedExts.includes(fileExt)) {
+          setError('Invalid image format. Only JPEG, PNG, and WebP images are allowed (SVGs are rejected).');
+          setIsSubmitting(false);
+          return;
+        }
+
+        if (file.size > maxSizeBytes) {
+          setError('Image file size exceeds the 5MB limit.');
+          setIsSubmitting(false);
+          return;
+        }
+
         const supabase = createClient();
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${Math.random()}.${fileExt}`;
+        const safeId = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2);
+        const fileName = `${safeId}.${fileExt}`;
         const { data, error: uploadErr } = await supabase.storage
           .from('team-logos')
-          .upload(fileName, file);
+          .upload(fileName, file, { contentType: file.type });
 
         if (uploadErr) {
           console.error('Error uploading file:', uploadErr);

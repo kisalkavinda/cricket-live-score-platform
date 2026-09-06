@@ -106,7 +106,7 @@ export default function Footer() {
               </li>
               <li>
                 <Link
-                  href="/#fixtures"
+                  href="/tournament"
                   style={{
                     color: 'rgba(255, 255, 255, 0.8)',
                     textDecoration: 'none',
@@ -114,7 +114,7 @@ export default function Footer() {
                     fontWeight: 500,
                   }}
                 >
-                  Tournament Draw & Fixtures
+                  Tournament Hub & Draw
                 </Link>
               </li>
             </ul>

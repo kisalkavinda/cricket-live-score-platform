@@ -2,6 +2,7 @@ import { prisma } from 'database';
 import Link from 'next/link';
 import { getAdminEntryPath, requireAdminAuth } from '@/lib/auth/admin-auth';
 import { createPerfTracker, logPerfMetric } from '@/lib/utils/perf-logger';
+import { normalizeImageUrl } from '@/lib/utils/image-utils';
 
 export const dynamic = 'force-dynamic';
 
@@ -174,9 +175,9 @@ export default async function AdminTeamsPage() {
               >
                 <div style={{ display: 'flex', alignItems: 'flex-start', gap: '14px' }}>
                   {/* Team Logo or Crest Avatar */}
-                  {team.logoUrl ? (
+                  {normalizeImageUrl(team.logoUrl) ? (
                     <img
-                      src={team.logoUrl}
+                      src={normalizeImageUrl(team.logoUrl)!}
                       alt={team.name}
                       style={{
                         width: '48px',

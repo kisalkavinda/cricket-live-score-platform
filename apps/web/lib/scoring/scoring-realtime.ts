@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 // Server-side Supabase client for broadcasting real-time events
 const supabase = supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKey) : null;
@@ -43,6 +43,8 @@ export interface ScoreBroadcastPayload {
     ballsPerOver?: number;
     resultNote?: string | null;
     winnerTeamId?: string | null;
+    tossWinnerId?: string | null;
+    tossDecision?: string | null;
   };
   allInningsSummary?: Array<{
     inningsNumber: number;
@@ -51,7 +53,7 @@ export interface ScoreBroadcastPayload {
     wickets: number;
     overs: number;
     balls: number;
-    isSuperOver: boolean;
+    isSuperOver?: boolean;
   }>;
   striker: {
     id: string;
@@ -83,7 +85,7 @@ export interface ScoreBroadcastPayload {
     wides: number;
     noBalls: number;
   } | null;
-  recentBalls: Array<{
+  recentBalls?: Array<{
     id: string;
     overNumber: number;
     ballNumber: number;
@@ -101,7 +103,7 @@ export interface ScoreBroadcastPayload {
 /**
  * Broadcasts an authoritative match state to Supabase Realtime channel `match:${matchId}`
  * and to a global `matches:live` channel for index widgets.
- * Guaranteed non-blocking and optimized with httpSend & race timeout.
+ * Uses high-speed HTTP REST endpoint via httpSend('score_update', payload) with 1500ms race timeout.
  */
 export async function broadcastScoreUpdate(payload: ScoreBroadcastPayload): Promise<void> {
   if (!supabase) {
@@ -115,11 +117,8 @@ export async function broadcastScoreUpdate(payload: ScoreBroadcastPayload): Prom
     const sendEvent = async (ch: any) => {
       try {
         if (typeof ch.httpSend === 'function') {
-          return await ch.httpSend({
-            type: 'broadcast',
-            event: 'score_update',
-            payload,
-          });
+          // Supabase Realtime httpSend takes event string and payload object
+          return await ch.httpSend('score_update', payload);
         }
         return await ch.send({
           type: 'broadcast',
@@ -127,14 +126,14 @@ export async function broadcastScoreUpdate(payload: ScoreBroadcastPayload): Prom
           payload,
         });
       } catch (e) {
-        // Silently catch individual channel send error
+        console.warn('[Realtime] Individual channel broadcast error:', (e as any)?.message || e);
       }
     };
 
-    // Broadcast concurrently with a strict 200ms timeout so it NEVER blocks or slows down mutations
+    // Broadcast concurrently to both channels with a generous 1500ms safety timeout
     await Promise.race([
       Promise.allSettled([sendEvent(channel1), sendEvent(channel2)]),
-      new Promise((resolve) => setTimeout(resolve, 200)),
+      new Promise((resolve) => setTimeout(resolve, 1500)),
     ]);
   } catch (err) {
     console.error('[Realtime] Failed to broadcast score update:', err);

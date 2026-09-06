@@ -446,13 +446,22 @@ h1, h2, h3, h4, h5, h6,
 }
 
 /* ============================================================
-   Bulletproof Responsive Scoreboard Grid (No wrapping bugs)
+   Google Cricket Standard Responsive Scoreboard Card
    ============================================================ */
+.scorecard-desktop-view {
+  display: block;
+  width: 100%;
+}
+
+.scorecard-mobile-view {
+  display: none;
+}
+
 .scorecard-match-header-grid {
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  gap: 16px;
+  gap: 20px;
   width: 100%;
 }
 
@@ -468,7 +477,7 @@ h1, h2, h3, h4, h5, h6,
   flex-direction: column;
   align-items: center;
   text-align: center;
-  padding: 0 8px;
+  padding: 0 12px;
 }
 
 .scorecard-team-b-box {
@@ -479,38 +488,350 @@ h1, h2, h3, h4, h5, h6,
   text-align: right;
 }
 
-@media (max-width: 640px) {
-  .scorecard-match-header-grid {
+/* Mobile Google Cricket View (< 768px) */
+@media (max-width: 767px) {
+  .scorecard-desktop-view {
+    display: none !important;
+  }
+
+  .scorecard-mobile-view {
+    display: flex !important;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+  }
+
+  /* Google Cricket Standard Side-by-Side Dual Team Layout */
+  .scorecard-mobile-dual-grid {
+    display: grid;
     grid-template-columns: 1fr auto 1fr;
+    align-items: stretch;
     gap: 6px;
+    width: 100%;
   }
 
-  .scorecard-team-a-box {
+  .scorecard-mobile-team-card {
+    display: flex;
+    flex-direction: column;
+    justifyContent: space-between;
+    padding: 8px 10px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    min-width: 0;
+    transition: all 0.2s ease;
+  }
+
+  .scorecard-mobile-team-card.is-batting {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.14) 0%, rgba(245, 158, 11, 0.06) 100%);
+    border: 1px solid rgba(239, 68, 68, 0.4);
+    box-shadow: 0 2px 10px rgba(239, 68, 68, 0.15);
+  }
+
+  .scorecard-mobile-team-card.left {
+    text-align: left;
+  }
+
+  .scorecard-mobile-team-card.right {
+    text-align: right;
+  }
+
+  .scorecard-mobile-card-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+  }
+
+  .scorecard-mobile-card-header.right {
+    justify-content: flex-end;
+    flex-direction: row-reverse;
+  }
+
+  .scorecard-mobile-card-names {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    gap: 2px;
+  }
+
+  .scorecard-mobile-card-names.right {
+    align-items: flex-end;
+  }
+
+  .scorecard-mobile-card-title {
+    font-family: var(--font-display);
+    font-size: 0.92rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    color: var(--color-paper);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+    line-height: 1.15;
+  }
+
+  .scorecard-mobile-card-scores {
+    display: flex;
+    flex-direction: column;
+    margin-top: 6px;
+  }
+
+  .scorecard-mobile-card-scores.left {
+    align-items: flex-start;
+  }
+
+  .scorecard-mobile-card-scores.right {
+    align-items: flex-end;
+  }
+
+  .scorecard-mobile-big-score {
+    font-family: var(--font-data);
+    font-size: 1.45rem;
+    font-weight: 900;
+    color: var(--color-gold);
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+  }
+
+  .scorecard-mobile-overs-tag {
+    font-family: var(--font-data);
+    font-size: 0.72rem;
+    color: rgba(255, 255, 255, 0.65);
+    font-weight: 600;
+    margin-top: 1px;
+  }
+
+  .scorecard-mobile-yet-text {
+    font-family: var(--font-data);
+    font-size: 0.82rem;
+    color: rgba(255, 255, 255, 0.4);
+    font-weight: 600;
+    padding: 6px 0;
+  }
+
+  .scorecard-mobile-vs-divider {
+    display: flex;
     flex-direction: column;
     align-items: center;
-    text-align: center;
-    gap: 4px;
+    justifyContent: center;
   }
 
-  .scorecard-team-b-box {
-    flex-direction: column;
+  .scorecard-mobile-vs-badge {
+    font-family: var(--font-data);
+    font-size: 0.65rem;
+    font-weight: 900;
+    color: rgba(255, 255, 255, 0.35);
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 4px 6px;
+    border-radius: 6px;
+    letter-spacing: 0.05em;
+  }
+
+  .scorecard-mobile-team-strip {
+    display: flex;
     align-items: center;
-    text-align: center;
-    gap: 4px;
+    justify-content: space-between;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    transition: all 0.2s ease;
   }
 
-  .scorecard-team-title {
-    font-size: 0.95rem !important;
-    white-space: normal !important;
-    word-break: break-word !important;
+  .scorecard-mobile-team-strip.is-batting {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.12) 0%, rgba(245, 158, 11, 0.06) 100%);
+    border: 1px solid rgba(239, 68, 68, 0.35);
+    box-shadow: 0 2px 10px rgba(239, 68, 68, 0.1);
   }
 
-  .scorecard-main-score {
-    font-size: 1.6rem !important;
+  .scorecard-mobile-team-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    flex: 1;
   }
 
-  .scorecard-overs-text {
-    font-size: 0.72rem !important;
+  .scorecard-mobile-logo {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+    border: 1.5px solid rgba(255, 255, 255, 0.2);
+  }
+
+  .scorecard-mobile-logo-placeholder {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1.5px solid rgba(255, 255, 255, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+  }
+
+  .scorecard-mobile-names {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    gap: 2px;
+  }
+
+  .scorecard-mobile-name-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .scorecard-mobile-team-title {
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    color: var(--color-paper);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    letter-spacing: -0.01em;
+  }
+
+  .scorecard-mobile-batting-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 1px 6px;
+    border-radius: 4px;
+    background: rgba(239, 68, 68, 0.25);
+    border: 1px solid #EF4444;
+    color: #FCA5A5;
+    font-size: 0.62rem;
+    font-weight: 900;
+    letter-spacing: 0.04em;
+    font-family: var(--font-data);
+    flex-shrink: 0;
+  }
+
+  .scorecard-mobile-shortname {
+    font-family: var(--font-data);
+    font-size: 0.72rem;
+    color: rgba(255, 255, 255, 0.45);
+    font-weight: 600;
+  }
+
+  .scorecard-mobile-score-box {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    text-align: right;
+    flex-shrink: 0;
+    padding-left: 10px;
+  }
+
+  .scorecard-mobile-score-val {
+    font-family: var(--font-data);
+    font-size: 1.35rem;
+    font-weight: 900;
+    color: var(--color-gold);
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+  }
+
+  .scorecard-mobile-score-overs {
+    font-family: var(--font-data);
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.65);
+    font-weight: 600;
+  }
+
+  .scorecard-mobile-yet-to-bat {
+    font-family: var(--font-data);
+    font-size: 0.82rem;
+    color: rgba(255, 255, 255, 0.4);
+    font-weight: 600;
+  }
+
+  .scorecard-mobile-status-strip {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    font-size: 0.75rem;
+    font-family: var(--font-data);
+    color: rgba(255, 255, 255, 0.75);
+    margin-top: 2px;
+  }
+
+  .scorecard-mobile-status-live {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 800;
+    color: #EF4444;
+  }
+
+  .scorecard-mobile-status-live .dot,
+  .scorecard-live-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #EF4444;
+    animation: pulseDot 1.4s ease-in-out infinite;
+    display: inline-block;
+    flex-shrink: 0;
+  }
+
+  .scorecard-mobile-rates {
+    font-weight: 700;
+    color: #FBBF24;
+  }
+}
+
+.scorecard-widget-body {
+  padding: 24px;
+}
+
+@media (max-width: 767px) {
+  .scorecard-widget-body {
+    padding: 12px 10px;
+  }
+}
+
+/* Scoring Console keypad responsive grids */
+.scoring-runs-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.scoring-extras-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+}
+
+@media (max-width: 640px) {
+  .scoring-runs-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 8px !important;
+  }
+  .scoring-extras-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
+  }
+  .scoring-extras-grid button:last-child {
+    grid-column: 1 / -1;
   }
 }
 

@@ -10,6 +10,7 @@ import {
 } from '@/lib/admin/admin-actions';
 import DeleteTeamButton from '@/components/admin/DeleteTeamButton';
 import RemovePlayerFromTeamButton from '@/components/admin/RemovePlayerFromTeamButton';
+import { normalizeImageUrl } from '@/lib/utils/image-utils';
 
 export const dynamic = 'force-dynamic';
 
@@ -114,9 +115,9 @@ export default async function TeamDetailPage({
       >
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '20px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '18px' }}>
-            {team.logoUrl ? (
+            {normalizeImageUrl(team.logoUrl) ? (
               <img
-                src={team.logoUrl}
+                src={normalizeImageUrl(team.logoUrl)!}
                 alt={team.name}
                 style={{
                   width: '64px',
