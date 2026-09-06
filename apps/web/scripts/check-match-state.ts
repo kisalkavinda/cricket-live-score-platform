@@ -8,6 +8,11 @@ async function main() {
     }
   });
 
+  if (!match) {
+    console.log('Match not found');
+    return;
+  }
+
   console.log('Match status:', match.status);
   console.log('Match currentInnings:', match.currentInnings);
   console.log('Total innings:', match.innings.length);
