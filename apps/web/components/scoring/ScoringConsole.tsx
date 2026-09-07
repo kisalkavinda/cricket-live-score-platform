@@ -306,7 +306,7 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
 
   // Modals state
   const [showNoBallModal, setShowNoBallModal] = useState(false);
-  const [nbReason, setNbReason] = useState<'OVERSTEP' | 'FULL_TOSS' | 'HEIGHT'>('OVERSTEP');
+  const [nbReason, setNbReason] = useState<'CHEST_HEIGHT' | 'CHUCKING' | 'OVERSTEP' | 'FULL_TOSS' | 'HEIGHT'>('CHEST_HEIGHT');
   const [nbType, setNbType] = useState<'BAT' | 'BYE' | 'LEG_BYE'>('BAT');
   const [nbRuns, setNbRuns] = useState<number>(0);
 
@@ -411,7 +411,7 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
   const isSuperOver = currentInnings?.inningsNumber >= 3;
   const maxOvers = isSuperOver ? 1 : (match.oversPerInnings || 20);
   const matchBallsPerOver = match.ballsPerOver || 6;
-  const maxOversPerBowler = isSuperOver ? 1 : Math.max(1, Math.ceil(maxOvers / 5));
+  const maxOversPerBowler = 1;
 
   // Bowler who bowled the last delivery of the previous over (cannot bowl consecutive overs)
   const lastBowledBall = currentInnings?.ballEvents?.[0];
@@ -428,16 +428,7 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
   });
 
   // Free Hit evaluation: Check whether the current delivery in play is a Free Hit
-  const isFreeHitActive = (() => {
-    const balls = currentInnings?.ballEvents;
-    if (!balls || balls.length === 0) return false;
-    for (const b of balls) {
-      if (b.extraType === 'NO_BALL') return true;
-      if (b.extraType === 'WIDE') continue;
-      return false;
-    }
-    return false;
-  })();
+  const isFreeHitActive = false;
 
   // Action handlers with INSTANT OPTIMISTIC FEEDBACK
   const handleStartMatch = () => {
@@ -777,36 +768,50 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
     const strikerName = activeStriker?.name || 'Striker';
     let commentary = '';
 
-    if (nbReason === 'FULL_TOSS') {
+    if (nbReason === 'CHEST_HEIGHT') {
       if (nbType === 'BAT' && runsOffBat === 6) {
-        commentary = `NO BALL (Full Toss) & SIX! Dangerous waist-high full toss punished with absolute disdain! ${strikerName} launches ${bowlerName}'s beamer deep into the stands! 7 runs and FREE HIT awarded!`;
+        commentary = `NO BALL (Above Chest Height) & SIX! Delivery above chest height hammered into the stands by ${strikerName}! 7 runs added (+1 run & extra delivery, no free hit under CPL rules).`;
       } else if (nbType === 'BAT' && runsOffBat === 4) {
-        commentary = `NO BALL (Full Toss) & FOUR! Smashed away to the boundary! High full toss from ${bowlerName} crunched away to the fence by ${strikerName}! 5 runs added and FREE HIT follows!`;
+        commentary = `NO BALL (Above Chest Height) & FOUR! High ball above chest level crunched away to the boundary by ${strikerName}! 5 runs added (+1 run & extra delivery).`;
       } else if (nbType === 'BAT' && runsOffBat > 0) {
-        commentary = `NO BALL (Full Toss) + ${runsOffBat} RUNS! Above-waist full toss called on ${bowlerName}! ${strikerName} works it away for ${runsOffBat} runs off the bat, penalty run added, and a FREE HIT is awarded!`;
+        commentary = `NO BALL (Above Chest Height) + ${runsOffBat} RUNS! High delivery called above chest height against ${bowlerName}! Batters take ${runsOffBat} runs plus 1 penalty run (+ extra delivery, no free hit).`;
       } else if (nbType === 'BYE' || nbType === 'LEG_BYE') {
-        commentary = `NO BALL (Full Toss) + ${nbRuns} ${nbType === 'BYE' ? 'BYES' : 'LEG BYES'}! High beamer from ${bowlerName} evades everyone! Batters scamper for ${nbRuns} extra runs, and a FREE HIT is signaled!`;
+        commentary = `NO BALL (Above Chest Height) + ${nbRuns} ${nbType === 'BYE' ? 'BYES' : 'LEG BYES'}! High delivery above chest height from ${bowlerName}, batters take ${nbRuns} runs plus 1 penalty run (no free hit).`;
       } else {
-        commentary = `NO BALL (Full Toss)! Dangerous delivery above waist height called on ${bowlerName}! Umpire signals no-ball, penalty run awarded and FREE HIT next for ${strikerName}!`;
+        commentary = `NO BALL (Above Chest Height)! Any delivery above chest height is called a No Ball! 1 penalty run awarded against ${bowlerName} and an extra delivery (CPL Rule: No Free Hit).`;
+      }
+    } else if (nbReason === 'CHUCKING') {
+      commentary = `NO BALL (Chucking)! Illegal bowling action called by the umpire against ${bowlerName}! 1 penalty run awarded and extra delivery (CPL Rule: No Free Hit).`;
+    } else if (nbReason === 'FULL_TOSS') {
+      if (nbType === 'BAT' && runsOffBat === 6) {
+        commentary = `NO BALL (Full Toss) & SIX! Dangerous waist-high full toss punished with absolute disdain! ${strikerName} launches ${bowlerName}'s beamer deep into the stands! 7 runs added (+ extra delivery, no free hit).`;
+      } else if (nbType === 'BAT' && runsOffBat === 4) {
+        commentary = `NO BALL (Full Toss) & FOUR! Smashed away to the boundary! High full toss from ${bowlerName} crunched away to the fence by ${strikerName}! 5 runs added (+ extra delivery).`;
+      } else if (nbType === 'BAT' && runsOffBat > 0) {
+        commentary = `NO BALL (Full Toss) + ${runsOffBat} RUNS! Above-waist full toss called on ${bowlerName}! ${strikerName} works it away for ${runsOffBat} runs, penalty run added (+ extra delivery).`;
+      } else if (nbType === 'BYE' || nbType === 'LEG_BYE') {
+        commentary = `NO BALL (Full Toss) + ${nbRuns} ${nbType === 'BYE' ? 'BYES' : 'LEG BYES'}! High beamer from ${bowlerName} evades everyone! Batters scamper for ${nbRuns} extra runs (+ extra delivery).`;
+      } else {
+        commentary = `NO BALL (Full Toss)! Dangerous delivery above waist height called on ${bowlerName}! Umpire signals no-ball, penalty run awarded and extra delivery (CPL: No Free Hit).`;
       }
     } else if (nbReason === 'HEIGHT') {
       if (runsOffBat > 0) {
-        commentary = `NO BALL (Height) + ${runsOffBat} RUNS! Sharp bouncer flying way over the head of ${strikerName}! Signaled no-ball for excessive height, ${runsOffBat} runs taken, and a FREE HIT coming up!`;
+        commentary = `NO BALL (Height) + ${runsOffBat} RUNS! Sharp bouncer flying way over the head of ${strikerName}! Signaled no-ball for excessive height, ${runsOffBat} runs taken (+ extra delivery).`;
       } else {
-        commentary = `NO BALL (Height)! Bouncer sails way over ${strikerName}'s head! Umpire signals no-ball for dangerous height from ${bowlerName}, penalty run awarded and FREE HIT next!`;
+        commentary = `NO BALL (Height)! Bouncer sails way over ${strikerName}'s head! Umpire signals no-ball for dangerous height from ${bowlerName}, penalty run awarded (+ extra delivery, no free hit).`;
       }
     } else {
       // Default: OVERSTEP / Missing Crease Mark
       if (nbType === 'BAT' && runsOffBat === 6) {
-        commentary = `NO BALL (Overstep) & SIX! ${bowlerName} misses the crease mark and oversteps! ${strikerName} launches it into the stands for a colossal maximum! 7 runs added and FREE HIT coming up!`;
+        commentary = `NO BALL (Overstep) & SIX! ${bowlerName} misses the crease mark and oversteps! ${strikerName} launches it into the stands for a colossal maximum! 7 runs added (+ extra delivery).`;
       } else if (nbType === 'BAT' && runsOffBat === 4) {
-        commentary = `NO BALL (Overstep) & FOUR! ${bowlerName} oversteps the bowling crease mark, and ${strikerName} crunches it through the covers for four! 5 runs total and a FREE HIT follows!`;
+        commentary = `NO BALL (Overstep) & FOUR! ${bowlerName} oversteps the bowling crease mark, and ${strikerName} crunches it through the covers for four! 5 runs total (+ extra delivery).`;
       } else if (nbType === 'BAT' && runsOffBat > 0) {
-        commentary = `NO BALL (Overstep) + ${runsOffBat} RUNS! Front-foot no-ball called as ${bowlerName} misses the mark! ${strikerName} hustles for ${runsOffBat} runs, penalty added, and a FREE HIT is awarded!`;
+        commentary = `NO BALL (Overstep) + ${runsOffBat} RUNS! Front-foot no-ball called as ${bowlerName} misses the mark! ${strikerName} hustles for ${runsOffBat} runs, penalty added (+ extra delivery).`;
       } else if (nbType === 'BYE' || nbType === 'LEG_BYE') {
-        commentary = `NO BALL (Overstep) + ${nbRuns} ${nbType === 'BYE' ? 'BYES' : 'LEG BYES'}! ${bowlerName} misses the crease line, batters take ${nbRuns} runs, plus 1 penalty, and FREE HIT coming up!`;
+        commentary = `NO BALL (Overstep) + ${nbRuns} ${nbType === 'BYE' ? 'BYES' : 'LEG BYES'}! ${bowlerName} misses the crease line, batters take ${nbRuns} runs, plus 1 penalty (+ extra delivery).`;
       } else {
-        commentary = `NO BALL (Overstep)! ${bowlerName} misses the mark and oversteps the bowling crease! Umpire signals no-ball, penalty run conceded and FREE HIT coming up for ${strikerName}!`;
+        commentary = `NO BALL (Overstep)! ${bowlerName} misses the mark and oversteps the bowling crease! Umpire signals no-ball, penalty run conceded (+ extra delivery, CPL: No Free Hit).`;
       }
     }
 
@@ -3367,7 +3372,12 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                 <div className="scoring-extras-grid">
                   <button
                     disabled={isScorePadLocked}
-                    onClick={() => handleRecordBall(0, 'WIDE', 1)}
+                    title="CPL Rule: Delivery outside batter's reasonable hitting reach (+1 run & extra delivery)"
+                    onClick={() => {
+                      const bName = activeBowler?.name || 'Bowler';
+                      const sName = activeStriker?.name || 'Striker';
+                      handleRecordBall(0, 'WIDE', 1, 0, 0, `Wide ball. Delivery outside ${sName}'s reasonable hitting reach. 1 extra run conceded by ${bName} and delivery to be re-bowled.`);
+                    }}
                     style={{
                       background: 'rgba(245, 158, 11, 0.15)',
                       border: '1px solid rgba(245, 158, 11, 0.4)',
@@ -3384,9 +3394,11 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
 
                   <button
                     disabled={isScorePadLocked}
+                    title="CPL Rule: Above chest height or chucking (+1 run & extra delivery, No Free Hit)"
                     onClick={() => {
                       setNbType('BAT');
                       setNbRuns(0);
+                      setNbReason('CHEST_HEIGHT');
                       setShowNoBallModal(true);
                     }}
                     style={{
@@ -4161,20 +4173,67 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
               </button>
             </div>
 
+            {/* CPL Official Rules Notice */}
+            <div style={{ background: 'rgba(249, 115, 22, 0.12)', border: '1px solid rgba(249, 115, 22, 0.35)', borderRadius: '8px', padding: '10px 12px', marginBottom: '14px', fontSize: '0.78rem', color: '#FED7AA' }}>
+              ⚡ <strong>CPL 2026 Rule:</strong> Any delivery above chest height or chucking/illegal action will be called a No Ball (+1 run & extra delivery). <strong>No Free Hit will be given after a No Ball.</strong>
+            </div>
+
             {/* Reason / Infraction Switcher */}
             <div style={{ marginBottom: '16px' }}>
               <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '8px', color: '#CBD5E1' }}>
                 No-Ball Reason / Infraction
               </label>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
+                <button
+                  type="button"
+                  onClick={() => setNbReason('CHEST_HEIGHT')}
+                  style={{
+                    padding: '10px 4px',
+                    borderRadius: '8px',
+                    fontWeight: 800,
+                    fontSize: '0.75rem',
+                    cursor: 'pointer',
+                    background: nbReason === 'CHEST_HEIGHT' ? '#F97316' : '#141A26',
+                    color: nbReason === 'CHEST_HEIGHT' ? '#000' : '#CBD5E1',
+                    border: nbReason === 'CHEST_HEIGHT' ? '1.5px solid #FB923C' : '1px solid #2A364E',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: '2px',
+                  }}
+                >
+                  <span>📏 Chest Height</span>
+                  <span style={{ fontSize: '0.62rem', opacity: 0.85 }}>CPL Rule</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setNbReason('CHUCKING')}
+                  style={{
+                    padding: '10px 4px',
+                    borderRadius: '8px',
+                    fontWeight: 800,
+                    fontSize: '0.75rem',
+                    cursor: 'pointer',
+                    background: nbReason === 'CHUCKING' ? '#F97316' : '#141A26',
+                    color: nbReason === 'CHUCKING' ? '#000' : '#CBD5E1',
+                    border: nbReason === 'CHUCKING' ? '1.5px solid #FB923C' : '1px solid #2A364E',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: '2px',
+                  }}
+                >
+                  <span>🚫 Chucking</span>
+                  <span style={{ fontSize: '0.62rem', opacity: 0.85 }}>Illegal Action</span>
+                </button>
                 <button
                   type="button"
                   onClick={() => setNbReason('OVERSTEP')}
                   style={{
-                    padding: '10px 6px',
+                    padding: '10px 4px',
                     borderRadius: '8px',
                     fontWeight: 800,
-                    fontSize: '0.78rem',
+                    fontSize: '0.75rem',
                     cursor: 'pointer',
                     background: nbReason === 'OVERSTEP' ? '#F97316' : '#141A26',
                     color: nbReason === 'OVERSTEP' ? '#000' : '#CBD5E1',
@@ -4186,16 +4245,16 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                   }}
                 >
                   <span>🦶 Overstep</span>
-                  <span style={{ fontSize: '0.65rem', opacity: 0.85 }}>Missing Mark</span>
+                  <span style={{ fontSize: '0.62rem', opacity: 0.85 }}>Crease Line</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setNbReason('FULL_TOSS')}
                   style={{
-                    padding: '10px 6px',
+                    padding: '10px 4px',
                     borderRadius: '8px',
                     fontWeight: 800,
-                    fontSize: '0.78rem',
+                    fontSize: '0.75rem',
                     cursor: 'pointer',
                     background: nbReason === 'FULL_TOSS' ? '#F97316' : '#141A26',
                     color: nbReason === 'FULL_TOSS' ? '#000' : '#CBD5E1',
@@ -4207,28 +4266,7 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                   }}
                 >
                   <span>🚀 Full Toss</span>
-                  <span style={{ fontSize: '0.65rem', opacity: 0.85 }}>Above Waist</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setNbReason('HEIGHT')}
-                  style={{
-                    padding: '10px 6px',
-                    borderRadius: '8px',
-                    fontWeight: 800,
-                    fontSize: '0.78rem',
-                    cursor: 'pointer',
-                    background: nbReason === 'HEIGHT' ? '#F97316' : '#141A26',
-                    color: nbReason === 'HEIGHT' ? '#000' : '#CBD5E1',
-                    border: nbReason === 'HEIGHT' ? '1.5px solid #FB923C' : '1px solid #2A364E',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    gap: '2px',
-                  }}
-                >
-                  <span>⬆️ Bouncer</span>
-                  <span style={{ fontSize: '0.65rem', opacity: 0.85 }}>Over Head</span>
+                  <span style={{ fontSize: '0.62rem', opacity: 0.85 }}>Beamer</span>
                 </button>
               </div>
             </div>
@@ -4336,8 +4374,13 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                     </span>
                   </div>
                   <div style={{ fontSize: '0.75rem', color: '#CBD5E1', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                    <div>• Reason: <strong style={{ color: '#FB923C' }}>{nbReason === 'OVERSTEP' ? 'Crease Overstep (Missing Mark)' : nbReason === 'FULL_TOSS' ? 'Waist-High Full Toss (Beamer)' : 'Bouncer Height Violation'}</strong></div>
-                    <div>• <strong>1 No-Ball Penalty</strong> added to Extras & Bowler</div>
+                    <div>• Reason: <strong style={{ color: '#FB923C' }}>{
+                      nbReason === 'CHEST_HEIGHT' ? 'Above Chest Height (CPL Rule)' :
+                      nbReason === 'CHUCKING' ? 'Chucking / Illegal Action (CPL Rule)' :
+                      nbReason === 'OVERSTEP' ? 'Crease Overstep (Missing Mark)' :
+                      nbReason === 'FULL_TOSS' ? 'Waist-High Full Toss (Beamer)' : 'Bouncer Height Violation'
+                    }</strong></div>
+                    <div>• <strong>1 No-Ball Penalty (+1 Run)</strong> added to Extras & Bowler</div>
                     {nbType === 'BAT' && nbRuns > 0 && (
                       <div>• <strong>+{nbRuns} Runs</strong> credited to Striker ({activeStriker?.name || 'Striker'}) & Bowler</div>
                     )}
@@ -4347,7 +4390,9 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                     {nbType === 'LEG_BYE' && nbRuns > 0 && (
                       <div>• <strong>+{nbRuns} Leg Byes</strong> added to Extras (NOT charged to Bowler under MCC rules)</div>
                     )}
-                    <div style={{ color: '#FBBF24', marginTop: '4px' }}>⚡ <strong>Next delivery will be a FREE HIT</strong></div>
+                    <div style={{ color: '#F87171', marginTop: '6px', fontWeight: 800 }}>
+                      🚫 CPL Rule: NO Free Hit is awarded after a No Ball. Extra delivery to be re-bowled.
+                    </div>
                   </div>
                 </div>
               );
@@ -4547,7 +4592,7 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
               🎯 Select / Change Active Bowler
             </h3>
             <p style={{ fontSize: '0.8rem', color: '#94A3B8', margin: '0 0 16px' }}>
-              Bowling Team: <strong style={{ color: '#FFF' }}>{currentInnings?.bowlingTeam?.name}</strong> (1 over max per bowler in standard format)
+              Bowling Team: <strong style={{ color: '#FFF' }}>{currentInnings?.bowlingTeam?.name}</strong> (CPL Rule: Maximum 1 over per bowler per match)
             </p>
 
             <div style={{ marginBottom: '20px' }}>
@@ -4562,11 +4607,13 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                 <option value="">Select Bowler...</option>
                 {bowlingSquad.map((p: any) => {
                   const bScore = currentInnings?.bowlingScores?.find((b: any) => b.playerId === p.id);
+                  const completedOvers = bScore?.overs || 0;
+                  const isMaxReached = completedOvers >= maxOversPerBowler;
                   const isCurrent = p.id === currentInnings?.currentBowlerId;
                   const oversText = bScore ? `${bScore.overs}.${bScore.balls} ov (${bScore.wickets}w, ${bScore.runsConceded}r)` : 'Yet to bowl';
                   return (
-                    <option key={p.id} value={p.id}>
-                      {p.name} — {oversText} {isCurrent ? '★ (Current)' : ''}
+                    <option key={p.id} value={p.id} disabled={isMaxReached}>
+                      {p.name} — {oversText} {isMaxReached ? '⛔ [MAX 1 OVER REACHED - CPL RULE]' : ''} {isCurrent ? '★ (Current)' : ''}
                     </option>
                   );
                 })}

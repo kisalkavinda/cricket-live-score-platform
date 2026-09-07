@@ -106,6 +106,19 @@ export default function Footer() {
               </li>
               <li>
                 <Link
+                  href="/rules"
+                  style={{
+                    color: 'rgba(255, 255, 255, 0.8)',
+                    textDecoration: 'none',
+                    fontFamily: 'var(--font-body)',
+                    fontWeight: 500,
+                  }}
+                >
+                  📜 Match Rules & Guidelines
+                </Link>
+              </li>
+              <li>
+                <Link
                   href="/tournament"
                   style={{
                     color: 'rgba(255, 255, 255, 0.8)',

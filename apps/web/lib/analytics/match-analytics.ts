@@ -464,6 +464,14 @@ export function generateBallDescription(
   // CASE 1: NO BALL DELIVERY (The ball that causes the Free Hit)
   // -------------------------------------------------------------------------
   if (b.extraType === 'NO_BALL') {
+    const isChestHeight = Boolean(
+      b.noBallReason === 'CHEST_HEIGHT' ||
+      (typeof b.commentary === 'string' && /chest\s*height/i.test(b.commentary))
+    );
+    const isChucking = Boolean(
+      b.noBallReason === 'CHUCKING' ||
+      (typeof b.commentary === 'string' && /chucking|illegal\s*action/i.test(b.commentary))
+    );
     const isFullToss = Boolean(
       b.noBallReason === 'FULL_TOSS' ||
       (typeof b.commentary === 'string' && /full\s*toss|beamer/i.test(b.commentary))
@@ -472,6 +480,38 @@ export function generateBallDescription(
       b.noBallReason === 'HEIGHT' ||
       (typeof b.commentary === 'string' && /height|bouncer/i.test(b.commentary))
     );
+
+    if (isChestHeight) {
+      if (runs === 6) {
+        return selectVariation([
+          `NO BALL (Above Chest Height) & SIX! Chest-high delivery punished with absolute disdain! ${batter} launches ${bowler} deep into the stands! 7 runs added (+1 run & extra delivery, no free hit under CPL rules).`,
+          `NO BALL (Above Chest Height) & SIX! Dangerous high ball over chest height hammered for six by ${batter}! Maximum runs (+1 penalty & extra ball, CPL: no free hit).`,
+        ], seed);
+      }
+      if (runs === 4) {
+        return selectVariation([
+          `NO BALL (Above Chest Height) & FOUR! High delivery above chest level crunched away to the boundary by ${batter}! 5 runs added (+1 run & extra delivery, CPL: no free hit).`,
+          `NO BALL (Above Chest Height) & FOUR! Pull shot cracked through the square boundary! 5 runs total conceded by ${bowler} (+ extra delivery).`,
+        ], seed);
+      }
+      if (runs > 0) {
+        return selectVariation([
+          `NO BALL (Above Chest Height) + ${runs} RUNS! Delivery above chest height called on ${bowler}! ${batter} works it away for ${runs} runs, penalty added (+ extra ball, CPL: no free hit).`,
+          `NO BALL (Above Chest Height)! Chest-high ball signaled by the umpire! Batters hustle for ${runs} runs plus 1 penalty run (+ extra delivery, no free hit).`,
+        ], seed);
+      }
+      return selectVariation([
+        `NO BALL (Above Chest Height)! Any delivery above chest height is called a No Ball! 1 penalty run awarded against ${bowler} and an extra delivery (CPL Rule: No Free Hit).`,
+        `NO BALL (Above Chest Height)! High delivery called by the umpire! 1 extra run conceded by ${bowler} and delivery to be re-bowled (No Free Hit in CPL).`,
+      ], seed);
+    }
+
+    if (isChucking) {
+      return selectVariation([
+        `NO BALL (Chucking)! Illegal bowling action called by the umpire against ${bowler}! 1 penalty run awarded and extra delivery (CPL Rule: No Free Hit).`,
+        `NO BALL (Illegal Bowling Action)! Chucking called on ${bowler}! Penalty run awarded, extra delivery to follow (No Free Hit in CPL).`,
+      ], seed);
+    }
 
     if (isFullToss) {
       if (runs === 6) {

@@ -1831,57 +1831,105 @@ export default function TournamentHubClient({ initialOverview }: Props) {
         >
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px', marginBottom: '12px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '1.2rem' }}>📐</span>
+              <span style={{ fontSize: '1.2rem' }}>📜</span>
               <strong style={{ fontSize: '0.95rem', fontWeight: 900, textTransform: 'uppercase', color: '#FFB800' }}>
-                Official CPL Softball Competition Rules & NRR Formula
+                Official CPL 2026 Match Rules & Tournament Information
               </strong>
             </div>
 
-            <button
-              onClick={() => setShowNrrRules(!showNrrRules)}
-              style={{
-                background: 'none',
-                border: '1px solid rgba(255, 184, 0, 0.4)',
-                borderRadius: '6px',
-                color: '#FFB800',
-                padding: '4px 10px',
-                fontSize: '0.75rem',
-                fontWeight: 700,
-                cursor: 'pointer',
-              }}
-            >
-              {showNrrRules ? 'Hide Rules Breakdown' : 'Show Full Rules Breakdown'}
-            </button>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <Link
+                href="/rules"
+                style={{
+                  background: 'rgba(255, 184, 0, 0.15)',
+                  border: '1px solid rgba(255, 184, 0, 0.4)',
+                  borderRadius: '6px',
+                  color: '#FFB800',
+                  padding: '4px 10px',
+                  fontSize: '0.75rem',
+                  fontWeight: 700,
+                  textDecoration: 'none',
+                }}
+              >
+                Full Rules Page →
+              </Link>
+              <button
+                onClick={() => setShowNrrRules(!showNrrRules)}
+                style={{
+                  background: 'none',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  borderRadius: '6px',
+                  color: '#FFF',
+                  padding: '4px 10px',
+                  fontSize: '0.75rem',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                }}
+              >
+                {showNrrRules ? 'Hide Rules Breakdown' : 'Show 8 Official Rules'}
+              </button>
+            </div>
           </div>
 
           <p style={{ fontSize: '0.84rem', color: 'rgba(255,255,255,0.7)', margin: 0, lineHeight: 1.45 }}>
-            NRR = (Total Runs Scored ÷ Effective Overs Faced) − (Total Runs Conceded ÷ Effective Overs Bowled). Effective overs are calculated mathematically from legal deliveries (legal balls ÷ tournament balls/over). If a team is dismissed all-out, its full allotted overs are charged. Standings and NRR reset cleanly between stages.
+            Key tournament regulations governing bowling allocations, extras, boundary fielding, points system, awards, and committee provisions for CPL 2026.
           </p>
 
           {showNrrRules && (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '14px', marginTop: '18px', paddingTop: '16px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-              <div style={{ background: 'rgba(255,255,255,0.02)', padding: '12px', borderRadius: '8px' }}>
-                <strong style={{ color: '#FFF', fontSize: '0.82rem', display: 'block', marginBottom: '4px' }}>1. Mathematical Overs</strong>
-                <span style={{ fontSize: '0.76rem', color: 'rgba(255,255,255,0.6)' }}>
-                  In a 4-ball over format: 5 balls = 1.25 overs (5/4). Never treated as cricket notation 1.1.
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '12px', marginTop: '18px', paddingTop: '16px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+              <div style={{ background: 'rgba(255,255,255,0.02)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                <strong style={{ color: '#FFB800', fontSize: '0.82rem', display: 'block', marginBottom: '4px' }}>🎯 1. Bowling Limits</strong>
+                <span style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.75)', lineHeight: 1.4, display: 'block' }}>
+                  Maximum 1 over per bowler per match.
                 </span>
               </div>
-              <div style={{ background: 'rgba(255,255,255,0.02)', padding: '12px', borderRadius: '8px' }}>
-                <strong style={{ color: '#FFF', fontSize: '0.82rem', display: 'block', marginBottom: '4px' }}>2. Full All-Out Rule</strong>
-                <span style={{ fontSize: '0.76rem', color: 'rgba(255,255,255,0.6)' }}>
-                  Teams dismissed before their allotted overs are debited with the full overs for that innings (e.g. 4.0 overs).
+
+              <div style={{ background: 'rgba(255,255,255,0.02)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                <strong style={{ color: '#FFB800', fontSize: '0.82rem', display: 'block', marginBottom: '4px' }}>🚫 2. No Ball</strong>
+                <span style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.75)', lineHeight: 1.4, display: 'block' }}>
+                  Any delivery above chest height. Grants +1 run and an extra delivery. <strong>No Free Hit after a No Ball.</strong> Chucking / illegal bowling action strictly prohibited and called as a No Ball.
                 </span>
               </div>
-              <div style={{ background: 'rgba(255,255,255,0.02)', padding: '12px', borderRadius: '8px' }}>
-                <strong style={{ color: '#FFF', fontSize: '0.82rem', display: 'block', marginBottom: '4px' }}>3. Stage Isolation</strong>
-                <span style={{ fontSize: '0.76rem', color: 'rgba(255,255,255,0.6)' }}>
-                  Wildcard and Playoff stages start with clean 0.000 NRR. Past stage stats do not carry over.
+
+              <div style={{ background: 'rgba(255,255,255,0.02)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                <strong style={{ color: '#FFB800', fontSize: '0.82rem', display: 'block', marginBottom: '4px' }}>↔️ 3. Wide Ball</strong>
+                <span style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.75)', lineHeight: 1.4, display: 'block' }}>
+                  Delivery outside batter's reasonable hitting reach. Grants +1 run and an extra delivery.
                 </span>
               </div>
-              <div style={{ background: 'rgba(255,255,255,0.02)', padding: '12px', borderRadius: '8px' }}>
-                <strong style={{ color: '#FFF', fontSize: '0.82rem', display: 'block', marginBottom: '4px' }}>4. Seeding & Progression</strong>
-                <span style={{ fontSize: '0.76rem', color: 'rgba(255,255,255,0.6)' }}>
-                  Group winners ranked #1, #2, #3 based on points & NRR. Wildcard winner is Seed #4.
+
+              <div style={{ background: 'rgba(255,255,255,0.02)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                <strong style={{ color: '#FFB800', fontSize: '0.82rem', display: 'block', marginBottom: '4px' }}>🛡️ 4. Boundary Fielding</strong>
+                <span style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.75)', lineHeight: 1.4, display: 'block' }}>
+                  Maximum 3 fielders on leg side, maximum 2 fielders on off side.
+                </span>
+              </div>
+
+              <div style={{ background: 'rgba(255,255,255,0.02)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                <strong style={{ color: '#FFB800', fontSize: '0.82rem', display: 'block', marginBottom: '4px' }}>⚖️ 5. Authority</strong>
+                <span style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.75)', lineHeight: 1.4, display: 'block' }}>
+                  Umpire's decision is final. Overs and balls per over may be adjusted according to match time.
+                </span>
+              </div>
+
+              <div style={{ background: 'rgba(255,255,255,0.02)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                <strong style={{ color: '#FFB800', fontSize: '0.82rem', display: 'block', marginBottom: '4px' }}>📊 6. Points & Standings</strong>
+                <span style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.75)', lineHeight: 1.4, display: 'block' }}>
+                  Win = 2 pts, Tie = 1 pt, Loss = 0 pts. Minimum 2 matches per team in league stage. Points rank teams; Net Run Rate (NRR) breaks ties.
+                </span>
+              </div>
+
+              <div style={{ background: 'rgba(255,255,255,0.02)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                <strong style={{ color: '#FFB800', fontSize: '0.82rem', display: 'block', marginBottom: '4px' }}>🎉 7. Provided by Organizing Committee</strong>
+                <span style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.75)', lineHeight: 1.4, display: 'block' }}>
+                  Refreshments, T4 match balls, Lunch, Post-match DJ party.
+                </span>
+              </div>
+
+              <div style={{ background: 'rgba(255,255,255,0.02)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                <strong style={{ color: '#FFB800', fontSize: '0.82rem', display: 'block', marginBottom: '4px' }}>🏆 8. Awards</strong>
+                <span style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.75)', lineHeight: 1.4, display: 'block' }}>
+                  1st Place Trophy, 2nd Place Trophy, Best Batsman (Most Runs), Best Bowler (Most Wickets), Man of the Final (Best performance by Batter or Bowler).
                 </span>
               </div>
             </div>
