@@ -288,6 +288,105 @@ export default function EventDetails() {
             ))}
           </div>
 
+          {/* CPL 2026 Official Rules & Tournament Information Card */}
+          <div
+            id="tournament-rules"
+            style={{
+              background: 'var(--color-paper-card)',
+              border: '1.5px solid var(--color-border)',
+              borderRadius: 'var(--radius-lg)',
+              padding: 'clamp(20px, 4vw, 32px)',
+              boxShadow: '0 4px 24px rgba(0, 0, 0, 0.03)',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '14px', marginBottom: '20px' }}>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                  <span style={{ fontSize: '1.1rem' }}>📜</span>
+                  <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.72rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.12em', color: 'var(--color-accent)' }}>
+                    Competition Guidelines
+                  </span>
+                </div>
+                <h3
+                  style={{
+                    fontFamily: 'var(--font-display)',
+                    fontSize: 'clamp(1.4rem, 4vw, 1.9rem)',
+                    fontWeight: 900,
+                    textTransform: 'uppercase',
+                    color: 'var(--color-ink)',
+                    margin: 0,
+                  }}
+                >
+                  Official Match <span style={{ color: 'var(--color-accent)' }}>Rules</span> & Information
+                </h3>
+              </div>
+
+              <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                <a
+                  href="/rules"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    background: 'var(--color-accent)',
+                    color: '#0D0A0A',
+                    fontSize: '0.82rem',
+                    fontWeight: 800,
+                    padding: '8px 16px',
+                    borderRadius: 'var(--radius-md)',
+                    textDecoration: 'none',
+                  }}
+                >
+                  View Full Rules Page →
+                </a>
+              </div>
+            </div>
+
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+                gap: '14px',
+              }}
+            >
+              {(tournamentConfig.rules || []).map((rule, idx) => (
+                <div
+                  key={rule.id || idx}
+                  style={{
+                    background: 'var(--color-paper-alt)',
+                    border: '1px solid var(--color-border)',
+                    borderRadius: 'var(--radius-md)',
+                    padding: '14px 16px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'space-between',
+                  }}
+                >
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span>{rule.icon}</span>
+                        <strong style={{ fontSize: '0.85rem', color: 'var(--color-ink)', textTransform: 'uppercase' }}>
+                          {rule.title}
+                        </strong>
+                      </div>
+                    </div>
+                    <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--color-ink-muted)', lineHeight: 1.5 }}>
+                      {rule.description}
+                    </p>
+                  </div>
+                  {rule.badge && (
+                    <div style={{ marginTop: '10px', paddingTop: '8px', borderTop: '1px dashed var(--color-border)' }}>
+                      <span style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--color-accent)' }}>
+                        {rule.badge}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
           {/* Dedicated Match Arena & Live Venue Map Showcase (Hallmark Sport Theme) */}
           <div
             id="arena-map"

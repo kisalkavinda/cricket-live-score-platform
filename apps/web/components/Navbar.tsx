@@ -63,6 +63,7 @@ export default function Navbar() {
   const navLinks = [
     { label: '🔴 Match Center', href: '/#live-scores', id: 'nav-scores' },
     { label: '🏆 Tournament Hub', href: '/tournament', id: 'nav-tournament' },
+    { label: '📜 Match Rules', href: '/rules', id: 'nav-rules' },
     { label: 'Overview', href: '/#overview', id: 'nav-overview' },
     { label: 'Tournament Info', href: '/#details', id: 'nav-details' },
     ...(tournamentConfig.registrationOpen

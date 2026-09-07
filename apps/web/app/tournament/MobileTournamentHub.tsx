@@ -1451,20 +1451,42 @@ export default function MobileTournamentHub({
 
           <div style={{ marginTop: '12px', paddingTop: '10px', borderTop: '1px solid rgba(255,255,255,0.06)', fontSize: '0.78rem', color: 'rgba(255,255,255,0.7)', lineHeight: 1.6 }}>
             <p style={{ margin: '0 0 8px' }}>
-              <strong style={{ color: '#FFF' }}>1. Format Structure:</strong> 3 Groups of 3 teams (9 matches) → Wildcard Mini-League (3 matches) → Final Four Playoffs (4 matches) = 16 total matches.
+              <strong style={{ color: '#FFB800' }}>1. Bowling Limits:</strong> Maximum 1 over per bowler per match.
             </p>
             <p style={{ margin: '0 0 8px' }}>
-              <strong style={{ color: '#FFF' }}>2. Match Settings:</strong> {oversPerInnings} overs per innings with {ballsPerOver} balls per over.
+              <strong style={{ color: '#FFB800' }}>2. No Ball:</strong> Any delivery above chest height. Grants +1 run and an extra delivery. <strong>No Free Hit after a No Ball.</strong> Chucking / illegal bowling action strictly prohibited and called as a No Ball.
             </p>
             <p style={{ margin: '0 0 8px' }}>
-              <strong style={{ color: '#FFF' }}>3. Ball-Based NRR:</strong> Calculated using actual legal balls bowled (e.g. 5 balls bowled in a 4-ball over = 1.25 effective overs).
+              <strong style={{ color: '#FFB800' }}>3. Wide Ball:</strong> Delivery outside batter's reasonable hitting reach. Grants +1 run and an extra delivery.
             </p>
             <p style={{ margin: '0 0 8px' }}>
-              <strong style={{ color: '#FFF' }}>4. All-Out Rule:</strong> If a team is bowled all-out, the full allotted {oversPerInnings} overs are charged against them for NRR calculation.
+              <strong style={{ color: '#FFB800' }}>4. Boundary Fielding:</strong> Maximum 3 fielders on leg side, maximum 2 fielders on off side.
             </p>
-            <p style={{ margin: '0' }}>
-              <strong style={{ color: '#FFF' }}>5. Stage Isolation:</strong> Group Stage NRR and Wildcard Mini-League NRR are strictly isolated and calculated independently.
+            <p style={{ margin: '0 0 8px' }}>
+              <strong style={{ color: '#FFB800' }}>5. Authority:</strong> Umpire's decision is final. Overs and balls per over may be adjusted according to match time.
             </p>
+            <p style={{ margin: '0 0 8px' }}>
+              <strong style={{ color: '#FFB800' }}>6. Points & Standings:</strong> Win = 2 pts, Tie = 1 pt, Loss = 0 pts. Minimum 2 matches per team in league stage. Points rank teams; Net Run Rate (NRR) breaks ties.
+            </p>
+            <p style={{ margin: '0 0 8px' }}>
+              <strong style={{ color: '#FFB800' }}>7. Provided by Organizing Committee:</strong> Refreshments, T4 match balls, Lunch, Post-match DJ party.
+            </p>
+            <p style={{ margin: '0 0 12px' }}>
+              <strong style={{ color: '#FFB800' }}>8. Awards:</strong> 1st Place Trophy, 2nd Place Trophy, Best Batsman (Most Runs), Best Bowler (Most Wickets), Man of the Final (Best performance by Batter or Bowler).
+            </p>
+            <div style={{ paddingTop: '8px', borderTop: '1px dashed rgba(255,255,255,0.1)' }}>
+              <a
+                href="/rules"
+                style={{
+                  color: '#FFB800',
+                  fontWeight: 700,
+                  textDecoration: 'underline',
+                  fontSize: '0.8rem',
+                }}
+              >
+                View Full Match Rules Page →
+              </a>
+            </div>
           </div>
         </details>
       </section>
