@@ -24,6 +24,14 @@ export interface ScoreBroadcastPayload {
     crr: string;
     rrr?: string;
     target?: number;
+    extrasBreakdown?: {
+      wides: number;
+      noBalls: number;
+      byes: number;
+      legByes: number;
+      penalty: number;
+      total: number;
+    };
   } | null;
   chase?: {
     isChase: boolean;

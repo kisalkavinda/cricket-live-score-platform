@@ -96,3 +96,10 @@ export const updateMatchRulesSchema = z.object({
   oversPerInnings: z.number().int().min(1).max(100).optional(),
   ballsPerOver: z.number().int().min(1).max(20).optional(),
 });
+
+export const renamePlayerSchema = z.object({
+  playerId: z.string().trim().min(1).max(64),
+  newName: z.string().trim().min(1).max(100),
+  jerseyNumber: z.number().int().min(0).max(999).optional().nullable(),
+  matchId: z.string().trim().min(1).max(64).optional(),
+});

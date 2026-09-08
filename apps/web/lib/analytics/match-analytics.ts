@@ -447,21 +447,37 @@ export function generateBallDescription(
     teamName?: string;
   }
 ): string {
+  // Sanitize any existing stored commentary so that legacy records never display "free hit" or "no free hit"
   if (b.commentary && typeof b.commentary === 'string' && b.commentary.trim().length > 0) {
-    return b.commentary.trim();
+    let text = b.commentary.trim();
+    if (/free\s*hit/i.test(text)) {
+      text = text
+        .replace(/\s*\(?(?:no\s+free\s*hit(?:\s+under\s+CPL\s+rules)?|CPL(?:\s+Rule)?:?\s*no\s+free\s*hit)\)?/gi, '')
+        .replace(/\b(?:ON\s+)?FREE\s+HIT\b/gi, '')
+        .replace(/FREE\s+HIT\s+SURVIVAL!\s*NOT\s*OUT!\s*/gi, '')
+        .replace(/CAUGHT\s*\/\s*BOWLED\s+ON\s+FREE\s+HIT!\s*/gi, '')
+        .replace(/NOT\s+OUT\s+ON\s+FREE\s+HIT!\s*/gi, '')
+        .replace(/\s{2,}/g, ' ')
+        .trim();
+      if (!/free\s*hit/i.test(text) && text.length > 5) {
+        return text;
+      }
+      // If still mentioning free hit or garbled, fall through to regenerate clean commentary below
+    } else {
+      return text;
+    }
   }
 
   const bowler = b.bowler?.name || b.bowlerName || 'Bowler';
   const batter = b.batsman?.name || b.batsmanName || 'Batter';
   const runs = Number(b.runs || 0);
   const extras = Number(b.extras || 0);
-  const seed = b.id || `${b.overNumber ?? 0}-${b.ballNumber ?? 1}-${runs}-${b.extraType || ''}-${context?.isFreeHit ? 'FH' : ''}`;
-  const isFreeHit = Boolean(b.isFreeHit || context?.isFreeHit);
+  const seed = b.id || `${b.overNumber ?? 0}-${b.ballNumber ?? 1}-${runs}-${b.extraType || ''}`;
   const isSuperOver = Boolean(b.isSuperOver || context?.isSuperOver);
   const dismissed = b.dismissedPlayer?.name || b.dismissedPlayerName || batter;
 
   // -------------------------------------------------------------------------
-  // CASE 1: NO BALL DELIVERY (The ball that causes the Free Hit)
+  // CASE 1: NO BALL DELIVERY
   // -------------------------------------------------------------------------
   if (b.extraType === 'NO_BALL') {
     const isChestHeight = Boolean(
@@ -484,166 +500,105 @@ export function generateBallDescription(
     if (isChestHeight) {
       if (runs === 6) {
         return selectVariation([
-          `NO BALL (Above Chest Height) & SIX! Chest-high delivery punished with absolute disdain! ${batter} launches ${bowler} deep into the stands! 7 runs added (+1 run & extra delivery, no free hit under CPL rules).`,
-          `NO BALL (Above Chest Height) & SIX! Dangerous high ball over chest height hammered for six by ${batter}! Maximum runs (+1 penalty & extra ball, CPL: no free hit).`,
+          `NO BALL (Above Chest Height) & SIX! Chest-high delivery punished with absolute disdain! ${batter} launches ${bowler} deep into the stands! 7 runs added (+1 run & extra delivery).`,
+          `NO BALL (Above Chest Height) & SIX! Dangerous high ball over chest height hammered for six by ${batter}! Maximum runs (+1 penalty & extra ball).`,
         ], seed);
       }
       if (runs === 4) {
         return selectVariation([
-          `NO BALL (Above Chest Height) & FOUR! High delivery above chest level crunched away to the boundary by ${batter}! 5 runs added (+1 run & extra delivery, CPL: no free hit).`,
+          `NO BALL (Above Chest Height) & FOUR! High delivery above chest level crunched away to the boundary by ${batter}! 5 runs added (+1 run & extra delivery).`,
           `NO BALL (Above Chest Height) & FOUR! Pull shot cracked through the square boundary! 5 runs total conceded by ${bowler} (+ extra delivery).`,
         ], seed);
       }
       if (runs > 0) {
         return selectVariation([
-          `NO BALL (Above Chest Height) + ${runs} RUNS! Delivery above chest height called on ${bowler}! ${batter} works it away for ${runs} runs, penalty added (+ extra ball, CPL: no free hit).`,
-          `NO BALL (Above Chest Height)! Chest-high ball signaled by the umpire! Batters hustle for ${runs} runs plus 1 penalty run (+ extra delivery, no free hit).`,
+          `NO BALL (Above Chest Height) + ${runs} RUNS! Delivery above chest height called on ${bowler}! ${batter} works it away for ${runs} runs, penalty added (+ extra ball).`,
+          `NO BALL (Above Chest Height)! Chest-high ball signaled by the umpire! Batters hustle for ${runs} runs plus 1 penalty run (+ extra delivery).`,
         ], seed);
       }
       return selectVariation([
-        `NO BALL (Above Chest Height)! Any delivery above chest height is called a No Ball! 1 penalty run awarded against ${bowler} and an extra delivery (CPL Rule: No Free Hit).`,
-        `NO BALL (Above Chest Height)! High delivery called by the umpire! 1 extra run conceded by ${bowler} and delivery to be re-bowled (No Free Hit in CPL).`,
+        `NO BALL (Above Chest Height)! Any delivery above chest height is called a No Ball! 1 penalty run awarded against ${bowler} and an extra delivery.`,
+        `NO BALL (Above Chest Height)! High delivery called by the umpire! 1 extra run conceded by ${bowler} and delivery to be re-bowled.`,
       ], seed);
     }
 
     if (isChucking) {
       return selectVariation([
-        `NO BALL (Chucking)! Illegal bowling action called by the umpire against ${bowler}! 1 penalty run awarded and extra delivery (CPL Rule: No Free Hit).`,
-        `NO BALL (Illegal Bowling Action)! Chucking called on ${bowler}! Penalty run awarded, extra delivery to follow (No Free Hit in CPL).`,
+        `NO BALL (Chucking)! Illegal bowling action called by the umpire against ${bowler}! 1 penalty run awarded and extra delivery.`,
+        `NO BALL (Illegal Bowling Action)! Chucking called on ${bowler}! Penalty run awarded, extra delivery to follow.`,
       ], seed);
     }
 
     if (isFullToss) {
       if (runs === 6) {
         return selectVariation([
-          `NO BALL (Full Toss) & SIX! Above-waist high full toss punished with absolute disdain! ${batter} deposits ${bowler}'s beamer deep into the stands! 7 runs and FREE HIT awarded!`,
-          `NO BALL (Full Toss) & SIX! Dangerous waist-high delivery from ${bowler} launched into orbit by ${batter}! Maximum runs and FREE HIT next!`,
-          `NO BALL (Full Toss) & SIX! Monster blow off the beamer! ${batter} hammers ${bowler} out of the ground! 7 runs total and a FREE HIT follows!`
+          `NO BALL (Full Toss) & SIX! Above-waist high full toss punished with absolute disdain! ${batter} deposits ${bowler}'s beamer deep into the stands! 7 runs added (+1 run & extra delivery).`,
+          `NO BALL (Full Toss) & SIX! Dangerous waist-high delivery from ${bowler} launched into orbit by ${batter}! Maximum runs (+1 penalty & extra ball)!`,
+          `NO BALL (Full Toss) & SIX! Monster blow off the beamer! ${batter} hammers ${bowler} out of the ground! 7 runs total and extra delivery to follow!`
         ], seed);
       }
       if (runs === 4) {
         return selectVariation([
-          `NO BALL (Full Toss) & FOUR! Smashed away to the boundary! High full toss from ${bowler} crunched away to the fence by ${batter}! 5 runs added and FREE HIT follows!`,
-          `NO BALL (Full Toss) & FOUR! Dangerous waist-high delivery from ${bowler}, pulled ferociously for four by ${batter}! 5 runs and FREE HIT coming up!`,
-          `NO BALL (Full Toss) & FOUR! Crunched through the off side! ${batter} pounces on the high full toss from ${bowler}, finding the ropes!`
+          `NO BALL (Full Toss) & FOUR! Smashed away to the boundary! High full toss from ${bowler} crunched away to the fence by ${batter}! 5 runs added (+1 penalty & extra ball)!`,
+          `NO BALL (Full Toss) & FOUR! Dangerous waist-high delivery from ${bowler}, pulled ferociously for four by ${batter}! 5 runs and extra delivery to follow!`,
+          `NO BALL (Full Toss) & FOUR! Crunched through the off side! ${batter} pounces on the high full toss from ${bowler}, finding the ropes (+1 run & extra delivery)!`
         ], seed);
       }
       if (runs > 0) {
         return selectVariation([
-          `NO BALL (Full Toss) + ${runs} RUNS! Above-waist full toss called on ${bowler}! ${batter} works it away for ${runs} runs off the bat, penalty run added, and a FREE HIT is awarded!`,
-          `NO BALL (Full Toss)! Dangerous delivery above the waist by ${bowler}! Batters hustle for ${runs} runs, penalty added, and a FREE HIT is signaled!`,
-          `NO BALL (Full Toss)! Waist-high beamer from ${bowler}! ${runs} runs taken, extra run conceded, and a FREE HIT opportunity for ${batter}!`
+          `NO BALL (Full Toss) + ${runs} RUNS! Above-waist full toss called on ${bowler}! ${batter} works it away for ${runs} runs off the bat, penalty run added (+ extra ball)!`,
+          `NO BALL (Full Toss)! Dangerous delivery above the waist by ${bowler}! Batters hustle for ${runs} runs, penalty added (+ extra delivery)!`,
+          `NO BALL (Full Toss)! Waist-high beamer from ${bowler}! ${runs} runs taken, extra run conceded, and delivery to be re-bowled!`
         ], seed);
       }
       return selectVariation([
-        `NO BALL (Full Toss)! Dangerous delivery above waist height called on ${bowler}! Umpire signals no-ball, penalty run awarded and FREE HIT next for ${batter}!`,
-        `NO BALL (Full Toss)! High full toss above waist height! Dangerous delivery called on ${bowler}, penalty run awarded and FREE HIT next!`,
-        `NO BALL (Full Toss)! Beamer called! Umpire immediately signals no-ball against ${bowler} for excessive height! FREE HIT coming up for ${batter}!`
+        `NO BALL (Full Toss)! Dangerous delivery above waist height called on ${bowler}! Umpire signals no-ball, penalty run awarded and extra delivery next!`,
+        `NO BALL (Full Toss)! High full toss above waist height! Dangerous delivery called on ${bowler}, penalty run awarded and ball to be re-bowled!`,
+        `NO BALL (Full Toss)! Beamer called! Umpire immediately signals no-ball against ${bowler} for excessive height! 1 penalty run & extra delivery to follow!`
       ], seed);
     }
 
     if (isHeight) {
       if (runs > 0) {
         return selectVariation([
-          `NO BALL (Height) + ${runs} RUNS! Sharp bouncer flying way over the head of ${batter}! Signaled no-ball for excessive height, ${runs} runs taken, and a FREE HIT coming up!`,
-          `NO BALL (Height)! Steep bouncer from ${bowler} sails too high! Umpire signals penalty run, batters take ${runs}, and a FREE HIT follows!`
+          `NO BALL (Height) + ${runs} RUNS! Sharp bouncer flying way over the head of ${batter}! Signaled no-ball for excessive height, ${runs} runs taken, and extra delivery next!`,
+          `NO BALL (Height)! Steep bouncer from ${bowler} sails too high! Umpire signals penalty run, batters take ${runs}, and delivery to be re-bowled!`
         ], seed);
       }
       return selectVariation([
-        `NO BALL (Height)! Bouncer sails way over ${batter}'s head! Umpire signals no-ball for dangerous height from ${bowler}, penalty run awarded and FREE HIT next!`,
-        `NO BALL (Height)! Fast bouncer called too high by the square-leg umpire! 1 penalty run conceded by ${bowler} and FREE HIT next!`
+        `NO BALL (Height)! Bouncer sails way over ${batter}'s head! Umpire signals no-ball for dangerous height from ${bowler}, penalty run awarded and extra delivery next!`,
+        `NO BALL (Height)! Fast bouncer called too high by the square-leg umpire! 1 penalty run conceded by ${bowler} and ball to be re-bowled!`
       ], seed);
     }
 
     // Default: Overstep / Missing Crease Mark
     if (runs === 6) {
       return selectVariation([
-        `NO BALL & SIX! Monster blow off the illegal delivery! ${bowler} misses the mark and oversteps! ${batter} launches it into the stands! 7 runs added and FREE HIT coming up!`,
-        `NO BALL & SIX! Massive strike from ${batter}! Smashes ${bowler} over the ropes off a front-foot no-ball! Penalty run plus six, and a FREE HIT follows!`,
-        `NO BALL & SIX! High full toss punished with absolute disdain by ${batter}! Maximum runs and an automatic FREE HIT awarded!`
+        `NO BALL & SIX! Monster blow off the illegal delivery! ${bowler} misses the mark and oversteps! ${batter} launches it into the stands! 7 runs added and extra delivery next!`,
+        `NO BALL & SIX! Massive strike from ${batter}! Smashes ${bowler} over the ropes off a front-foot no-ball! Penalty run plus six, and delivery to be re-bowled!`,
+        `NO BALL & SIX! High delivery punished with absolute disdain by ${batter}! Maximum runs and 1 penalty run awarded!`
       ], seed);
     }
     if (runs === 4) {
       return selectVariation([
-        `NO BALL & FOUR! Smashed away to the boundary! ${bowler} misses the crease mark and oversteps, ${batter} crunches it for four! 5 runs total and a FREE HIT coming up!`,
-        `NO BALL & FOUR! Crunched through the covers! ${bowler} errs on the front crease mark, conceded four runs plus penalty, and ${batter} gets a FREE HIT next!`,
-        `NO BALL & FOUR! Pulled hard through the gap by ${batter}! Boundary scored off an illegal delivery and a FREE HIT follows!`
+        `NO BALL & FOUR! Smashed away to the boundary! ${bowler} misses the crease mark and oversteps, ${batter} crunches it for four! 5 runs total and extra delivery next!`,
+        `NO BALL & FOUR! Crunched through the covers! ${bowler} errs on the front crease mark, conceded four runs plus penalty, and delivery to be re-bowled!`,
+        `NO BALL & FOUR! Pulled hard through the gap by ${batter}! Boundary scored off an illegal delivery (+1 penalty run & extra delivery)!`
       ], seed);
     }
     if (runs > 0) {
       return selectVariation([
-        `NO BALL + ${runs} RUNS! ${bowler} misses the crease mark and oversteps! ${batter} and partner hustle for ${runs} runs off the bat, plus 1 penalty run, and a FREE HIT is awarded!`,
-        `NO BALL! Illegal delivery from ${bowler}, batters run ${runs} extra runs, and ${batter} earns a FREE HIT on the next ball!`,
-        `NO BALL! Front-foot overstep by ${bowler} missing the mark! ${runs} runs taken, extra run conceded, and a FREE HIT is signaled!`
+        `NO BALL + ${runs} RUNS! ${bowler} misses the crease mark and oversteps! ${batter} and partner hustle for ${runs} runs off the bat, plus 1 penalty run, and extra delivery next!`,
+        `NO BALL! Illegal delivery from ${bowler}, batters run ${runs} extra runs, and delivery will be re-bowled!`,
+        `NO BALL! Front-foot overstep by ${bowler} missing the mark! ${runs} runs taken, extra run conceded, and delivery to be re-bowled!`
       ], seed);
     }
     return selectVariation([
-      `NO BALL! ${bowler} misses the mark and oversteps the bowling crease! Penalty run awarded and FREE HIT coming up for ${batter}!`,
-      `NO BALL! Illegal delivery called on ${bowler}. Extra run conceded and a FREE HIT opportunity for ${batter}!`,
-      `NO BALL! Front-foot no-ball called on ${bowler} for missing the mark! The umpire signals a penalty run and a FREE HIT for ${batter} on the next delivery!`,
-      `NO BALL! High full toss above waist height! Dangerous delivery called on ${bowler}, penalty run awarded and FREE HIT next!`
+      `NO BALL! ${bowler} misses the mark and oversteps the bowling crease! Penalty run awarded and extra delivery next for ${batter}!`,
+      `NO BALL! Illegal delivery called on ${bowler}. Extra run conceded and delivery to be re-bowled!`,
+      `NO BALL! Front-foot no-ball called on ${bowler} for missing the mark! The umpire signals a penalty run and an extra delivery next!`,
+      `NO BALL! Dangerous delivery called on ${bowler}, penalty run awarded and extra delivery next!`
     ], seed);
-  }
-
-  // -------------------------------------------------------------------------
-  // CASE 2: BALL BOWLED ON A FREE HIT
-  // -------------------------------------------------------------------------
-  if (isFreeHit) {
-    if (b.isWicket) {
-      if (b.wicketType === 'RUN_OUT') {
-        return selectVariation([
-          `OUT! RUN OUT ON FREE HIT! High drama! Run out is the ONLY dismissal permitted on a Free Hit, and ${dismissed} is caught short of the crease!`,
-          `OUT! RUN OUT ON FREE HIT! Direct hit at the stumps! ${dismissed} sacrifices the wicket attempting a desperate run on the free hit!`,
-          `OUT! RUN OUT! Batters take on the fielder's arm on the free hit, and ${dismissed} fails to make ground! Superb throw ends the innings!`
-        ], seed);
-      }
-      // Any other dismissal on Free Hit (Bowled, Caught, LBW, Stumped, etc.) is NOT OUT!
-      return selectVariation([
-        `FREE HIT SURVIVAL! NOT OUT! ${bowler} ${b.wicketType === 'BOWLED' ? 'shatters the stumps' : b.wicketType === 'CAUGHT' ? 'induces the catch' : 'appeals loudly'}, but it's a FREE HIT! ${dismissed} cannot be dismissed this way and survives!`,
-        `CAUGHT / BOWLED ON FREE HIT! Stumps disturbed / caught in the deep, but the umpire waves arms — it's a FREE HIT! ${dismissed} survives to fight on!`,
-        `NOT OUT ON FREE HIT! ${dismissed} would have been out, but the Free Hit protects the wicket! Fielding team misses out.`
-      ], seed);
-    }
-
-    if (runs === 6) {
-      return selectVariation([
-        `FREE HIT MAXIMUM! SIX! ${batter} takes full toll of the free hit from ${bowler} and launches it deep into the stands for a colossal maximum!`,
-        `FREE HIT DISPATCHED FOR SIX! Clean strike! ${batter} stands tall against ${bowler}'s free hit and deposits it all the way over the ropes!`,
-        `FREE HIT PUNISHED! Smashed high and handsome! ${batter} makes ${bowler} pay with a gigantic six on the free hit!`
-      ], seed);
-    }
-
-    if (runs === 4) {
-      return selectVariation([
-        `FREE HIT CRUNCHED FOR FOUR! ${batter} pounces on the free hit delivery, drilling ${bowler} through the infield to the boundary!`,
-        `FREE HIT FOUR! Beautifully executed by ${batter}! Drills ${bowler}'s free hit delivery past extra cover for four runs!`,
-        `FREE HIT BOUNDARY! ${batter} uses the license to attack, slashing ${bowler} away to the fence for four!`
-      ], seed);
-    }
-
-    if (b.extraType === 'WIDE') {
-      return selectVariation([
-        `WIDE — FREE HIT REMAINS ACTIVE! ${bowler} loses radar under free-hit pressure! 1 extra conceded and the Free Hit carries over to the next ball!`,
-        `WIDE BALL! Straying outside the tramline on a free hit! Penalty conceded and ${batter} retains the FREE HIT on the next delivery!`,
-        `WIDE ON FREE HIT! ${bowler} errs in line, wide signaled, so the Free Hit continues for ${batter}!`
-      ], seed);
-    }
-
-    if (runs === 0) {
-      return selectVariation([
-        `FREE HIT DEFENDED! Superb yorker from ${bowler}! Right in the blockhole on the free hit and ${batter} can only dig it out for a dot!`,
-        `FREE HIT WASTED! Slower ball from ${bowler} completely deceives ${batter}! A golden free-hit opportunity goes begging.`,
-        `FREE HIT DOT! Brilliant comeback from ${bowler}! Nails the wide yorker, denying ${batter} any scoring shot on the free hit!`
-      ], seed);
-    }
-
-    if (runs > 0) {
-      return selectVariation([
-        `${runs} ${runs === 1 ? 'run' : 'runs'} taken on the Free Hit. ${batter} works ${bowler} safely into the outfield to rotate strike.`,
-        `${runs} runs off the Free Hit. Good recovery from ${bowler} to restrict ${batter} to just ${runs} runs on the free hit.`,
-        `FREE HIT! ${batter} pushes ${bowler} into the deep and picks up ${runs} ${runs === 1 ? 'run' : 'runs'}.`
-      ], seed);
-    }
   }
 
   // -------------------------------------------------------------------------
@@ -708,6 +663,13 @@ export function generateBallDescription(
         ], seed);
 
       case 'RUN_OUT':
+        if (runs > 0) {
+          return selectVariation([
+            `OUT! RUN OUT! The batters complete ${runs} run${runs > 1 ? 's' : ''}, but attempting another ends in disaster! ${dismissed} is run out!`,
+            `OUT! RUN OUT! ${runs} run${runs > 1 ? 's' : ''} completed safely, but going for the next run proves fatal! Brilliant fielding dismisses ${dismissed}!`,
+            `OUT! RUN OUT! Good running for ${runs} run${runs > 1 ? 's' : ''}, but turning for more brings a direct hit to run out ${dismissed}!`
+          ], seed);
+        }
         return selectVariation([
           `OUT! RUN OUT! Direct hit at the stumps! ${dismissed} is caught well short of the crease after a risky run!`,
           `OUT! RUN OUT! Miscommunication between the wickets! Brilliant fielding ends ${dismissed}'s innings!`,
@@ -892,8 +854,18 @@ export function getBallBadgeStyle(b: any): FormattedCommentaryBall['outcomeBadge
   const batRuns = Number(b.runs || 0);
 
   if (b.isWicket) {
+    const extraRuns = Number(b.extras || 0);
+    let label = 'W';
+    if (b.extraType === 'WIDE') {
+      label = batRuns > 0 ? `WD+${batRuns}+W` : (extraRuns > 1 ? `WD+${extraRuns - 1}+W` : 'WD+W');
+    } else if (b.extraType === 'NO_BALL') {
+      label = batRuns > 0 ? `NB+${batRuns}+W` : 'NB+W';
+    } else if (batRuns > 0) {
+      label = `${batRuns}+W`;
+    }
+
     return {
-      label: 'W',
+      label,
       bg: '#EF4444',
       color: '#FFFFFF',
       borderColor: '#DC2626',
@@ -1024,24 +996,9 @@ export function filterCommentaryBalls(
     return (a.ballNumber ?? 0) - (b.ballNumber ?? 0);
   });
 
-  // Track Free Hit state sequentially across legal/illegal deliveries
-  let freeHitPending = false;
-
+  // Under tournament rules, NO Free Hit after No-ball
   const decorated = chrono.map((b: any) => {
-    // A ball is on a Free Hit only if the delivery immediately preceding it was a NO_BALL (or Wide carryover on Free Hit)
-    const isFreeHit = Boolean(freeHitPending);
-
-    // Update freeHitPending for the *subsequent* delivery:
-    if (b.extraType === 'NO_BALL') {
-      // Any no-ball causes a free hit on the NEXT delivery
-      freeHitPending = true;
-    } else if (isFreeHit && b.extraType === 'WIDE') {
-      // If wide is bowled on a free hit, the Free Hit carries over to the next delivery
-      freeHitPending = true;
-    } else {
-      // Any legal delivery consumes the Free Hit
-      freeHitPending = false;
-    }
+    const isFreeHit = false;
 
     const isSuperOver = Boolean(
       options?.isSuperOver ||

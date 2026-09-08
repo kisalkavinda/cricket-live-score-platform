@@ -20,6 +20,7 @@ import {
   getBallBadgeStyle,
   computeInningsSummary,
 } from '../lib/analytics/match-analytics';
+import { calculateDeliveryRuns } from '../lib/scoring/scoring-rules';
 
 let passed = 0;
 let failed = 0;
@@ -335,6 +336,16 @@ async function runTestSuite() {
     assert.strictEqual(badgeW.label, 'W');
     assert.strictEqual(badgeW.bg, '#EF4444', 'Wicket must have Ruby Red background');
 
+    // 3b. Completed runs + Wicket badge (e.g. 1 run taken, run out on 2nd)
+    const badge1W = getBallBadgeStyle({ runs: 1, isWicket: true });
+    assert.strictEqual(badge1W.type, 'WICKET');
+    assert.strictEqual(badge1W.label, '1+W');
+    assert.strictEqual(badge1W.bg, '#EF4444');
+
+    const badge2W = getBallBadgeStyle({ runs: 2, isWicket: true });
+    assert.strictEqual(badge2W.type, 'WICKET');
+    assert.strictEqual(badge2W.label, '2+W');
+
     // 4. Dynamic description generation
     const descBowled = generateBallDescription({
       isWicket: true,
@@ -351,6 +362,16 @@ async function runTestSuite() {
     });
     assert(descSix.includes('SIX!'), 'Description must describe a six');
 
+    const descRunOut = generateBallDescription({
+      runs: 1,
+      isWicket: true,
+      wicketType: 'RUN_OUT',
+      batsman: { name: 'Pathum Nissanka' },
+      dismissedPlayer: { name: 'Charith Asalanka' },
+      bowler: { name: 'Shaheen Afridi' },
+    });
+    assert(descRunOut.includes('OUT! RUN OUT!') && descRunOut.includes('1 run'), 'Description must describe completed run before run out');
+
     logPass('6.1: Visual badges and dynamic commentary descriptions render with exact hallmarks');
   } catch (err) {
     logFail('6.1: Visual badges test failed', err);
@@ -361,7 +382,7 @@ async function runTestSuite() {
   // ===========================================================================
   console.log('\n--- TEST GROUP 7: No-Ball Free Hits, Super Overs & Innings Summary ---');
   try {
-    // 1. No-ball commentary
+    // 1. No-ball commentary (Tournament Rule: No Free Hit after No-ball)
     const nbSix = generateBallDescription({
       extraType: 'NO_BALL',
       runs: 6,
@@ -369,7 +390,7 @@ async function runTestSuite() {
       bowler: { name: 'Mitchell Starc' },
     });
     assert(nbSix.includes('NO BALL & SIX'), 'No ball with six must include NO BALL & SIX');
-    assert(nbSix.includes('FREE HIT'), 'Must mention Free Hit awarded');
+    assert(!nbSix.includes('FREE HIT'), 'Tournament rules: No Free Hit awarded after No-ball');
 
     const nbFour = generateBallDescription({
       extraType: 'NO_BALL',
@@ -379,34 +400,22 @@ async function runTestSuite() {
     });
     assert(nbFour.includes('NO BALL & FOUR'), 'No ball with four must include NO BALL & FOUR');
 
-    // 2. Ball bowled on a Free Hit
-    const fhSix = generateBallDescription({
-      isFreeHit: true,
+    // 2. Legacy commentary sanitization (Tournament Rule: Free Hits purged from commentary)
+    const sanitizedLegacyCommentary = generateBallDescription({
+      commentary: 'NO BALL (Above Chest Height) & SIX! 7 runs added (+1 run & extra delivery, no free hit under CPL rules).',
       runs: 6,
       batsman: { name: 'Dasun Shanaka' },
       bowler: { name: 'Shaheen Afridi' },
     });
-    assert(fhSix.includes('FREE HIT') && (fhSix.includes('SIX') || fhSix.includes('MAXIMUM')), 'Free hit six must mention Free Hit maximum');
+    assert(!sanitizedLegacyCommentary.toUpperCase().includes('FREE HIT'), 'Sanitizer must remove all free hit text from legacy commentary');
 
-    const fhRunOut = generateBallDescription({
-      isFreeHit: true,
-      isWicket: true,
-      wicketType: 'RUN_OUT',
-      dismissedPlayer: { name: 'Dasun Shanaka' },
+    const sanitizedFhSurvival = generateBallDescription({
+      commentary: 'FREE HIT SURVIVAL! NOT OUT! Mitchell Starc shatters the stumps, but it is a FREE HIT!',
+      runs: 0,
       batsman: { name: 'Dasun Shanaka' },
-      bowler: { name: 'Shaheen Afridi' },
+      bowler: { name: 'Mitchell Starc' },
     });
-    assert(fhRunOut.includes('RUN OUT ON FREE HIT'), 'Run out on free hit must highlight legal dismissal on free hit');
-
-    const fhBowledSurvives = generateBallDescription({
-      isFreeHit: true,
-      isWicket: true,
-      wicketType: 'BOWLED',
-      dismissedPlayer: { name: 'Dasun Shanaka' },
-      batsman: { name: 'Dasun Shanaka' },
-      bowler: { name: 'Shaheen Afridi' },
-    });
-    assert(fhBowledSurvives.includes('FREE HIT SURVIVAL') || fhBowledSurvives.includes('NOT OUT ON FREE HIT') || fhBowledSurvives.includes('CAUGHT / BOWLED ON FREE HIT'), 'Non-run-out wicket on free hit must indicate survival / not out');
+    assert(!sanitizedFhSurvival.toUpperCase().includes('FREE HIT'), 'Sanitizer must not output Free Hit on fallback');
 
     // 3. Super Over commentary
     const soWkt = generateBallDescription({
@@ -419,21 +428,21 @@ async function runTestSuite() {
     });
     assert(soWkt.includes('SUPER OVER'), 'Super over wicket must mention Super Over');
 
-    // 4. Sequential Free Hit detection via filterCommentaryBalls
+    // 4. Sequential No-ball delivery detection via filterCommentaryBalls
     const rawDeliverySequence = [
-      // Ball 1: No ball -> triggers Free Hit for next delivery
+      // Ball 1: No ball -> under tournament rules, next ball is NOT a Free Hit
       { id: 'b-1', overNumber: 0, ballNumber: 1, runs: 0, extras: 1, extraType: 'NO_BALL', isLegal: false, isWicket: false, createdAt: '2026-09-06T10:00:00Z' },
-      // Ball 2: Bowled during Free Hit!
+      // Ball 2: Bowled after No-ball (valid delivery, not Free Hit)
       { id: 'b-2', overNumber: 0, ballNumber: 1, runs: 6, extras: 0, isLegal: true, isWicket: false, createdAt: '2026-09-06T10:00:30Z' },
-      // Ball 3: Normal delivery (Free Hit ended)
+      // Ball 3: Normal delivery
       { id: 'b-3', overNumber: 0, ballNumber: 2, runs: 1, extras: 0, isLegal: true, isWicket: false, createdAt: '2026-09-06T10:01:00Z' },
     ];
 
     const processedDeliveries = filterCommentaryBalls(rawDeliverySequence, 'ALL');
     const ball2 = processedDeliveries.find(d => d.id === 'b-2');
     const ball3 = processedDeliveries.find(d => d.id === 'b-3');
-    assert.strictEqual(ball2?.isFreeHit, true, 'Delivery immediately following No-Ball must be flagged as Free Hit');
-    assert.strictEqual(ball3?.isFreeHit, false, 'Delivery following legal Free Hit must not be Free Hit');
+    assert.strictEqual(ball2?.isFreeHit, false, 'Under tournament rules, delivery following No-Ball must not be Free Hit');
+    assert.strictEqual(ball3?.isFreeHit, false, 'Delivery following legal delivery must not be Free Hit');
 
     // 5. Innings Summary calculation
     const mockInnSummary = computeInningsSummary({
@@ -465,9 +474,71 @@ async function runTestSuite() {
     assert.strictEqual(mockSuperOverSummary.totalRuns, 16);
     assert(mockSuperOverSummary.targetEquationText?.includes('17 runs to win'), 'Super over target must be 17 runs');
 
-    logPass('7.1: No-ball free hits, super overs, and innings summary calculations are verified');
+    // 7. Wide ball boundary (5 wides) and running extras calculation (MCC Law 22)
+    const wide5 = calculateDeliveryRuns({ extraType: 'WIDE', extras: 5 });
+    assert.strictEqual(wide5.totalRuns, 5, 'Boundary wide must yield 5 total runs');
+    assert.strictEqual(wide5.wideRuns, 5, 'Boundary wide must record 5 wide extras');
+    assert.strictEqual(wide5.bowlerRuns, 5, 'Bowler must be charged 5 runs for boundary wide');
+    assert.strictEqual(wide5.isLegal, false, 'Wide ball is not a legal delivery and must be re-bowled');
+
+    const wide2 = calculateDeliveryRuns({ extraType: 'WIDE', extras: 2 });
+    assert.strictEqual(wide2.totalRuns, 2, 'Wide + 1 run must yield 2 total runs');
+    assert.strictEqual(wide2.wideRuns, 2, 'Wide + 1 run must record 2 wide extras');
+
+    const descWide5 = generateBallDescription({
+      extraType: 'WIDE',
+      extras: 5,
+      batsman: { name: 'Pathum Nissanka' },
+      bowler: { name: 'Mitchell Starc' },
+    });
+    assert(descWide5.includes('5 WIDES!'), '5 Wides commentary must describe boundary 5 wides');
+
+    const descWide2 = generateBallDescription({
+      extraType: 'WIDE',
+      extras: 2,
+      batsman: { name: 'Pathum Nissanka' },
+      bowler: { name: 'Mitchell Starc' },
+    });
+    assert(descWide2.includes('WIDE + 1 RUN'), 'Wide with 1 extra run must describe running extras');
+
+    logPass('7.1: No-ball free hits, super overs, wide boundary (5 WDs), and innings summary calculations are verified');
   } catch (err) {
     logFail('7.1: No-ball and Super Over test failed', err);
+  }
+
+  // ===========================================================================
+  // TEST GROUP 8: Match Prioritization Sorting in All Matches Tab
+  // ===========================================================================
+  console.log('--- TEST GROUP 8: Match Prioritization Sorting ---');
+  try {
+    const { sortMatchesByPriority } = await import('../lib/scoring/scoring-rules');
+
+    const sampleMatches = [
+      { id: 'm-upcoming-far', status: 'UPCOMING', scheduledAt: '2026-09-10T14:00:00Z', createdAt: '2026-09-01T00:00:00Z' },
+      { id: 'm-completed-old', status: 'COMPLETED', completedAt: '2026-09-05T12:00:00Z', createdAt: '2026-09-01T00:00:00Z' },
+      { id: 'm-live-2', status: 'LIVE', startedAt: '2026-09-08T10:30:00Z', createdAt: '2026-09-01T00:00:00Z' },
+      { id: 'm-completed-recent', status: 'COMPLETED', completedAt: '2026-09-08T09:00:00Z', createdAt: '2026-09-01T00:00:00Z' },
+      { id: 'm-live-1', status: 'LIVE', startedAt: '2026-09-08T11:00:00Z', createdAt: '2026-09-01T00:00:00Z' },
+      { id: 'm-upcoming-soon', status: 'UPCOMING', scheduledAt: '2026-09-09T10:00:00Z', createdAt: '2026-09-01T00:00:00Z' },
+    ];
+
+    const sorted = sortMatchesByPriority(sampleMatches);
+    const sortedIds = sorted.map((m) => m.id);
+
+    // Expected order:
+    // 1. LIVE matches: m-live-1 (11:00) then m-live-2 (10:30)
+    // 2. COMPLETED matches (recent to past): m-completed-recent (Sep 8) then m-completed-old (Sep 5)
+    // 3. UPCOMING matches (soonest first): m-upcoming-soon (Sep 9) then m-upcoming-far (Sep 10)
+    assert.strictEqual(sortedIds[0], 'm-live-1', 'Most recent LIVE match must come 1st');
+    assert.strictEqual(sortedIds[1], 'm-live-2', 'Earlier LIVE match must come 2nd');
+    assert.strictEqual(sortedIds[2], 'm-completed-recent', 'Most recent COMPLETED match must come 3rd');
+    assert.strictEqual(sortedIds[3], 'm-completed-old', 'Older COMPLETED match must come 4th');
+    assert.strictEqual(sortedIds[4], 'm-upcoming-soon', 'Soonest UPCOMING match must come 5th');
+    assert.strictEqual(sortedIds[5], 'm-upcoming-far', 'Later UPCOMING match must come 6th');
+
+    logPass('8.1: Match sorting correctly prioritizes LIVE -> COMPLETED (recent to past) -> UPCOMING/SCHEDULED last');
+  } catch (err) {
+    logFail('8.1: Match prioritization test failed', err);
   }
 
   console.log('\n============================================================');

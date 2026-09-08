@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import Link from 'next/link';
 import { createClient } from '@/utils/supabase/client';
 import { ScoreBroadcastPayload } from '@/lib/scoring/scoring-realtime';
+import { sortMatchesByPriority } from '@/lib/scoring/scoring-rules';
 
 type NavTab = 'LIVE' | 'POINTS_TABLE' | 'ALL_MATCHES' | 'TOP_BATTERS' | 'TOP_BOWLERS' | 'MVP';
 
@@ -157,10 +158,14 @@ export default function LiveScoreWidget() {
   const currentMatch = matches.find((m) => m.matchId === activeMatchId) || matches[0];
   const currentInnings = currentMatch?.innings;
 
-  const filteredMatches = statsData.allMatches.filter((m) => {
-    if (matchFilter === 'ALL') return true;
-    return m.status === matchFilter;
-  });
+  const filteredMatches = useMemo(() => {
+    const list = statsData.allMatches.filter((m) => {
+      if (matchFilter === 'ALL') return true;
+      return m.status === matchFilter;
+    });
+
+    return sortMatchesByPriority(list);
+  }, [statsData.allMatches, matchFilter]);
 
   return (
     <div
@@ -759,8 +764,11 @@ export default function LiveScoreWidget() {
                   const isLeftBatting = currentMatch.status === 'LIVE' && currentInnings?.battingTeam?.id === leftTeam.id;
                   const isRightBatting = currentMatch.status === 'LIVE' && currentInnings?.battingTeam?.id === rightTeam.id;
 
+                  const isSuperOver = currentMatch.currentInnings >= 3;
                   const leftInningsSummary = (currentMatch.allInningsSummary || []).find((i: any) => i.battingTeamId === leftTeam.id && !i.isSuperOver);
                   const rightInningsSummary = (currentMatch.allInningsSummary || []).find((i: any) => i.battingTeamId === rightTeam.id && !i.isSuperOver);
+                  const leftSuperOverSummary = (currentMatch.allInningsSummary || []).find((i: any) => i.battingTeamId === leftTeam.id && i.isSuperOver);
+                  const rightSuperOverSummary = (currentMatch.allInningsSummary || []).find((i: any) => i.battingTeamId === rightTeam.id && i.isSuperOver);
 
                   return (
                     <div style={{ paddingBottom: '16px', borderBottom: '1px solid rgba(255, 255, 255, 0.08)' }}>
@@ -816,7 +824,18 @@ export default function LiveScoreWidget() {
                                 )}
                               </div>
                               <div style={{ fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.5)' }}>
-                                {leftInningsSummary
+                                {isSuperOver ? (
+                                  <div>
+                                    <div style={{ color: '#F59E0B', fontWeight: 800 }}>
+                                      ⚡ SO: {leftSuperOverSummary ? `${leftSuperOverSummary.runs}/${leftSuperOverSummary.wickets} (${leftSuperOverSummary.overs}.${leftSuperOverSummary.balls} ov)` : (isLeftBatting ? `${currentInnings?.runs ?? 0}/${currentInnings?.wickets ?? 0} (${currentInnings?.overs ?? 0}.${currentInnings?.balls ?? 0} ov)` : 'Yet to bat')}
+                                    </div>
+                                    {leftInningsSummary && (
+                                      <div style={{ fontSize: '0.72rem', color: 'rgba(255, 255, 255, 0.4)' }}>
+                                        Main: {leftInningsSummary.runs}/${leftInningsSummary.wickets} ({leftInningsSummary.overs}.${leftInningsSummary.balls} ov)
+                                      </div>
+                                    )}
+                                  </div>
+                                ) : leftInningsSummary
                                   ? `${leftInningsSummary.runs}/${leftInningsSummary.wickets} (${leftInningsSummary.overs}.${leftInningsSummary.balls} ov)`
                                   : isLeftBatting
                                   ? `${currentInnings?.runs ?? 0}/${currentInnings?.wickets ?? 0} (Batting)`
@@ -843,16 +862,11 @@ export default function LiveScoreWidget() {
                             </div>
                             <div style={{ fontSize: '0.9rem', color: 'rgba(255, 255, 255, 0.7)', marginTop: '4px', fontWeight: 600 }}>
                               {currentInnings ? `Overs: ${currentInnings.overs}.${currentInnings.balls}` : '0.0 Overs'}
-                              {currentMatch.match.oversPerInnings ? ` / ${currentMatch.match.oversPerInnings} ov` : ''}
+                              {isSuperOver ? ' / 1.0 ov' : currentMatch.match.oversPerInnings ? ` / ${currentMatch.match.oversPerInnings} ov` : ''}
                             </div>
-                            {currentMatch.currentInnings >= 3 && (
+                            {isSuperOver && (
                               <div style={{ marginTop: '4px', display: 'inline-block', background: 'rgba(245, 158, 11, 0.2)', border: '1px solid #F59E0B', color: '#FBBF24', fontSize: '0.72rem', fontWeight: 800, padding: '2px 8px', borderRadius: '4px' }}>
-                                ⚡ SUPER OVER
-                              </div>
-                            )}
-                            {currentMatch.isFreeHit && (
-                              <div style={{ marginTop: '6px', display: 'inline-flex', alignItems: 'center', gap: '4px', background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.3) 0%, rgba(234, 88, 12, 0.3) 100%)', border: '1.5px solid #F59E0B', color: '#FEF08A', fontSize: '0.72rem', fontWeight: 900, padding: '3px 10px', borderRadius: '20px', letterSpacing: '0.06em', textTransform: 'uppercase', boxShadow: '0 0 10px rgba(245, 158, 11, 0.4)' }}>
-                                ⚡ FREE HIT
+                                ⚡ SUPER OVER {currentMatch.currentInnings % 2 === 1 ? '1' : '2 (CHASE)'} (1 OV • 2 WKTS MAX)
                               </div>
                             )}
                           </div>
@@ -883,7 +897,18 @@ export default function LiveScoreWidget() {
                                 <span>{rightTeam.name}</span>
                               </div>
                               <div style={{ fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.5)' }}>
-                                {rightInningsSummary
+                                {isSuperOver ? (
+                                  <div>
+                                    <div style={{ color: '#F59E0B', fontWeight: 800 }}>
+                                      ⚡ SO: {rightSuperOverSummary ? `${rightSuperOverSummary.runs}/${rightSuperOverSummary.wickets} (${rightSuperOverSummary.overs}.${rightSuperOverSummary.balls} ov)` : (isRightBatting ? `${currentInnings?.runs ?? 0}/${currentInnings?.wickets ?? 0} (${currentInnings?.overs ?? 0}.${currentInnings?.balls ?? 0} ov)` : 'Yet to bat')}
+                                    </div>
+                                    {rightInningsSummary && (
+                                      <div style={{ fontSize: '0.72rem', color: 'rgba(255, 255, 255, 0.4)' }}>
+                                        Main: {rightInningsSummary.runs}/${rightInningsSummary.wickets} ({rightInningsSummary.overs}.${rightInningsSummary.balls} ov)
+                                      </div>
+                                    )}
+                                  </div>
+                                ) : rightInningsSummary
                                   ? `${rightInningsSummary.runs}/${rightInningsSummary.wickets} (${rightInningsSummary.overs}.${rightInningsSummary.balls} ov)`
                                   : isRightBatting
                                   ? `${currentInnings?.runs ?? 0}/${currentInnings?.wickets ?? 0} (Batting)`
@@ -938,7 +963,23 @@ export default function LiveScoreWidget() {
                             </div>
 
                             <div className="scorecard-mobile-card-scores left">
-                              {leftInningsSummary ? (
+                              {isSuperOver ? (
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                                  <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
+                                    <span className="scorecard-mobile-big-score" style={{ color: '#F59E0B' }}>
+                                      {leftSuperOverSummary ? `${leftSuperOverSummary.runs}/${leftSuperOverSummary.wickets}` : isLeftBatting ? `${currentInnings?.runs ?? 0}/${currentInnings?.wickets ?? 0}` : '-'}
+                                    </span>
+                                    <span className="scorecard-mobile-overs-tag">
+                                      ({leftSuperOverSummary ? `${leftSuperOverSummary.overs}.${leftSuperOverSummary.balls}` : isLeftBatting ? `${currentInnings?.overs ?? 0}.${currentInnings?.balls ?? 0}` : '0.0'} ov)
+                                    </span>
+                                  </div>
+                                  {leftInningsSummary && (
+                                    <span style={{ fontSize: '0.68rem', color: 'rgba(255, 255, 255, 0.4)', marginTop: '1px' }}>
+                                      Main: {leftInningsSummary.runs}/{leftInningsSummary.wickets}
+                                    </span>
+                                  )}
+                                </div>
+                              ) : leftInningsSummary ? (
                                 <>
                                   <span className="scorecard-mobile-big-score">{leftInningsSummary.runs}/{leftInningsSummary.wickets}</span>
                                   <span className="scorecard-mobile-overs-tag">({leftInningsSummary.overs}.{leftInningsSummary.balls} ov)</span>
@@ -975,7 +1016,23 @@ export default function LiveScoreWidget() {
                             </div>
 
                             <div className="scorecard-mobile-card-scores right">
-                              {rightInningsSummary ? (
+                              {isSuperOver ? (
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                                  <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
+                                    <span className="scorecard-mobile-big-score" style={{ color: '#F59E0B' }}>
+                                      {rightSuperOverSummary ? `${rightSuperOverSummary.runs}/${rightSuperOverSummary.wickets}` : isRightBatting ? `${currentInnings?.runs ?? 0}/${currentInnings?.wickets ?? 0}` : '-'}
+                                    </span>
+                                    <span className="scorecard-mobile-overs-tag">
+                                      ({rightSuperOverSummary ? `${rightSuperOverSummary.overs}.${rightSuperOverSummary.balls}` : isRightBatting ? `${currentInnings?.overs ?? 0}.${currentInnings?.balls ?? 0}` : '0.0'} ov)
+                                    </span>
+                                  </div>
+                                  {rightInningsSummary && (
+                                    <span style={{ fontSize: '0.68rem', color: 'rgba(255, 255, 255, 0.4)', marginTop: '1px' }}>
+                                      Main: {rightInningsSummary.runs}/{rightInningsSummary.wickets}
+                                    </span>
+                                  )}
+                                </div>
+                              ) : rightInningsSummary ? (
                                 <>
                                   <span className="scorecard-mobile-big-score">{rightInningsSummary.runs}/{rightInningsSummary.wickets}</span>
                                   <span className="scorecard-mobile-overs-tag">({rightInningsSummary.overs}.{rightInningsSummary.balls} ov)</span>
@@ -997,16 +1054,11 @@ export default function LiveScoreWidget() {
                           <div className="scorecard-mobile-status-live">
                             <span className="scorecard-live-dot" />
                             <span>
-                              {currentMatch.currentInnings >= 3
-                                ? `SUPER OVER ${currentMatch.currentInnings - 2}`
+                              {isSuperOver
+                                ? `⚡ SUPER OVER ${currentMatch.currentInnings % 2 === 1 ? '1' : '2 (CHASE)'}`
                                 : `INNINGS ${currentMatch.currentInnings}`}
-                              {currentInnings ? ` (${currentInnings.overs}.${currentInnings.balls}/${currentMatch.match.oversPerInnings || 4} OV)` : ''}
+                              {currentInnings ? ` (${currentInnings.overs}.${currentInnings.balls}/${isSuperOver ? '1.0' : (currentMatch.match.oversPerInnings || 4)} OV)` : ''}
                             </span>
-                            {currentMatch.isFreeHit && (
-                              <span style={{ color: '#FEF08A', fontWeight: 900, background: 'rgba(245, 158, 11, 0.25)', padding: '1px 5px', borderRadius: '3px' }}>
-                                FREE HIT
-                              </span>
-                            )}
                           </div>
                           <div className="scorecard-mobile-rates">
                             <span>CRR: <strong>{currentMatch.chase?.crr || currentInnings?.crr || '0.00'}</strong></span>
@@ -1153,35 +1205,81 @@ export default function LiveScoreWidget() {
                       </span>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                      {currentMatch.recentBalls.map((b, idx) => (
-                        <div key={b.id || idx} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
-                          <span
-                            style={{
-                              width: '30px',
-                              height: '30px',
-                              borderRadius: '50%',
-                              background: b.isWicket ? '#EF4444' : b.runs === 4 ? '#10B981' : b.runs === 6 ? '#8B5CF6' : b.extraType === 'WIDE' || b.extraType === 'NO_BALL' ? '#F59E0B' : 'rgba(255, 255, 255, 0.1)',
-                              color: b.extraType === 'WIDE' || b.extraType === 'NO_BALL' ? '#000' : '#FFF',
-                              fontSize: '0.75rem',
-                              fontWeight: 900,
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              boxShadow: '0 2px 6px rgba(0,0,0,0.3)',
-                            }}
-                          >
-                            {b.display}
-                          </span>
-                          <span style={{ fontSize: '0.62rem', color: 'rgba(255, 255, 255, 0.4)', fontWeight: 700 }}>
-                            .{idx + 1}
-                          </span>
-                        </div>
-                      ))}
+                      {currentMatch.recentBalls.map((b, idx) => {
+                        const runs = Number(b.runs || 0);
+                        const extraRuns = Number(b.extras || 0);
+                        const displayLabel = b.display || (b.isWicket
+                          ? (b.extraType === 'WIDE' ? (runs > 0 ? `WD+${runs}+W` : (extraRuns > 1 ? `WD+${extraRuns - 1}+W` : 'WD+W'))
+                            : b.extraType === 'NO_BALL' ? (runs > 0 ? `NB+${runs}+W` : 'NB+W')
+                            : (runs > 0 ? `${runs}+W` : 'W'))
+                          : (b.extraType === 'WIDE' ? (extraRuns > 1 ? `WD+${extraRuns - 1}` : 'WD')
+                            : b.extraType === 'NO_BALL' ? (runs > 0 ? `NB+${runs}` : 'NB')
+                            : b.extraType === 'BYE' ? `${extraRuns || 1}B`
+                            : b.extraType === 'LEG_BYE' ? `${extraRuns || 1}LB`
+                            : `${runs}`));
+
+                        return (
+                          <div key={b.id || idx} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+                            <span
+                              style={{
+                                minWidth: '30px',
+                                width: displayLabel.length > 2 ? 'auto' : '30px',
+                                height: '30px',
+                                padding: displayLabel.length > 2 ? '0 6px' : '0',
+                                borderRadius: displayLabel.length > 2 ? '15px' : '50%',
+                                background: b.isWicket ? '#EF4444' : b.runs === 4 ? '#10B981' : b.runs === 6 ? '#8B5CF6' : b.extraType === 'WIDE' || b.extraType === 'NO_BALL' ? '#F59E0B' : 'rgba(255, 255, 255, 0.1)',
+                                color: b.extraType === 'WIDE' || b.extraType === 'NO_BALL' ? '#000' : '#FFF',
+                                fontSize: displayLabel.length > 3 ? '0.65rem' : '0.75rem',
+                                fontWeight: 900,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                boxShadow: '0 2px 6px rgba(0,0,0,0.3)',
+                              }}
+                            >
+                              {displayLabel}
+                            </span>
+                            <span style={{ fontSize: '0.62rem', color: 'rgba(255, 255, 255, 0.4)', fontWeight: 700 }}>
+                              .{idx + 1}
+                            </span>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
               </div>
             )}
+
+            {/* Extras Row */}
+            {currentMatch && currentMatch.innings && currentMatch.innings.extrasBreakdown && (() => {
+              const eb = currentMatch.innings!.extrasBreakdown!;
+              return (
+                <div
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.02)',
+                    borderTop: '1px solid rgba(255, 255, 255, 0.07)',
+                    padding: '10px 24px',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    fontSize: '0.85rem',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                    <span style={{ fontWeight: 800, color: 'rgba(255, 255, 255, 0.85)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                      Extras
+                    </span>
+                    <span style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.45)' }}>
+                      (b {eb.byes}, lb {eb.legByes}, w {eb.wides}, nb {eb.noBalls}{eb.penalty > 0 ? `, p ${eb.penalty}` : ''})
+                    </span>
+                  </div>
+                  <span style={{ fontFamily: 'var(--font-data, monospace)', fontWeight: 900, color: '#FFF', fontSize: '0.95rem' }}>
+                    {eb.total}
+                  </span>
+                </div>
+              );
+            })()}
 
             {/* Footer Link to Full Scorecard */}
             {currentMatch && (
@@ -1207,7 +1305,7 @@ export default function LiveScoreWidget() {
                     textDecoration: 'none',
                   }}
                 >
-                  View Full Scorecard & Commentary →
+                  View Full Scorecard &amp; Commentary →
                 </Link>
               </div>
             )}

@@ -17,6 +17,8 @@ import {
   editBallDeliveryAction,
   deleteBallDeliveryAction,
   startSuperOverAction,
+  undoSuperOverAction,
+  renamePlayerAction,
 } from '@/lib/scoring/scoring-actions';
 import {
   calculateDeliveryRuns,
@@ -118,14 +120,169 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
         battingFirstTeamId: teamId,
         ballsPerOver: superOverBallsPerOver || match.ballsPerOver || 6,
       });
-      if (res?.updatedMatch) {
+      if (res && res.success && res.updatedMatch) {
         setMatch(res.updatedMatch);
+        if (res.updatedMatch.currentInnings) {
+          setActiveInningsTabNumber(res.updatedMatch.currentInnings);
+        }
+        await updateAuthoritativeSnapshot(res.updatedMatch);
+        setLineupStrikerId('');
+        setLineupNonStrikerId('');
+        setLineupBowlerId('');
+        setShowSuperOverModal(false);
+      } else {
+        alert(`Failed to start Super Over: ${res?.error || 'Server rejected request'}`);
       }
-      setShowSuperOverModal(false);
     } catch (err: any) {
       alert(`Failed to start Super Over: ${err?.message || 'Unknown error'}`);
     } finally {
       setIsEditingBallSaving(false);
+    }
+  }
+
+  // Match Rules (Overs & Balls Per Over) Modal State
+  const [showRulesModal, setShowRulesModal] = useState(false);
+  const [rulesOvers, setRulesOvers] = useState<number>(initialMatch?.oversPerInnings || 20);
+  const [rulesBallsPerOver, setRulesBallsPerOver] = useState<number>(initialMatch?.ballsPerOver || 6);
+  const [isRulesSaving, setIsRulesSaving] = useState(false);
+  const [isUndoSuperOverSaving, setIsUndoSuperOverSaving] = useState(false);
+
+  // Keep modal inputs in sync when match changes
+  useEffect(() => {
+    if (match?.oversPerInnings) setRulesOvers(match.oversPerInnings);
+    if (match?.ballsPerOver) setRulesBallsPerOver(match.ballsPerOver);
+  }, [match?.oversPerInnings, match?.ballsPerOver]);
+
+  async function handleSaveMatchRules(newOvers: number, newBallsPerOver: number) {
+    if (!newOvers || newOvers < 1 || newOvers > 100) {
+      alert('Total overs per innings must be between 1 and 100.');
+      return;
+    }
+    if (!newBallsPerOver || newBallsPerOver < 1 || newBallsPerOver > 20) {
+      alert('Balls per over must be between 1 and 20.');
+      return;
+    }
+
+    setIsRulesSaving(true);
+    try {
+      const res = await updateMatchRulesAction(match.id, {
+        oversPerInnings: Number(newOvers),
+        ballsPerOver: Number(newBallsPerOver),
+      });
+      if (res && res.success && res.updatedMatch) {
+        setMatch(res.updatedMatch);
+        await updateAuthoritativeSnapshot(res.updatedMatch);
+        setShowRulesModal(false);
+      } else {
+        alert('Failed to update match rules.');
+      }
+    } catch (err: any) {
+      alert(`Failed to update match rules: ${err?.message || 'Server error'}`);
+    } finally {
+      setIsRulesSaving(false);
+    }
+  }
+
+  async function handleUndoSuperOver() {
+    const confirmed = window.confirm(
+      '⚠️ Are you sure you want to undo and cancel the Super Over?\n\n' +
+      '• This will cancel and delete all Super Over innings (Innings 3 & 4).\n' +
+      '• Any deliveries scored in the Super Over will be deleted.\n' +
+      '• The match will be restored back to Innings 2.'
+    );
+    if (!confirmed) return;
+
+    setIsUndoSuperOverSaving(true);
+    try {
+      const res = await undoSuperOverAction(match.id);
+      if (res && res.success && res.updatedMatch) {
+        setMatch(res.updatedMatch);
+        setActiveInningsTabNumber(res.updatedMatch.currentInnings || 2);
+        await updateAuthoritativeSnapshot(res.updatedMatch);
+        setShowSuperOverModal(false);
+      } else {
+        alert(`Failed to undo Super Over: ${res?.error || 'Server error'}`);
+      }
+    } catch (err: any) {
+      alert(`Error undoing Super Over: ${err?.message || 'Unknown error'}`);
+    } finally {
+      setIsUndoSuperOverSaving(false);
+    }
+  }
+
+  // Rename Player (Score-Safe) Modal State
+  const [showRenameModal, setShowRenameModal] = useState(false);
+  const [renamePlayerId, setRenamePlayerId] = useState<string>('');
+  const [renamePlayerName, setRenamePlayerName] = useState<string>('');
+  const [renamePlayerJersey, setRenamePlayerJersey] = useState<number | string>('');
+  const [isRenamingSaving, setIsRenamingSaving] = useState(false);
+
+  function openRenameModal(playerId?: string, currentName?: string, jersey?: number | null) {
+    if (playerId) {
+      setRenamePlayerId(playerId);
+      setRenamePlayerName(currentName || '');
+      setRenamePlayerJersey(jersey ?? '');
+    } else {
+      // Default to first player if none specified
+      const firstP = allKnownPlayers[0];
+      setRenamePlayerId(firstP?.id || '');
+      setRenamePlayerName(firstP?.name || '');
+      setRenamePlayerJersey(firstP?.jerseyNumber ?? '');
+    }
+    setShowRenameModal(true);
+  }
+
+  async function handleSaveRenamePlayer() {
+    if (!renamePlayerId) {
+      alert('Please select a player to rename.');
+      return;
+    }
+    const cleanName = renamePlayerName.trim();
+    if (!cleanName) {
+      alert('Player name cannot be empty.');
+      return;
+    }
+
+    setIsRenamingSaving(true);
+    try {
+      const res = await renamePlayerAction({
+        playerId: renamePlayerId,
+        newName: cleanName,
+        jerseyNumber: renamePlayerJersey !== '' ? Number(renamePlayerJersey) : null,
+        matchId: match.id,
+      });
+
+      if (res && res.success) {
+        if (res.updatedMatch) {
+          setMatch(res.updatedMatch);
+          await updateAuthoritativeSnapshot(res.updatedMatch);
+        } else {
+          // Optimistically update in-memory
+          setMatch((prev: any) => {
+            if (!prev) return prev;
+            const updated = JSON.parse(JSON.stringify(prev));
+            (updated.innings || []).forEach((inn: any) => {
+              if (inn.currentStriker?.id === renamePlayerId) inn.currentStriker.name = cleanName;
+              if (inn.currentNonStriker?.id === renamePlayerId) inn.currentNonStriker.name = cleanName;
+              if (inn.currentBowler?.id === renamePlayerId) inn.currentBowler.name = cleanName;
+              (inn.battingScores || []).forEach((bs: any) => {
+                if (bs.player?.id === renamePlayerId) bs.player.name = cleanName;
+              });
+              (inn.bowlingScores || []).forEach((bw: any) => {
+                if (bw.player?.id === renamePlayerId) bw.player.name = cleanName;
+              });
+            });
+            return updated;
+          });
+        }
+        setShowRenameModal(false);
+      } else {
+        alert(`Failed to rename player: ${res?.error || 'Server error'}`);
+      }
+    } catch (err: any) {
+      alert(`Error renaming player: ${err?.message || 'Unknown error'}`);
+    } finally {
+      setIsRenamingSaving(false);
     }
   }
 
@@ -315,7 +472,13 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
   const [dismissedId, setDismissedId] = useState<string>('');
   const [newBatterId, setNewBatterId] = useState<string>('');
   const [wicketRuns, setWicketRuns] = useState<number>(0);
+  const [isWicketOnNoBall, setIsWicketOnNoBall] = useState<boolean>(false);
   const [wicketModalError, setWicketModalError] = useState<string | null>(null);
+
+  // Wide delivery state
+  const [showWideModal, setShowWideModal] = useState<boolean>(false);
+  const [wideRuns, setWideRuns] = useState<number>(0); // 0 additional = 1 wide; 4 additional = 5 wides (boundary)
+  const [wideIsBoundary, setWideIsBoundary] = useState<boolean>(false);
 
   const [showBatterModal, setShowBatterModal] = useState(false);
   const [targetRole, setTargetRole] = useState<'striker' | 'nonStriker'>('striker');
@@ -398,12 +561,24 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
   const nonStrikerScore = currentInnings?.battingScores?.find((b: any) => b.playerId === currentInnings?.currentNonStrikerId);
   const bowlerScore = currentInnings?.bowlingScores?.find((b: any) => b.playerId === currentInnings?.currentBowlerId);
 
+  // Helper to determine if a batter has already been dismissed in this innings (MCC Law 25: an out player cannot bat again)
+  const isPlayerDismissedInInnings = (playerId: string) => {
+    if (!currentInnings || !playerId) return false;
+    const score = currentInnings.battingScores?.find((b: any) => b.playerId === playerId);
+    const isRetiredHurt = score?.dismissal?.toLowerCase().includes('retired hurt');
+    if (score && (score.isOut || (score.dismissal && !isRetiredHurt))) {
+      return true;
+    }
+    const hasOutBall = currentInnings.ballEvents?.some(
+      (be: any) => be.isWicket && be.dismissedPlayerId === playerId && be.wicketType !== 'RETIRED_HURT'
+    );
+    return Boolean(hasOutBall);
+  };
+
   // Available new batters (not out OR retired hurt wishing to resume, and not currently batting)
   const availableBatters = battingSquad.filter((p: any) => {
-    const score = currentInnings?.battingScores?.find((b: any) => b.playerId === p.id);
     const isCurrentlyBatting = p.id === currentInnings?.currentStrikerId || p.id === currentInnings?.currentNonStrikerId;
-    const isRetiredHurt = score?.dismissal?.toLowerCase().includes('retired hurt');
-    const isOut = score?.isOut && !isRetiredHurt;
+    const isOut = isPlayerDismissedInInnings(p.id);
     return !isCurrentlyBatting && !isOut;
   });
 
@@ -427,8 +602,11 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
     return completedOvers < maxOversPerBowler;
   });
 
-  // Free Hit evaluation: Check whether the current delivery in play is a Free Hit
+  // Free Hit evaluation: Under tournament rules, there is NO Free Hit after a No-Ball
   const isFreeHitActive = false;
+  // Check whether the immediately preceding delivery in play was a No-Ball (re-bowled ball)
+  const lastDeliveryBall = currentInnings?.ballEvents?.[0];
+  const isPreviousDeliveryNoBall = Boolean(lastDeliveryBall && lastDeliveryBall.extraType === 'NO_BALL');
 
   // Action handlers with INSTANT OPTIMISTIC FEEDBACK
   const handleStartMatch = () => {
@@ -616,7 +794,12 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
     let nextStrikerId = currentInnings.currentStrikerId;
     let nextNonStrikerId = currentInnings.currentNonStrikerId;
 
-    if (isLegal && (runsOffBat % 2 === 1 || (extraType === 'BYE' && byeRuns % 2 === 1) || (extraType === 'LEG_BYE' && legByeRuns % 2 === 1))) {
+    const wideRanRuns = (extraType === 'WIDE') ? Math.max(0, deliveryCalc.wideRuns - 1) : 0;
+    const isWideBoundary = (extraType === 'WIDE') && (deliveryCalc.wideRuns === 5 || commentary?.toLowerCase().includes('boundary'));
+    const shouldRotateWide = (extraType === 'WIDE') && !isWideBoundary && (wideRanRuns % 2 !== 0);
+    const shouldRotateOther = isLegal && (runsOffBat % 2 === 1 || (extraType === 'BYE' && byeRuns % 2 === 1) || (extraType === 'LEG_BYE' && legByeRuns % 2 === 1));
+
+    if (shouldRotateWide || shouldRotateOther) {
       const temp = nextStrikerId;
       nextStrikerId = nextNonStrikerId;
       nextNonStrikerId = temp;
@@ -770,21 +953,21 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
 
     if (nbReason === 'CHEST_HEIGHT') {
       if (nbType === 'BAT' && runsOffBat === 6) {
-        commentary = `NO BALL (Above Chest Height) & SIX! Delivery above chest height hammered into the stands by ${strikerName}! 7 runs added (+1 run & extra delivery, no free hit under CPL rules).`;
+        commentary = `NO BALL (Above Chest Height) & SIX! Delivery above chest height hammered into the stands by ${strikerName}! 7 runs added (+1 run & extra delivery).`;
       } else if (nbType === 'BAT' && runsOffBat === 4) {
         commentary = `NO BALL (Above Chest Height) & FOUR! High ball above chest level crunched away to the boundary by ${strikerName}! 5 runs added (+1 run & extra delivery).`;
       } else if (nbType === 'BAT' && runsOffBat > 0) {
-        commentary = `NO BALL (Above Chest Height) + ${runsOffBat} RUNS! High delivery called above chest height against ${bowlerName}! Batters take ${runsOffBat} runs plus 1 penalty run (+ extra delivery, no free hit).`;
+        commentary = `NO BALL (Above Chest Height) + ${runsOffBat} RUNS! High delivery called above chest height against ${bowlerName}! Batters take ${runsOffBat} runs plus 1 penalty run (+ extra delivery).`;
       } else if (nbType === 'BYE' || nbType === 'LEG_BYE') {
-        commentary = `NO BALL (Above Chest Height) + ${nbRuns} ${nbType === 'BYE' ? 'BYES' : 'LEG BYES'}! High delivery above chest height from ${bowlerName}, batters take ${nbRuns} runs plus 1 penalty run (no free hit).`;
+        commentary = `NO BALL (Above Chest Height) + ${nbRuns} ${nbType === 'BYE' ? 'BYES' : 'LEG BYES'}! High delivery above chest height from ${bowlerName}, batters take ${nbRuns} runs plus 1 penalty run (+ extra delivery).`;
       } else {
-        commentary = `NO BALL (Above Chest Height)! Any delivery above chest height is called a No Ball! 1 penalty run awarded against ${bowlerName} and an extra delivery (CPL Rule: No Free Hit).`;
+        commentary = `NO BALL (Above Chest Height)! Any delivery above chest height is called a No Ball! 1 penalty run awarded against ${bowlerName} and an extra delivery.`;
       }
     } else if (nbReason === 'CHUCKING') {
-      commentary = `NO BALL (Chucking)! Illegal bowling action called by the umpire against ${bowlerName}! 1 penalty run awarded and extra delivery (CPL Rule: No Free Hit).`;
+      commentary = `NO BALL (Chucking)! Illegal bowling action called by the umpire against ${bowlerName}! 1 penalty run awarded and extra delivery.`;
     } else if (nbReason === 'FULL_TOSS') {
       if (nbType === 'BAT' && runsOffBat === 6) {
-        commentary = `NO BALL (Full Toss) & SIX! Dangerous waist-high full toss punished with absolute disdain! ${strikerName} launches ${bowlerName}'s beamer deep into the stands! 7 runs added (+ extra delivery, no free hit).`;
+        commentary = `NO BALL (Full Toss) & SIX! Dangerous waist-high full toss punished with absolute disdain! ${strikerName} launches ${bowlerName}'s beamer deep into the stands! 7 runs added (+ extra delivery).`;
       } else if (nbType === 'BAT' && runsOffBat === 4) {
         commentary = `NO BALL (Full Toss) & FOUR! Smashed away to the boundary! High full toss from ${bowlerName} crunched away to the fence by ${strikerName}! 5 runs added (+ extra delivery).`;
       } else if (nbType === 'BAT' && runsOffBat > 0) {
@@ -792,13 +975,13 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
       } else if (nbType === 'BYE' || nbType === 'LEG_BYE') {
         commentary = `NO BALL (Full Toss) + ${nbRuns} ${nbType === 'BYE' ? 'BYES' : 'LEG BYES'}! High beamer from ${bowlerName} evades everyone! Batters scamper for ${nbRuns} extra runs (+ extra delivery).`;
       } else {
-        commentary = `NO BALL (Full Toss)! Dangerous delivery above waist height called on ${bowlerName}! Umpire signals no-ball, penalty run awarded and extra delivery (CPL: No Free Hit).`;
+        commentary = `NO BALL (Full Toss)! Dangerous delivery above waist height called on ${bowlerName}! Umpire signals no-ball, penalty run awarded and extra delivery.`;
       }
     } else if (nbReason === 'HEIGHT') {
       if (runsOffBat > 0) {
         commentary = `NO BALL (Height) + ${runsOffBat} RUNS! Sharp bouncer flying way over the head of ${strikerName}! Signaled no-ball for excessive height, ${runsOffBat} runs taken (+ extra delivery).`;
       } else {
-        commentary = `NO BALL (Height)! Bouncer sails way over ${strikerName}'s head! Umpire signals no-ball for dangerous height from ${bowlerName}, penalty run awarded (+ extra delivery, no free hit).`;
+        commentary = `NO BALL (Height)! Bouncer sails way over ${strikerName}'s head! Umpire signals no-ball for dangerous height from ${bowlerName}, penalty run awarded (+ extra delivery).`;
       }
     } else {
       // Default: OVERSTEP / Missing Crease Mark
@@ -811,7 +994,7 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
       } else if (nbType === 'BYE' || nbType === 'LEG_BYE') {
         commentary = `NO BALL (Overstep) + ${nbRuns} ${nbType === 'BYE' ? 'BYES' : 'LEG BYES'}! ${bowlerName} misses the crease line, batters take ${nbRuns} runs, plus 1 penalty (+ extra delivery).`;
       } else {
-        commentary = `NO BALL (Overstep)! ${bowlerName} misses the mark and oversteps the bowling crease! Umpire signals no-ball, penalty run conceded (+ extra delivery, CPL: No Free Hit).`;
+        commentary = `NO BALL (Overstep)! ${bowlerName} misses the mark and oversteps the bowling crease! Umpire signals no-ball, penalty run conceded (+ extra delivery).`;
       }
     }
 
@@ -854,32 +1037,39 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
 
     const dismissedPlayerId = dismissedId || currentInnings.currentStrikerId;
     const incomingBatterId = newBatterId || null;
-    const runsScoredOnWicket = wicketRuns || 0;
 
-    if (isFreeHitActive) {
-      const legality = validateDismissalLegality({
-        extraType: 'NONE',
-        isFreeHit: true,
-        isWicket: true,
-        wicketType,
-      });
-      if (!legality.valid) {
-        setWicketModalError(legality.error || `⚡ FREE HIT RULE: Batters CANNOT be dismissed by "${wicketType}". On a Free Hit, only Run Out, Hit Ball Twice, or Obstructing The Field are allowed.`);
+    if (incomingBatterId) {
+      if (incomingBatterId === dismissedPlayerId) {
+        setWicketModalError('⚠️ The incoming batter cannot be the player who was just dismissed.');
+        return;
+      }
+      if (isPlayerDismissedInInnings(incomingBatterId)) {
+        setWicketModalError('⚠️ Cannot select this incoming batter. They have already been dismissed in this innings (Cricket Law 25).');
         return;
       }
     }
+
+    const runsScoredOnWicket = wicketRuns || 0;
+    const wicketExtraType = isWicketOnNoBall ? 'NO_BALL' : 'NONE';
+    const wicketExtraRuns = isWicketOnNoBall ? 1 : 0;
+    const isLegalBall = !isWicketOnNoBall;
 
     setWicketModalError(null);
     setError(null);
     setShowWicketModal(false);
 
-    let nextBalls = currentInnings.balls + 1;
+    let nextBalls = currentInnings.balls;
     let nextOvers = currentInnings.overs;
     let isOverComplete = false;
-    if (nextBalls >= matchBallsPerOver) {
-      nextOvers += 1;
-      nextBalls = 0;
-      isOverComplete = true;
+
+    if (isLegalBall) {
+      if (nextBalls + 1 >= matchBallsPerOver) {
+        nextOvers += 1;
+        nextBalls = 0;
+        isOverComplete = true;
+      } else {
+        nextBalls += 1;
+      }
     }
 
     let nextStrikerId = currentInnings.currentStrikerId;
@@ -997,7 +1187,7 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
       const updatedBowlingScores = (curInn.bowlingScores || []).map((bw: any) => {
         if (bw.playerId === currentInnings.currentBowlerId) {
           let bOvers = bw.overs || 0;
-          let bBalls = (bw.balls || 0) + 1;
+          let bBalls = (bw.balls || 0) + (isLegalBall ? 1 : 0);
           if (bBalls >= matchBallsPerOver) {
             bOvers += 1;
             bBalls = 0;
@@ -1006,7 +1196,7 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
             ...bw,
             overs: bOvers,
             balls: bBalls,
-            runsConceded: (bw.runsConceded || 0) + runsScoredOnWicket,
+            runsConceded: (bw.runsConceded || 0) + runsScoredOnWicket + wicketExtraRuns,
             wickets: (bw.wickets || 0) + (isBowlerCreditedDismissal(wicketType) ? 1 : 0),
           };
         }
@@ -1016,11 +1206,11 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
       const newBallEvent = {
         id: `temp-${Date.now()}`,
         overNumber: currentInnings.overs,
-        ballNumber: currentInnings.balls + 1,
+        ballNumber: isLegalBall ? currentInnings.balls + 1 : currentInnings.balls,
         runs: runsScoredOnWicket,
-        extras: 0,
-        extraType: 'NONE',
-        isLegal: true,
+        extras: wicketExtraRuns,
+        extraType: wicketExtraType,
+        isLegal: isLegalBall,
         isWicket: true,
         wicketType,
         dismissedPlayerId,
@@ -1031,7 +1221,7 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
         if (inn.id === currentInnings.id) {
           return {
             ...inn,
-            runs: inn.runs + runsScoredOnWicket,
+            runs: inn.runs + runsScoredOnWicket + wicketExtraRuns,
             wickets: inn.wickets + (isRetHurt ? 0 : 1),
             overs: nextOvers,
             balls: nextBalls,
@@ -1055,6 +1245,8 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
 
     const wicketPayload = {
       runs: runsScoredOnWicket,
+      extraType: wicketExtraType as any,
+      extraRuns: wicketExtraRuns,
       isWicket: true,
       wicketType: wicketType as any,
       dismissedPlayerId,
@@ -1071,6 +1263,7 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
       });
       setNewBatterId('');
       setWicketRuns(0);
+      setIsWicketOnNoBall(false);
       return;
     }
 
@@ -1081,6 +1274,7 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
         if (res && res.success) {
           setNewBatterId('');
           setWicketRuns(0);
+          setIsWicketOnNoBall(false);
           if ((res as any).updatedMatch) {
             setMatch((res as any).updatedMatch);
           }
@@ -1098,6 +1292,7 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
         });
         setNewBatterId('');
         setWicketRuns(0);
+        setIsWicketOnNoBall(false);
       }
     });
   };
@@ -1237,6 +1432,12 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
 
   const handleSwitchBatter = () => {
     if (!currentInnings || !selectedBatterId) return;
+
+    if (isPlayerDismissedInInnings(selectedBatterId)) {
+      setError('⚠️ Cannot select this player. They have already been dismissed in this innings and cannot bat again (MCC Cricket Law 25).');
+      return;
+    }
+
     setError(null);
     setShowBatterModal(false);
 
@@ -1302,8 +1503,8 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
             ...inn,
             currentStrikerId: nextStrikerId,
             currentNonStrikerId: nextNonStrikerId,
-            currentStriker: sPlayer || inn.currentStriker,
-            currentNonStriker: nsPlayer || null,
+            currentStriker: isStriker ? (sPlayer || incomingPlayer || inn.currentStriker) : (sPlayer || inn.currentStriker),
+            currentNonStriker: !isStriker ? (nsPlayer || incomingPlayer || inn.currentNonStriker) : (nsPlayer || inn.currentNonStriker),
             battingScores: updatedBattingScores,
           };
         }
@@ -1337,6 +1538,7 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
         setSelectedBatterId('');
       } catch (err: any) {
         console.warn('[Online Route Switch Batter] Failed, falling back to outbox:', err);
+        setError(`Failed to assign incoming batter: ${err?.message || 'Server error'}`);
         recordOfflineOperation('SWITCH_BATTER', { role: targetRole, newPlayerId: selectedBatterId, operationId, clientId: effectiveClientId }).catch(() => {});
         setSelectedBatterId('');
       }
@@ -1497,7 +1699,16 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                       let border = '1px solid rgba(255,255,255,0.15)';
 
                       if (b.isWicket) {
-                        label = 'W';
+                        const r = bCalc.batterRuns || b.runs || 0;
+                        if (b.extraType === 'WIDE') {
+                          label = r > 0 ? `WD+${r}+W` : (b.extras > 1 ? `WD+${b.extras - 1}+W` : 'WD+W');
+                        } else if (b.extraType === 'NO_BALL') {
+                          label = r > 0 ? `NB+${r}+W` : 'NB+W';
+                        } else if (r > 0) {
+                          label = `${r}+W`;
+                        } else {
+                          label = 'W';
+                        }
                         bg = '#EF4444';
                         border = '1px solid #DC2626';
                       } else if (b.extraType === 'WIDE') {
@@ -1557,9 +1768,11 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                         >
                           <span
                             style={{
-                              width: '34px',
+                              minWidth: '34px',
+                              width: label.length > 2 ? 'auto' : '34px',
                               height: '34px',
-                              borderRadius: '50%',
+                              padding: label.length > 2 ? '0 6px' : '0',
+                              borderRadius: label.length > 2 ? '17px' : '50%',
                               background: bg,
                               color: color,
                               border: effectiveBorder,
@@ -1567,7 +1780,7 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                               alignItems: 'center',
                               justifyContent: 'center',
                               fontWeight: 900,
-                              fontSize: '0.82rem',
+                              fontSize: label.length > 3 ? '0.72rem' : '0.82rem',
                               fontFamily: 'monospace',
                               boxShadow: '0 2px 6px rgba(0,0,0,0.3)',
                               transition: 'transform 0.1s',
@@ -1738,7 +1951,7 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
               {match.status === 'LIVE' ? '● LIVE' : match.status}
             </span>
             <span style={{ fontSize: '0.85rem', color: '#94A3B8' }}>
-              {match.tournament?.name} • {match.oversPerInnings} Overs ({match.ballsPerOver || 6} Balls/Over)
+              {match.tournament?.name} • {match.currentInnings >= 3 ? '⚡ Super Over (1 Over Tie-Breaker)' : `${match.oversPerInnings} Overs`} ({match.ballsPerOver || 6} Balls/Over)
             </span>
           </div>
 
@@ -1758,8 +1971,65 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
               👥 Match Squads: {selectedTeamAPlayerIds.length} vs {selectedTeamBPlayerIds.length}
             </div>
             <div style={{ fontSize: '0.85rem', color: '#F59E0B', fontWeight: 800, fontFamily: 'monospace' }}>
-              Innings {match.currentInnings}
+              {match.currentInnings >= 3
+                ? `⚡ Super Over ${match.currentInnings === 3 ? 1 : match.currentInnings === 4 ? '2 (Chase)' : match.currentInnings - 2}`
+                : `Innings ${match.currentInnings}`}
             </div>
+
+            {/* EDIT OVERS & BALLS PER OVER BUTTON */}
+            <button
+              type="button"
+              onClick={() => {
+                setRulesOvers(match.oversPerInnings || 20);
+                setRulesBallsPerOver(match.ballsPerOver || 6);
+                setShowRulesModal(true);
+              }}
+              title="Edit match overs per innings and balls per over dynamically"
+              style={{
+                background: 'rgba(59, 130, 246, 0.15)',
+                border: '1px solid #3B82F6',
+                color: '#93C5FD',
+                padding: '4px 10px',
+                borderRadius: '6px',
+                fontSize: '0.78rem',
+                fontWeight: 800,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '5px',
+                transition: 'all 0.15s ease',
+              }}
+            >
+              <span>⚙️</span>
+              <span>Edit Overs ({match.oversPerInnings} ov • {match.ballsPerOver || 6} b/ov)</span>
+            </button>
+
+            {/* UNDO SUPER OVER BUTTON (ACTIVE DURING SUPER OVER ROUNDS) */}
+            {(isSuperOver || match.currentInnings >= 3) && (
+              <button
+                type="button"
+                onClick={handleUndoSuperOver}
+                disabled={isUndoSuperOverSaving}
+                title="Cancel and undo the Super Over, restoring match to Innings 2"
+                style={{
+                  background: 'rgba(239, 68, 68, 0.2)',
+                  border: '1.5px solid #EF4444',
+                  color: '#FCA5A5',
+                  padding: '4px 10px',
+                  borderRadius: '6px',
+                  fontSize: '0.78rem',
+                  fontWeight: 900,
+                  cursor: isUndoSuperOverSaving ? 'not-allowed' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '5px',
+                  boxShadow: '0 0 10px rgba(239, 68, 68, 0.25)',
+                }}
+              >
+                <span>↩️</span>
+                <span>{isUndoSuperOverSaving ? 'Undoing...' : 'Undo Super Over'}</span>
+              </button>
+            )}
           </div>
         </div>
 
@@ -1768,11 +2038,14 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
           const isPreMatch = match.status === 'UPCOMING' && !match.tossWinnerId;
           const inn1 = match.innings?.find((i: any) => i.inningsNumber === 1);
           const inn2 = match.innings?.find((i: any) => i.inningsNumber === 2);
+          const effectiveOversLimit = isSuperOver ? 1 : (match.oversPerInnings || 20);
 
           let leftTeam: any;
           let rightTeam: any;
           let leftInnings: any = null;
           let rightInnings: any = null;
+          let leftSO: any = null;
+          let rightSO: any = null;
           let leftSquadCount = 0;
           let rightSquadCount = 0;
           let isLeftBattingCurrent = false;
@@ -1785,9 +2058,6 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
             leftSquadCount = selectedTeamAPlayerIds.length;
             rightSquadCount = selectedTeamBPlayerIds.length;
           } else {
-            // Once match starts / toss decided:
-            // Left: The team batting in Innings 1 (with their 1st innings score)
-            // Right: The team batting in Innings 2 (with their 2nd innings score)
             const inn1BattingTeamId = inn1?.battingTeamId || (
               match.tossWinnerId
                 ? (match.tossDecision === 'BAT' ? match.tossWinnerId : (match.tossWinnerId === match.teamAId ? match.teamBId : match.teamAId))
@@ -1803,6 +2073,9 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
 
             leftInnings = inn1 || match.innings?.find((i: any) => i.battingTeamId === leftTeam?.id && i.inningsNumber === 1);
             rightInnings = inn2 || match.innings?.find((i: any) => i.battingTeamId === rightTeam?.id && i.inningsNumber === 2);
+
+            leftSO = isSuperOver ? match.innings?.find((i: any) => i.battingTeamId === leftTeam?.id && i.inningsNumber >= 3) : null;
+            rightSO = isSuperOver ? match.innings?.find((i: any) => i.battingTeamId === rightTeam?.id && i.inningsNumber >= 3) : null;
 
             // Indicator: A badge or 🏏 next to the team currently batting
             if (match.status === 'LIVE' && currentInnings) {
@@ -1844,7 +2117,18 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                       <div style={{ fontSize: '0.82rem', color: '#94A3B8', fontFamily: 'monospace' }}>
                         {leftTeam?.shortName} • ({leftSquadCount} players)
                       </div>
-                      {leftInnings ? (
+                      {leftSO ? (
+                        <div>
+                          <div style={{ fontSize: '1rem', color: '#FBBF24', fontFamily: 'monospace', fontWeight: 900, marginTop: '2px' }}>
+                            ⚡ SO: {leftSO.runs}/{leftSO.wickets} ({leftSO.overs}.{leftSO.balls} ov)
+                          </div>
+                          {leftInnings && (
+                            <div style={{ fontSize: '0.76rem', color: '#94A3B8', fontFamily: 'monospace' }}>
+                              Main: {leftInnings.runs}/{leftInnings.wickets} ({leftInnings.overs}.{leftInnings.balls} ov)
+                            </div>
+                          )}
+                        </div>
+                      ) : leftInnings ? (
                         <div style={{ fontSize: '0.95rem', color: '#FBBF24', fontFamily: 'monospace', fontWeight: 700, marginTop: '2px' }}>
                           {leftInnings.runs}/{leftInnings.wickets} ({leftInnings.overs}.{leftInnings.balls} ov)
                         </div>
@@ -1864,8 +2148,13 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                           {currentInnings.runs} / {currentInnings.wickets}
                         </div>
                         <div style={{ fontSize: '0.92rem', fontWeight: 700, color: 'rgba(255, 255, 255, 0.8)', marginTop: '4px' }}>
-                          {currentInnings.overs}.{currentInnings.balls} / {match.oversPerInnings} Overs
+                          {currentInnings.overs}.{currentInnings.balls} / {effectiveOversLimit} {effectiveOversLimit === 1 ? 'Over' : 'Overs'}
                         </div>
+                        {isSuperOver && (
+                          <div style={{ marginTop: '5px', display: 'inline-flex', alignItems: 'center', gap: '4px', background: 'rgba(245, 158, 11, 0.2)', border: '1.5px solid #F59E0B', color: '#FBBF24', fontSize: '0.74rem', fontWeight: 900, padding: '2px 8px', borderRadius: '4px', letterSpacing: '0.04em' }}>
+                            ⚡ SUPER OVER {currentInnings.inningsNumber === 3 ? '1' : currentInnings.inningsNumber === 4 ? '2 (CHASE)' : currentInnings.inningsNumber - 2} (1 OV • 2 WKTS MAX)
+                          </div>
+                        )}
                       </div>
                     ) : (
                       <div style={{ fontSize: '1.2rem', fontWeight: 800, color: 'rgba(255, 255, 255, 0.5)' }}>
@@ -1902,7 +2191,18 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                       <div style={{ fontSize: '0.82rem', color: '#94A3B8', fontFamily: 'monospace' }}>
                         {rightTeam?.shortName} • ({rightSquadCount} players)
                       </div>
-                      {rightInnings ? (
+                      {rightSO ? (
+                        <div>
+                          <div style={{ fontSize: '1rem', color: '#FBBF24', fontFamily: 'monospace', fontWeight: 900, marginTop: '2px' }}>
+                            ⚡ SO: {rightSO.runs}/{rightSO.wickets} ({rightSO.overs}.{rightSO.balls} ov)
+                          </div>
+                          {rightInnings && (
+                            <div style={{ fontSize: '0.76rem', color: '#94A3B8', fontFamily: 'monospace' }}>
+                              Main: {rightInnings.runs}/{rightInnings.wickets} ({rightInnings.overs}.{rightInnings.balls} ov)
+                            </div>
+                          )}
+                        </div>
+                      ) : rightInnings ? (
                         <div style={{ fontSize: '0.95rem', color: '#FBBF24', fontFamily: 'monospace', fontWeight: 700, marginTop: '2px' }}>
                           {rightInnings.runs}/{rightInnings.wickets} ({rightInnings.overs}.{rightInnings.balls} ov)
                         </div>
@@ -1935,7 +2235,13 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                     </div>
 
                     <div className="scorecard-mobile-card-scores left">
-                      {leftInnings ? (
+                      {leftSO ? (
+                        <>
+                          <span className="scorecard-mobile-big-score" style={{ color: '#FBBF24' }}>{leftSO.runs}/{leftSO.wickets}</span>
+                          <span className="scorecard-mobile-overs-tag">({leftSO.overs}.{leftSO.balls} ov [SO])</span>
+                          {leftInnings && <span style={{ fontSize: '0.72rem', color: '#94A3B8', display: 'block', marginTop: '1px' }}>Main: {leftInnings.runs}/{leftInnings.wickets}</span>}
+                        </>
+                      ) : leftInnings ? (
                         <>
                           <span className="scorecard-mobile-big-score">{leftInnings.runs}/{leftInnings.wickets}</span>
                           <span className="scorecard-mobile-overs-tag">({leftInnings.overs}.{leftInnings.balls} ov)</span>
@@ -1972,7 +2278,13 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                     </div>
 
                     <div className="scorecard-mobile-card-scores right">
-                      {rightInnings ? (
+                      {rightSO ? (
+                        <>
+                          <span className="scorecard-mobile-big-score" style={{ color: '#FBBF24' }}>{rightSO.runs}/{rightSO.wickets}</span>
+                          <span className="scorecard-mobile-overs-tag">({rightSO.overs}.{rightSO.balls} ov [SO])</span>
+                          {rightInnings && <span style={{ fontSize: '0.72rem', color: '#94A3B8', display: 'block', marginTop: '1px' }}>Main: {rightInnings.runs}/{rightInnings.wickets}</span>}
+                        </>
+                      ) : rightInnings ? (
                         <>
                           <span className="scorecard-mobile-big-score">{rightInnings.runs}/{rightInnings.wickets}</span>
                           <span className="scorecard-mobile-overs-tag">({rightInnings.overs}.{rightInnings.balls} ov)</span>
@@ -1995,7 +2307,9 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                     <span className="scorecard-live-dot" />
                     <span>
                       {match.status === 'LIVE' && currentInnings
-                        ? `INNINGS ${currentInnings.inningsNumber} (${currentInnings.overs}.${currentInnings.balls}/${match.oversPerInnings} OV)`
+                        ? (isSuperOver
+                            ? `⚡ SUPER OVER ${currentInnings.inningsNumber === 3 ? 1 : currentInnings.inningsNumber === 4 ? 2 : currentInnings.inningsNumber - 2} (${currentInnings.overs}.${currentInnings.balls}/1.0 OV)`
+                            : `INNINGS ${currentInnings.inningsNumber} (${currentInnings.overs}.${currentInnings.balls}/${match.oversPerInnings} OV)`)
                         : match.status}
                     </span>
                   </div>
@@ -2388,21 +2702,24 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
             Batting: <strong style={{ color: '#FFF' }}>{currentInnings.battingTeam?.name} ({battingSquad.length} in squad)</strong> • Bowling: <strong style={{ color: '#FFF' }}>{currentInnings.bowlingTeam?.name} ({bowlingSquad.length} in squad)</strong>
           </p>
 
-          {currentInnings.inningsNumber === 2 && (() => {
-            const inn1 = match.innings?.find((i: any) => i.inningsNumber === 1);
-            const target = (inn1?.runs || 0) + 1;
-            const rrr = (target / (match.oversPerInnings || 6)).toFixed(2);
+          {(currentInnings.inningsNumber === 2 || (currentInnings.inningsNumber >= 4 && currentInnings.inningsNumber % 2 === 0)) && (() => {
+            const isSOChase = currentInnings.inningsNumber >= 4;
+            const prevInnNum = isSOChase ? currentInnings.inningsNumber - 1 : 1;
+            const innPrev = match.innings?.find((i: any) => i.inningsNumber === prevInnNum);
+            const target = (innPrev?.runs || 0) + 1;
+            const oversLimit = isSOChase ? 1 : (match.oversPerInnings || 6);
+            const rrr = (target / oversLimit).toFixed(2);
             return (
-              <div style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid #10B981', borderRadius: '8px', padding: '12px 16px', marginBottom: '18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
+              <div style={{ background: isSOChase ? 'rgba(245, 158, 11, 0.15)' : 'rgba(16, 185, 129, 0.1)', border: isSOChase ? '1.5px solid #F59E0B' : '1px solid #10B981', borderRadius: '8px', padding: '12px 16px', marginBottom: '18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
                 <div>
-                  <span style={{ fontSize: '0.75rem', color: '#10B981', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                    🎯 2nd Innings Target Chase
+                  <span style={{ fontSize: '0.75rem', color: isSOChase ? '#FBBF24' : '#10B981', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    {isSOChase ? '⚡ Super Over 2 Target Chase' : '🎯 2nd Innings Target Chase'}
                   </span>
                   <div style={{ fontSize: '1.1rem', fontWeight: 900, color: '#FFF', fontFamily: 'monospace' }}>
-                    Target: {target} Runs in {match.oversPerInnings} Overs
+                    Target: {target} Runs in {oversLimit} {oversLimit === 1 ? 'Over' : 'Overs'}
                   </div>
                 </div>
-                <div style={{ background: '#141A26', border: '1px solid #2A364E', padding: '4px 10px', borderRadius: '6px', fontSize: '0.8rem', color: '#10B981', fontWeight: 800 }}>
+                <div style={{ background: '#141A26', border: '1px solid #2A364E', padding: '4px 10px', borderRadius: '6px', fontSize: '0.8rem', color: isSOChase ? '#FBBF24' : '#10B981', fontWeight: 800 }}>
                   Req. RR: {rrr}
                 </div>
               </div>
@@ -2490,13 +2807,14 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
       {match.status === 'LIVE' && currentInnings && (currentInnings.overs > 0 || currentInnings.balls > 0 || (currentInnings.currentStrikerId && currentInnings.currentNonStrikerId) || (currentInnings.ballEvents && currentInnings.ballEvents.length > 0)) && (
         <div>
           {/* 2ND INNINGS / SUPER OVER CHASE EQUATION BAR */}
-          {(currentInnings.inningsNumber === 2 || currentInnings.inningsNumber === 4) && (() => {
-            const firstInnNum = currentInnings.inningsNumber === 2 ? 1 : 3;
+          {(currentInnings.inningsNumber === 2 || (currentInnings.inningsNumber >= 4 && currentInnings.inningsNumber % 2 === 0)) && (() => {
+            const isSOChase = currentInnings.inningsNumber >= 4;
+            const firstInnNum = isSOChase ? currentInnings.inningsNumber - 1 : 1;
             const inn1 = match.innings?.find((i: any) => i.inningsNumber === firstInnNum);
             const target = (inn1?.runs || 0) + 1;
             const needed = Math.max(0, target - currentInnings.runs);
             const bPerOver = match.ballsPerOver || 6;
-            const totalOvers = currentInnings.inningsNumber === 4 ? 1 : (match.oversPerInnings || 20);
+            const totalOvers = isSOChase ? 1 : (match.oversPerInnings || 20);
             const totalBalls = totalOvers * bPerOver;
             const bowled = (currentInnings.overs * bPerOver) + currentInnings.balls;
             const ballsLeft = Math.max(0, totalBalls - bowled);
@@ -2619,7 +2937,24 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                             fontWeight: 700,
                           }}
                         >
-                          ✏️ Change
+                          🔄 Change
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => openRenameModal(activeStriker?.id, activeStriker?.name, activeStriker?.jerseyNumber)}
+                          title="Edit/correct player name without affecting score"
+                          style={{
+                            background: 'rgba(59, 130, 246, 0.15)',
+                            border: '1px solid #3B82F6',
+                            color: '#93C5FD',
+                            borderRadius: '4px',
+                            padding: '2px 7px',
+                            fontSize: '0.72rem',
+                            cursor: 'pointer',
+                            fontWeight: 700,
+                          }}
+                        >
+                          ✏️ Rename
                         </button>
                       </div>
                     </div>
@@ -2637,7 +2972,7 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                     </div>
                     <button
                       type="button"
-                      onClick={() => { setTargetRole('striker'); setShowBatterModal(true); }}
+                      onClick={() => { setTargetRole('striker'); setSelectedBatterId(''); setShowBatterModal(true); }}
                       style={{ width: '100%', background: '#EF4444', color: '#FFF', border: 'none', padding: '8px', borderRadius: '6px', fontWeight: 800, fontSize: '0.8rem', cursor: 'pointer' }}
                     >
                       🏏 Select Incoming Striker →
@@ -2670,7 +3005,24 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                             fontWeight: 700,
                           }}
                         >
-                          ✏️ Change
+                          🔄 Change
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => openRenameModal(activeNonStriker?.id, activeNonStriker?.name, activeNonStriker?.jerseyNumber)}
+                          title="Edit/correct player name without affecting score"
+                          style={{
+                            background: 'rgba(59, 130, 246, 0.15)',
+                            border: '1px solid #3B82F6',
+                            color: '#93C5FD',
+                            borderRadius: '4px',
+                            padding: '2px 7px',
+                            fontSize: '0.72rem',
+                            cursor: 'pointer',
+                            fontWeight: 700,
+                          }}
+                        >
+                          ✏️ Rename
                         </button>
                       </div>
                     </div>
@@ -2702,16 +3054,37 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
             <div style={{ background: '#10141E', border: '1px solid #1E2638', borderRadius: '12px', padding: '16px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase' }}>Current Bowler</span>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSelectedBowlerId(activeBowler?.id || '');
-                    setShowBowlerModal(true);
-                  }}
-                  style={{ background: '#1E2638', border: '1px solid #2A364E', color: '#FBBF24', borderRadius: '4px', padding: '3px 9px', fontSize: '0.75rem', cursor: 'pointer', fontWeight: 700 }}
-                >
-                  🔄 Change Bowler
-                </button>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedBowlerId(activeBowler?.id || '');
+                      setShowBowlerModal(true);
+                    }}
+                    style={{ background: '#1E2638', border: '1px solid #2A364E', color: '#FBBF24', borderRadius: '4px', padding: '3px 9px', fontSize: '0.75rem', cursor: 'pointer', fontWeight: 700 }}
+                  >
+                    🔄 Change Bowler
+                  </button>
+                  {activeBowler && (
+                    <button
+                      type="button"
+                      onClick={() => openRenameModal(activeBowler?.id, activeBowler?.name, activeBowler?.jerseyNumber)}
+                      title="Edit/correct bowler name without affecting bowling figures"
+                      style={{
+                        background: 'rgba(59, 130, 246, 0.15)',
+                        border: '1px solid #3B82F6',
+                        color: '#93C5FD',
+                        borderRadius: '4px',
+                        padding: '3px 9px',
+                        fontSize: '0.75rem',
+                        cursor: 'pointer',
+                        fontWeight: 700,
+                      }}
+                    >
+                      ✏️ Rename
+                    </button>
+                  )}
+                </div>
               </div>
 
               {activeBowler ? (
@@ -2822,7 +3195,16 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
               let border = '1px solid rgba(255,255,255,0.15)';
 
               if (b.isWicket) {
-                label = 'W';
+                const r = bCalc.batterRuns || b.runs || 0;
+                if (b.extraType === 'WIDE') {
+                  label = r > 0 ? `WD+${r}+W` : (b.extras > 1 ? `WD+${b.extras - 1}+W` : 'WD+W');
+                } else if (b.extraType === 'NO_BALL') {
+                  label = r > 0 ? `NB+${r}+W` : 'NB+W';
+                } else if (r > 0) {
+                  label = `${r}+W`;
+                } else {
+                  label = 'W';
+                }
                 bg = '#EF4444';
                 border = '1px solid #DC2626';
               } else if (b.extraType === 'WIDE') {
@@ -2900,9 +3282,11 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                         >
                           <span
                             style={{
-                              width: '36px',
+                              minWidth: '36px',
+                              width: style.label.length > 2 ? 'auto' : '36px',
                               height: '36px',
-                              borderRadius: '50%',
+                              padding: style.label.length > 2 ? '0 6px' : '0',
+                              borderRadius: style.label.length > 2 ? '18px' : '50%',
                               background: style.bg,
                               color: style.color,
                               border: style.border,
@@ -2910,7 +3294,7 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                               alignItems: 'center',
                               justifyContent: 'center',
                               fontWeight: 900,
-                              fontSize: '0.88rem',
+                              fontSize: style.label.length > 3 ? '0.74rem' : '0.88rem',
                               fontFamily: 'monospace',
                               boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
                             }}
@@ -3111,7 +3495,7 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
           )}
 
           {/* SUPER OVER 1 QUOTA REACHED BANNER */}
-          {match.currentInnings === 3 && (currentInnings.overs >= 1 || currentInnings.wickets >= 2) && (
+          {match.currentInnings >= 3 && currentInnings.inningsNumber % 2 === 1 && (currentInnings.overs >= 1 || currentInnings.wickets >= 2 || currentInnings.status === 'COMPLETED') && (
             <div
               style={{
                 background: 'rgba(245, 158, 11, 0.15)',
@@ -3128,7 +3512,7 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                     🔥 SUPER OVER 1 COMPLETED ({currentInnings.runs}/{currentInnings.wickets} in {currentInnings.overs}.{currentInnings.balls} ov)
                   </div>
                   <div style={{ fontSize: '0.84rem', color: '#CBD5E1', marginTop: '4px' }}>
-                    Super Over 1 finished! Target for Super Over 2 is {currentInnings.runs + 1} runs.
+                    Super Over 1 finished! Target for Super Over 2 is {currentInnings.runs + 1} runs in 1.0 Over.
                   </div>
                 </div>
                 <button
@@ -3183,6 +3567,7 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                 type="button"
                 onClick={() => {
                   setTargetRole(!currentInnings.currentStrikerId ? 'striker' : 'nonStriker');
+                  setSelectedBatterId('');
                   setShowBatterModal(true);
                 }}
                 style={{
@@ -3255,45 +3640,96 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                   </div>
                 )}
 
-                {isFreeHitActive && (
+                {isPreviousDeliveryNoBall && (
                   <div
                     style={{
-                      background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.2) 0%, rgba(234, 88, 12, 0.2) 100%)',
-                      border: '1.5px solid #F59E0B',
+                      background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(249, 115, 22, 0.15) 100%)',
+                      border: '1.5px solid rgba(239, 68, 68, 0.5)',
                       borderRadius: '10px',
                       padding: '12px 16px',
                       marginBottom: '16px',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'space-between',
-                      boxShadow: '0 0 16px rgba(245, 158, 11, 0.25)',
+                      boxShadow: '0 0 16px rgba(239, 68, 68, 0.2)',
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                       <span style={{ fontSize: '1.4rem' }}>⚡</span>
                       <div>
-                        <div style={{ fontSize: '0.95rem', fontWeight: 900, color: '#FDE68A', letterSpacing: '0.04em' }}>
-                          FREE HIT DELIVERY IN PLAY
+                        <div style={{ fontSize: '0.95rem', fontWeight: 900, color: '#FCA5A5', letterSpacing: '0.04em' }}>
+                          RE-BOWLED DELIVERY (EXTRA BALL)
                         </div>
-                        <div style={{ fontSize: '0.76rem', color: '#FCD34D', marginTop: '2px' }}>
-                          Previous ball was a No Ball. Batter CANNOT be dismissed except by Run Out!
+                        <div style={{ fontSize: '0.76rem', color: '#FED7AA', marginTop: '2px' }}>
+                          Previous delivery was a No-Ball (+1 Extra). Delivery to be re-bowled — any wicket on this delivery is <strong>100% VALID</strong>!
                         </div>
                       </div>
                     </div>
                     <span
                       style={{
-                        background: '#F59E0B',
-                        color: '#000',
+                        background: 'linear-gradient(135deg, #EF4444, #DC2626)',
+                        color: '#FFF',
                         fontSize: '0.72rem',
                         fontWeight: 900,
                         padding: '4px 10px',
                         borderRadius: '20px',
                         letterSpacing: '0.06em',
                         textTransform: 'uppercase',
+                        boxShadow: '0 0 10px rgba(239, 68, 68, 0.4)',
                       }}
                     >
-                      FREE HIT
+                      ALL WICKETS VALID
                     </span>
+                  </div>
+                )}
+
+                {/* SUPER OVER ACTIVE IN-GAME BANNER WITH UNDO BUTTON */}
+                {isSuperOver && (
+                  <div
+                    style={{
+                      background: 'rgba(245, 158, 11, 0.12)',
+                      border: '1.5px solid #F59E0B',
+                      borderRadius: '10px',
+                      padding: '10px 14px',
+                      marginBottom: '14px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      flexWrap: 'wrap',
+                      gap: '10px',
+                    }}
+                  >
+                    <div>
+                      <div style={{ fontSize: '0.85rem', fontWeight: 900, color: '#FBBF24', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span>⚡</span>
+                        <span>SUPER OVER {currentInnings?.inningsNumber === 3 ? '1' : '2 (CHASE)'} IN PROGRESS</span>
+                      </div>
+                      <div style={{ fontSize: '0.74rem', color: '#CBD5E1', marginTop: '2px' }}>
+                        1 Over Limit ({match.ballsPerOver || 6} Balls) • 2 Wickets Maximum
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleUndoSuperOver}
+                      disabled={isUndoSuperOverSaving}
+                      title="Cancel and undo the Super Over, restoring match to Innings 2"
+                      style={{
+                        background: 'rgba(239, 68, 68, 0.2)',
+                        border: '1px solid #EF4444',
+                        color: '#FCA5A5',
+                        borderRadius: '6px',
+                        padding: '6px 12px',
+                        fontSize: '0.76rem',
+                        fontWeight: 800,
+                        cursor: isUndoSuperOverSaving ? 'not-allowed' : 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                      }}
+                    >
+                      <span>↩️</span>
+                      <span>{isUndoSuperOverSaving ? 'Undoing...' : 'Undo Super Over'}</span>
+                    </button>
                   </div>
                 )}
 
@@ -3372,11 +3808,11 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                 <div className="scoring-extras-grid">
                   <button
                     disabled={isScorePadLocked}
-                    title="CPL Rule: Delivery outside batter's reasonable hitting reach (+1 run & extra delivery)"
+                    title="Wide Delivery Options: standard +1, boundary 4 (+5 wides), running extra runs (MCC Law 22)"
                     onClick={() => {
-                      const bName = activeBowler?.name || 'Bowler';
-                      const sName = activeStriker?.name || 'Striker';
-                      handleRecordBall(0, 'WIDE', 1, 0, 0, `Wide ball. Delivery outside ${sName}'s reasonable hitting reach. 1 extra run conceded by ${bName} and delivery to be re-bowled.`);
+                      setWideRuns(0);
+                      setWideIsBoundary(false);
+                      setShowWideModal(true);
                     }}
                     style={{
                       background: 'rgba(245, 158, 11, 0.15)',
@@ -3387,14 +3823,19 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                       padding: '14px 0',
                       borderRadius: '8px',
                       cursor: isScorePadLocked ? 'not-allowed' : 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '4px',
                     }}
                   >
-                    WIDE (+1)
+                    <span>WIDE</span>
+                    <span style={{ fontSize: '0.72rem', background: 'rgba(245,158,11,0.3)', padding: '1px 5px', borderRadius: '4px' }}>+Options</span>
                   </button>
 
                   <button
                     disabled={isScorePadLocked}
-                    title="CPL Rule: Above chest height or chucking (+1 run & extra delivery, No Free Hit)"
+                    title="CPL Rule: Above chest height or chucking (+1 run & extra delivery to be re-bowled)"
                     onClick={() => {
                       setNbType('BAT');
                       setNbRuns(0);
@@ -3412,7 +3853,7 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                       cursor: isScorePadLocked ? 'not-allowed' : 'pointer',
                     }}
                   >
-                    NO BALL
+                    NO BALL (+1)
                   </button>
 
                   <button
@@ -3470,6 +3911,65 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                     }}
                   >
                     🔴 WICKET
+                  </button>
+                </div>
+
+                {/* Direct 1-Tap Extras Shortcut Bar (Boundary 4+1 Wides & Running Wides) */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginTop: '10px' }}>
+                  <button
+                    type="button"
+                    disabled={isScorePadLocked}
+                    title="MCC Law 22: Ball beats keeper to boundary fence (1 wide penalty + 4 boundary = 5 wides extras to batting team & bowler, delivery re-bowled)"
+                    onClick={() => {
+                      const bName = activeBowler?.name || 'Bowler';
+                      const sName = activeStriker?.name || 'Striker';
+                      handleRecordBall(4, 'WIDE', 5, 0, 0, `5 WIDES! Wild delivery from ${bName} beats ${sName} and keeper, racing all the way to the boundary for 5 extras!`);
+                    }}
+                    style={{
+                      background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.22), rgba(217, 119, 6, 0.12))',
+                      border: '1.5px solid rgba(245, 158, 11, 0.55)',
+                      color: '#FBBF24',
+                      padding: '10px 12px',
+                      borderRadius: '8px',
+                      fontWeight: 900,
+                      fontSize: '0.84rem',
+                      cursor: isScorePadLocked ? 'not-allowed' : 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '6px',
+                    }}
+                  >
+                    <span>🏏</span>
+                    <span>5 WD (Boundary 4+1)</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    disabled={isScorePadLocked}
+                    title="MCC Law 22: Batters scamper 1 extra run on a wide (1 wide penalty + 1 run = 2 wides total, strike rotates)"
+                    onClick={() => {
+                      const bName = activeBowler?.name || 'Bowler';
+                      const sName = activeStriker?.name || 'Striker';
+                      handleRecordBall(1, 'WIDE', 2, 0, 0, `WIDE + 1 RUN! Delivery outside reach of ${sName}. Batters scamper through for 1 extra run (2 wides total) conceded by ${bName}.`);
+                    }}
+                    style={{
+                      background: 'rgba(245, 158, 11, 0.12)',
+                      border: '1px solid rgba(245, 158, 11, 0.35)',
+                      color: '#FBBF24',
+                      padding: '10px 12px',
+                      borderRadius: '8px',
+                      fontWeight: 800,
+                      fontSize: '0.84rem',
+                      cursor: isScorePadLocked ? 'not-allowed' : 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '6px',
+                    }}
+                  >
+                    <span>🏃</span>
+                    <span>2 WD (1 Run + Swap)</span>
                   </button>
                 </div>
               </div>
@@ -3928,7 +4428,24 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                         {(selectedInn.battingScores || []).map((bs: any) => (
                           <tr key={bs.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', color: '#FFF' }}>
                             <td style={{ padding: '6px 8px', fontWeight: 700 }}>
-                              {bs.player?.name || 'Player'} {bs.isOut ? <span style={{ color: '#EF4444', fontSize: '0.72rem' }}>({bs.dismissal || 'out'})</span> : <span style={{ color: '#10B981', fontSize: '0.72rem' }}>*</span>}
+                              <span>{bs.player?.name || 'Player'}</span>
+                              {bs.isOut ? <span style={{ color: '#EF4444', fontSize: '0.72rem', marginLeft: '4px' }}>({bs.dismissal || 'out'})</span> : <span style={{ color: '#10B981', fontSize: '0.72rem', marginLeft: '4px' }}>*</span>}
+                              <button
+                                type="button"
+                                onClick={() => openRenameModal(bs.player?.id, bs.player?.name, bs.player?.jerseyNumber)}
+                                title="Edit/correct player name without affecting scores"
+                                style={{
+                                  background: 'transparent',
+                                  border: 'none',
+                                  color: '#60A5FA',
+                                  cursor: 'pointer',
+                                  fontSize: '0.72rem',
+                                  marginLeft: '6px',
+                                  padding: '1px 3px',
+                                }}
+                              >
+                                ✏️
+                              </button>
                             </td>
                             <td style={{ padding: '6px 8px', fontWeight: 800, color: '#FBBF24' }}>{bs.runs}</td>
                             <td style={{ padding: '6px 8px', color: '#94A3B8' }}>{bs.balls}</td>
@@ -3960,7 +4477,25 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                           const econ = totalLegalOvers > 0 ? (bw.runsConceded / totalLegalOvers).toFixed(1) : '0.0';
                           return (
                             <tr key={bw.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', color: '#FFF' }}>
-                              <td style={{ padding: '6px 8px', fontWeight: 700 }}>{bw.player?.name || 'Bowler'}</td>
+                              <td style={{ padding: '6px 8px', fontWeight: 700 }}>
+                                <span>{bw.player?.name || 'Bowler'}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => openRenameModal(bw.player?.id, bw.player?.name, bw.player?.jerseyNumber)}
+                                  title="Edit/correct bowler name without affecting figures"
+                                  style={{
+                                    background: 'transparent',
+                                    border: 'none',
+                                    color: '#60A5FA',
+                                    cursor: 'pointer',
+                                    fontSize: '0.72rem',
+                                    marginLeft: '6px',
+                                    padding: '1px 3px',
+                                  }}
+                                >
+                                  ✏️
+                                </button>
+                              </td>
                               <td style={{ padding: '6px 8px', color: '#94A3B8' }}>{bw.overs}.{bw.balls}</td>
                               <td style={{ padding: '6px 8px', color: '#94A3B8' }}>{bw.maidens || 0}</td>
                               <td style={{ padding: '6px 8px', fontWeight: 800, color: '#FBBF24' }}>{bw.runsConceded}</td>
@@ -4041,6 +4576,23 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                           }}
                         >
                           🎯 Change Bowler ({activeBowler?.name || 'Unset'})
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => openRenameModal()}
+                          style={{
+                            background: 'rgba(59, 130, 246, 0.15)',
+                            border: '1px solid #3B82F6',
+                            color: '#93C5FD',
+                            padding: '8px 12px',
+                            borderRadius: '6px',
+                            fontWeight: 700,
+                            fontSize: '0.8rem',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          ✏️ Rename Any Player (Fix Typo)
                         </button>
 
                         <button
@@ -4152,30 +4704,297 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
       {/* MODALS SECTION                                                */}
       {/* ───────────────────────────────────────────────────────────── */}
 
-      {/* NO-BALL RECORDING MODAL */}
-      {showNoBallModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
-          <div style={{ background: '#10141E', border: '1.5px solid #F97316', borderRadius: '16px', padding: '24px', maxWidth: '460px', width: '100%', boxShadow: '0 8px 32px rgba(249, 115, 22, 0.25)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+      {/* WIDE OPTIONS MODAL (MCC Law 22 Conformance) */}
+      {showWideModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px', overflowY: 'auto' }}>
+          <div style={{ background: '#10141E', border: '1.5px solid #F59E0B', borderRadius: '16px', maxWidth: '480px', width: '100%', maxHeight: 'min(90vh, calc(100dvh - 32px))', display: 'flex', flexDirection: 'column', overflow: 'hidden', margin: 'auto', boxShadow: '0 8px 32px rgba(245, 158, 11, 0.25)' }}>
+            {/* Header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 20px 12px', borderBottom: '1px solid rgba(245, 158, 11, 0.25)', background: 'rgba(245, 158, 11, 0.06)', flexShrink: 0 }}>
               <div>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: 900, color: '#FB923C', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span>⚠️ Record No-Ball Delivery</span>
+                <h3 style={{ fontSize: '1.15rem', fontWeight: 900, color: '#FBBF24', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span>🟡 Record Wide Delivery</span>
                 </h3>
-                <div style={{ fontSize: '0.8rem', color: '#94A3B8', marginTop: '2px' }}>
-                  Automatic +1 No-ball penalty extra + any runs scored
+                <div style={{ fontSize: '0.78rem', color: '#94A3B8', marginTop: '2px' }}>
+                  MCC Law 22 • 1 Wide penalty + running / boundary extras
                 </div>
               </div>
               <button
-                onClick={() => setShowNoBallModal(false)}
-                style={{ background: 'transparent', border: 'none', color: '#94A3B8', fontSize: '1.2rem', cursor: 'pointer' }}
+                type="button"
+                onClick={() => setShowWideModal(false)}
+                style={{ background: 'transparent', border: 'none', color: '#94A3B8', fontSize: '1.2rem', cursor: 'pointer', padding: '4px' }}
               >
                 ✕
               </button>
             </div>
 
+            {/* Body */}
+            <div className="scoring-modal-card" style={{ flex: '1 1 auto', overflowY: 'auto', minHeight: 0, padding: '16px 20px' }}>
+              <div style={{ background: 'rgba(245, 158, 11, 0.08)', border: '1px solid rgba(245, 158, 11, 0.25)', borderRadius: '8px', padding: '10px 12px', marginBottom: '16px', fontSize: '0.78rem', color: '#FDE68A' }}>
+                💡 <strong>MCC Law 22:</strong> All runs scored from a wide ball (including the 1 penalty, running byes, and boundary 4) are scored as <strong>WIDES</strong> and charged to the bowler. Delivery must be re-bowled.
+              </div>
+
+              {/* Presets Grid */}
+              <div style={{ marginBottom: '18px' }}>
+                <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 800, marginBottom: '8px', color: '#F59E0B', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                  Select Wide Outcome
+                </label>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
+                  {/* Standard 1 Wide */}
+                  <button
+                    type="button"
+                    onClick={() => { setWideRuns(0); setWideIsBoundary(false); }}
+                    style={{
+                      background: wideRuns === 0 && !wideIsBoundary ? '#F59E0B' : '#141A26',
+                      color: wideRuns === 0 && !wideIsBoundary ? '#000' : '#FFF',
+                      border: wideRuns === 0 && !wideIsBoundary ? '2px solid #D97706' : '1px solid #2A364E',
+                      borderRadius: '8px',
+                      padding: '12px 10px',
+                      textAlign: 'left',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <div style={{ fontWeight: 900, fontSize: '0.95rem' }}>1 Wide (+1)</div>
+                    <div style={{ fontSize: '0.72rem', opacity: 0.8 }}>Standard wide • No running</div>
+                  </button>
+
+                  {/* 5 Wides (Boundary 4) */}
+                  <button
+                    type="button"
+                    onClick={() => { setWideRuns(4); setWideIsBoundary(true); }}
+                    style={{
+                      background: wideRuns === 4 && wideIsBoundary ? '#F59E0B' : 'rgba(245, 158, 11, 0.12)',
+                      color: wideRuns === 4 && wideIsBoundary ? '#000' : '#FBBF24',
+                      border: wideRuns === 4 && wideIsBoundary ? '2px solid #D97706' : '1.5px solid rgba(245, 158, 11, 0.4)',
+                      borderRadius: '8px',
+                      padding: '12px 10px',
+                      textAlign: 'left',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <div style={{ fontWeight: 900, fontSize: '0.95rem' }}>🏏 5 Wides (Boundary)</div>
+                    <div style={{ fontSize: '0.72rem', opacity: 0.8 }}>Wide + 4 to boundary cushion</div>
+                  </button>
+
+                  {/* 2 Wides (1 Run) */}
+                  <button
+                    type="button"
+                    onClick={() => { setWideRuns(1); setWideIsBoundary(false); }}
+                    style={{
+                      background: wideRuns === 1 && !wideIsBoundary ? '#F59E0B' : '#141A26',
+                      color: wideRuns === 1 && !wideIsBoundary ? '#000' : '#FFF',
+                      border: wideRuns === 1 && !wideIsBoundary ? '2px solid #D97706' : '1px solid #2A364E',
+                      borderRadius: '8px',
+                      padding: '12px 10px',
+                      textAlign: 'left',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <div style={{ fontWeight: 900, fontSize: '0.95rem' }}>2 Wides (+1 Run)</div>
+                    <div style={{ fontSize: '0.72rem', opacity: 0.8 }}>1 run ran • Strike swaps</div>
+                  </button>
+
+                  {/* 3 Wides (2 Runs) */}
+                  <button
+                    type="button"
+                    onClick={() => { setWideRuns(2); setWideIsBoundary(false); }}
+                    style={{
+                      background: wideRuns === 2 && !wideIsBoundary ? '#F59E0B' : '#141A26',
+                      color: wideRuns === 2 && !wideIsBoundary ? '#000' : '#FFF',
+                      border: wideRuns === 2 && !wideIsBoundary ? '2px solid #D97706' : '1px solid #2A364E',
+                      borderRadius: '8px',
+                      padding: '12px 10px',
+                      textAlign: 'left',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <div style={{ fontWeight: 900, fontSize: '0.95rem' }}>3 Wides (+2 Runs)</div>
+                    <div style={{ fontSize: '0.72rem', opacity: 0.8 }}>2 runs ran • Strike stays</div>
+                  </button>
+
+                  {/* 4 Wides (3 Runs) */}
+                  <button
+                    type="button"
+                    onClick={() => { setWideRuns(3); setWideIsBoundary(false); }}
+                    style={{
+                      background: wideRuns === 3 && !wideIsBoundary ? '#F59E0B' : '#141A26',
+                      color: wideRuns === 3 && !wideIsBoundary ? '#000' : '#FFF',
+                      border: wideRuns === 3 && !wideIsBoundary ? '2px solid #D97706' : '1px solid #2A364E',
+                      borderRadius: '8px',
+                      padding: '12px 10px',
+                      textAlign: 'left',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <div style={{ fontWeight: 900, fontSize: '0.95rem' }}>4 Wides (+3 Runs)</div>
+                    <div style={{ fontSize: '0.72rem', opacity: 0.8 }}>3 runs ran • Strike swaps</div>
+                  </button>
+
+                  {/* Custom Extra Runs */}
+                  <button
+                    type="button"
+                    onClick={() => { if (wideRuns <= 4 && !wideIsBoundary) setWideRuns(5); }}
+                    style={{
+                      background: (wideRuns > 4 || (wideRuns === 4 && !wideIsBoundary)) ? '#F59E0B' : '#141A26',
+                      color: (wideRuns > 4 || (wideRuns === 4 && !wideIsBoundary)) ? '#000' : '#FFF',
+                      border: (wideRuns > 4 || (wideRuns === 4 && !wideIsBoundary)) ? '2px solid #D97706' : '1px solid #2A364E',
+                      borderRadius: '8px',
+                      padding: '12px 10px',
+                      textAlign: 'left',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <div style={{ fontWeight: 900, fontSize: '0.95rem' }}>Other Extra Runs</div>
+                    <div style={{ fontSize: '0.72rem', opacity: 0.8 }}>Custom runs taken</div>
+                  </button>
+                </div>
+              </div>
+
+              {/* Custom Number Input if selected */}
+              {(wideRuns > 4 || (wideRuns === 4 && !wideIsBoundary)) && (
+                <div style={{ background: '#141A26', border: '1px solid #2A364E', borderRadius: '8px', padding: '12px', marginBottom: '16px' }}>
+                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: '#CBD5E1', marginBottom: '6px' }}>
+                    Additional Runs Ran by Batters:
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="10"
+                    value={wideRuns}
+                    onChange={(e) => {
+                      const val = Math.max(0, Number(e.target.value));
+                      setWideRuns(val);
+                      setWideIsBoundary(false);
+                    }}
+                    style={{ width: '100%', background: '#0D111A', border: '1px solid #2A364E', borderRadius: '6px', padding: '8px 12px', color: '#FFF', fontWeight: 800 }}
+                  />
+                </div>
+              )}
+
+              {/* Live Preview Card */}
+              {(() => {
+                const totalExtras = 1 + wideRuns;
+                const willRotate = !wideIsBoundary && (wideRuns % 2 !== 0);
+                return (
+                  <div style={{ background: '#141A26', border: '1px solid #2A364E', borderRadius: '10px', padding: '14px', marginBottom: '18px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                      <span style={{ fontSize: '0.82rem', color: '#94A3B8' }}>Total Team Runs Conceded:</span>
+                      <span style={{ fontSize: '1.25rem', fontWeight: 900, color: '#FBBF24', fontFamily: 'monospace' }}>
+                        {totalExtras} {totalExtras === 1 ? 'Run' : 'Runs'} ({totalExtras} Wides)
+                      </span>
+                    </div>
+                    <div style={{ fontSize: '0.75rem', color: '#CBD5E1', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      <div>• <strong>1 Wide Penalty</strong> extra added to Extras & charged to {activeBowler?.name || 'Bowler'}</div>
+                      {wideRuns > 0 && (
+                        <div>• <strong>+{wideRuns} {wideIsBoundary ? 'Boundary Runs' : 'Running Extras'}</strong> scored as Wides (charged to {activeBowler?.name || 'Bowler'})</div>
+                      )}
+                      <div>• Strike: <strong style={{ color: willRotate ? '#34D399' : '#FBBF24' }}>{
+                        willRotate
+                          ? `🔄 Strike rotates (${activeStriker?.name || 'Striker'} and ${activeNonStriker?.name || 'Non-striker'} swap ends)`
+                          : `Strike remains with ${activeStriker?.name || 'Striker'}`
+                      }</strong></div>
+                      <div style={{ color: '#F87171', marginTop: '4px', fontWeight: 700 }}>
+                        🚫 Ball is illegal & must be re-bowled.
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* Dismissal on Wide Button */}
+              <button
+                type="button"
+                onClick={() => {
+                  setShowWideModal(false);
+                  setDismissedId(currentInnings.currentStrikerId || '');
+                  setWicketType('STUMPED');
+                  setWicketRuns(wideRuns);
+                  setShowWicketModal(true);
+                }}
+                style={{
+                  width: '100%',
+                  background: 'rgba(239, 68, 68, 0.12)',
+                  border: '1px solid #EF4444',
+                  color: '#FCA5A5',
+                  padding: '10px 12px',
+                  borderRadius: '8px',
+                  fontWeight: 800,
+                  fontSize: '0.84rem',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                }}
+              >
+                <span>🔴</span>
+                <span>Dismissal on this Wide? (Record Stumped or Run Out)</span>
+              </button>
+            </div>
+
+            {/* Footer */}
+            <div style={{ display: 'flex', gap: '10px', padding: '12px 20px 16px', borderTop: '1px solid rgba(255, 255, 255, 0.08)', background: '#0D111A', flexShrink: 0 }}>
+              <button
+                type="button"
+                onClick={() => setShowWideModal(false)}
+                style={{ flex: 1, background: '#141A26', border: '1px solid #2A364E', color: '#94A3B8', padding: '11px', borderRadius: '8px', fontWeight: 700, cursor: 'pointer' }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const bName = activeBowler?.name || 'Bowler';
+                  const sName = activeStriker?.name || 'Striker';
+                  const totalWideExtras = 1 + wideRuns;
+
+                  let commentary = `Wide ball. Delivery outside ${sName}'s reasonable hitting reach. 1 extra run conceded by ${bName} and delivery to be re-bowled.`;
+                  if (wideIsBoundary || wideRuns === 4) {
+                    commentary = `5 WIDES! Wild delivery from ${bName} beats ${sName} and keeper, racing all the way to the boundary for 5 extras!`;
+                  } else if (wideRuns > 0) {
+                    commentary = `WIDE + ${wideRuns} RUN${wideRuns > 1 ? 'S' : ''}! Delivery outside reach of ${sName}, batters complete ${wideRuns} extra run${wideRuns > 1 ? 's' : ''} (${totalWideExtras} total wides) conceded by ${bName}.`;
+                  }
+
+                  setShowWideModal(false);
+                  handleRecordBall(wideRuns, 'WIDE', totalWideExtras, 0, 0, commentary);
+                }}
+                style={{ flex: 2, background: '#F59E0B', border: 'none', color: '#000', padding: '11px', borderRadius: '8px', fontWeight: 800, cursor: 'pointer', fontSize: '0.92rem' }}
+              >
+                Confirm {1 + wideRuns} {1 + wideRuns === 1 ? 'Wide' : 'Wides'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* NO-BALL RECORDING MODAL */}
+      {showNoBallModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px', overflowY: 'auto' }}>
+          <div style={{ background: '#10141E', border: '1.5px solid #F97316', borderRadius: '16px', maxWidth: '460px', width: '100%', maxHeight: 'min(88vh, calc(100dvh - 32px))', display: 'flex', flexDirection: 'column', overflow: 'hidden', margin: 'auto', boxShadow: '0 8px 32px rgba(249, 115, 22, 0.25)' }}>
+            {/* Header (Fixed) */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 20px 12px', borderBottom: '1px solid rgba(249, 115, 22, 0.25)', background: 'rgba(249, 115, 22, 0.05)', flexShrink: 0 }}>
+              <div>
+                <h3 style={{ fontSize: '1.15rem', fontWeight: 900, color: '#FB923C', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span>⚠️ Record No-Ball Delivery</span>
+                </h3>
+                <div style={{ fontSize: '0.78rem', color: '#94A3B8', marginTop: '2px' }}>
+                  Automatic +1 No-ball penalty extra + any runs scored
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowNoBallModal(false)}
+                style={{ background: 'transparent', border: 'none', color: '#94A3B8', fontSize: '1.2rem', cursor: 'pointer', padding: '4px' }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Scrollable Body */}
+            <div className="scoring-modal-card" style={{ flex: '1 1 auto', overflowY: 'auto', minHeight: 0, padding: '16px 20px' }}>
+
             {/* CPL Official Rules Notice */}
             <div style={{ background: 'rgba(249, 115, 22, 0.12)', border: '1px solid rgba(249, 115, 22, 0.35)', borderRadius: '8px', padding: '10px 12px', marginBottom: '14px', fontSize: '0.78rem', color: '#FED7AA' }}>
-              ⚡ <strong>CPL 2026 Rule:</strong> Any delivery above chest height or chucking/illegal action will be called a No Ball (+1 run & extra delivery). <strong>No Free Hit will be given after a No Ball.</strong>
+              ⚡ <strong>CPL 2026 Rule:</strong> Any delivery above chest height or chucking/illegal action will be called a No Ball (+1 run & extra delivery to be re-bowled).
             </div>
 
             {/* Reason / Infraction Switcher */}
@@ -4391,25 +5210,57 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                       <div>• <strong>+{nbRuns} Leg Byes</strong> added to Extras (NOT charged to Bowler under MCC rules)</div>
                     )}
                     <div style={{ color: '#F87171', marginTop: '6px', fontWeight: 800 }}>
-                      🚫 CPL Rule: NO Free Hit is awarded after a No Ball. Extra delivery to be re-bowled.
+                      🚫 Extra delivery to be re-bowled (+1 penalty run).
                     </div>
                   </div>
                 </div>
               );
             })()}
 
-            <div style={{ display: 'flex', gap: '10px' }}>
+            <button
+              type="button"
+              onClick={() => {
+                setShowNoBallModal(false);
+                setIsWicketOnNoBall(true);
+                setWicketType('RUN_OUT');
+                setShowWicketModal(true);
+              }}
+              style={{
+                width: '100%',
+                background: 'rgba(239, 68, 68, 0.15)',
+                border: '1px solid #EF4444',
+                color: '#FCA5A5',
+                padding: '10px 12px',
+                borderRadius: '8px',
+                fontWeight: 800,
+                fontSize: '0.85rem',
+                cursor: 'pointer',
+                marginBottom: '14px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+              }}
+            >
+              <span>🔴</span>
+              <span>Dismissal on this No-Ball? (Record Wicket + No-Ball)</span>
+            </button>
+
+            </div>
+
+            {/* Footer (Fixed) */}
+            <div style={{ display: 'flex', gap: '10px', padding: '12px 20px 16px', borderTop: '1px solid rgba(255, 255, 255, 0.08)', background: '#0D111A', flexShrink: 0 }}>
               <button
                 type="button"
                 onClick={() => setShowNoBallModal(false)}
-                style={{ flex: 1, background: '#141A26', border: '1px solid #2A364E', color: '#94A3B8', padding: '12px', borderRadius: '8px', fontWeight: 700, cursor: 'pointer' }}
+                style={{ flex: 1, background: '#141A26', border: '1px solid #2A364E', color: '#94A3B8', padding: '11px', borderRadius: '8px', fontWeight: 700, cursor: 'pointer' }}
               >
                 Cancel
               </button>
               <button
                 type="button"
                 onClick={handleConfirmNoBall}
-                style={{ flex: 2, background: 'linear-gradient(135deg, #F97316 0%, #EA580C 100%)', border: 'none', color: '#FFF', padding: '12px', borderRadius: '8px', fontWeight: 900, fontSize: '0.95rem', cursor: 'pointer', boxShadow: '0 4px 14px rgba(249, 115, 22, 0.4)' }}
+                style={{ flex: 2, background: 'linear-gradient(135deg, #F97316 0%, #EA580C 100%)', border: 'none', color: '#FFF', padding: '11px', borderRadius: '8px', fontWeight: 900, fontSize: '0.95rem', cursor: 'pointer', boxShadow: '0 4px 14px rgba(249, 115, 22, 0.4)' }}
               >
                 Confirm No-Ball
               </button>
@@ -4420,11 +5271,27 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
 
       {/* WICKET RECORDING MODAL */}
       {showWicketModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
-          <div style={{ background: '#10141E', border: '1.5px solid #EF4444', borderRadius: '16px', padding: '24px', maxWidth: '440px', width: '100%' }}>
-            <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#EF4444', margin: '0 0 16px' }}>
-              🔴 Record Wicket Dismissal
-            </h3>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px', overflowY: 'auto' }}>
+          <div style={{ background: '#10141E', border: '1.5px solid #EF4444', borderRadius: '16px', maxWidth: '450px', width: '100%', maxHeight: 'min(88vh, calc(100dvh - 32px))', display: 'flex', flexDirection: 'column', overflow: 'hidden', margin: 'auto' }}>
+            {/* Header (Fixed) */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 20px 12px', borderBottom: '1px solid rgba(239, 68, 68, 0.25)', background: 'rgba(239, 68, 68, 0.05)', flexShrink: 0 }}>
+              <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#EF4444', margin: 0 }}>
+                🔴 Record Wicket Dismissal
+              </h3>
+              <button
+                type="button"
+                onClick={() => {
+                  setWicketModalError(null);
+                  setShowWicketModal(false);
+                }}
+                style={{ background: 'transparent', border: 'none', color: '#94A3B8', fontSize: '1.2rem', cursor: 'pointer', padding: '4px' }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Scrollable Body */}
+            <div className="scoring-modal-card" style={{ flex: '1 1 auto', overflowY: 'auto', minHeight: 0, padding: '16px 20px' }}>
 
             {wicketModalError && (
               <div style={{ background: 'rgba(239, 68, 68, 0.15)', border: '1px solid #EF4444', color: '#FCA5A5', padding: '10px', borderRadius: '8px', marginBottom: '14px', fontSize: '0.85rem' }}>
@@ -4432,12 +5299,12 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
               </div>
             )}
 
-            {isFreeHitActive && (
+            {isPreviousDeliveryNoBall && (
               <div
                 style={{
-                  background: 'rgba(245, 158, 11, 0.15)',
-                  border: '1.5px solid #F59E0B',
-                  color: '#FDE68A',
+                  background: 'rgba(16, 185, 129, 0.15)',
+                  border: '1.5px solid #10B981',
+                  color: '#6EE7B7',
                   padding: '10px 12px',
                   borderRadius: '8px',
                   marginBottom: '14px',
@@ -4445,7 +5312,7 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                   lineHeight: 1.4,
                 }}
               >
-                ⚡ <strong>FREE HIT ACTIVE:</strong> Under MCC Law, batters <strong>CANNOT</strong> be dismissed Bowled, Caught, LBW, Stumped, or Hit Wicket. Only <strong>Run Out</strong>, <strong>Hit Ball Twice</strong>, or <strong>Obstructing The Field</strong> are permitted.
+                ✓ <strong>RE-BOWLED DELIVERY:</strong> Previous delivery was a No-Ball. Batters <strong>CAN be dismissed</strong> by any method (Bowled, Caught, LBW, Stumped, Run Out). This wicket is <strong>100% VALID</strong>.
               </div>
             )}
 
@@ -4473,28 +5340,36 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                   onChange={(e) => setWicketType(e.target.value)}
                   style={{ width: '100%', background: '#141A26', border: '1px solid #2A364E', borderRadius: '8px', padding: '10px', color: '#FFF' }}
                 >
-                  {isFreeHitActive ? (
-                    <>
-                      <option value="RUN_OUT">Run Out</option>
-                      <option value="HIT_BALL_TWICE">Hit Ball Twice</option>
-                      <option value="OBSTRUCTING_FIELD">Obstructing The Field</option>
-                    </>
-                  ) : (
-                    <>
-                      <option value="CAUGHT">Caught</option>
-                      <option value="BOWLED">Bowled</option>
-                      <option value="LBW">LBW</option>
-                      <option value="RUN_OUT">Run Out</option>
-                      <option value="STUMPED">Stumped</option>
-                      <option value="HIT_WICKET">Hit Wicket</option>
-                      <option value="HIT_BALL_TWICE">Hit Ball Twice</option>
-                      <option value="OBSTRUCTING_FIELD">Obstructing The Field</option>
-                      <option value="RETIRED_HURT">Retired Hurt</option>
-                      <option value="RETIRED_OUT">Retired Out</option>
-                      <option value="OTHER">Other</option>
-                    </>
-                  )}
+                  <option value="CAUGHT">Caught</option>
+                  <option value="BOWLED">Bowled</option>
+                  <option value="LBW">LBW</option>
+                  <option value="RUN_OUT">Run Out</option>
+                  <option value="STUMPED">Stumped</option>
+                  <option value="HIT_WICKET">Hit Wicket</option>
+                  <option value="HIT_BALL_TWICE">Hit Ball Twice</option>
+                  <option value="OBSTRUCTING_FIELD">Obstructing The Field</option>
+                  <option value="RETIRED_HURT">Retired Hurt</option>
+                  <option value="RETIRED_OUT">Retired Out</option>
+                  <option value="OTHER">Other</option>
                 </select>
+              </div>
+
+              {/* Delivery is a No-Ball Switch */}
+              <div style={{ background: '#141A26', border: '1px solid #2A364E', borderRadius: '8px', padding: '10px 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
+                <div>
+                  <div style={{ fontSize: '0.82rem', fontWeight: 800, color: '#CBD5E1' }}>
+                    Delivery is a No-Ball?
+                  </div>
+                  <div style={{ fontSize: '0.72rem', color: '#94A3B8' }}>
+                    +1 penalty extra to batting team (+ extra delivery)
+                  </div>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={isWicketOnNoBall}
+                  onChange={(e) => setIsWicketOnNoBall(e.target.checked)}
+                  style={{ width: '18px', height: '18px', accentColor: '#F97316', cursor: 'pointer' }}
+                />
               </div>
 
               {/* RUN OUT: Completed Runs Selector */}
@@ -4503,8 +5378,8 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                   <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 800, color: '#F59E0B', marginBottom: '8px' }}>
                     🏃 Runs Completed Before Run Out
                   </label>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
-                    {[0, 1, 2, 3].map((r) => (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '8px' }}>
+                    {[0, 1, 2, 3, 4].map((r) => (
                       <button
                         key={r}
                         type="button"
@@ -4530,7 +5405,7 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                 </div>
               )}
 
-              {availableBatters.length > 0 && (
+              {availableBatters.filter((p: any) => p.id !== (dismissedId || currentInnings?.currentStrikerId) && !isPlayerDismissedInInnings(p.id)).length > 0 && (
                 <div>
                   <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '6px', color: '#94A3B8' }}>
                     Next Incoming Batter (Optional)
@@ -4548,7 +5423,9 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                     }}
                   >
                     <option value="">Select later when player walks in...</option>
-                    {availableBatters.map((p: any) => {
+                    {availableBatters
+                      .filter((p: any) => p.id !== (dismissedId || currentInnings?.currentStrikerId) && !isPlayerDismissedInInnings(p.id))
+                      .map((p: any) => {
                       const bScore = currentInnings?.battingScores?.find((b: any) => b.playerId === p.id);
                       const isRetHurt = bScore?.dismissal?.toLowerCase().includes('retired hurt');
                       return (
@@ -4562,20 +5439,25 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
               )}
             </div>
 
-            <div style={{ display: 'flex', gap: '10px' }}>
+            </div>
+
+            {/* Footer (Fixed) */}
+            <div style={{ display: 'flex', gap: '10px', padding: '12px 20px 16px', borderTop: '1px solid rgba(255, 255, 255, 0.08)', background: '#0D111A', flexShrink: 0 }}>
               <button
+                type="button"
                 onClick={() => {
                   setWicketModalError(null);
                   setShowWicketModal(false);
                 }}
-                style={{ flex: 1, background: '#1E2638', border: 'none', color: '#FFF', padding: '10px', borderRadius: '8px', fontWeight: 700, cursor: 'pointer' }}
+                style={{ flex: 1, background: '#1E2638', border: 'none', color: '#FFF', padding: '11px', borderRadius: '8px', fontWeight: 700, cursor: 'pointer' }}
               >
                 Cancel
               </button>
               <button
+                type="button"
                 onClick={handleRecordWicket}
                 disabled={isPending}
-                style={{ flex: 2, background: '#EF4444', border: 'none', color: '#FFF', padding: '10px', borderRadius: '8px', fontWeight: 800, cursor: isPending ? 'not-allowed' : 'pointer' }}
+                style={{ flex: 2, background: '#EF4444', border: 'none', color: '#FFF', padding: '11px', borderRadius: '8px', fontWeight: 800, cursor: isPending ? 'not-allowed' : 'pointer' }}
               >
                 Confirm Wicket
               </button>
@@ -4586,16 +5468,29 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
 
       {/* BOWLER SELECTOR MODAL */}
       {showBowlerModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
-          <div style={{ background: '#10141E', border: '1.5px solid #F59E0B', borderRadius: '16px', padding: '24px', maxWidth: '460px', width: '100%' }}>
-            <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#FBBF24', margin: '0 0 4px' }}>
-              🎯 Select / Change Active Bowler
-            </h3>
-            <p style={{ fontSize: '0.8rem', color: '#94A3B8', margin: '0 0 16px' }}>
-              Bowling Team: <strong style={{ color: '#FFF' }}>{currentInnings?.bowlingTeam?.name}</strong> (CPL Rule: Maximum 1 over per bowler per match)
-            </p>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px', overflowY: 'auto' }}>
+          <div style={{ background: '#10141E', border: '1.5px solid #F59E0B', borderRadius: '16px', maxWidth: '460px', width: '100%', maxHeight: 'min(88vh, calc(100dvh - 32px))', display: 'flex', flexDirection: 'column', overflow: 'hidden', margin: 'auto' }}>
+            {/* Header (Fixed) */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 20px 12px', borderBottom: '1px solid rgba(245, 158, 11, 0.25)', background: 'rgba(245, 158, 11, 0.05)', flexShrink: 0 }}>
+              <div>
+                <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#FBBF24', margin: 0 }}>
+                  🎯 Select / Change Active Bowler
+                </h3>
+                <p style={{ fontSize: '0.78rem', color: '#94A3B8', margin: '2px 0 0' }}>
+                  Bowling Team: <strong style={{ color: '#FFF' }}>{currentInnings?.bowlingTeam?.name}</strong> (Max 1 over per bowler)
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowBowlerModal(false)}
+                style={{ background: 'transparent', border: 'none', color: '#94A3B8', fontSize: '1.2rem', cursor: 'pointer', padding: '4px' }}
+              >
+                ✕
+              </button>
+            </div>
 
-            <div style={{ marginBottom: '20px' }}>
+            {/* Scrollable Body */}
+            <div className="scoring-modal-card" style={{ flex: '1 1 auto', overflowY: 'auto', minHeight: 0, padding: '16px 20px' }}>
               <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '6px', color: '#FBBF24' }}>
                 Choose Bowler ({bowlingSquad.length} in squad)
               </label>
@@ -4620,17 +5515,20 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
               </select>
             </div>
 
-            <div style={{ display: 'flex', gap: '10px' }}>
+            {/* Footer (Fixed) */}
+            <div style={{ display: 'flex', gap: '10px', padding: '12px 20px 16px', borderTop: '1px solid rgba(255, 255, 255, 0.08)', background: '#0D111A', flexShrink: 0 }}>
               <button
+                type="button"
                 onClick={() => setShowBowlerModal(false)}
-                style={{ flex: 1, background: '#1E2638', border: 'none', color: '#FFF', padding: '10px', borderRadius: '8px', fontWeight: 700, cursor: 'pointer' }}
+                style={{ flex: 1, background: '#1E2638', border: 'none', color: '#FFF', padding: '11px', borderRadius: '8px', fontWeight: 700, cursor: 'pointer' }}
               >
                 Cancel
               </button>
               <button
+                type="button"
                 onClick={handleChangeBowler}
                 disabled={isPending || !selectedBowlerId}
-                style={{ flex: 2, background: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)', border: 'none', color: '#000', padding: '10px', borderRadius: '8px', fontWeight: 800, cursor: isPending || !selectedBowlerId ? 'not-allowed' : 'pointer' }}
+                style={{ flex: 2, background: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)', border: 'none', color: '#000', padding: '11px', borderRadius: '8px', fontWeight: 800, cursor: isPending || !selectedBowlerId ? 'not-allowed' : 'pointer' }}
               >
                 Set Bowler
               </button>
@@ -4641,59 +5539,132 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
 
       {/* BATTER SELECTOR MODAL */}
       {showBatterModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
-          <div style={{ background: '#10141E', border: '1.5px solid #F59E0B', borderRadius: '16px', padding: '24px', maxWidth: '460px', width: '100%' }}>
-            <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#FBBF24', margin: '0 0 4px' }}>
-              🏏 Set / Change {targetRole === 'striker' ? 'Striker (On Strike)' : 'Non-Striker'}
-            </h3>
-            <p style={{ fontSize: '0.8rem', color: '#94A3B8', margin: '0 0 16px' }}>
-              Batting Team: <strong style={{ color: '#FFF' }}>{currentInnings?.battingTeam?.name}</strong>
-            </p>
-
-            <div style={{ marginBottom: '20px' }}>
-              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '6px', color: '#CBD5E1' }}>
-                Select Batter ({battingSquad.length} in squad)
-              </label>
-              <select
-                value={selectedBatterId}
-                onChange={(e) => setSelectedBatterId(e.target.value)}
-                style={{ width: '100%', background: '#141A26', border: '1px solid #2A364E', borderRadius: '8px', padding: '10px', color: '#FFF' }}
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px', overflowY: 'auto' }}>
+          <div style={{ background: '#10141E', border: '1.5px solid #F59E0B', borderRadius: '16px', maxWidth: '460px', width: '100%', maxHeight: 'min(88vh, calc(100dvh - 32px))', display: 'flex', flexDirection: 'column', overflow: 'hidden', margin: 'auto' }}>
+            {/* Header (Fixed) */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 20px 12px', borderBottom: '1px solid rgba(245, 158, 11, 0.25)', background: 'rgba(245, 158, 11, 0.05)', flexShrink: 0 }}>
+              <div>
+                <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#FBBF24', margin: 0 }}>
+                  🏏 Set / Change {targetRole === 'striker' ? 'Striker (On Strike)' : 'Non-Striker'}
+                </h3>
+                <p style={{ fontSize: '0.78rem', color: '#94A3B8', margin: '2px 0 0' }}>
+                  Batting Team: <strong style={{ color: '#FFF' }}>{currentInnings?.battingTeam?.name}</strong>
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowBatterModal(false)}
+                style={{ background: 'transparent', border: 'none', color: '#94A3B8', fontSize: '1.2rem', cursor: 'pointer', padding: '4px' }}
               >
-                <option value="">Select Batter...</option>
-                {battingSquad.map((p: any) => {
-                  const bScore = currentInnings?.battingScores?.find((b: any) => b.playerId === p.id);
-                  const isStriker = p.id === currentInnings?.currentStrikerId;
-                  const isNonStriker = p.id === currentInnings?.currentNonStrikerId;
-                  const isRetHurt = bScore?.dismissal?.toLowerCase().includes('retired hurt');
-                  const isOut = bScore?.isOut && !isRetHurt;
-
-                  let tag = 'Yet to bat';
-                  if (isStriker) tag = 'Currently Striker';
-                  else if (isNonStriker) tag = 'Currently Non-Striker';
-                  else if (isRetHurt) tag = `🏥 Retired Hurt (${bScore.runs}* off ${bScore.balls}b) — Can Resume Batting`;
-                  else if (isOut) tag = `Out (${bScore.runs} runs) — Override`;
-                  else if (bScore && bScore.balls > 0) tag = `${bScore.runs}* (${bScore.balls}b)`;
-
-                  return (
-                    <option key={p.id} value={p.id}>
-                      {p.name} [{tag}]
-                    </option>
-                  );
-                })}
-              </select>
+                ✕
+              </button>
             </div>
 
-            <div style={{ display: 'flex', gap: '10px' }}>
+            {/* Scrollable Body */}
+            <div className="scoring-modal-card" style={{ flex: '1 1 auto', overflowY: 'auto', minHeight: 0, padding: '16px 20px' }}>
+              {(() => {
+                const eligibleBatters = battingSquad.filter((p: any) => !isPlayerDismissedInInnings(p.id));
+                const dismissedBatters = battingSquad.filter((p: any) => isPlayerDismissedInInnings(p.id));
+                const isSelectedOut = Boolean(selectedBatterId && isPlayerDismissedInInnings(selectedBatterId));
+
+                return (
+                  <>
+                    {isSelectedOut && (
+                      <div style={{ background: 'rgba(239, 68, 68, 0.15)', border: '1px solid #EF4444', color: '#FCA5A5', padding: '10px 12px', borderRadius: '8px', marginBottom: '14px', fontSize: '0.82rem', lineHeight: 1.4 }}>
+                        ⛔ <strong>Player Already Dismissed:</strong> This batter is OUT and cannot bat again in this innings (MCC Cricket Law 25). Please select an eligible incoming batter.
+                      </div>
+                    )}
+
+                    {eligibleBatters.length === 0 && (
+                      <div style={{ background: 'rgba(239, 68, 68, 0.15)', border: '1px solid #EF4444', color: '#FCA5A5', padding: '10px 12px', borderRadius: '8px', marginBottom: '14px', fontSize: '0.82rem', lineHeight: 1.4 }}>
+                        ⚠️ <strong>No Eligible Batters Remaining:</strong> All players in the batting squad have already batted and been dismissed (Team All Out / Wicket Limit reached).
+                      </div>
+                    )}
+
+                    <div style={{ marginBottom: '10px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                        <label style={{ fontSize: '0.85rem', fontWeight: 700, color: '#CBD5E1' }}>
+                          Select Batter ({eligibleBatters.length} eligible)
+                        </label>
+                        {dismissedBatters.length > 0 && (
+                          <span style={{ fontSize: '0.72rem', color: '#EF4444', fontWeight: 700 }}>
+                            {dismissedBatters.length} player{dismissedBatters.length > 1 ? 's' : ''} out
+                          </span>
+                        )}
+                      </div>
+
+                      <select
+                        value={selectedBatterId}
+                        onChange={(e) => setSelectedBatterId(e.target.value)}
+                        style={{ width: '100%', background: '#141A26', border: '1px solid #2A364E', borderRadius: '8px', padding: '10px', color: '#FFF' }}
+                      >
+                        <option value="">Select Batter...</option>
+                        <optgroup label="✓ AVAILABLE / ELIGIBLE BATTERS">
+                          {eligibleBatters.map((p: any) => {
+                            const bScore = currentInnings?.battingScores?.find((b: any) => b.playerId === p.id);
+                            const isStriker = p.id === currentInnings?.currentStrikerId;
+                            const isNonStriker = p.id === currentInnings?.currentNonStrikerId;
+                            const isRetHurt = bScore?.dismissal?.toLowerCase().includes('retired hurt');
+
+                            let tag = 'Yet to bat';
+                            if (isStriker) tag = 'Currently Striker';
+                            else if (isNonStriker) tag = 'Currently Non-Striker';
+                            else if (isRetHurt) tag = `🏥 Retired Hurt (${bScore.runs}* off ${bScore.balls}b) — Resume Batting`;
+                            else if (bScore && bScore.balls > 0) tag = `${bScore.runs}* (${bScore.balls}b)`;
+
+                            return (
+                              <option key={p.id} value={p.id}>
+                                {p.name} [{tag}]
+                              </option>
+                            );
+                          })}
+                        </optgroup>
+
+                        {dismissedBatters.length > 0 && (
+                          <optgroup label="⛔ DISMISSED BATTERS (OUT — CANNOT BAT AGAIN)">
+                            {dismissedBatters.map((p: any) => {
+                              const bScore = currentInnings?.battingScores?.find((b: any) => b.playerId === p.id);
+                              const runs = bScore?.runs ?? 0;
+                              const balls = bScore?.balls ?? 0;
+                              const dismissal = bScore?.dismissal || 'Out';
+                              return (
+                                <option key={p.id} value={p.id} disabled style={{ color: '#94A3B8', background: '#0D111A' }}>
+                                  ❌ {p.name} — OUT ({dismissal} • {runs}r off {balls}b)
+                                </option>
+                              );
+                            })}
+                          </optgroup>
+                        )}
+                      </select>
+                    </div>
+                  </>
+                );
+              })()}
+            </div>
+
+            {/* Footer (Fixed) */}
+            <div style={{ display: 'flex', gap: '10px', padding: '12px 20px 16px', borderTop: '1px solid rgba(255, 255, 255, 0.08)', background: '#0D111A', flexShrink: 0 }}>
               <button
+                type="button"
                 onClick={() => setShowBatterModal(false)}
-                style={{ flex: 1, background: '#1E2638', border: 'none', color: '#FFF', padding: '10px', borderRadius: '8px', fontWeight: 700, cursor: 'pointer' }}
+                style={{ flex: 1, background: '#1E2638', border: 'none', color: '#FFF', padding: '11px', borderRadius: '8px', fontWeight: 700, cursor: 'pointer' }}
               >
                 Cancel
               </button>
               <button
+                type="button"
                 onClick={handleSwitchBatter}
-                disabled={!selectedBatterId || isPending}
-                style={{ flex: 2, background: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)', border: 'none', color: '#000', padding: '10px', borderRadius: '8px', fontWeight: 800, cursor: (!selectedBatterId || isPending) ? 'not-allowed' : 'pointer' }}
+                disabled={!selectedBatterId || isPlayerDismissedInInnings(selectedBatterId) || isPending}
+                style={{
+                  flex: 2,
+                  background: (!selectedBatterId || isPlayerDismissedInInnings(selectedBatterId) || isPending) ? '#2A364E' : 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)',
+                  border: 'none',
+                  color: (!selectedBatterId || isPlayerDismissedInInnings(selectedBatterId) || isPending) ? '#64748B' : '#000',
+                  padding: '11px',
+                  borderRadius: '8px',
+                  fontWeight: 800,
+                  cursor: (!selectedBatterId || isPlayerDismissedInInnings(selectedBatterId) || isPending) ? 'not-allowed' : 'pointer',
+                }}
               >
                 Confirm Batter
               </button>
@@ -4702,53 +5673,69 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
         </div>
       )}
       {showCompleteModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
-          <div style={{ background: '#10141E', border: '1.5px solid #10B981', borderRadius: '16px', padding: '24px', maxWidth: '460px', width: '100%' }}>
-            <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#34D399', margin: '0 0 16px' }}>
-              🏆 Finalize & Complete Match
-            </h3>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px', overflowY: 'auto' }}>
+          <div style={{ background: '#10141E', border: '1.5px solid #10B981', borderRadius: '16px', maxWidth: '460px', width: '100%', maxHeight: 'min(88vh, calc(100dvh - 32px))', display: 'flex', flexDirection: 'column', overflow: 'hidden', margin: 'auto' }}>
+            {/* Header (Fixed) */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 20px 12px', borderBottom: '1px solid rgba(16, 185, 129, 0.25)', background: 'rgba(16, 185, 129, 0.05)', flexShrink: 0 }}>
+              <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#34D399', margin: 0 }}>
+                🏆 Finalize & Complete Match
+              </h3>
+              <button
+                type="button"
+                onClick={() => setShowCompleteModal(false)}
+                style={{ background: 'transparent', border: 'none', color: '#94A3B8', fontSize: '1.2rem', cursor: 'pointer', padding: '4px' }}
+              >
+                ✕
+              </button>
+            </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '20px' }}>
-              <div>
-                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '6px', color: '#CBD5E1' }}>
-                  Winning Team
-                </label>
-                <select
-                  value={winnerTeamId}
-                  onChange={(e) => setWinnerTeamId(e.target.value)}
-                  style={{ width: '100%', background: '#141A26', border: '1px solid #2A364E', borderRadius: '8px', padding: '10px', color: '#FFF' }}
-                >
-                  <option value="">No Winner / Tie / Abandoned</option>
-                  <option value={match.teamAId}>{match.teamA.name}</option>
-                  <option value={match.teamBId}>{match.teamB.name}</option>
-                </select>
-              </div>
+            {/* Scrollable Body */}
+            <div className="scoring-modal-card" style={{ flex: '1 1 auto', overflowY: 'auto', minHeight: 0, padding: '16px 20px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '6px', color: '#CBD5E1' }}>
+                    Winning Team
+                  </label>
+                  <select
+                    value={winnerTeamId}
+                    onChange={(e) => setWinnerTeamId(e.target.value)}
+                    style={{ width: '100%', background: '#141A26', border: '1px solid #2A364E', borderRadius: '8px', padding: '10px', color: '#FFF' }}
+                  >
+                    <option value="">No Winner / Tie / Abandoned</option>
+                    <option value={match.teamAId}>{match.teamA.name}</option>
+                    <option value={match.teamBId}>{match.teamB.name}</option>
+                  </select>
+                </div>
 
-              <div>
-                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '6px', color: '#CBD5E1' }}>
-                  Result Summary / Note
-                </label>
-                <input
-                  type="text"
-                  value={resultNote}
-                  onChange={(e) => setResultNote(e.target.value)}
-                  placeholder="e.g. Team A won by 14 runs"
-                  style={{ width: '100%', background: '#141A26', border: '1px solid #2A364E', borderRadius: '8px', padding: '10px', color: '#FFF' }}
-                />
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '6px', color: '#CBD5E1' }}>
+                    Result Summary / Note
+                  </label>
+                  <input
+                    type="text"
+                    value={resultNote}
+                    onChange={(e) => setResultNote(e.target.value)}
+                    placeholder="e.g. Team A won by 14 runs"
+                    style={{ width: '100%', background: '#141A26', border: '1px solid #2A364E', borderRadius: '8px', padding: '10px', color: '#FFF' }}
+                  />
+                </div>
               </div>
             </div>
 
-            <div style={{ display: 'flex', gap: '10px' }}>
+            {/* Footer (Fixed) */}
+            <div style={{ display: 'flex', gap: '10px', padding: '12px 20px 16px', borderTop: '1px solid rgba(255, 255, 255, 0.08)', background: '#0D111A', flexShrink: 0 }}>
               <button
+                type="button"
                 onClick={() => setShowCompleteModal(false)}
-                style={{ flex: 1, background: '#1E2638', border: 'none', color: '#FFF', padding: '10px', borderRadius: '8px', fontWeight: 700, cursor: 'pointer' }}
+                style={{ flex: 1, background: '#1E2638', border: 'none', color: '#FFF', padding: '11px', borderRadius: '8px', fontWeight: 700, cursor: 'pointer' }}
               >
                 Cancel
               </button>
               <button
+                type="button"
                 onClick={handleCompleteMatch}
                 disabled={isPending}
-                style={{ flex: 2, background: '#10B981', border: 'none', color: '#FFF', padding: '10px', borderRadius: '8px', fontWeight: 800, cursor: isPending ? 'not-allowed' : 'pointer' }}
+                style={{ flex: 2, background: '#10B981', border: 'none', color: '#FFF', padding: '11px', borderRadius: '8px', fontWeight: 800, cursor: isPending ? 'not-allowed' : 'pointer' }}
               >
                 Declare Result
               </button>
@@ -4759,24 +5746,29 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
 
       {/* EDIT BALL MODAL */}
       {editingBall && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
-          <div style={{ background: '#10141E', border: '1.5px solid #F59E0B', borderRadius: '16px', padding: '24px', maxWidth: '460px', width: '100%' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px', overflowY: 'auto' }}>
+          <div style={{ background: '#10141E', border: '1.5px solid #F59E0B', borderRadius: '16px', maxWidth: '460px', width: '100%', maxHeight: 'min(88vh, calc(100dvh - 32px))', display: 'flex', flexDirection: 'column', overflow: 'hidden', margin: 'auto' }}>
+            {/* Header (Fixed) */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 20px 12px', borderBottom: '1px solid rgba(245, 158, 11, 0.25)', background: 'rgba(245, 158, 11, 0.05)', flexShrink: 0 }}>
               <div>
                 <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#FBBF24', margin: 0 }}>
                   ✏️ Edit Delivery (Over {editingBall.overNumber + 1}, Ball {editingBall.ballNumber})
                 </h3>
-                <div style={{ fontSize: '0.8rem', color: '#94A3B8', marginTop: '2px' }}>
+                <div style={{ fontSize: '0.78rem', color: '#94A3B8', marginTop: '2px' }}>
                   {editingBall.batsman?.name || 'Batter'} vs {editingBall.bowler?.name || 'Bowler'}
                 </div>
               </div>
               <button
+                type="button"
                 onClick={() => setEditingBall(null)}
-                style={{ background: 'transparent', border: 'none', color: '#94A3B8', fontSize: '1.2rem', cursor: 'pointer' }}
+                style={{ background: 'transparent', border: 'none', color: '#94A3B8', fontSize: '1.2rem', cursor: 'pointer', padding: '4px' }}
               >
                 ✕
               </button>
             </div>
+
+            {/* Scrollable Body */}
+            <div className="scoring-modal-card" style={{ flex: '1 1 auto', overflowY: 'auto', minHeight: 0, padding: '16px 20px' }}>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '20px' }}>
               <div>
@@ -4844,6 +5836,29 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                     }}
                     style={{ width: '100%', background: '#141A26', border: '1px solid #2A364E', borderRadius: '8px', padding: '10px', color: '#FFF' }}
                   />
+                  {editExtraType === 'WIDE' && (
+                    <div style={{ display: 'flex', gap: '6px', marginTop: '8px', flexWrap: 'wrap' }}>
+                      {[1, 2, 3, 4, 5].map((w) => (
+                        <button
+                          key={w}
+                          type="button"
+                          onClick={() => setEditExtras(w)}
+                          style={{
+                            padding: '5px 10px',
+                            background: editExtras === w ? '#F59E0B' : '#141A26',
+                            color: editExtras === w ? '#000' : '#FFF',
+                            border: editExtras === w ? '1.5px solid #F59E0B' : '1px solid #2A364E',
+                            borderRadius: '6px',
+                            fontSize: '0.75rem',
+                            fontWeight: 800,
+                            cursor: 'pointer',
+                          }}
+                        >
+                          {w === 1 ? '1 Wide' : w === 5 ? '5 WD (Boundary)' : `${w} Wides`}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -4922,12 +5937,15 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
               )}
             </div>
 
-            <div style={{ display: 'flex', gap: '10px' }}>
+            </div>
+
+            {/* Footer (Fixed) */}
+            <div style={{ display: 'flex', gap: '10px', padding: '12px 20px 16px', borderTop: '1px solid rgba(255, 255, 255, 0.08)', background: '#0D111A', flexShrink: 0 }}>
               <button
                 type="button"
                 onClick={handleDeleteBall}
                 disabled={isEditingBallSaving}
-                style={{ flex: 1, background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.4)', color: '#EF4444', padding: '10px', borderRadius: '8px', fontWeight: 700, cursor: 'pointer' }}
+                style={{ flex: 1, background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.4)', color: '#EF4444', padding: '11px', borderRadius: '8px', fontWeight: 700, cursor: 'pointer' }}
               >
                 🗑️ Delete Ball
               </button>
@@ -4935,7 +5953,7 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                 type="button"
                 onClick={handleSaveEditedBall}
                 disabled={isEditingBallSaving}
-                style={{ flex: 2, background: '#F59E0B', border: 'none', color: '#000', padding: '10px', borderRadius: '8px', fontWeight: 800, cursor: 'pointer' }}
+                style={{ flex: 2, background: '#F59E0B', border: 'none', color: '#000', padding: '11px', borderRadius: '8px', fontWeight: 800, cursor: 'pointer' }}
               >
                 {isEditingBallSaving ? 'Saving...' : '💾 Save Correction'}
               </button>
@@ -4946,24 +5964,29 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
 
       {/* SUPER OVER SETUP MODAL */}
       {showSuperOverModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
-          <div style={{ background: '#10141E', border: '1.5px solid #F59E0B', borderRadius: '16px', padding: '24px', maxWidth: '460px', width: '100%', boxShadow: '0 8px 32px rgba(245, 158, 11, 0.3)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px', overflowY: 'auto' }}>
+          <div style={{ background: '#10141E', border: '1.5px solid #F59E0B', borderRadius: '16px', maxWidth: '460px', width: '100%', maxHeight: 'min(88vh, calc(100dvh - 32px))', display: 'flex', flexDirection: 'column', overflow: 'hidden', margin: 'auto', boxShadow: '0 8px 32px rgba(245, 158, 11, 0.3)' }}>
+            {/* Header (Fixed) */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 20px 12px', borderBottom: '1px solid rgba(245, 158, 11, 0.25)', background: 'rgba(245, 158, 11, 0.05)', flexShrink: 0 }}>
               <div>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: 900, color: '#FBBF24', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <h3 style={{ fontSize: '1.15rem', fontWeight: 900, color: '#FBBF24', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <span>⚡ Launch Super Over Tie-Breaker</span>
                 </h3>
-                <div style={{ fontSize: '0.8rem', color: '#94A3B8', marginTop: '2px' }}>
+                <div style={{ fontSize: '0.78rem', color: '#94A3B8', marginTop: '2px' }}>
                   1 Over per team • 2 Wickets maximum per innings
                 </div>
               </div>
               <button
+                type="button"
                 onClick={() => setShowSuperOverModal(false)}
-                style={{ background: 'transparent', border: 'none', color: '#94A3B8', fontSize: '1.2rem', cursor: 'pointer' }}
+                style={{ background: 'transparent', border: 'none', color: '#94A3B8', fontSize: '1.2rem', cursor: 'pointer', padding: '4px' }}
               >
                 ✕
               </button>
             </div>
+
+            {/* Scrollable Body */}
+            <div className="scoring-modal-card" style={{ flex: '1 1 auto', overflowY: 'auto', minHeight: 0, padding: '16px 20px' }}>
 
             <div style={{ marginBottom: '20px' }}>
               <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '8px', color: '#CBD5E1' }}>
@@ -5063,12 +6086,15 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
               </div>
             </div>
 
-            <div style={{ display: 'flex', gap: '10px' }}>
+            </div>
+
+            {/* Footer (Fixed) */}
+            <div style={{ display: 'flex', gap: '10px', padding: '12px 20px 16px', borderTop: '1px solid rgba(255, 255, 255, 0.08)', background: '#0D111A', flexShrink: 0 }}>
               <button
                 type="button"
                 onClick={() => setShowSuperOverModal(false)}
                 disabled={isEditingBallSaving}
-                style={{ flex: 1, background: '#1E2638', border: 'none', color: '#FFF', padding: '12px', borderRadius: '8px', fontWeight: 700, cursor: 'pointer' }}
+                style={{ flex: 1, background: '#1E2638', border: 'none', color: '#FFF', padding: '11px', borderRadius: '8px', fontWeight: 700, cursor: 'pointer' }}
               >
                 Cancel
               </button>
@@ -5076,9 +6102,336 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                 type="button"
                 onClick={handleStartSuperOver}
                 disabled={isEditingBallSaving}
-                style={{ flex: 2, background: '#F59E0B', border: 'none', color: '#000', padding: '12px', borderRadius: '8px', fontWeight: 900, cursor: 'pointer' }}
+                style={{ flex: 2, background: '#F59E0B', border: 'none', color: '#000', padding: '11px', borderRadius: '8px', fontWeight: 900, cursor: 'pointer' }}
               >
                 {isEditingBallSaving ? 'Starting...' : '⚡ Begin Super Over →'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* EDIT MATCH RULES (OVERS & BALLS PER OVER) MODAL */}
+      {showRulesModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px', overflowY: 'auto' }}>
+          <div style={{ background: '#10141E', border: '1.5px solid #3B82F6', borderRadius: '16px', maxWidth: '460px', width: '100%', maxHeight: 'min(88vh, calc(100dvh - 32px))', display: 'flex', flexDirection: 'column', overflow: 'hidden', margin: 'auto', boxShadow: '0 8px 32px rgba(59, 130, 246, 0.3)' }}>
+            {/* Header (Fixed) */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 20px 12px', borderBottom: '1px solid rgba(59, 130, 246, 0.25)', background: 'rgba(59, 130, 246, 0.05)', flexShrink: 0 }}>
+              <div>
+                <h3 style={{ fontSize: '1.15rem', fontWeight: 900, color: '#93C5FD', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span>⚙️ Edit Match Overs & Balls</span>
+                </h3>
+                <div style={{ fontSize: '0.78rem', color: '#94A3B8', marginTop: '2px' }}>
+                  Dynamically update match overs and balls per over during live play
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowRulesModal(false)}
+                style={{ background: 'transparent', border: 'none', color: '#94A3B8', fontSize: '1.2rem', cursor: 'pointer', padding: '4px' }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Scrollable Body */}
+            <div className="scoring-modal-card" style={{ flex: '1 1 auto', overflowY: 'auto', minHeight: 0, padding: '16px 20px' }}>
+              {/* OVERS PER INNINGS SECTION */}
+              <div style={{ marginBottom: '22px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                  <label style={{ fontSize: '0.88rem', fontWeight: 800, color: '#CBD5E1' }}>
+                    Total Overs Per Innings
+                  </label>
+                  <span style={{ fontSize: '0.82rem', color: '#60A5FA', fontFamily: 'monospace', fontWeight: 800 }}>
+                    {rulesOvers} Overs
+                  </span>
+                </div>
+
+                <input
+                  type="number"
+                  min={1}
+                  max={100}
+                  value={rulesOvers}
+                  onChange={(e) => setRulesOvers(Math.max(1, Math.min(100, parseInt(e.target.value, 10) || 1)))}
+                  style={{
+                    width: '100%',
+                    background: '#141A26',
+                    border: '1.5px solid #2A364E',
+                    borderRadius: '8px',
+                    padding: '10px 14px',
+                    color: '#FFF',
+                    fontSize: '1rem',
+                    fontWeight: 700,
+                    marginBottom: '10px',
+                  }}
+                />
+
+                {/* Preset Overs Chips */}
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                  {[5, 6, 8, 10, 12, 15, 20, 50].map((ov) => {
+                    const isSelected = rulesOvers === ov;
+                    return (
+                      <button
+                        key={ov}
+                        type="button"
+                        onClick={() => setRulesOvers(ov)}
+                        style={{
+                          background: isSelected ? '#3B82F6' : '#141A26',
+                          color: isSelected ? '#FFF' : '#94A3B8',
+                          border: isSelected ? '1px solid #3B82F6' : '1px solid #2A364E',
+                          borderRadius: '6px',
+                          padding: '6px 12px',
+                          fontSize: '0.78rem',
+                          fontWeight: 800,
+                          cursor: 'pointer',
+                          transition: 'all 0.15s ease',
+                        }}
+                      >
+                        {ov} Ov
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* BALLS PER OVER SECTION */}
+              <div style={{ marginBottom: '22px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                  <label style={{ fontSize: '0.88rem', fontWeight: 800, color: '#CBD5E1' }}>
+                    Balls Per Over
+                  </label>
+                  <span style={{ fontSize: '0.82rem', color: '#60A5FA', fontFamily: 'monospace', fontWeight: 800 }}>
+                    {rulesBallsPerOver} Balls/Over
+                  </span>
+                </div>
+
+                <input
+                  type="number"
+                  min={1}
+                  max={20}
+                  value={rulesBallsPerOver}
+                  onChange={(e) => setRulesBallsPerOver(Math.max(1, Math.min(20, parseInt(e.target.value, 10) || 1)))}
+                  style={{
+                    width: '100%',
+                    background: '#141A26',
+                    border: '1.5px solid #2A364E',
+                    borderRadius: '8px',
+                    padding: '10px 14px',
+                    color: '#FFF',
+                    fontSize: '1rem',
+                    fontWeight: 700,
+                    marginBottom: '10px',
+                  }}
+                />
+
+                {/* Preset Balls Chips */}
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  {[4, 5, 6, 8].map((b) => {
+                    const isSelected = rulesBallsPerOver === b;
+                    return (
+                      <button
+                        key={b}
+                        type="button"
+                        onClick={() => setRulesBallsPerOver(b)}
+                        style={{
+                          flex: 1,
+                          background: isSelected ? '#3B82F6' : '#141A26',
+                          color: isSelected ? '#FFF' : '#94A3B8',
+                          border: isSelected ? '1px solid #3B82F6' : '1px solid #2A364E',
+                          borderRadius: '6px',
+                          padding: '8px 10px',
+                          fontSize: '0.82rem',
+                          fontWeight: 800,
+                          cursor: 'pointer',
+                          transition: 'all 0.15s ease',
+                        }}
+                      >
+                        {b} Balls
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Notice */}
+              <div style={{ background: 'rgba(59, 130, 246, 0.08)', border: '1px solid rgba(59, 130, 246, 0.25)', borderRadius: '8px', padding: '10px 12px', fontSize: '0.78rem', color: '#93C5FD', lineHeight: 1.45 }}>
+                💡 <strong>Live Impact:</strong> Changing these values immediately updates the required over limit, run rates, balls remaining, and public scorecards for this match.
+              </div>
+            </div>
+
+            {/* Footer (Fixed) */}
+            <div style={{ display: 'flex', gap: '10px', padding: '12px 20px 16px', borderTop: '1px solid rgba(255, 255, 255, 0.08)', background: '#0D111A', flexShrink: 0 }}>
+              <button
+                type="button"
+                onClick={() => setShowRulesModal(false)}
+                disabled={isRulesSaving}
+                style={{ flex: 1, background: '#1E2638', border: 'none', color: '#FFF', padding: '11px', borderRadius: '8px', fontWeight: 700, cursor: 'pointer' }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSaveMatchRules(rulesOvers, rulesBallsPerOver)}
+                disabled={isRulesSaving}
+                style={{ flex: 2, background: 'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)', border: 'none', color: '#FFF', padding: '11px', borderRadius: '8px', fontWeight: 900, cursor: 'pointer', boxShadow: '0 4px 14px rgba(59, 130, 246, 0.4)' }}
+              >
+                {isRulesSaving ? 'Saving...' : '💾 Save Match Rules'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* RENAME PLAYER (CORRECT NAME WITHOUT AFFECTING SCORES) MODAL */}
+      {showRenameModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px', overflowY: 'auto' }}>
+          <div style={{ background: '#10141E', border: '1.5px solid #3B82F6', borderRadius: '16px', maxWidth: '440px', width: '100%', maxHeight: 'min(88vh, calc(100dvh - 32px))', display: 'flex', flexDirection: 'column', overflow: 'hidden', margin: 'auto', boxShadow: '0 8px 32px rgba(59, 130, 246, 0.3)' }}>
+            {/* Header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 20px 12px', borderBottom: '1px solid rgba(59, 130, 246, 0.25)', background: 'rgba(59, 130, 246, 0.05)', flexShrink: 0 }}>
+              <div>
+                <h3 style={{ fontSize: '1.15rem', fontWeight: 900, color: '#93C5FD', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span>✏️ Correct Player Name</span>
+                </h3>
+                <div style={{ fontSize: '0.78rem', color: '#94A3B8', marginTop: '2px' }}>
+                  Fix spelling or names without resetting runs, balls, or wickets
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowRenameModal(false)}
+                style={{ background: 'transparent', border: 'none', color: '#94A3B8', fontSize: '1.2rem', cursor: 'pointer', padding: '4px' }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="scoring-modal-card" style={{ flex: '1 1 auto', overflowY: 'auto', minHeight: 0, padding: '16px 20px' }}>
+              {/* Player Selector if needed */}
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, color: '#CBD5E1', marginBottom: '6px' }}>
+                  Select Player To Rename
+                </label>
+                <select
+                  value={renamePlayerId}
+                  onChange={(e) => {
+                    const pid = e.target.value;
+                    setRenamePlayerId(pid);
+                    const found = allKnownPlayers.find((p: any) => p.id === pid);
+                    if (found) {
+                      setRenamePlayerName(found.name || '');
+                      setRenamePlayerJersey(found.jerseyNumber ?? '');
+                    }
+                  }}
+                  style={{
+                    width: '100%',
+                    background: '#141A26',
+                    border: '1.5px solid #2A364E',
+                    borderRadius: '8px',
+                    padding: '10px 12px',
+                    color: '#FFF',
+                    fontSize: '0.9rem',
+                    fontWeight: 600,
+                  }}
+                >
+                  <option value="">-- Choose Player --</option>
+                  <optgroup label={`${match.teamA?.name || 'Team A'}`}>
+                    {rawTeamAPlayers.map((p: any) => (
+                      <option key={p.id} value={p.id}>
+                        {p.name} {p.jerseyNumber ? `(#${p.jerseyNumber})` : ''}
+                      </option>
+                    ))}
+                  </optgroup>
+                  <optgroup label={`${match.teamB?.name || 'Team B'}`}>
+                    {rawTeamBPlayers.map((p: any) => (
+                      <option key={p.id} value={p.id}>
+                        {p.name} {p.jerseyNumber ? `(#${p.jerseyNumber})` : ''}
+                      </option>
+                    ))}
+                  </optgroup>
+                </select>
+              </div>
+
+              {/* Name Input */}
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, color: '#CBD5E1', marginBottom: '6px' }}>
+                  Player Name *
+                </label>
+                <input
+                  type="text"
+                  value={renamePlayerName}
+                  onChange={(e) => setRenamePlayerName(e.target.value)}
+                  placeholder="e.g. Wanindu Hasaranga"
+                  style={{
+                    width: '100%',
+                    background: '#141A26',
+                    border: '1.5px solid #2A364E',
+                    borderRadius: '8px',
+                    padding: '10px 12px',
+                    color: '#FFF',
+                    fontSize: '0.95rem',
+                    fontWeight: 700,
+                  }}
+                />
+              </div>
+
+              {/* Jersey Number */}
+              <div style={{ marginBottom: '18px' }}>
+                <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, color: '#CBD5E1', marginBottom: '6px' }}>
+                  Jersey Number (Optional)
+                </label>
+                <input
+                  type="number"
+                  min={0}
+                  max={999}
+                  value={renamePlayerJersey}
+                  onChange={(e) => setRenamePlayerJersey(e.target.value)}
+                  placeholder="e.g. 49"
+                  style={{
+                    width: '100%',
+                    background: '#141A26',
+                    border: '1.5px solid #2A364E',
+                    borderRadius: '8px',
+                    padding: '10px 12px',
+                    color: '#FFF',
+                    fontSize: '0.9rem',
+                  }}
+                />
+              </div>
+
+              {/* Notice */}
+              <div style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.3)', borderRadius: '8px', padding: '10px 12px', fontSize: '0.78rem', color: '#6EE7B7', lineHeight: 1.45 }}>
+                ✓ <strong>100% Score-Safe:</strong> All batting runs, balls faced, strike rates, overs bowled, wickets, and maidens remain completely untouched and attached to this player.
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div style={{ display: 'flex', gap: '10px', padding: '12px 20px 16px', borderTop: '1px solid rgba(255, 255, 255, 0.08)', background: '#0D111A', flexShrink: 0 }}>
+              <button
+                type="button"
+                onClick={() => setShowRenameModal(false)}
+                disabled={isRenamingSaving}
+                style={{ flex: 1, background: '#1E2638', border: 'none', color: '#FFF', padding: '11px', borderRadius: '8px', fontWeight: 700, cursor: 'pointer' }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleSaveRenamePlayer}
+                disabled={isRenamingSaving || !renamePlayerId || !renamePlayerName.trim()}
+                style={{
+                  flex: 2,
+                  background: 'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)',
+                  border: 'none',
+                  color: '#FFF',
+                  padding: '11px',
+                  borderRadius: '8px',
+                  fontWeight: 900,
+                  cursor: (isRenamingSaving || !renamePlayerId || !renamePlayerName.trim()) ? 'not-allowed' : 'pointer',
+                  boxShadow: '0 4px 14px rgba(59, 130, 246, 0.4)',
+                }}
+              >
+                {isRenamingSaving ? 'Saving...' : '💾 Update Player Name'}
               </button>
             </div>
           </div>

@@ -658,9 +658,11 @@ export default function BallTimelineFilter({
                       {/* Outcome Badge */}
                       <div
                         style={{
-                          width: '32px',
+                          minWidth: '32px',
+                          width: b.outcomeBadge.label.length > 2 ? 'auto' : '32px',
                           height: '32px',
-                          borderRadius: '50%',
+                          padding: b.outcomeBadge.label.length > 2 ? '0 6px' : '0',
+                          borderRadius: b.outcomeBadge.label.length > 2 ? '16px' : '50%',
                           background: b.outcomeBadge.bg,
                           color: b.outcomeBadge.color,
                           border: `1.5px solid ${b.outcomeBadge.borderColor}`,
@@ -669,7 +671,7 @@ export default function BallTimelineFilter({
                           justifyContent: 'center',
                           fontFamily: 'var(--font-data)',
                           fontWeight: 900,
-                          fontSize: '0.78rem',
+                          fontSize: b.outcomeBadge.label.length > 3 ? '0.7rem' : '0.78rem',
                           boxShadow:
                             b.outcomeBadge.type === 'FOUR'
                               ? '0 0 10px rgba(16, 185, 129, 0.4)'
@@ -690,24 +692,6 @@ export default function BallTimelineFilter({
                           <span style={{ fontWeight: 800, color: 'var(--color-paper, #F8FAFC)', fontSize: '0.85rem' }}>
                             {b.bowlerName} to {b.batsmanName}
                           </span>
-
-                          {/* Free Hit Delivery Tag */}
-                          {b.isFreeHit && (
-                            <span
-                              style={{
-                                background: 'linear-gradient(135deg, #F59E0B, #D97706)',
-                                color: '#000000',
-                                padding: '1px 8px',
-                                borderRadius: '4px',
-                                fontSize: '0.68rem',
-                                fontWeight: 900,
-                                letterSpacing: '0.04em',
-                                boxShadow: '0 0 8px rgba(245, 158, 11, 0.4)',
-                              }}
-                            >
-                              ⚡ FREE HIT
-                            </span>
-                          )}
 
                           {/* Super Over Delivery Tag */}
                           {b.isSuperOver && (
@@ -782,7 +766,7 @@ export default function BallTimelineFilter({
                                 fontWeight: 900,
                               }}
                             >
-                              ⚠️ NO BALL (FREE HIT NEXT)
+                              ⚠️ NO BALL (RE-BOWLED DELIVERY)
                             </span>
                           )}
 

@@ -9,6 +9,7 @@ const {
   calculateBowlerMaidens,
   calculateMaidensMap,
   BOWLER_CREDITED_WICKETS,
+  isFreeHitActive,
 } = require('../lib/scoring/scoring-rules.ts');
 
 const {
@@ -131,7 +132,7 @@ rejectedOnNbAndFh.forEach((wt) => {
 });
 console.log('  PASS  3.2: No-ball rejects BOWLED, CAUGHT, LBW, STUMPED, HIT_WICKET, RETIRED_HURT, RETIRED_OUT, TIMED_OUT');
 
-// Verify Free Hit dismissals
+// Verify Free Hit dismissals (if flagged)
 allowedOnNbAndFh.forEach((wt) => {
   const res = validateDismissalLegality({ extraType: 'NONE', isFreeHit: true, isWicket: true, wicketType: wt });
   assert.strictEqual(res.valid, true, `Free Hit MUST allow ${wt}`);
@@ -144,6 +145,23 @@ rejectedOnNbAndFh.forEach((wt) => {
   assert.ok(res.error, `Rejection of ${wt} on Free Hit must have descriptive error message`);
 });
 console.log('  PASS  3.4: Free Hit rejects BOWLED, CAUGHT, LBW, STUMPED, HIT_WICKET, RETIRED_HURT, RETIRED_OUT, TIMED_OUT');
+
+// Verify Tournament Rule: No Free Hit after No-ball, delivery following No-ball allows ALL wickets
+const noBallHistory = [{ extraType: 'NO_BALL', isLegal: false, createdAt: new Date() }];
+const freeHitActive = isFreeHitActive(noBallHistory);
+assert.strictEqual(freeHitActive, false, 'Under tournament rules, delivery after No-ball must NOT be a Free Hit');
+
+const standardWicketsAfterNb = ['BOWLED', 'CAUGHT', 'LBW', 'STUMPED', 'HIT_WICKET', 'RUN_OUT'];
+standardWicketsAfterNb.forEach((wt) => {
+  const res = validateDismissalLegality({
+    extraType: 'NONE',
+    isFreeHit: freeHitActive,
+    isWicket: true,
+    wicketType: wt,
+  });
+  assert.strictEqual(res.valid, true, `Delivery following No-ball MUST allow valid dismissal: ${wt}`);
+});
+console.log('  PASS  3.5: No Free Hit after No-ball; all wickets (BOWLED, CAUGHT, LBW, STUMPED, etc.) are valid');
 
 
 // -------------------------------------------------------------
