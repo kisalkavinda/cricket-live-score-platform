@@ -17,7 +17,7 @@ function ScorecardContent() {
   const [match, setMatch] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [activeTab, setActiveTab] = useState<string>('inn1');
-  const [viewMode, setViewMode] = useState<'SCORECARD' | 'WORM' | 'COMMENTARY'>('SCORECARD');
+  const [viewMode, setViewMode] = useState<'SCORECARD' | 'WORM' | 'COMMENTARY' | 'SQUADS'>('SCORECARD');
   const [lastLivePing, setLastLivePing] = useState<string>('');
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const inFlightRef = useRef<boolean>(false);
@@ -163,16 +163,8 @@ function ScorecardContent() {
   const currentInnings = match.innings?.find((i: any) => i.inningsNumber === match.currentInnings) || allInnings[allInnings.length - 1] || allInnings[0];
   const selectedInnings = match.innings?.find((i: any) => `inn${i.inningsNumber}` === activeTab) || currentInnings || allInnings[0];
 
-  const isFreeHit = (() => {
-    const balls = currentInnings?.ballEvents;
-    if (!balls || balls.length === 0) return false;
-    for (const b of balls) {
-      if (b.extraType === 'NO_BALL') return true;
-      if (b.extraType === 'WIDE') continue;
-      return false;
-    }
-    return false;
-  })();
+  // Under tournament rules, there is no Free Hit after a No-Ball
+  const isFreeHit = false;
 
   const ballsPerOver = match.ballsPerOver || match.tournament?.stages?.[0]?.ballsPerOver || 6;
 
@@ -181,36 +173,46 @@ function ScorecardContent() {
     return totalOvers > 0 ? (runs / totalOvers).toFixed(2) : '0.00';
   };
 
-  // Ball badge matching LiveScoreWidget theme
   const getBallStyle = (b: any) => {
-    let label = `${b.runs ?? 0}`;
+    const runs = Number(b.runs || 0);
+    const extraRuns = Number(b.extras || 0);
+    let label = `${runs}`;
     let bg = 'rgba(255, 255, 255, 0.1)';
     let color = '#FFFFFF';
 
     if (b.isWicket) {
-      label = 'W';
+      if (b.extraType === 'WIDE') {
+        label = runs > 0 ? `WD+${runs}+W` : (extraRuns > 1 ? `WD+${extraRuns - 1}+W` : 'WD+W');
+      } else if (b.extraType === 'NO_BALL') {
+        label = runs > 0 ? `NB+${runs}+W` : 'NB+W';
+      } else if (runs > 0) {
+        label = `${runs}+W`;
+      } else {
+        label = 'W';
+      }
       bg = '#EF4444';
-    } else if (b.runs === 4) {
+      color = '#FFFFFF';
+    } else if (runs === 4) {
       label = '4';
       bg = '#10B981';
-    } else if (b.runs === 6) {
+    } else if (runs === 6) {
       label = '6';
       bg = '#8B5CF6';
     } else if (b.extraType === 'WIDE') {
-      label = b.extras > 1 ? `WD+${b.extras - 1}` : 'WD';
+      label = extraRuns > 1 ? `WD+${extraRuns - 1}` : 'WD';
       bg = '#F59E0B';
       color = '#000000';
     } else if (b.extraType === 'NO_BALL') {
-      label = b.runs > 0 ? `NB+${b.runs}` : 'NB';
+      label = runs > 0 ? `NB+${runs}` : 'NB';
       bg = '#F97316';
       color = '#000000';
     } else if (b.extraType === 'BYE') {
-      label = `${b.extras || 1}B`;
+      label = `${extraRuns || 1}B`;
       bg = 'rgba(255, 255, 255, 0.15)';
     } else if (b.extraType === 'LEG_BYE') {
-      label = `${b.extras || 1}LB`;
+      label = `${extraRuns || 1}LB`;
       bg = 'rgba(255, 255, 255, 0.15)';
-    } else if (b.runs === 0) {
+    } else if (runs === 0) {
       label = '•';
       bg = 'rgba(255, 255, 255, 0.05)';
       color = 'rgba(255, 255, 255, 0.4)';
@@ -297,6 +299,10 @@ function ScorecardContent() {
     }
   }
 
+  const isSuperOverMatch = (match.currentInnings || 1) >= 3;
+  const leftSO = match.innings?.find((i: any) => i.battingTeamId === leftTeam?.id && i.inningsNumber >= 3);
+  const rightSO = match.innings?.find((i: any) => i.battingTeamId === rightTeam?.id && i.inningsNumber >= 3);
+
   return (
     <main style={{ paddingTop: '86px', paddingBottom: 'var(--space-3xl)' }}>
       <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 var(--space-md)' }}>
@@ -358,28 +364,6 @@ function ScorecardContent() {
               )}
               {match.status}
             </span>
-
-            {match.status === 'LIVE' && isFreeHit && (
-              <span
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                  padding: '4px 10px',
-                  borderRadius: '9999px',
-                  background: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)',
-                  color: '#000000',
-                  fontSize: '0.72rem',
-                  fontWeight: 900,
-                  letterSpacing: '0.08em',
-                  textTransform: 'uppercase',
-                  boxShadow: '0 0 10px rgba(245, 158, 11, 0.5)',
-                  fontFamily: 'var(--font-data)',
-                }}
-              >
-                ⚡ Free Hit
-              </span>
-            )}
 
             {lastLivePing && (
               <span style={{ fontSize: '0.72rem', color: 'rgba(255, 255, 255, 0.4)', fontFamily: 'var(--font-data)' }}>
@@ -446,7 +430,7 @@ function ScorecardContent() {
               <span>•</span>
               <span>{match.venue || 'Main Stadium'}</span>
               <span>•</span>
-              <span>{match.oversPerInnings} Overs {match.ballsPerOver ? `(${match.ballsPerOver}b/ov)` : ''}</span>
+              <span>{isSuperOverMatch ? '⚡ Super Over (1 Over)' : `${match.oversPerInnings} Overs`} {match.ballsPerOver ? `(${match.ballsPerOver}b/ov)` : ''}</span>
             </div>
 
             {match.tossWinner && (
@@ -523,7 +507,18 @@ function ScorecardContent() {
                     <div style={{ fontFamily: 'var(--font-data)', fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.5)', fontWeight: 600 }}>
                       {leftTeam?.shortName}
                     </div>
-                    {leftTeamInnings ? (
+                    {isSuperOverMatch ? (
+                      <div style={{ marginTop: '2px' }}>
+                        <div style={{ fontFamily: 'var(--font-data)', fontSize: '0.85rem', color: '#F59E0B', fontWeight: 800 }}>
+                          ⚡ SO: {leftSO ? `${leftSO.runs}/${leftSO.wickets} (${leftSO.overs}.${leftSO.balls} ov)` : (isLeftBattingCurrent ? `${currentInnings?.runs ?? 0}/${currentInnings?.wickets ?? 0} (${currentInnings?.overs ?? 0}.${currentInnings?.balls ?? 0} ov)` : 'Yet to bat')}
+                        </div>
+                        {leftTeamInnings && (
+                          <div style={{ fontFamily: 'var(--font-data)', fontSize: '0.72rem', color: 'rgba(255, 255, 255, 0.4)' }}>
+                            Main: {leftTeamInnings.runs}/{leftTeamInnings.wickets} ({leftTeamInnings.overs}.{leftTeamInnings.balls} ov)
+                          </div>
+                        )}
+                      </div>
+                    ) : leftTeamInnings ? (
                       <div style={{ fontFamily: 'var(--font-data)', fontSize: '0.85rem', color: 'var(--color-gold)', fontWeight: 700, marginTop: '2px' }}>
                         {leftTeamInnings.runs}/{leftTeamInnings.wickets} ({leftTeamInnings.overs}.{leftTeamInnings.balls} ov)
                       </div>
@@ -554,8 +549,13 @@ function ScorecardContent() {
                         {currentInnings.runs} / {currentInnings.wickets}
                       </div>
                       <div className="scorecard-overs-text" style={{ fontFamily: 'var(--font-data)', fontSize: '0.85rem', fontWeight: 700, color: 'var(--color-paper)', whiteSpace: 'nowrap' }}>
-                        {currentInnings.overs}.{currentInnings.balls} / {match.oversPerInnings} Overs
+                        {currentInnings.overs}.{currentInnings.balls} / {isSuperOverMatch ? '1.0' : match.oversPerInnings} Overs
                       </div>
+                      {isSuperOverMatch && (
+                        <div style={{ marginTop: '4px', display: 'inline-block', background: 'rgba(245, 158, 11, 0.2)', border: '1px solid #F59E0B', color: '#FBBF24', fontSize: '0.72rem', fontWeight: 800, padding: '2px 8px', borderRadius: '4px' }}>
+                          ⚡ SUPER OVER {match.currentInnings % 2 === 1 ? '1' : '2 (CHASE)'} (1 OV • 2 WKTS MAX)
+                        </div>
+                      )}
                       <div style={{ fontFamily: 'var(--font-body)', fontSize: '0.72rem', color: 'rgba(255, 255, 255, 0.5)', marginTop: '2px', whiteSpace: 'nowrap' }}>
                         CRR: {getRunRate(currentInnings.runs, currentInnings.overs, currentInnings.balls)} {requiredRunRate !== '0.00' ? `• RRR: ${requiredRunRate}` : ''}
                       </div>
@@ -596,7 +596,18 @@ function ScorecardContent() {
                     <div style={{ fontFamily: 'var(--font-data)', fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.5)', fontWeight: 600 }}>
                       {rightTeam?.shortName}
                     </div>
-                    {rightTeamInnings ? (
+                    {isSuperOverMatch ? (
+                      <div style={{ marginTop: '2px' }}>
+                        <div style={{ fontFamily: 'var(--font-data)', fontSize: '0.85rem', color: '#F59E0B', fontWeight: 800 }}>
+                          ⚡ SO: {rightSO ? `${rightSO.runs}/${rightSO.wickets} (${rightSO.overs}.${rightSO.balls} ov)` : (isRightBattingCurrent ? `${currentInnings?.runs ?? 0}/${currentInnings?.wickets ?? 0} (${currentInnings?.overs ?? 0}.${currentInnings?.balls ?? 0} ov)` : 'Yet to bat')}
+                        </div>
+                        {rightTeamInnings && (
+                          <div style={{ fontFamily: 'var(--font-data)', fontSize: '0.72rem', color: 'rgba(255, 255, 255, 0.4)' }}>
+                            Main: {rightTeamInnings.runs}/{rightTeamInnings.wickets} ({rightTeamInnings.overs}.{rightTeamInnings.balls} ov)
+                          </div>
+                        )}
+                      </div>
+                    ) : rightTeamInnings ? (
                       <div style={{ fontFamily: 'var(--font-data)', fontSize: '0.85rem', color: 'var(--color-gold)', fontWeight: 700, marginTop: '2px' }}>
                         {rightTeamInnings.runs}/{rightTeamInnings.wickets} ({rightTeamInnings.overs}.{rightTeamInnings.balls} ov)
                       </div>
@@ -664,7 +675,23 @@ function ScorecardContent() {
                   </div>
 
                   <div className="scorecard-mobile-card-scores left">
-                    {leftTeamInnings ? (
+                    {isSuperOverMatch ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                        <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
+                          <span className="scorecard-mobile-big-score" style={{ color: '#F59E0B' }}>
+                            {leftSO ? `${leftSO.runs}/${leftSO.wickets}` : isLeftBattingCurrent ? `${currentInnings?.runs ?? 0}/${currentInnings?.wickets ?? 0}` : '-'}
+                          </span>
+                          <span className="scorecard-mobile-overs-tag">
+                            ({leftSO ? `${leftSO.overs}.${leftSO.balls}` : isLeftBattingCurrent ? `${currentInnings?.overs ?? 0}.${currentInnings?.balls ?? 0}` : '0.0'} ov)
+                          </span>
+                        </div>
+                        {leftTeamInnings && (
+                          <span style={{ fontSize: '0.68rem', color: 'rgba(255, 255, 255, 0.4)', marginTop: '1px' }}>
+                            Main: {leftTeamInnings.runs}/{leftTeamInnings.wickets}
+                          </span>
+                        )}
+                      </div>
+                    ) : leftTeamInnings ? (
                       <>
                         <span className="scorecard-mobile-big-score">{leftTeamInnings.runs}/{leftTeamInnings.wickets}</span>
                         <span className="scorecard-mobile-overs-tag">({leftTeamInnings.overs}.{leftTeamInnings.balls} ov)</span>
@@ -703,7 +730,23 @@ function ScorecardContent() {
                   </div>
 
                   <div className="scorecard-mobile-card-scores right">
-                    {rightTeamInnings ? (
+                    {isSuperOverMatch ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                        <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
+                          <span className="scorecard-mobile-big-score" style={{ color: '#F59E0B' }}>
+                            {rightSO ? `${rightSO.runs}/${rightSO.wickets}` : isRightBattingCurrent ? `${currentInnings?.runs ?? 0}/${currentInnings?.wickets ?? 0}` : '-'}
+                          </span>
+                          <span className="scorecard-mobile-overs-tag">
+                            ({rightSO ? `${rightSO.overs}.${rightSO.balls}` : isRightBattingCurrent ? `${currentInnings?.overs ?? 0}.${currentInnings?.balls ?? 0}` : '0.0'} ov)
+                          </span>
+                        </div>
+                        {rightTeamInnings && (
+                          <span style={{ fontSize: '0.68rem', color: 'rgba(255, 255, 255, 0.4)', marginTop: '1px' }}>
+                            Main: {rightTeamInnings.runs}/{rightTeamInnings.wickets}
+                          </span>
+                        )}
+                      </div>
+                    ) : rightTeamInnings ? (
                       <>
                         <span className="scorecard-mobile-big-score">{rightTeamInnings.runs}/{rightTeamInnings.wickets}</span>
                         <span className="scorecard-mobile-overs-tag">({rightTeamInnings.overs}.{rightTeamInnings.balls} ov)</span>
@@ -726,7 +769,11 @@ function ScorecardContent() {
                   {match.status === 'LIVE' ? (
                     <>
                       <span className="dot" />
-                      <span>INNINGS {match.currentInnings} • {currentInnings?.overs}.{currentInnings?.balls}/{match.oversPerInnings} OV</span>
+                      <span>
+                        {isSuperOverMatch
+                          ? `⚡ SUPER OVER ${match.currentInnings % 2 === 1 ? '1' : '2 (CHASE)'} • ${currentInnings?.overs}.${currentInnings?.balls}/1.0 OV`
+                          : `INNINGS ${match.currentInnings} • ${currentInnings?.overs}.${currentInnings?.balls}/${match.oversPerInnings} OV`}
+                      </span>
                     </>
                   ) : (
                     <span>{match.status === 'UPCOMING' ? 'UPCOMING FIXTURE' : match.status}</span>
@@ -1134,6 +1181,32 @@ function ScorecardContent() {
           >
             <span>🎙️</span> Ball-by-Ball Timeline
           </button>
+
+          <button
+            onClick={() => setViewMode('SQUADS')}
+            style={{
+              flex: '1 1 auto',
+              minHeight: '40px',
+              padding: '8px 16px',
+              borderRadius: '9px',
+              border: 'none',
+              background: viewMode === 'SQUADS' ? 'var(--color-accent, #C0272D)' : 'transparent',
+              color: viewMode === 'SQUADS' ? '#FFFFFF' : 'rgba(255, 255, 255, 0.7)',
+              fontWeight: 800,
+              fontSize: '0.85rem',
+              fontFamily: 'var(--font-display)',
+              textTransform: 'uppercase',
+              letterSpacing: '0.04em',
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+              transition: 'all 0.2s ease',
+            }}
+          >
+            <span>👥</span> Teams & Squads
+          </button>
         </div>
 
         {/* VIEW 1: MATCH WORM & GRAPH */}
@@ -1175,6 +1248,293 @@ function ScorecardContent() {
             <BallTimelineFilter innings={selectedInnings} ballsPerOver={ballsPerOver} match={match} />
           </div>
         )}
+
+        {/* VIEW 4: SQUADS & PLAYING XI */}
+        {viewMode === 'SQUADS' && (() => {
+          const buildSquad = (team: any, teamId: string) => {
+            const playerMap = new Map<string, any>();
+
+            (team?.tournamentSquads || []).forEach((ts: any) => {
+              if (ts.player?.id) {
+                playerMap.set(ts.player.id, { ...ts.player, source: 'squad' });
+              }
+            });
+
+            (team?.teamPlayers || []).forEach((tp: any) => {
+              if (tp.player?.id) {
+                const existing = playerMap.get(tp.player.id) || {};
+                playerMap.set(tp.player.id, {
+                  ...tp.player,
+                  ...existing,
+                  jerseyNumber: tp.jerseyNumber ?? tp.player.jerseyNumber ?? existing.jerseyNumber,
+                  role: tp.role ?? tp.player.role ?? existing.role,
+                });
+              }
+            });
+
+            allInnings.forEach((inn: any) => {
+              if (inn.battingTeamId === teamId) {
+                (inn.battingScores || []).forEach((bs: any) => {
+                  if (bs.player?.id) {
+                    const existing = playerMap.get(bs.player.id) || bs.player;
+                    playerMap.set(bs.player.id, {
+                      ...existing,
+                      hasPlayed: true,
+                      batted: true,
+                      battingSummary: `${bs.runs} (${bs.balls})${bs.isOut ? '' : '*'}`,
+                    });
+                  }
+                });
+              }
+              if (inn.bowlingTeamId === teamId) {
+                (inn.bowlingScores || []).forEach((bw: any) => {
+                  if (bw.player?.id) {
+                    const existing = playerMap.get(bw.player.id) || bw.player;
+                    playerMap.set(bw.player.id, {
+                      ...existing,
+                      hasPlayed: true,
+                      bowled: true,
+                      bowlingSummary: `${bw.wickets}/${bw.runsConceded} (${bw.overs}.${bw.balls} ov)`,
+                    });
+                  }
+                });
+              }
+            });
+
+            return Array.from(playerMap.values()).sort((a, b) => {
+              if (a.hasPlayed && !b.hasPlayed) return -1;
+              if (!a.hasPlayed && b.hasPlayed) return 1;
+              return (a.jerseyNumber ?? 999) - (b.jerseyNumber ?? 999);
+            });
+          };
+
+          const squadA = buildSquad(match.teamA, match.teamAId);
+          const squadB = buildSquad(match.teamB, match.teamBId);
+
+          return (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px', marginBottom: '24px' }}>
+              {/* TEAM A SQUAD CARD */}
+              <div
+                style={{
+                  background: 'var(--color-paper-dark)',
+                  border: '1.5px solid var(--color-border-dark)',
+                  borderRadius: 'var(--radius-md)',
+                  overflow: 'hidden',
+                  boxShadow: '0 8px 24px rgba(0,0,0,0.3)',
+                }}
+              >
+                <div
+                  style={{
+                    background: 'rgba(192, 39, 45, 0.15)',
+                    borderBottom: '1px solid rgba(192, 39, 45, 0.3)',
+                    padding: '16px 20px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    {match.teamA?.logoUrl ? (
+                      <img src={match.teamA.logoUrl} alt={match.teamA.name} style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover', border: '1.5px solid rgba(255,255,255,0.2)' }} />
+                    ) : (
+                      <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem' }}>🏏</div>
+                    )}
+                    <div>
+                      <div style={{ fontWeight: 800, fontSize: '1.1rem', color: '#FFF', fontFamily: 'var(--font-display)', textTransform: 'uppercase' }}>
+                        {match.teamA?.name}
+                      </div>
+                      <div style={{ fontSize: '0.76rem', color: 'rgba(255,255,255,0.5)', fontFamily: 'var(--font-data)' }}>
+                        {match.teamA?.shortName} • Playing Squad
+                      </div>
+                    </div>
+                  </div>
+                  <span style={{ background: 'rgba(255,255,255,0.1)', color: 'var(--color-gold)', padding: '4px 10px', borderRadius: '9999px', fontSize: '0.78rem', fontWeight: 800, fontFamily: 'var(--font-data)' }}>
+                    {squadA.length} Players
+                  </span>
+                </div>
+
+                <div style={{ padding: '8px 0' }}>
+                  {squadA.length === 0 ? (
+                    <div style={{ padding: '24px', textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontStyle: 'italic' }}>
+                      No squad registered for this team yet.
+                    </div>
+                  ) : (
+                    squadA.map((p: any, idx: number) => (
+                      <div
+                        key={p.id || idx}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          padding: '10px 18px',
+                          borderBottom: idx === squadA.length - 1 ? 'none' : '1px solid rgba(255, 255, 255, 0.04)',
+                          background: p.hasPlayed ? 'rgba(245, 158, 11, 0.03)' : 'transparent',
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                          <span
+                            style={{
+                              width: '28px',
+                              height: '28px',
+                              borderRadius: '50%',
+                              background: 'rgba(255, 255, 255, 0.08)',
+                              color: 'rgba(255, 255, 255, 0.7)',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontSize: '0.75rem',
+                              fontWeight: 800,
+                              fontFamily: 'var(--font-data)',
+                            }}
+                          >
+                            {p.jerseyNumber ? `#${p.jerseyNumber}` : idx + 1}
+                          </span>
+                          <div>
+                            <div style={{ fontWeight: 700, color: 'var(--color-paper)', fontSize: '0.9rem' }}>
+                              {p.name}
+                            </div>
+                            {(p.battingStyle || p.bowlingStyle) && (
+                              <div style={{ fontSize: '0.72rem', color: 'rgba(255, 255, 255, 0.45)', marginTop: '2px', display: 'flex', gap: '6px' }}>
+                                {p.battingStyle && <span>{p.battingStyle}</span>}
+                                {p.battingStyle && p.bowlingStyle && <span>•</span>}
+                                {p.bowlingStyle && <span>{p.bowlingStyle}</span>}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {p.hasPlayed && (
+                          <div style={{ textAlign: 'right', fontSize: '0.75rem' }}>
+                            {p.batted && (
+                              <div style={{ color: 'var(--color-gold)', fontWeight: 700, fontFamily: 'var(--font-data)' }}>
+                                🏏 {p.battingSummary}
+                              </div>
+                            )}
+                            {p.bowled && (
+                              <div style={{ color: '#34D399', fontWeight: 700, fontFamily: 'var(--font-data)', marginTop: '2px' }}>
+                                🎯 {p.bowlingSummary}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+
+              {/* TEAM B SQUAD CARD */}
+              <div
+                style={{
+                  background: 'var(--color-paper-dark)',
+                  border: '1.5px solid var(--color-border-dark)',
+                  borderRadius: 'var(--radius-md)',
+                  overflow: 'hidden',
+                  boxShadow: '0 8px 24px rgba(0,0,0,0.3)',
+                }}
+              >
+                <div
+                  style={{
+                    background: 'rgba(59, 130, 246, 0.15)',
+                    borderBottom: '1px solid rgba(59, 130, 246, 0.3)',
+                    padding: '16px 20px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    {match.teamB?.logoUrl ? (
+                      <img src={match.teamB.logoUrl} alt={match.teamB.name} style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover', border: '1.5px solid rgba(255,255,255,0.2)' }} />
+                    ) : (
+                      <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem' }}>🦁</div>
+                    )}
+                    <div>
+                      <div style={{ fontWeight: 800, fontSize: '1.1rem', color: '#FFF', fontFamily: 'var(--font-display)', textTransform: 'uppercase' }}>
+                        {match.teamB?.name}
+                      </div>
+                      <div style={{ fontSize: '0.76rem', color: 'rgba(255,255,255,0.5)', fontFamily: 'var(--font-data)' }}>
+                        {match.teamB?.shortName} • Playing Squad
+                      </div>
+                    </div>
+                  </div>
+                  <span style={{ background: 'rgba(255,255,255,0.1)', color: 'var(--color-gold)', padding: '4px 10px', borderRadius: '9999px', fontSize: '0.78rem', fontWeight: 800, fontFamily: 'var(--font-data)' }}>
+                    {squadB.length} Players
+                  </span>
+                </div>
+
+                <div style={{ padding: '8px 0' }}>
+                  {squadB.length === 0 ? (
+                    <div style={{ padding: '24px', textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontStyle: 'italic' }}>
+                      No squad registered for this team yet.
+                    </div>
+                  ) : (
+                    squadB.map((p: any, idx: number) => (
+                      <div
+                        key={p.id || idx}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          padding: '10px 18px',
+                          borderBottom: idx === squadB.length - 1 ? 'none' : '1px solid rgba(255, 255, 255, 0.04)',
+                          background: p.hasPlayed ? 'rgba(59, 130, 246, 0.03)' : 'transparent',
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                          <span
+                            style={{
+                              width: '28px',
+                              height: '28px',
+                              borderRadius: '50%',
+                              background: 'rgba(255, 255, 255, 0.08)',
+                              color: 'rgba(255, 255, 255, 0.7)',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontSize: '0.75rem',
+                              fontWeight: 800,
+                              fontFamily: 'var(--font-data)',
+                            }}
+                          >
+                            {p.jerseyNumber ? `#${p.jerseyNumber}` : idx + 1}
+                          </span>
+                          <div>
+                            <div style={{ fontWeight: 700, color: 'var(--color-paper)', fontSize: '0.9rem' }}>
+                              {p.name}
+                            </div>
+                            {(p.battingStyle || p.bowlingStyle) && (
+                              <div style={{ fontSize: '0.72rem', color: 'rgba(255, 255, 255, 0.45)', marginTop: '2px', display: 'flex', gap: '6px' }}>
+                                {p.battingStyle && <span>{p.battingStyle}</span>}
+                                {p.battingStyle && p.bowlingStyle && <span>•</span>}
+                                {p.bowlingStyle && <span>{p.bowlingStyle}</span>}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {p.hasPlayed && (
+                          <div style={{ textAlign: 'right', fontSize: '0.75rem' }}>
+                            {p.batted && (
+                              <div style={{ color: 'var(--color-gold)', fontWeight: 700, fontFamily: 'var(--font-data)' }}>
+                                🏏 {p.battingSummary}
+                              </div>
+                            )}
+                            {p.bowled && (
+                              <div style={{ color: '#34D399', fontWeight: 700, fontFamily: 'var(--font-data)', marginTop: '2px' }}>
+                                🎯 {p.bowlingSummary}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        })()}
 
         {/* VIEW 3: FULL SCORECARD */}
         {viewMode === 'SCORECARD' && (
@@ -1295,12 +1655,14 @@ function ScorecardContent() {
                           <div key={b.id || idx} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3px' }}>
                             <span
                               style={{
-                                width: '32px',
+                                minWidth: '32px',
+                                width: style.label.length > 2 ? 'auto' : '32px',
                                 height: '32px',
-                                borderRadius: '50%',
+                                padding: style.label.length > 2 ? '0 6px' : '0',
+                                borderRadius: style.label.length > 2 ? '16px' : '50%',
                                 background: style.bg,
                                 color: style.color,
-                                fontSize: '0.78rem',
+                                fontSize: style.label.length > 3 ? '0.68rem' : '0.78rem',
                                 fontWeight: 900,
                                 fontFamily: 'var(--font-data)',
                                 display: 'flex',
@@ -1457,6 +1819,43 @@ function ScorecardContent() {
                 </table>
               </div>
 
+              {/* EXTRAS ROW */}
+              {(() => {
+                const balls = selectedInnings.ballEvents || [];
+                const wides = balls.filter((b: any) => b.extraType === 'WIDE').reduce((acc: number, b: any) => acc + (b.extras || 1), 0);
+                const noBalls = balls.filter((b: any) => b.extraType === 'NO_BALL').reduce((acc: number, b: any) => acc + (b.extras || 1), 0);
+                const byes = balls.filter((b: any) => b.extraType === 'BYE').reduce((acc: number, b: any) => acc + (b.byeRuns || b.extras || 1), 0);
+                const legByes = balls.filter((b: any) => b.extraType === 'LEG_BYE').reduce((acc: number, b: any) => acc + (b.legByeRuns || b.extras || 1), 0);
+                const penalty = balls.filter((b: any) => b.extraType === 'PENALTY').reduce((acc: number, b: any) => acc + (b.extras || 0), 0);
+                const totalExtras = wides + noBalls + byes + legByes + penalty;
+
+                return (
+                  <div
+                    style={{
+                      padding: '10px 16px',
+                      background: 'rgba(255, 255, 255, 0.02)',
+                      borderTop: '1px solid rgba(255, 255, 255, 0.06)',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      fontSize: '0.86rem',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                      <span style={{ fontWeight: 800, color: 'var(--color-paper)', fontFamily: 'var(--font-display)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+                        Extras
+                      </span>
+                      <span style={{ fontSize: '0.78rem', color: 'rgba(255, 255, 255, 0.55)', fontFamily: 'var(--font-body)' }}>
+                        (b {byes}, lb {legByes}, w {wides}, nb {noBalls}{penalty > 0 ? `, p ${penalty}` : ''})
+                      </span>
+                    </div>
+                    <span style={{ fontWeight: 800, color: 'var(--color-paper)', fontFamily: 'var(--font-data)', fontSize: '0.92rem' }}>
+                      {totalExtras}
+                    </span>
+                  </div>
+                );
+              })()}
+
               {/* Total & Run Rate Footer Row */}
               <div
                 style={{
@@ -1578,6 +1977,69 @@ function ScorecardContent() {
                 </table>
               </div>
             </div>
+
+            {/* FALL OF WICKETS (WICKET FALLOUT) CARD */}
+            {(() => {
+              const allBalls = selectedInnings.ballEvents || [];
+              const chronologicalBalls = [...allBalls].sort((a: any, b: any) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+              const wicketBalls = chronologicalBalls.filter((b: any) => b.isWicket);
+
+              if (wicketBalls.length === 0) return null;
+
+              return (
+                <div
+                  style={{
+                    background: 'var(--color-paper-dark)',
+                    border: '1.5px solid var(--color-border-dark)',
+                    borderRadius: 'var(--radius-md)',
+                    padding: '16px 18px',
+                    boxShadow: '0 8px 24px rgba(0,0,0,0.3)',
+                  }}
+                >
+                  <div style={{ fontWeight: 800, color: 'var(--color-gold)', fontFamily: 'var(--font-display)', fontSize: '1.05rem', textTransform: 'uppercase', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span>⚡</span> Fall of Wickets
+                  </div>
+
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+                    {wicketBalls.map((b: any, idx: number) => {
+                      const ballIndex = chronologicalBalls.findIndex((cb: any) => cb.id === b.id);
+                      const runsUpToWicket = chronologicalBalls
+                        .slice(0, ballIndex + 1)
+                        .reduce((sum: number, cb: any) => sum + (cb.runs || 0) + (cb.extras || 0), 0);
+
+                      const batterName = b.dismissedPlayer?.name || b.batsman?.name || 'Batter';
+                      const overStr = `${b.overNumber}.${b.ballNumber}`;
+
+                      return (
+                        <div
+                          key={b.id || idx}
+                          style={{
+                            background: 'rgba(255, 255, 255, 0.04)',
+                            border: '1px solid rgba(255, 255, 255, 0.08)',
+                            borderRadius: '8px',
+                            padding: '8px 12px',
+                            fontSize: '0.84rem',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                          }}
+                        >
+                          <span style={{ fontWeight: 900, color: '#EF4444', fontFamily: 'var(--font-data)' }}>
+                            {idx + 1}-{runsUpToWicket}
+                          </span>
+                          <span style={{ color: 'var(--color-paper)', fontWeight: 600 }}>
+                            {batterName}
+                          </span>
+                          <span style={{ color: 'rgba(255, 255, 255, 0.45)', fontSize: '0.75rem', fontFamily: 'var(--font-data)' }}>
+                            ({overStr} ov)
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })()}
 
           </div>
         ) : (

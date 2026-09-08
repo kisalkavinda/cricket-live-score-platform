@@ -12,6 +12,7 @@ import {
   editBallDeliverySchema,
   startSuperOverSchema,
   updateMatchRulesSchema,
+  renamePlayerSchema,
 } from '@/lib/validations/scoring';
 import {
   createMatch,
@@ -181,6 +182,15 @@ export async function startSuperOverAction(matchId: string, input: { battingFirs
   return await startSuperOver(matchId.trim(), parsed.data);
 }
 
+export async function undoSuperOverAction(matchId: string) {
+  await requireAdminAuth();
+  if (!matchId || typeof matchId !== 'string') {
+    throw new Error('Invalid match ID.');
+  }
+  const { undoSuperOver } = await import('./scoring-service');
+  return await undoSuperOver(matchId.trim());
+}
+
 export async function updateMatchRulesAction(matchId: string, input: { oversPerInnings?: number; ballsPerOver?: number }) {
   await requireAdminAuth();
   if (!matchId || typeof matchId !== 'string') {
@@ -192,6 +202,21 @@ export async function updateMatchRulesAction(matchId: string, input: { oversPerI
   }
   const { updateMatchRules } = await import('./scoring-service');
   return await updateMatchRules(matchId.trim(), parsed.data);
+}
+
+export async function renamePlayerAction(input: {
+  playerId: string;
+  newName: string;
+  jerseyNumber?: number | null;
+  matchId?: string;
+}) {
+  await requireAdminAuth();
+  const parsed = renamePlayerSchema.safeParse(input);
+  if (!parsed.success) {
+    throw new Error(`Invalid rename player input: ${parsed.error.issues[0]?.message}`);
+  }
+  const { renamePlayer } = await import('./scoring-service');
+  return await renamePlayer(parsed.data);
 }
 
 export async function deleteMatchAction(matchId: string) {

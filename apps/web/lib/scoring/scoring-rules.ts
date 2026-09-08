@@ -114,51 +114,15 @@ export function validateDismissalLegality(params: {
 
 /**
  * Evaluates whether the next delivery is a Free Hit from ball history.
- * In cricket rules:
- * - A No-ball triggers a Free Hit on the next delivery.
- * - If a Wide or another No-ball is bowled on the Free Hit, the Free Hit is retained.
- * - A legal delivery consumes the Free Hit.
+ * Under tournament / CPL rules:
+ * - There is NO Free Hit after a No-ball ("after noball there is no freehit").
+ * - After a No-ball, the delivery is re-bowled as a normal delivery, and if a wicket
+ *   falls on subsequent deliveries, that wicket is completely valid (Bowled, Caught, LBW, Stumped, etc.).
  *
- * @param ballEvents Array of ball events ordered newest-first (createdAt desc)
+ * @param _ballEvents Array of ball events ordered newest-first (createdAt desc)
  */
-export function isFreeHitActive(ballEvents: Array<{ extraType?: string; isLegal?: boolean; createdAt?: any; overNumber?: number; ballNumber?: number }>): boolean {
-  if (!ballEvents || ballEvents.length === 0) return false;
-
-  const getBallTimestamp = (b: any): number => {
-    if (!b) return 0;
-    if (b.createdAt instanceof Date) {
-      const t = b.createdAt.getTime();
-      if (!isNaN(t)) return t;
-    }
-    if (typeof b.createdAt === 'string') {
-      const t = new Date(b.createdAt).getTime();
-      if (!isNaN(t)) return t;
-    }
-    if (typeof b.createdAt === 'number' && !isNaN(b.createdAt)) {
-      return b.createdAt;
-    }
-    if (typeof b.id === 'string' && b.id.startsWith('temp-')) {
-      const t = Number(b.id.replace('temp-', ''));
-      if (!isNaN(t)) return t;
-    }
-    return 0;
-  };
-
-  // Sort newest first (highest timestamp / latest over & ball)
-  const sorted = [...ballEvents].sort((a, b) => {
-    const tA = getBallTimestamp(a);
-    const tB = getBallTimestamp(b);
-    if (tA && tB && tA !== tB) return tB - tA;
-    const ovDiff = (b.overNumber ?? 0) - (a.overNumber ?? 0);
-    if (ovDiff !== 0) return ovDiff;
-    return (b.ballNumber ?? 0) - (a.ballNumber ?? 0);
-  });
-
-  for (const b of sorted) {
-    if (b.extraType === 'NO_BALL') return true;
-    if (b.extraType === 'WIDE') continue;
-    return false;
-  }
+export function isFreeHitActive(_ballEvents?: Array<{ extraType?: string; isLegal?: boolean; createdAt?: any; overNumber?: number; ballNumber?: number }>): boolean {
+  // Tournament Rule: No Free Hit after a No-ball. Subsequent deliveries permit all valid dismissals.
   return false;
 }
 
@@ -239,9 +203,22 @@ export function calculateDeliveryRuns(input: {
   }
 
   if (extraType === 'WIDE') {
-    const penalty = extraRunsParam > 0 ? extraRunsParam : 1;
-    const additionalRuns = rawRuns;
-    const totalWideRuns = penalty + additionalRuns;
+    // Under MCC Law 22:
+    // Every wide incurs at least a 1-run penalty.
+    // In addition, any runs completed by the batters or boundary runs are added to wides.
+    // E.g., boundary 4 + 1 wide penalty = 5 wides (all charged to bowler as extras).
+    // 1 run completed + 1 wide penalty = 2 wides.
+    let totalWideRuns = 1;
+    if (extraRunsParam > 0) {
+      if (rawRuns > 0 && extraRunsParam === 1) {
+        totalWideRuns = 1 + rawRuns;
+      } else {
+        totalWideRuns = Math.max(extraRunsParam, 1 + rawRuns);
+      }
+    } else if (rawRuns > 0) {
+      totalWideRuns = 1 + rawRuns;
+    }
+
     return {
       totalRuns: totalWideRuns,
       batterRuns: 0,
@@ -479,3 +456,63 @@ export function calculateBowlerMaidens(
   const map = calculateMaidensMap(allBalls, ballsPerOver);
   return map[bowlerId] || 0;
 }
+
+/**
+ * Priority sorter for matches:
+ * 1. LIVE matches first (most recently active/started first)
+ * 2. COMPLETED matches next, ordered from recent to past (newest completedAt/updatedAt first)
+ * 3. SCHEDULED / UPCOMING matches last, ordered chronologically (soonest scheduledAt first)
+ */
+export function sortMatchesByPriority<T extends {
+  status?: string | null;
+  completedAt?: string | Date | null;
+  updatedAt?: string | Date | null;
+  scheduledAt?: string | Date | null;
+  startedAt?: string | Date | null;
+  createdAt?: string | Date | null;
+}>(matches: T[]): T[] {
+  const getStatusRank = (status?: string | null): number => {
+    const s = (status || '').toUpperCase();
+    if (s === 'LIVE') return 1;
+    if (s === 'COMPLETED') return 2;
+    if (s === 'UPCOMING' || s === 'SCHEDULED') return 3;
+    return 4; // ABANDONED / CANCELLED / other
+  };
+
+  return [...matches].sort((a, b) => {
+    const rankA = getStatusRank(a.status);
+    const rankB = getStatusRank(b.status);
+
+    if (rankA !== rankB) {
+      return rankA - rankB;
+    }
+
+    // Secondary sorting within each status category:
+    if (rankA === 1) {
+      // LIVE: most recently started or updated first
+      const timeA = new Date(a.startedAt || a.updatedAt || a.createdAt || 0).getTime();
+      const timeB = new Date(b.startedAt || b.updatedAt || b.createdAt || 0).getTime();
+      return timeB - timeA;
+    }
+
+    if (rankA === 2) {
+      // COMPLETED: recent to past (descending)
+      const timeA = new Date(a.completedAt || a.updatedAt || a.scheduledAt || a.createdAt || 0).getTime();
+      const timeB = new Date(b.completedAt || b.updatedAt || b.scheduledAt || b.createdAt || 0).getTime();
+      return timeB - timeA;
+    }
+
+    if (rankA === 3) {
+      // UPCOMING / SCHEDULED: soonest upcoming first (ascending)
+      const timeA = new Date(a.scheduledAt || a.createdAt || 0).getTime();
+      const timeB = new Date(b.scheduledAt || b.createdAt || 0).getTime();
+      return timeA - timeB;
+    }
+
+    // Other statuses (e.g. ABANDONED): most recent first
+    const timeA = new Date(a.updatedAt || a.createdAt || 0).getTime();
+    const timeB = new Date(b.updatedAt || b.createdAt || 0).getTime();
+    return timeB - timeA;
+  });
+}
+

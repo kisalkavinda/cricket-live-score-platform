@@ -16,6 +16,22 @@ export function notifyMatchUpdated(updatedMatch: any) {
     .catch(() => {});
 }
 
+import {
+  type ExtraTypeValue,
+  type WicketTypeValue,
+  BOWLER_CREDITED_WICKETS,
+  isBowlerCreditedDismissal,
+  validateDismissalLegality,
+  isFreeHitActive,
+  calculateDeliveryRuns,
+  calculateBowlerRunsFromDelivery,
+  getInningsWicketLimit,
+  isAuthoritativeAllOut,
+  calculateMaidensMap,
+  calculateBowlerMaidens,
+  sortMatchesByPriority,
+} from './scoring-rules';
+
 export {
   type ExtraTypeValue,
   type WicketTypeValue,
@@ -29,20 +45,8 @@ export {
   isAuthoritativeAllOut,
   calculateMaidensMap,
   calculateBowlerMaidens,
-} from './scoring-rules';
-
-import {
-  ExtraTypeValue,
-  WicketTypeValue,
-  isBowlerCreditedDismissal,
-  validateDismissalLegality,
-  isFreeHitActive,
-  calculateDeliveryRuns,
-  calculateBowlerRunsFromDelivery,
-  getInningsWicketLimit,
-  isAuthoritativeAllOut,
-  calculateMaidensMap,
-} from './scoring-rules';
+  sortMatchesByPriority,
+};
 
 export type MatchStatusType = 'UPCOMING' | 'LIVE' | 'COMPLETED' | 'ABANDONED';
 export type InningsStatusType = 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED';
@@ -89,11 +93,11 @@ export interface RecordDeliveryInput {
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * Returns all matches grouped by status.
+ * Returns all matches grouped by status and prioritized.
  */
 export async function getMatchesList() {
   const matches = await (prisma as any).match.findMany({
-    orderBy: [{ status: 'asc' }, { scheduledAt: 'desc' }, { createdAt: 'desc' }],
+    orderBy: [{ scheduledAt: 'desc' }, { createdAt: 'desc' }],
     select: {
       id: true,
       status: true,
@@ -129,7 +133,7 @@ export async function getMatchesList() {
     },
   });
 
-  return matches;
+  return sortMatchesByPriority(matches);
 }
 
 
@@ -221,6 +225,7 @@ export async function updateMatchRules(matchId: string, input: { oversPerInnings
 
   const fullMatch = await getMatchDetail(matchId);
   if (fullMatch) {
+    notifyMatchUpdated(fullMatch);
     buildMatchBroadcastPayload(fullMatch)
       .then((p) => { if (p) broadcastScoreUpdate(p); })
       .catch(() => {});
@@ -320,13 +325,13 @@ export async function buildMatchBroadcastPayload(matchOrId: string | any): Promi
       crr = (currentInnings.runs / totalOversDecimal).toFixed(2);
     }
 
-    if (currentInnings.inningsNumber === 2 || currentInnings.inningsNumber === 4) {
-      const firstInnNum = currentInnings.inningsNumber === 2 ? 1 : 3;
+    if (currentInnings.inningsNumber === 2 || (currentInnings.inningsNumber >= 4 && currentInnings.inningsNumber % 2 === 0)) {
+      const firstInnNum = currentInnings.inningsNumber === 2 ? 1 : currentInnings.inningsNumber - 1;
       const inn1 = match.innings?.find((i: any) => i.inningsNumber === firstInnNum);
       if (inn1) {
         target = inn1.runs + 1;
         const runsNeeded = Math.max(0, target - currentInnings.runs);
-        const totalOvers = currentInnings.inningsNumber === 4 ? 1 : match.oversPerInnings;
+        const totalOvers = currentInnings.inningsNumber >= 4 ? 1 : match.oversPerInnings;
         const totalBallsPossible = totalOvers * matchBallsPerOver;
         const ballsBowled = currentInnings.overs * matchBallsPerOver + currentInnings.balls;
         const ballsRemaining = Math.max(0, totalBallsPossible - ballsBowled);
@@ -344,6 +349,7 @@ export async function buildMatchBroadcastPayload(matchOrId: string | any): Promi
           ballsRemaining,
           rrr: rrr || '0.00',
           crr,
+          isSuperOver: currentInnings.inningsNumber >= 3,
         };
       }
     }
@@ -403,18 +409,43 @@ export async function buildMatchBroadcastPayload(matchOrId: string | any): Promi
     }
   }
 
-  const recentBalls = (currentInnings?.ballEvents || []).slice(0, matchBallsPerOver).map((b: any) => ({
-    id: b.id || '',
-    overNumber: b.overNumber ?? 0,
-    ballNumber: b.ballNumber ?? 0,
-    runs: b.runs ?? 0,
-    extras: b.extras ?? 0,
-    extraType: b.extraType || 'NONE',
-    isLegal: b.isLegal ?? true,
-    isWicket: b.isWicket ?? false,
-    wicketType: b.wicketType || null,
-    display: b.isWicket ? 'W' : (b.extraType === 'WIDE' ? 'WD' : (b.extraType === 'NO_BALL' ? 'NB' : `${b.runs ?? 0}`)),
-  }));
+  const recentBalls = (currentInnings?.ballEvents || []).slice(0, matchBallsPerOver).map((b: any) => {
+    const runs = Number(b.runs || 0);
+    const extraRuns = Number(b.extras || 0);
+    let display = `${runs}`;
+    if (b.isWicket) {
+      if (b.extraType === 'WIDE') {
+        display = runs > 0 ? `WD+${runs}+W` : (extraRuns > 1 ? `WD+${extraRuns - 1}+W` : 'WD+W');
+      } else if (b.extraType === 'NO_BALL') {
+        display = runs > 0 ? `NB+${runs}+W` : 'NB+W';
+      } else if (runs > 0) {
+        display = `${runs}+W`;
+      } else {
+        display = 'W';
+      }
+    } else if (b.extraType === 'WIDE') {
+      display = extraRuns > 1 ? `WD+${extraRuns - 1}` : 'WD';
+    } else if (b.extraType === 'NO_BALL') {
+      display = runs > 0 ? `NB+${runs}` : 'NB';
+    } else if (b.extraType === 'BYE') {
+      display = `${extraRuns || 1}B`;
+    } else if (b.extraType === 'LEG_BYE') {
+      display = `${extraRuns || 1}LB`;
+    }
+
+    return {
+      id: b.id || '',
+      overNumber: b.overNumber ?? 0,
+      ballNumber: b.ballNumber ?? 0,
+      runs,
+      extras: extraRuns,
+      extraType: b.extraType || 'NONE',
+      isLegal: b.isLegal ?? true,
+      isWicket: b.isWicket ?? false,
+      wicketType: b.wicketType || null,
+      display,
+    };
+  });
 
   const isFreeHit = isFreeHitActive(currentInnings?.ballEvents || []);
 
@@ -469,6 +500,15 @@ export async function buildMatchBroadcastPayload(matchOrId: string | any): Promi
           crr,
           rrr,
           target,
+          extrasBreakdown: (() => {
+            const balls = currentInnings.ballEvents || [];
+            const wides = balls.filter((b: any) => b.extraType === 'WIDE').reduce((acc: number, b: any) => acc + (b.extras || 1), 0);
+            const noBalls = balls.filter((b: any) => b.extraType === 'NO_BALL').reduce((acc: number, b: any) => acc + (b.extras || 1), 0);
+            const byes = balls.filter((b: any) => b.extraType === 'BYE').reduce((acc: number, b: any) => acc + (b.byeRuns || b.extras || 1), 0);
+            const legByes = balls.filter((b: any) => b.extraType === 'LEG_BYE').reduce((acc: number, b: any) => acc + (b.legByeRuns || b.extras || 1), 0);
+            const penalty = balls.filter((b: any) => b.extraType === 'PENALTY').reduce((acc: number, b: any) => acc + (b.extras || 0), 0);
+            return { wides, noBalls, byes, legByes, penalty, total: wides + noBalls + byes + legByes + penalty };
+          })(),
         }
       : null,
     allInningsSummary: (match.innings || []).map((inn: any) => ({
@@ -963,6 +1003,28 @@ export async function recordDelivery(inningsId: string, input: RecordDeliveryInp
       const incomingBatterId = input.newBatterId || null;
 
       if (incomingBatterId) {
+        if (incomingBatterId === dismissedPlayerId) {
+          throw new Error('The incoming batter cannot be the player who was just dismissed.');
+        }
+        const existingIncoming = await tx.inningsBatter.findUnique({
+          where: { inningsId_playerId: { inningsId, playerId: incomingBatterId } },
+        });
+        const isRetHurt = existingIncoming?.dismissal?.toLowerCase().includes('retired hurt');
+        if (existingIncoming?.isOut && !isRetHurt) {
+          throw new Error('Cannot select a player who is already out in this innings.');
+        }
+        const dismissedBall = await tx.ballEvent.findFirst({
+          where: {
+            inningsId,
+            isWicket: true,
+            dismissedPlayerId: incomingBatterId,
+            wicketType: { not: 'RETIRED_HURT' },
+          },
+        });
+        if (dismissedBall) {
+          throw new Error('Cannot select a player who is already out in this innings.');
+        }
+
         const batterCount = await tx.inningsBatter.count({ where: { inningsId } });
         await tx.inningsBatter.upsert({
           where: { inningsId_playerId: { inningsId, playerId: incomingBatterId } },
@@ -997,9 +1059,15 @@ export async function recordDelivery(inningsId: string, input: RecordDeliveryInp
     }
 
     // 6. Strike rotation
-    // Physical runs completed (bat runs, byes, leg-byes) rotate strike on odd runs
+    // Physical runs completed (bat runs, byes, leg-byes, and runs run on a wide) rotate strike on odd runs
+    const wideRanRuns = (extraType === 'WIDE') ? Math.max(0, delivery.wideRuns - 1) : 0;
+    const isWideBoundary = (extraType === 'WIDE') && (delivery.wideRuns === 5 || input.commentary?.toLowerCase().includes('boundary'));
+    const shouldRotateWide = (extraType === 'WIDE') && !isWideBoundary && (wideRanRuns % 2 !== 0);
+
     const physicalRunsTaken = delivery.batterRuns + delivery.byeRuns + delivery.legByeRuns;
-    if (physicalRunsTaken % 2 !== 0) {
+    const shouldRotateOther = physicalRunsTaken % 2 !== 0;
+
+    if (shouldRotateWide || shouldRotateOther) {
       const temp = nextStrikerId;
       nextStrikerId = nextNonStrikerId;
       nextNonStrikerId = temp;
@@ -1049,28 +1117,31 @@ export async function recordDelivery(inningsId: string, input: RecordDeliveryInp
           resultNote = `${bowlingTeamName} won by ${runsMargin} run${runsMargin === 1 ? '' : 's'}`;
         }
       }
-    } else if (innings.inningsNumber === 4) {
+    } else if (innings.inningsNumber >= 4 && innings.inningsNumber % 2 === 0) {
       // Super Over 2 chase logic (1 over limit, 2 wickets max)
-      const inn3 = innings.match.innings.find((i: any) => i.inningsNumber === 3);
-      const target = (inn3?.runs || 0) + 1;
+      const firstInnNum = innings.inningsNumber - 1;
+      const innFirst = innings.match.innings.find((i: any) => i.inningsNumber === firstInnNum);
+      const target = (innFirst?.runs ?? 0) + 1;
       if (nextRuns >= target) {
         matchFinished = true;
         inningsFinished = true;
         winnerTeamId = innings.battingTeamId;
-        resultNote = `${battingTeamName} won the Super Over!`;
+        const wicketsRemaining = 2 - nextWickets;
+        resultNote = `${battingTeamName} won the Super Over${wicketsRemaining > 0 ? ` by ${wicketsRemaining} wicket${wicketsRemaining === 1 ? '' : 's'}` : ''}!`;
       } else if (nextWickets >= 2 || (isOverComplete && nextOvers >= 1)) {
         matchFinished = true;
         inningsFinished = true;
         if (nextRuns === target - 1) {
-          resultNote = 'Super Over Tied!';
+          resultNote = 'Super Over Tied! (Another Super Over may be played)';
+          winnerTeamId = null;
         } else {
           winnerTeamId = innings.bowlingTeamId;
           const runsMargin = (target - 1) - nextRuns;
           resultNote = `${bowlingTeamName} won the Super Over by ${runsMargin} run${runsMargin === 1 ? '' : 's'}!`;
         }
       }
-    } else if (innings.inningsNumber === 3) {
-      // Super Over 1 logic (1 over limit, 2 wickets max)
+    } else if (innings.inningsNumber >= 3 && innings.inningsNumber % 2 === 1) {
+      // Super Over 1st innings logic (1 over limit, 2 wickets max)
       if (nextWickets >= 2 || (isOverComplete && nextOvers >= 1)) {
         inningsFinished = true;
       }
@@ -1091,6 +1162,16 @@ export async function recordDelivery(inningsId: string, input: RecordDeliveryInp
         status: inningsFinished ? 'COMPLETED' : 'IN_PROGRESS',
       },
     });
+
+    // 8.1 If Super Over 1 completed, set informative match note
+    if (inningsFinished && !matchFinished && innings.inningsNumber >= 3 && innings.inningsNumber % 2 === 1) {
+      await tx.match.update({
+        where: { id: innings.matchId },
+        data: {
+          resultNote: `Super Over 1 Completed (Target: ${nextRuns + 1} runs)`,
+        },
+      });
+    }
 
     // 9. Update Match if match finished (Innings 2 or Super Over 2 chase complete)
     if (matchFinished) {
@@ -1519,8 +1600,6 @@ export async function changeBowler(inningsId: string, bowlerId: string, operatio
   }
 
   await prisma.$transaction(async (tx: any) => {
-    await tx.$executeRaw`select id from "Innings" where id = ${inningsId} for update;`;
-
     if (operationId) {
       const existingOp = await tx.scoringOperation.findUnique({
         where: { operationId },
@@ -1644,8 +1723,6 @@ export async function swapStriker(inningsId: string, operationId?: string, clien
   const newNonStrikerId = innings.currentStrikerId;
 
   await prisma.$transaction(async (tx: any) => {
-    await tx.$executeRaw`select id from "Innings" where id = ${inningsId} for update;`;
-
     if (operationId) {
       const existingOp = await tx.scoringOperation.findUnique({
         where: { operationId },
@@ -1697,6 +1774,9 @@ export async function swapStriker(inningsId: string, operationId?: string, clien
         throw err;
       }
     }
+  }, {
+    maxWait: 20000,
+    timeout: 45000,
   });
 
   (prisma as any).adminAuditLog.create({
@@ -1750,6 +1830,7 @@ export async function switchBatter(inningsId: string, role: 'striker' | 'nonStri
     include: {
       match: true,
       battingTeam: { include: { teamPlayers: true, tournamentSquads: true } },
+      battingScores: true,
     },
   });
 
@@ -1768,9 +1849,29 @@ export async function switchBatter(inningsId: string, role: 'striker' | 'nonStri
     }
   }
 
-  await prisma.$transaction(async (tx: any) => {
-    await tx.$executeRaw`select id from "Innings" where id = ${inningsId} for update;`;
+  // Verify batter is not already dismissed in this innings (MCC Law 25: an out batter cannot bat again)
+  const existingBatterRecord = await (prisma as any).inningsBatter.findUnique({
+    where: { inningsId_playerId: { inningsId, playerId: newPlayerId } },
+  });
+  const isRetHurtDismissal = existingBatterRecord?.dismissal?.toLowerCase().includes('retired hurt');
+  if (existingBatterRecord?.isOut && !isRetHurtDismissal) {
+    return { success: false, error: 'Cannot select a player who is already out in this innings (MCC Law 25).' };
+  }
+  const previouslyDismissedBall = await (prisma as any).ballEvent.findFirst({
+    where: {
+      inningsId,
+      isWicket: true,
+      dismissedPlayerId: newPlayerId,
+      wicketType: { not: 'RETIRED_HURT' },
+    },
+  });
+  if (previouslyDismissedBall) {
+    return { success: false, error: 'Cannot select a player who is already out in this innings (MCC Law 25).' };
+  }
 
+  const batterCount = innings.battingScores?.length || 0;
+
+  await prisma.$transaction(async (tx: any) => {
     if (operationId) {
       const existingOp = await tx.scoringOperation.findUnique({
         where: { operationId },
@@ -1779,8 +1880,6 @@ export async function switchBatter(inningsId: string, role: 'striker' | 'nonStri
         return existingOp.result;
       }
     }
-
-    const batterCount = await tx.inningsBatter.count({ where: { inningsId } });
 
     // Determine if newPlayerId is already active at the opposite role
     const isCurrentlyOtherRole = role === 'striker' 
@@ -1872,6 +1971,9 @@ export async function switchBatter(inningsId: string, role: 'striker' | 'nonStri
         throw err;
       }
     }
+  }, {
+    maxWait: 20000,
+    timeout: 45000,
   });
 
   (prisma as any).adminAuditLog.create({
@@ -1911,7 +2013,7 @@ export async function endInnings(inningsId: string) {
     data: { status: 'COMPLETED' },
   });
 
-  if (innings.inningsNumber === 1 || innings.inningsNumber === 3) {
+  if (innings.inningsNumber === 1 || (innings.inningsNumber >= 3 && innings.inningsNumber % 2 === 1)) {
     const nextInn = innings.inningsNumber + 1;
     // Create Next Innings with swapped teams
     await (prisma as any).innings.upsert({
@@ -1921,17 +2023,38 @@ export async function endInnings(inningsId: string) {
         inningsNumber: nextInn,
         battingTeamId: innings.bowlingTeamId,
         bowlingTeamId: innings.battingTeamId,
-        status: 'NOT_STARTED',
+        status: 'IN_PROGRESS',
+        runs: 0,
+        wickets: 0,
+        overs: 0,
+        balls: 0,
+        currentStrikerId: null,
+        currentNonStrikerId: null,
+        currentBowlerId: null,
       },
       update: {
         battingTeamId: innings.bowlingTeamId,
         bowlingTeamId: innings.battingTeamId,
+        status: 'IN_PROGRESS',
+        runs: 0,
+        wickets: 0,
+        overs: 0,
+        balls: 0,
+        currentStrikerId: null,
+        currentNonStrikerId: null,
+        currentBowlerId: null,
       },
     });
 
     await (prisma as any).match.update({
       where: { id: innings.matchId },
-      data: { currentInnings: nextInn },
+      data: {
+        status: 'LIVE',
+        currentInnings: nextInn,
+        resultNote: innings.inningsNumber >= 3
+          ? `Super Over 2 Chase In Progress (Target: ${innings.runs + 1} runs)`
+          : innings.match.resultNote,
+      },
     });
   }
 
@@ -1961,7 +2084,14 @@ export async function startSuperOver(matchId: string, input: { battingFirstTeamI
 
   const match = await (prisma as any).match.findUnique({
     where: { id: matchId },
-    include: { innings: { orderBy: { inningsNumber: 'asc' } }, teamA: true, teamB: true },
+    include: {
+      innings: {
+        orderBy: { inningsNumber: 'asc' },
+        include: { battingScores: true, ballEvents: true },
+      },
+      teamA: true,
+      teamB: true,
+    },
   });
 
   if (!match) return { success: false, error: 'Match not found.' };
@@ -1969,9 +2099,34 @@ export async function startSuperOver(matchId: string, input: { battingFirstTeamI
   const battingTeamId = input.battingFirstTeamId;
   const bowlingTeamId = battingTeamId === match.teamAId ? match.teamBId : match.teamAId;
 
-  // Next Super Over innings number (3 for 1st Super Over, 5 for 2nd)
-  const highestInnNum = match.innings.reduce((max: number, i: any) => Math.max(max, i.inningsNumber), 0);
-  const nextInnNumber = Math.max(3, highestInnNum + 1);
+  // Determine correct Super Over innings number:
+  // Super Over rounds start at odd innings (Innings 3 for SO 1, Innings 5 for SO 2, etc.)
+  const existingSOInnings = (match.innings || []).filter((i: any) => i.inningsNumber >= 3);
+  const unplayedOrIncompleteSO = existingSOInnings.find(
+    (i: any) => i.status !== 'COMPLETED' || (i.overs === 0 && i.balls === 0 && (i.ballEvents?.length ?? 0) === 0)
+  );
+
+  let nextInnNumber = 3;
+  if (unplayedOrIncompleteSO) {
+    // Re-use existing unplayed/incomplete Super Over innings (e.g. Innings 3)
+    nextInnNumber = unplayedOrIncompleteSO.inningsNumber % 2 === 1
+      ? unplayedOrIncompleteSO.inningsNumber
+      : unplayedOrIncompleteSO.inningsNumber - 1;
+  } else {
+    // If all previous SO innings are completed, start next SO pair (odd number >= 3)
+    const maxInn = match.innings.reduce((max: number, i: any) => Math.max(max, i.inningsNumber), 0);
+    nextInnNumber = maxInn >= 4 ? (maxInn % 2 === 0 ? maxInn + 1 : maxInn) : 3;
+  }
+
+  // Purge any orphaned higher innings (e.g. if Innings 4 existed when re-starting Innings 3)
+  if (nextInnNumber === 3) {
+    await (prisma as any).innings.deleteMany({
+      where: {
+        matchId,
+        inningsNumber: { gt: 3 },
+      },
+    });
+  }
 
   const superOverInn = await (prisma as any).innings.upsert({
     where: { matchId_inningsNumber: { matchId, inningsNumber: nextInnNumber } },
@@ -1980,19 +2135,38 @@ export async function startSuperOver(matchId: string, input: { battingFirstTeamI
       inningsNumber: nextInnNumber,
       battingTeamId,
       bowlingTeamId,
-      status: 'NOT_STARTED',
+      status: 'IN_PROGRESS',
+      runs: 0,
+      wickets: 0,
+      overs: 0,
+      balls: 0,
+      currentStrikerId: null,
+      currentNonStrikerId: null,
+      currentBowlerId: null,
     },
     update: {
       battingTeamId,
       bowlingTeamId,
-      status: 'NOT_STARTED',
+      status: 'IN_PROGRESS',
+      runs: 0,
+      wickets: 0,
+      overs: 0,
+      balls: 0,
+      currentStrikerId: null,
+      currentNonStrikerId: null,
+      currentBowlerId: null,
     },
   });
+
+  // Clean up any stale ball events or player scores on this super over innings
+  await (prisma as any).ballEvent.deleteMany({ where: { inningsId: superOverInn.id } });
+  await (prisma as any).inningsBatter.deleteMany({ where: { inningsId: superOverInn.id } });
+  await (prisma as any).inningsBowler.deleteMany({ where: { inningsId: superOverInn.id } });
 
   const matchUpdateData: any = {
     status: 'LIVE',
     currentInnings: nextInnNumber,
-    resultNote: 'Super Over In Progress',
+    resultNote: `Super Over ${nextInnNumber === 3 ? 1 : Math.floor((nextInnNumber - 1) / 2) + 1} In Progress`,
     winnerTeamId: null,
   };
   if (input.ballsPerOver && input.ballsPerOver >= 1 && input.ballsPerOver <= 12) {
@@ -2021,6 +2195,109 @@ export async function startSuperOver(matchId: string, input: { battingFirstTeamI
   }
 
   return { success: true, inningsId: superOverInn.id, updatedMatch };
+}
+
+/**
+ * Reverts/cancels an active or completed Super Over, deleting Innings 3+ and restoring match to Innings 2.
+ */
+export async function undoSuperOver(matchId: string) {
+  const session = await requireAdminAuth();
+
+  const match = await (prisma as any).match.findUnique({
+    where: { id: matchId },
+    include: {
+      innings: {
+        orderBy: { inningsNumber: 'asc' },
+        include: { ballEvents: true, battingScores: true, bowlingScores: true },
+      },
+      teamA: true,
+      teamB: true,
+    },
+  });
+
+  if (!match) return { success: false, error: 'Match not found.' };
+
+  const superOverInnings = (match.innings || []).filter((i: any) => i.inningsNumber >= 3);
+  if (superOverInnings.length === 0) {
+    return { success: false, error: 'No Super Over found to undo.' };
+  }
+
+  // Delete all ballEvents, inningsBatter, inningsBowler, and innings records for super over rounds (>= 3)
+  for (const soInn of superOverInnings) {
+    await (prisma as any).ballEvent.deleteMany({ where: { inningsId: soInn.id } });
+    await (prisma as any).inningsBatter.deleteMany({ where: { inningsId: soInn.id } });
+    await (prisma as any).inningsBowler.deleteMany({ where: { inningsId: soInn.id } });
+    await (prisma as any).innings.delete({ where: { id: soInn.id } });
+  }
+
+  // Restore state based on regular innings 1 and 2
+  const inn1 = match.innings?.find((i: any) => i.inningsNumber === 1);
+  const inn2 = match.innings?.find((i: any) => i.inningsNumber === 2);
+
+  let restoredCurrentInnings = 2;
+  let restoredStatus = 'COMPLETED';
+  let restoredResultNote = 'Match Tied';
+  let restoredWinnerTeamId: string | null = null;
+
+  if (inn2) {
+    restoredCurrentInnings = 2;
+    if (inn2.status === 'IN_PROGRESS') {
+      restoredStatus = 'LIVE';
+      restoredResultNote = 'Innings 2 in progress';
+    } else {
+      const inn1Runs = inn1?.runs ?? 0;
+      const inn2Runs = inn2.runs ?? 0;
+      if (inn2Runs > inn1Runs) {
+        restoredWinnerTeamId = inn2.battingTeamId;
+        const winnerName = inn2.battingTeamId === match.teamAId ? match.teamA.name : match.teamB.name;
+        const marginWkts = Math.max(1, 10 - inn2.wickets);
+        restoredResultNote = `${winnerName} won by ${marginWkts} wickets`;
+      } else if (inn1Runs > inn2Runs) {
+        restoredWinnerTeamId = inn1?.battingTeamId ?? null;
+        const winnerName = inn1?.battingTeamId === match.teamAId ? match.teamA.name : match.teamB.name;
+        const marginRuns = inn1Runs - inn2Runs;
+        restoredResultNote = `${winnerName} won by ${marginRuns} runs`;
+      } else {
+        restoredWinnerTeamId = null;
+        restoredResultNote = 'Match Tied';
+      }
+    }
+  } else if (inn1) {
+    restoredCurrentInnings = 1;
+    restoredStatus = inn1.status === 'COMPLETED' ? 'COMPLETED' : 'LIVE';
+    restoredResultNote = inn1.status === 'COMPLETED' ? 'Innings 1 Completed' : 'Innings 1 in progress';
+  }
+
+  await (prisma as any).match.update({
+    where: { id: matchId },
+    data: {
+      status: restoredStatus,
+      currentInnings: restoredCurrentInnings,
+      resultNote: restoredResultNote,
+      winnerTeamId: restoredWinnerTeamId,
+    },
+  });
+
+  (prisma as any).adminAuditLog.create({
+    data: {
+      action: 'SUPER_OVER_UNDONE',
+      entityType: 'Match',
+      entityId: matchId,
+      description: `Super Over was undone and cancelled. Match restored to Innings ${restoredCurrentInnings} (${restoredStatus}).`,
+      performedBy: session.username,
+      metadata: { matchId, restoredCurrentInnings, restoredStatus },
+    },
+  }).catch(() => {});
+
+  const updatedMatch = await getMatchDetail(matchId);
+  if (updatedMatch) {
+    notifyMatchUpdated(updatedMatch);
+    buildMatchBroadcastPayload(updatedMatch)
+      .then((p) => { if (p) broadcastScoreUpdate(p); })
+      .catch(() => {});
+  }
+
+  return { success: true, updatedMatch };
 }
 
 /**
@@ -2475,6 +2752,10 @@ export interface TournamentStatsResult {
     id: string;
     status: MatchStatusType;
     scheduledAt: string | null;
+    startedAt?: string | null;
+    completedAt?: string | null;
+    updatedAt?: string | null;
+    createdAt?: string | null;
     venue: string | null;
     resultNote: string | null;
     winnerTeamId: string | null;
@@ -2560,6 +2841,10 @@ export async function getTournamentStats(): Promise<TournamentStatsResult> {
     id: m.id,
     status: m.status,
     scheduledAt: m.scheduledAt ? new Date(m.scheduledAt).toISOString() : null,
+    startedAt: m.startedAt ? new Date(m.startedAt).toISOString() : null,
+    completedAt: m.completedAt ? new Date(m.completedAt).toISOString() : null,
+    updatedAt: m.updatedAt ? new Date(m.updatedAt).toISOString() : null,
+    createdAt: m.createdAt ? new Date(m.createdAt).toISOString() : null,
     venue: m.venue,
     resultNote: m.resultNote,
     winnerTeamId: m.winnerTeamId,
@@ -2846,10 +3131,95 @@ export async function getTournamentStats(): Promise<TournamentStatsResult> {
     .map((p, idx) => ({ ...p, rank: idx + 1 }));
 
   return {
-    allMatches: formattedMatches,
+    allMatches: sortMatchesByPriority(formattedMatches),
     topBatters,
     topBowlers,
     mvpLeaderboard: sortedMvp,
   };
+}
+
+/**
+ * Renames a player without affecting any runs, balls, wickets, or statistics.
+ * Retains all historical relations and updates ball-by-ball commentary if present.
+ */
+export async function renamePlayer(input: {
+  playerId: string;
+  newName: string;
+  jerseyNumber?: number | null;
+  matchId?: string;
+}) {
+  const session = await requireAdminAuth();
+  const trimmedName = input.newName.trim();
+  if (!trimmedName) {
+    return { success: false, error: 'Player name cannot be empty.' };
+  }
+
+  const existingPlayer = await (prisma as any).player.findUnique({
+    where: { id: input.playerId },
+  });
+
+  if (!existingPlayer) {
+    return { success: false, error: 'Player not found.' };
+  }
+
+  const oldName = existingPlayer.name;
+
+  // Update Player name and optional jersey number
+  const updatedPlayer = await (prisma as any).player.update({
+    where: { id: input.playerId },
+    data: {
+      name: trimmedName,
+      jerseyNumber: input.jerseyNumber !== undefined ? input.jerseyNumber : undefined,
+    },
+  });
+
+  // If matchId provided, also update commentary in ballEvents for this match if oldName appears in commentary
+  if (input.matchId && oldName && oldName !== trimmedName) {
+    const ballEvents = await (prisma as any).ballEvent.findMany({
+      where: {
+        innings: { matchId: input.matchId },
+        OR: [
+          { batsmanId: input.playerId },
+          { bowlerId: input.playerId },
+          { dismissedPlayerId: input.playerId },
+        ],
+      },
+      select: { id: true, commentary: true },
+    });
+
+    for (const b of ballEvents) {
+      if (b.commentary && b.commentary.includes(oldName)) {
+        const updatedCommentary = b.commentary.split(oldName).join(trimmedName);
+        await (prisma as any).ballEvent.update({
+          where: { id: b.id },
+          data: { commentary: updatedCommentary },
+        });
+      }
+    }
+  }
+
+  (prisma as any).adminAuditLog.create({
+    data: {
+      action: 'PLAYER_RENAMED',
+      entityType: 'Player',
+      entityId: input.playerId,
+      description: `Player renamed from "${oldName}" to "${trimmedName}". Scores unaffected.`,
+      performedBy: session.username,
+      metadata: { playerId: input.playerId, oldName, newName: trimmedName, matchId: input.matchId },
+    },
+  }).catch(() => {});
+
+  let updatedMatch = null;
+  if (input.matchId) {
+    updatedMatch = await getMatchDetail(input.matchId);
+    if (updatedMatch) {
+      notifyMatchUpdated(updatedMatch);
+      buildMatchBroadcastPayload(updatedMatch)
+        .then((p) => { if (p) broadcastScoreUpdate(p); })
+        .catch(() => {});
+    }
+  }
+
+  return { success: true, player: updatedPlayer, updatedMatch };
 }
 
