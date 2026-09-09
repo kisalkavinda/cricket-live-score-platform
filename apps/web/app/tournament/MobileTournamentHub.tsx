@@ -62,7 +62,7 @@ export default function MobileTournamentHub({
   refreshTournamentData,
   lastRefreshed,
 }: MobileTournamentHubProps) {
-  const { groups, wildcard, playoffs, matches, progress, tournament } = overview;
+  const { groups, qualification, playoffs, matches, progress, tournament } = overview;
   const [stickyDismissed, setStickyDismissed] = useState(false);
 
   // Dynamic ballsPerOver from match data or default
@@ -84,7 +84,7 @@ export default function MobileTournamentHub({
     };
   };
 
-  const stageOrder = ['GROUP', 'WILDCARD', 'PLAYOFFS', 'FINAL', 'COMPLETED'];
+  const stageOrder = ['GROUP', 'QUALIFICATION', 'PLAYOFFS', 'FINAL', 'COMPLETED'];
   const currentStageIdx = stageOrder.indexOf(progress.currentStage);
 
   return (
@@ -148,17 +148,14 @@ export default function MobileTournamentHub({
               border: '1px solid rgba(255, 255, 255, 0.12)',
               borderRadius: '9999px',
               padding: '4px 10px',
-              color: '#FFF',
-              fontSize: '0.68rem',
+              color: '#FFB800',
+              fontSize: '0.7rem',
               fontWeight: 700,
               cursor: 'pointer',
               minHeight: '32px',
             }}
           >
-            <span style={{ display: 'inline-block', transform: isRefreshing ? 'rotate(360deg)' : 'none', transition: 'transform 0.5s' }}>
-              ↻
-            </span>
-            <span>{isRefreshing ? 'Syncing...' : lastRefreshed || 'Live Sync'}</span>
+            {isRefreshing ? '↻ ...' : '↻ Sync'}
           </button>
         </div>
 
@@ -168,14 +165,17 @@ export default function MobileTournamentHub({
             fontSize: '1.75rem',
             fontWeight: 900,
             textTransform: 'uppercase',
-            color: '#FFFFFF',
+            color: '#FFF',
+            margin: '0 0 6px',
             lineHeight: 1.1,
-            margin: '0 0 8px',
-            letterSpacing: '-0.01em',
           }}
         >
           Tournament Hub
         </h1>
+
+        <p style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.6)', margin: '0 0 10px', lineHeight: 1.4 }}>
+          8 Teams · 15 Matches · 4 Stages · Softball Net Run Rate
+        </p>
 
         {/* Stage & Completion Pill Row */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
@@ -205,10 +205,10 @@ export default function MobileTournamentHub({
             />
             {progress.currentStage === 'GROUP'
               ? 'Group Stage'
-              : progress.currentStage === 'WILDCARD'
-              ? 'Wildcard Mini-League'
+              : progress.currentStage === 'QUALIFICATION'
+              ? 'Playoff Qualification'
               : progress.currentStage === 'PLAYOFFS'
-              ? 'Final Four Playoffs'
+              ? 'Four-Team Playoff'
               : progress.currentStage === 'FINAL'
               ? 'Championship Final'
               : 'Completed'}
@@ -474,7 +474,7 @@ export default function MobileTournamentHub({
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative' }}>
             {[
               { key: 'GROUP', label: 'GROUPS' },
-              { key: 'WILDCARD', label: 'WILD' },
+              { key: 'QUALIFICATION', label: 'QUAL' },
               { key: 'PLAYOFFS', label: 'PLAYOFF' },
               { key: 'FINAL', label: 'FINAL' },
             ].map((stage, idx) => {
@@ -551,14 +551,14 @@ export default function MobileTournamentHub({
           }}
         >
           <div style={{ fontSize: '0.68rem', fontWeight: 800, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', marginBottom: '8px' }}>
-            Final Four Qualified Seeds
+            Four-Team Playoff Seeds
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '6px' }}>
             {[
-              { seed: '#1', team: seed1, fallback: 'Group Winner #1' },
-              { seed: '#2', team: seed2, fallback: 'Group Winner #2' },
-              { seed: '#3', team: seed3, fallback: 'Group Winner #3' },
-              { seed: '#4', team: seed4, fallback: 'Wildcard Winner' },
+              { seed: '#1', team: seed1, fallback: 'Top Group Winner' },
+              { seed: '#2', team: seed2, fallback: '2nd Group Winner' },
+              { seed: '#3', team: seed3, fallback: 'Match 9 Winner' },
+              { seed: '#4', team: seed4, fallback: 'Match 11 Winner' },
             ].map((s) => (
               <div
                 key={s.seed}
@@ -595,7 +595,7 @@ export default function MobileTournamentHub({
           ↓
         </div>
 
-        {/* Step 2: Qualifier 1 Card (#13) */}
+        {/* Step 2: 1st vs 2nd Card (#12) */}
         <div
           style={{
             background: 'rgba(15, 15, 20, 0.95)',
@@ -607,7 +607,7 @@ export default function MobileTournamentHub({
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
             <span style={{ fontSize: '0.72rem', fontWeight: 800, color: '#FFB800', textTransform: 'uppercase' }}>
-              Qualifier 1 · Match #13
+              1st vs 2nd · Match #12
             </span>
             <span
               style={{
@@ -679,7 +679,7 @@ export default function MobileTournamentHub({
 
           <div style={{ marginTop: '8px', paddingTop: '6px', borderTop: '1px solid rgba(255,255,255,0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '0.68rem', color: q1Winner ? '#10B981' : 'rgba(255,255,255,0.5)' }}>
-              {q1Winner ? `✓ ${q1Winner.shortName || q1Winner.name} → Final` : 'Winner → Final · Loser → Q2'}
+              {q1Winner ? `✓ ${q1Winner.shortName || q1Winner.name} → Grand Final` : 'Winner → Grand Final · Loser → M14'}
             </span>
             {q1 && (
               <Link href={`/scorecard?matchId=${q1.id}`} style={{ fontSize: '0.68rem', color: '#FFB800', textDecoration: 'none', fontWeight: 700, minHeight: '36px', display: 'inline-flex', alignItems: 'center' }}>
@@ -694,7 +694,7 @@ export default function MobileTournamentHub({
           ↓
         </div>
 
-        {/* Step 3: Eliminator Card (#14) */}
+        {/* Step 3: 3rd vs 4th Card (#13) */}
         <div
           style={{
             background: 'rgba(15, 15, 20, 0.95)',
@@ -706,7 +706,7 @@ export default function MobileTournamentHub({
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
             <span style={{ fontSize: '0.72rem', fontWeight: 800, color: '#EF4444', textTransform: 'uppercase' }}>
-              Eliminator · Match #14
+              3rd vs 4th · Match #13
             </span>
             <span
               style={{
@@ -763,7 +763,7 @@ export default function MobileTournamentHub({
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <span style={{ fontSize: '0.68rem', fontWeight: 900, color: '#A855F7' }}>#4</span>
                 <span style={{ fontSize: '0.84rem', fontWeight: 700, color: '#FFF' }}>
-                  {elim?.teamB?.name || seed4?.name || 'TBD (Wildcard #4)'}
+                  {elim?.teamB?.name || seed4?.name || 'TBD (Seed #4)'}
                 </span>
                 {elimWinner && elim?.teamBId && elimWinner.id === elim.teamBId && <span style={{ color: '#10B981' }}>✓</span>}
               </div>
@@ -778,7 +778,7 @@ export default function MobileTournamentHub({
 
           <div style={{ marginTop: '8px', paddingTop: '6px', borderTop: '1px solid rgba(255,255,255,0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '0.68rem', color: elimWinner ? '#10B981' : 'rgba(255,255,255,0.5)' }}>
-              {elimWinner ? `✓ ${elimWinner.shortName || elimWinner.name} → Q2` : 'Winner → Q2 · Loser Eliminated'}
+              {elimWinner ? `✓ ${elimWinner.shortName || elimWinner.name} → M14` : 'Winner → M14 · Loser Eliminated'}
             </span>
             {elim && (
               <Link href={`/scorecard?matchId=${elim.id}`} style={{ fontSize: '0.68rem', color: '#FFB800', textDecoration: 'none', fontWeight: 700, minHeight: '36px', display: 'inline-flex', alignItems: 'center' }}>
@@ -793,7 +793,7 @@ export default function MobileTournamentHub({
           ↓
         </div>
 
-        {/* Step 4: Qualifier 2 Card (#15) */}
+        {/* Step 4: Final Qualifier Card (#14) */}
         <div
           style={{
             background: 'rgba(15, 15, 20, 0.95)',
@@ -805,7 +805,7 @@ export default function MobileTournamentHub({
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
             <span style={{ fontSize: '0.72rem', fontWeight: 800, color: '#FFB800', textTransform: 'uppercase' }}>
-              Qualifier 2 · Match #15
+              Final Qualifier · Match #14
             </span>
             <span
               style={{
@@ -822,7 +822,7 @@ export default function MobileTournamentHub({
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            {/* Loser of Q1 */}
+            {/* Loser of M12 */}
             <div
               style={{
                 display: 'flex',
@@ -834,9 +834,9 @@ export default function MobileTournamentHub({
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span style={{ fontSize: '0.68rem', fontWeight: 900, color: 'rgba(255,255,255,0.5)' }}>Q1-L</span>
+                <span style={{ fontSize: '0.68rem', fontWeight: 900, color: 'rgba(255,255,255,0.5)' }}>LM12</span>
                 <span style={{ fontSize: '0.84rem', fontWeight: 700, color: '#FFF' }}>
-                  {q2?.teamA?.name || q1Loser?.name || 'Loser of Qualifier 1'}
+                  {q2?.teamA?.name || q1Loser?.name || 'Loser Match 12'}
                 </span>
                 {q2Winner && q2?.teamAId && q2Winner.id === q2.teamAId && <span style={{ color: '#10B981' }}>✓</span>}
               </div>
@@ -848,7 +848,7 @@ export default function MobileTournamentHub({
               </span>
             </div>
 
-            {/* Winner of Eliminator */}
+            {/* Winner of M13 */}
             <div
               style={{
                 display: 'flex',
@@ -860,9 +860,9 @@ export default function MobileTournamentHub({
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span style={{ fontSize: '0.68rem', fontWeight: 900, color: 'rgba(255,255,255,0.5)' }}>EL-W</span>
+                <span style={{ fontSize: '0.68rem', fontWeight: 900, color: 'rgba(255,255,255,0.5)' }}>WM13</span>
                 <span style={{ fontSize: '0.84rem', fontWeight: 700, color: '#FFF' }}>
-                  {q2?.teamB?.name || elimWinner?.name || 'Winner of Eliminator'}
+                  {q2?.teamB?.name || elimWinner?.name || 'Winner Match 13'}
                 </span>
                 {q2Winner && q2?.teamBId && q2Winner.id === q2.teamBId && <span style={{ color: '#10B981' }}>✓</span>}
               </div>
@@ -877,7 +877,7 @@ export default function MobileTournamentHub({
 
           <div style={{ marginTop: '8px', paddingTop: '6px', borderTop: '1px solid rgba(255,255,255,0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '0.68rem', color: q2Winner ? '#10B981' : 'rgba(255,255,255,0.5)' }}>
-              {q2Winner ? `✓ ${q2Winner.shortName || q2Winner.name} → Final` : 'Winner → Final · Loser Eliminated'}
+              {q2Winner ? `✓ ${q2Winner.shortName || q2Winner.name} → Grand Final` : 'Winner → Grand Final · Loser Eliminated'}
             </span>
             {q2 && (
               <Link href={`/scorecard?matchId=${q2.id}`} style={{ fontSize: '0.68rem', color: '#FFB800', textDecoration: 'none', fontWeight: 700, minHeight: '36px', display: 'inline-flex', alignItems: 'center' }}>
@@ -892,7 +892,7 @@ export default function MobileTournamentHub({
           ↓
         </div>
 
-        {/* Step 5: Grand Final Card (#16) */}
+        {/* Step 5: Grand Final Card (#15) */}
         <div
           style={{
             background: 'linear-gradient(135deg, rgba(255, 184, 0, 0.1) 0%, rgba(15, 15, 20, 0.98) 100%)',
@@ -906,7 +906,7 @@ export default function MobileTournamentHub({
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <span>👑</span>
               <span style={{ fontSize: '0.74rem', fontWeight: 900, color: '#FFB800', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                Grand Final · Match #16
+                Grand Final · Match #15
               </span>
             </div>
             <span
@@ -924,7 +924,7 @@ export default function MobileTournamentHub({
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            {/* Winner of Q1 */}
+            {/* Winner of M12 */}
             <div
               style={{
                 display: 'flex',
@@ -936,9 +936,9 @@ export default function MobileTournamentHub({
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span style={{ fontSize: '0.68rem', fontWeight: 900, color: '#FFB800' }}>Q1-W</span>
+                <span style={{ fontSize: '0.68rem', fontWeight: 900, color: '#FFB800' }}>WM12</span>
                 <span style={{ fontSize: '0.86rem', fontWeight: 800, color: '#FFF' }}>
-                  {finalMatch?.teamA?.name || q1Winner?.name || 'Winner of Qualifier 1'}
+                  {finalMatch?.teamA?.name || q1Winner?.name || 'Winner Match 12'}
                 </span>
                 {crownedChampion && finalMatch?.teamAId && crownedChampion.id === finalMatch.teamAId && <span>🏆</span>}
               </div>
@@ -950,7 +950,7 @@ export default function MobileTournamentHub({
               </span>
             </div>
 
-            {/* Winner of Q2 */}
+            {/* Winner of M14 */}
             <div
               style={{
                 display: 'flex',
@@ -962,9 +962,9 @@ export default function MobileTournamentHub({
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span style={{ fontSize: '0.68rem', fontWeight: 900, color: '#FFB800' }}>Q2-W</span>
+                <span style={{ fontSize: '0.68rem', fontWeight: 900, color: '#FFB800' }}>WM14</span>
                 <span style={{ fontSize: '0.86rem', fontWeight: 800, color: '#FFF' }}>
-                  {finalMatch?.teamB?.name || q2Winner?.name || 'Winner of Qualifier 2'}
+                  {finalMatch?.teamB?.name || q2Winner?.name || 'Winner Match 14'}
                 </span>
                 {crownedChampion && finalMatch?.teamBId && crownedChampion.id === finalMatch.teamBId && <span>🏆</span>}
               </div>
@@ -1004,7 +1004,7 @@ export default function MobileTournamentHub({
             </h2>
           </div>
           <span style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,0.45)', fontFamily: 'var(--font-data)' }}>
-            3 Groups × 3 Teams
+            2 Groups × 4 Teams
           </span>
         </div>
 
@@ -1012,7 +1012,6 @@ export default function MobileTournamentHub({
           {[
             { name: 'Group A', data: groups.groupA },
             { name: 'Group B', data: groups.groupB },
-            { name: 'Group C', data: groups.groupC },
           ].map((group) => (
             <div
               key={group.name}
@@ -1029,7 +1028,7 @@ export default function MobileTournamentHub({
                   {group.name}
                 </span>
                 <span style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,0.4)' }}>
-                  {group.data?.matches?.filter((m: any) => m.status === 'COMPLETED').length || 0}/3 Completed
+                  {group.data?.matches?.filter((m: any) => m.status === 'COMPLETED').length || 0}/4 Completed
                 </span>
               </div>
 
@@ -1046,35 +1045,45 @@ export default function MobileTournamentHub({
                 </thead>
                 <tbody>
                   {(group.data?.standings || []).map((s: TeamStanding) => {
-                    const isQualified = s.qualificationStatus === 'QUALIFIED' || s.pos === 1;
-                    const isWildcard = s.qualificationStatus === 'WILDCARD' || s.pos === 2;
-                    const isEliminated = s.qualificationStatus === 'ELIMINATED' || s.pos === 3;
+                    const isQualified = s.pos === 1;
+                    const isM9 = s.pos === 2;
+                    const isM10 = s.pos === 3;
+                    const isEliminated = s.pos === 4;
+
+                    const rowBg = isQualified
+                      ? 'rgba(255, 184, 0, 0.05)'
+                      : isM9
+                      ? 'rgba(59, 130, 246, 0.05)'
+                      : isM10
+                      ? 'rgba(245, 158, 11, 0.05)'
+                      : 'transparent';
+
+                    const posColor = isQualified ? '#FFB800' : isM9 ? '#3B82F6' : isM10 ? '#F59E0B' : 'rgba(255,255,255,0.4)';
 
                     return (
                       <tr
                         key={s.teamId}
                         style={{
                           borderBottom: '1px solid rgba(255,255,255,0.03)',
-                          background: isQualified
-                            ? 'rgba(255, 184, 0, 0.05)'
-                            : isWildcard
-                            ? 'rgba(59, 130, 246, 0.04)'
-                            : 'transparent',
+                          background: rowBg,
                         }}
                       >
-                        <td style={{ padding: '6px 2px', fontWeight: 800, color: isQualified ? '#FFB800' : isWildcard ? '#3B82F6' : 'rgba(255,255,255,0.4)' }}>
+                        <td style={{ padding: '6px 2px', fontWeight: 800, color: posColor }}>
                           {s.pos}
                         </td>
                         <td style={{ padding: '6px 4px' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '4px', minWidth: 0 }}>
                             <span style={{ fontWeight: 700, color: '#FFF', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                              {s.teamShortName}
+                              {s.teamName || s.teamShortName}
                             </span>
                             {isQualified && (
-                              <span style={{ fontSize: '0.62rem', color: '#10B981', fontWeight: 800 }}>✓</span>
+                              <span style={{ fontSize: '0.62rem', color: '#10B981', fontWeight: 800 }}>✓ Playoff</span>
                             )}
-                            {isWildcard && (
-                              <span style={{ fontSize: '0.62rem', color: '#3B82F6', fontWeight: 800 }}>→</span>
+                            {isM9 && (
+                              <span style={{ fontSize: '0.62rem', color: '#3B82F6', fontWeight: 800 }}>→ M9</span>
+                            )}
+                            {isM10 && (
+                              <span style={{ fontSize: '0.62rem', color: '#F59E0B', fontWeight: 800 }}>→ M10</span>
                             )}
                           </div>
                         </td>
@@ -1103,9 +1112,10 @@ export default function MobileTournamentHub({
 
               {/* Group Qualification Legend */}
               <div style={{ marginTop: '8px', paddingTop: '6px', borderTop: '1px solid rgba(255,255,255,0.04)', display: 'flex', justifyContent: 'space-between', fontSize: '0.64rem', color: 'rgba(255,255,255,0.4)' }}>
-                <span style={{ color: '#FFB800' }}>1st → Final Four</span>
-                <span style={{ color: '#3B82F6' }}>2nd → Wildcard</span>
-                <span style={{ color: '#EF4444' }}>3rd → Out</span>
+                <span style={{ color: '#FFB800' }}>1st → Playoff</span>
+                <span style={{ color: '#3B82F6' }}>2nd → Match 9</span>
+                <span style={{ color: '#F59E0B' }}>3rd → Match 10</span>
+                <span style={{ color: '#EF4444' }}>4th → Eliminated</span>
               </div>
             </div>
           ))}
@@ -1113,95 +1123,146 @@ export default function MobileTournamentHub({
       </section>
 
       {/* ───────────────────────────────────────────────────────────── */}
-      {/* 6. MOBILE WILDCARD MINI-LEAGUE (COMPACT BRIDGE)               */}
+      {/* 6. MOBILE PLAYOFF QUALIFICATION (MATCHES 9–11)                 */}
       {/* ───────────────────────────────────────────────────────────── */}
-      <section id="wildcard-mobile" style={{ marginBottom: '28px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
-          <div>
-            <div style={{ fontSize: '0.68rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.12em', color: '#3B82F6' }}>
-              Stage 2
+      {(() => {
+        const qualMatches = qualification?.matches || [];
+        const m9 = qualMatches.find((m: any) => m.bracketSlot === 'M9' || m.matchNumber === 9);
+        const m10 = qualMatches.find((m: any) => m.bracketSlot === 'M10' || m.matchNumber === 10);
+        const m11 = qualMatches.find((m: any) => m.bracketSlot === 'M11' || m.matchNumber === 11);
+
+        const renderQualCard = (
+          match: any,
+          matchNum: number,
+          title: string,
+          badge: string,
+          teamALabel: string,
+          teamBLabel: string,
+          outcomeText: string
+        ) => {
+          const isCompleted = match?.status === 'COMPLETED';
+          const isLive = match?.status === 'LIVE' || match?.status === 'IN_PROGRESS';
+          const winnerId = match?.winnerId;
+          const scoreA = getTeamScore(match, match?.teamAId);
+          const scoreB = getTeamScore(match, match?.teamBId);
+
+          return (
+            <div
+              key={matchNum}
+              style={{
+                background: 'rgba(15, 15, 20, 0.95)',
+                border: isLive ? '1.5px solid #10B981' : isCompleted ? '1px solid rgba(59, 130, 246, 0.35)' : '1px solid rgba(255, 255, 255, 0.08)',
+                borderRadius: '12px',
+                padding: '12px',
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span style={{ fontSize: '0.68rem', fontWeight: 900, color: '#3B82F6', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                    Match #{matchNum} · {title}
+                  </span>
+                  <span style={{ fontSize: '0.6rem', padding: '2px 5px', borderRadius: '4px', background: 'rgba(59, 130, 246, 0.15)', color: '#60A5FA', fontWeight: 700 }}>
+                    {badge}
+                  </span>
+                </div>
+                <span
+                  style={{
+                    fontSize: '0.62rem',
+                    fontWeight: 800,
+                    padding: '2px 6px',
+                    borderRadius: '4px',
+                    background: isLive ? 'rgba(16, 185, 129, 0.2)' : isCompleted ? 'rgba(255, 255, 255, 0.08)' : 'rgba(255, 255, 255, 0.04)',
+                    color: isLive ? '#10B981' : isCompleted ? '#FFF' : 'rgba(255,255,255,0.4)',
+                  }}
+                >
+                  {isLive ? 'LIVE' : isCompleted ? 'COMPLETED' : 'SCHEDULED'}
+                </span>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                {/* Team A */}
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    padding: '6px 8px',
+                    borderRadius: '6px',
+                    background: winnerId && match?.teamAId && winnerId === match.teamAId ? 'rgba(16, 185, 129, 0.15)' : 'rgba(255,255,255,0.03)',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#FFF' }}>
+                      {match?.teamA?.name || teamALabel}
+                    </span>
+                    {winnerId && match?.teamAId && winnerId === match.teamAId && <span style={{ color: '#10B981', fontSize: '0.7rem' }}>✓</span>}
+                  </div>
+                  <span style={{ fontFamily: 'var(--font-data)', fontSize: '0.8rem', fontWeight: 800, color: '#FFB800' }}>
+                    {scoreA ? `${scoreA.runs}/${scoreA.wickets}` : '-'}
+                  </span>
+                </div>
+
+                {/* Team B */}
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    padding: '6px 8px',
+                    borderRadius: '6px',
+                    background: winnerId && match?.teamBId && winnerId === match.teamBId ? 'rgba(16, 185, 129, 0.15)' : 'rgba(255,255,255,0.03)',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#FFF' }}>
+                      {match?.teamB?.name || teamBLabel}
+                    </span>
+                    {winnerId && match?.teamBId && winnerId === match.teamBId && <span style={{ color: '#10B981', fontSize: '0.7rem' }}>✓</span>}
+                  </div>
+                  <span style={{ fontFamily: 'var(--font-data)', fontSize: '0.8rem', fontWeight: 800, color: '#FFB800' }}>
+                    {scoreB ? `${scoreB.runs}/${scoreB.wickets}` : '-'}
+                  </span>
+                </div>
+              </div>
+
+              <div style={{ marginTop: '8px', paddingTop: '6px', borderTop: '1px solid rgba(255,255,255,0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '0.66rem', color: winnerId ? '#10B981' : 'rgba(255,255,255,0.5)', fontWeight: 600 }}>
+                  {outcomeText}
+                </span>
+                {match && (
+                  <Link href={`/scorecard?matchId=${match.id}`} style={{ fontSize: '0.68rem', color: '#3B82F6', textDecoration: 'none', fontWeight: 700, minHeight: '32px', display: 'inline-flex', alignItems: 'center' }}>
+                    Scorecard →
+                  </Link>
+                )}
+              </div>
             </div>
-            <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.25rem', fontWeight: 900, textTransform: 'uppercase', color: '#FFF', margin: 0 }}>
-              Wildcard Mini-League
-            </h2>
-          </div>
-          <span style={{ fontSize: '0.68rem', color: '#FFB800', fontWeight: 700 }}>
-            Winner → Seed #4
-          </span>
-        </div>
+          );
+        };
 
-        <div
-          style={{
-            background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(15, 15, 20, 0.95) 100%)',
-            border: '1.5px solid rgba(59, 130, 246, 0.3)',
-            borderRadius: '12px',
-            padding: '12px',
-          }}
-        >
-          <div style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.6)', marginBottom: '8px', lineHeight: 1.4 }}>
-            The 3 runners-up from Groups A, B, and C compete in a single round-robin. The #1 team claims <strong>Seed #4</strong> in the Eliminator.
-          </div>
+        return (
+          <section id="qualification-mobile" style={{ marginBottom: '28px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+              <div>
+                <div style={{ fontSize: '0.68rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.12em', color: '#3B82F6' }}>
+                  Stage 2
+                </div>
+                <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.25rem', fontWeight: 900, textTransform: 'uppercase', color: '#FFF', margin: 0 }}>
+                  Playoff Qualification
+                </h2>
+              </div>
+              <span style={{ fontSize: '0.68rem', color: '#FFB800', fontWeight: 700 }}>
+                Matches 9–11
+              </span>
+            </div>
 
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.76rem' }}>
-            <thead>
-              <tr style={{ color: 'rgba(255,255,255,0.4)', textAlign: 'left', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                <th style={{ padding: '4px 2px', width: '22px' }}>#</th>
-                <th style={{ padding: '4px 4px' }}>Team</th>
-                <th style={{ padding: '4px 2px', textAlign: 'center', width: '22px' }}>P</th>
-                <th style={{ padding: '4px 2px', textAlign: 'center', width: '28px', color: '#FFF' }}>PTS</th>
-                <th style={{ padding: '4px 2px', textAlign: 'right', width: '56px' }}>NRR</th>
-              </tr>
-            </thead>
-            <tbody>
-              {(wildcard?.standings || []).map((s: TeamStanding) => {
-                const isQualifier = s.pos === 1 && (wildcard?.matches?.filter((m: any) => m.status === 'COMPLETED').length === 3);
-
-                return (
-                  <tr
-                    key={s.teamId}
-                    style={{
-                      borderBottom: '1px solid rgba(255,255,255,0.03)',
-                      background: isQualifier ? 'rgba(255, 184, 0, 0.1)' : 'transparent',
-                    }}
-                  >
-                    <td style={{ padding: '6px 2px', fontWeight: 800, color: isQualifier ? '#FFB800' : 'rgba(255,255,255,0.4)' }}>
-                      {s.pos}
-                    </td>
-                    <td style={{ padding: '6px 4px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        <span style={{ fontWeight: 700, color: '#FFF' }}>{s.teamShortName}</span>
-                        {isQualifier && <span style={{ color: '#FFB800', fontSize: '0.65rem' }}>👑</span>}
-                      </div>
-                    </td>
-                    <td style={{ padding: '6px 2px', textAlign: 'center', color: 'rgba(255,255,255,0.6)', fontFamily: 'var(--font-data)' }}>
-                      {s.played}
-                    </td>
-                    <td style={{ padding: '6px 2px', textAlign: 'center', fontWeight: 900, color: '#FFF', fontFamily: 'var(--font-data)' }}>
-                      {s.points}
-                    </td>
-                    <td
-                      style={{
-                        padding: '6px 2px',
-                        textAlign: 'right',
-                        fontFamily: 'var(--font-data)',
-                        fontWeight: 800,
-                        color: s.nrr > 0 ? '#10B981' : s.nrr < 0 ? '#EF4444' : 'rgba(255,255,255,0.5)',
-                      }}
-                    >
-                      {s.displayNRR}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-
-          <div style={{ marginTop: '8px', paddingTop: '6px', borderTop: '1px solid rgba(255,255,255,0.06)', fontSize: '0.68rem', color: '#FFB800', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <span>🏆</span>
-            <span>Winner claims Seed #4 → Eliminator (#14)</span>
-          </div>
-        </div>
-      </section>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {renderQualCard(m9, 9, '2nd vs 2nd', 'Double Chance', 'Group A 2nd', 'Group B 2nd', 'Winner → Seed #3 · Loser → Match 11')}
+              {renderQualCard(m10, 10, '3rd vs 3rd', 'Knockout', 'Group A 3rd', 'Group B 3rd', 'Winner → Match 11 · Loser Eliminated')}
+              {renderQualCard(m11, 11, 'Final Qualifier', 'Winner → Seed #4', 'Match 9 Loser', 'Match 10 Winner', 'Winner → Seed #4 · Loser Eliminated')}
+            </div>
+          </section>
+        );
+      })()}
 
       {/* ───────────────────────────────────────────────────────────── */}
       {/* 7. MOBILE UPCOMING FIXTURES                                   */}

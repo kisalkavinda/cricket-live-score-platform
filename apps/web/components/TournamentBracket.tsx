@@ -100,7 +100,7 @@ export default function TournamentBracket() {
                   background: 'var(--color-accent)',
                 }}
               />
-              <span>Registration Closed · Draw Underway</span>
+              <span>8 Teams · 15 Matches · 4 Stages</span>
             </div>
           </div>
         </div>
@@ -141,10 +141,10 @@ export default function TournamentBracket() {
               {/* Column 1: Stage 1 Groups */}
               <div>
                 <div style={{ fontFamily: 'var(--font-display)', fontSize: '0.95rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--color-accent)', marginBottom: '12px', letterSpacing: '0.06em' }}>
-                  Stage 1 · Groups A, B, C (M1–M9)
+                  Stage 1 · Groups A & B (M1–M8)
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  {['Group A (3 Teams)', 'Group B (3 Teams)', 'Group C (3 Teams)'].map((grp, i) => (
+                  {['Group A (4 Teams)', 'Group B (4 Teams)'].map((grp, i) => (
                     <div
                       key={i}
                       style={{
@@ -156,45 +156,51 @@ export default function TournamentBracket() {
                     >
                       <div style={{ fontSize: '0.78rem', fontWeight: 800, color: 'var(--color-ink)' }}>{grp}</div>
                       <div style={{ fontSize: '0.72rem', color: 'var(--color-ink-muted)', marginTop: '2px' }}>
-                        Top 1 → Final Four · 2nd → Wildcard
+                        1st → Playoff · 2nd → M9 · 3rd → M10 · 4th → Out
                       </div>
                     </div>
                   ))}
                 </div>
               </div>
 
-              {/* Column 2: Stage 2 Wildcard */}
+              {/* Column 2: Stage 2 Playoff Qualification */}
               <div>
                 <div style={{ fontFamily: 'var(--font-display)', fontSize: '0.95rem', fontWeight: 800, textTransform: 'uppercase', color: '#D97706', marginBottom: '12px', letterSpacing: '0.06em' }}>
-                  Stage 2 · Wildcard (M10–M12)
+                  Stage 2 · Qualification (M9–M11)
                 </div>
-                <div style={{ background: 'var(--color-paper-alt)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', padding: '14px' }}>
-                  <div style={{ fontSize: '0.82rem', fontWeight: 800, color: 'var(--color-ink)', marginBottom: '4px' }}>
-                    3 Group Runners-Up
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <div style={{ background: 'var(--color-paper-alt)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', padding: '10px 12px' }}>
+                    <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#D97706' }}>M9 · 2nd vs 2nd</div>
+                    <div style={{ fontSize: '0.74rem', color: 'var(--color-ink-muted)' }}>Winner → Seed #3 · Loser → M11</div>
                   </div>
-                  <div style={{ fontSize: '0.72rem', color: 'var(--color-ink-muted)', lineHeight: 1.4 }}>
-                    Single Round-Robin (3 matches). Winner advances as <strong>Seed #4</strong> into Final Four.
+                  <div style={{ background: 'var(--color-paper-alt)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', padding: '10px 12px' }}>
+                    <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#DC2626' }}>M10 · 3rd vs 3rd</div>
+                    <div style={{ fontSize: '0.74rem', color: 'var(--color-ink-muted)' }}>Winner → M11 · Loser Out</div>
+                  </div>
+                  <div style={{ background: 'var(--color-paper-alt)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', padding: '10px 12px' }}>
+                    <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#2563EB' }}>M11 · Final Qualifier</div>
+                    <div style={{ fontSize: '0.74rem', color: 'var(--color-ink-muted)' }}>Winner → Seed #4 · Loser Out</div>
                   </div>
                 </div>
               </div>
 
-              {/* Column 3: Stage 3 Final Four */}
+              {/* Column 3: Stage 3 Four-Team Playoff */}
               <div>
                 <div style={{ fontFamily: 'var(--font-display)', fontSize: '0.95rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--color-accent)', marginBottom: '12px', letterSpacing: '0.06em' }}>
-                  Stage 3 · Final Four (M13–M15)
+                  Stage 3 · Playoff (M12–M14)
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   <div style={{ background: 'var(--color-paper-alt)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', padding: '10px 12px' }}>
-                    <div style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--color-accent)' }}>Q1 (M13)</div>
-                    <div style={{ fontSize: '0.78rem', fontWeight: 700 }}>Seed #1 vs Seed #2</div>
+                    <div style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--color-accent)' }}>M12 · 1st vs 2nd</div>
+                    <div style={{ fontSize: '0.74rem', color: 'var(--color-ink-muted)' }}>Seed #1 vs Seed #2 · Winner → M15</div>
                   </div>
                   <div style={{ background: 'var(--color-paper-alt)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', padding: '10px 12px' }}>
-                    <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#DC2626' }}>ELIM (M14)</div>
-                    <div style={{ fontSize: '0.78rem', fontWeight: 700 }}>Seed #3 vs Seed #4 [Wildcard]</div>
+                    <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#DC2626' }}>M13 · 3rd vs 4th</div>
+                    <div style={{ fontSize: '0.74rem', color: 'var(--color-ink-muted)' }}>Seed #3 vs Seed #4 · Winner → M14</div>
                   </div>
                   <div style={{ background: 'var(--color-paper-alt)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', padding: '10px 12px' }}>
-                    <div style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--color-accent)' }}>Q2 (M15)</div>
-                    <div style={{ fontSize: '0.78rem', fontWeight: 700 }}>Loser Q1 vs Winner Elim</div>
+                    <div style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--color-accent)' }}>M14 · Qualifier 2</div>
+                    <div style={{ fontSize: '0.74rem', color: 'var(--color-ink-muted)' }}>M12 Loser vs M13 Winner → M15</div>
                   </div>
                 </div>
               </div>
@@ -209,7 +215,7 @@ export default function TournamentBracket() {
                     <path d="M10 14.66V17c0 .55-.45 1-1 1H7v4h10v-4h-2c-.55 0-1-.45-1-1v-2.34" />
                     <path d="M18 4H6v7a6 6 0 0 0 12 0V4Z" />
                   </svg>
-                  <span>Grand Final (M16)</span>
+                  <span>Grand Final (M15)</span>
                 </div>
                 <div
                   style={{
@@ -227,7 +233,7 @@ export default function TournamentBracket() {
                     CPL 2026 Final
                   </div>
                   <div style={{ fontSize: '0.75rem', color: 'var(--color-ink-muted)', marginTop: '4px' }}>
-                    Winner Q1 vs Winner Q2
+                    Winner M12 vs Winner M14
                   </div>
                 </div>
               </div>
@@ -297,7 +303,7 @@ export default function TournamentBracket() {
                     color: 'var(--color-accent)',
                   }}
                 >
-                  Live Draw Coming Soon
+                  8-Team Championship Bracket
                 </span>
                 <span style={{ width: '10px', height: '2px', background: 'var(--color-accent)', display: 'inline-block' }} />
               </div>
@@ -314,7 +320,7 @@ export default function TournamentBracket() {
                   lineHeight: 1.15,
                 }}
               >
-                Fixture Pairings & Pitch Allocations
+                Fixture Pairings & Match Progression
               </h3>
 
               <p
@@ -326,7 +332,7 @@ export default function TournamentBracket() {
                   margin: '0 0 18px 0',
                 }}
               >
-                Team registrations are officially closed and squad rosters have been locked. The knockout bracket and pitch pairings will be announced here once the tournament draw concludes.
+                The complete 15-match championship roadmap across 2 groups, playoff qualification, 4-team playoffs, and grand final is active on the live tournament hub.
               </p>
 
               {/* Action Buttons */}

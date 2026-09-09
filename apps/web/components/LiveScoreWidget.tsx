@@ -17,8 +17,8 @@ export default function LiveScoreWidget() {
   const inFlightRef = useRef<boolean>(false);
   const inFlightStatsRef = useRef<boolean>(false);
 
-  // Points Table active stage selector (Group A, B, C or Wildcard)
-  const [tableGroup, setTableGroup] = useState<'A' | 'B' | 'C' | 'wildcard'>('A');
+  // Points Table active stage selector (Group A or Group B)
+  const [tableGroup, setTableGroup] = useState<'A' | 'B'>('A');
 
   // Tournament stats for Points Table, All Matches & Leaderboards
   const [statsData, setStatsData] = useState<{
@@ -1368,9 +1368,9 @@ export default function LiveScoreWidget() {
               </div>
             </div>
 
-            {/* Stage Selector Sub-tabs (Group A, B, C, Wildcard) */}
+            {/* Stage Selector Sub-tabs (Group A, Group B) */}
             <div style={{ display: 'flex', gap: '8px', marginBottom: '18px', overflowX: 'auto', paddingBottom: '4px' }}>
-              {(['A', 'B', 'C', 'wildcard'] as const).map((g) => {
+              {(['A', 'B'] as const).map((g) => {
                 const isSelected = tableGroup === g;
                 return (
                   <button
@@ -1389,7 +1389,7 @@ export default function LiveScoreWidget() {
                       transition: 'all 0.15s ease',
                     }}
                   >
-                    {g === 'wildcard' ? '⚡ Wildcard Stage' : `Group ${g}`}
+                    {`Group ${g}`}
                   </button>
                 );
               })}
@@ -1400,24 +1400,16 @@ export default function LiveScoreWidget() {
               const overview = statsData.overview;
               let activeStandings: any[] = [];
               let groupTitle = 'Group A Standings';
-              let groupSubtitle = '1st qualifies for Final Four; 2nd advances to Wildcard; 3rd eliminated.';
+              let groupSubtitle = '1st qualifies for Final Four; 2nd advances to Match 9; 3rd advances to Match 10; 4th eliminated.';
 
               if (tableGroup === 'A') {
                 activeStandings = overview?.groups?.groupA?.standings || [];
                 groupTitle = 'Group A Standings';
-                groupSubtitle = 'Top team qualifies directly for Final Four (Seed #1-#3). 2nd advances to Wildcard. 3rd eliminated.';
-              } else if (tableGroup === 'B') {
+                groupSubtitle = 'Top team qualifies directly for Final Four (Seed #1/#2). 2nd advances to Match 9. 3rd advances to Match 10. 4th eliminated.';
+              } else {
                 activeStandings = overview?.groups?.groupB?.standings || [];
                 groupTitle = 'Group B Standings';
-                groupSubtitle = 'Top team qualifies directly for Final Four (Seed #1-#3). 2nd advances to Wildcard. 3rd eliminated.';
-              } else if (tableGroup === 'C') {
-                activeStandings = overview?.groups?.groupC?.standings || [];
-                groupTitle = 'Group C Standings';
-                groupSubtitle = 'Top team qualifies directly for Final Four (Seed #1-#3). 2nd advances to Wildcard. 3rd eliminated.';
-              } else {
-                activeStandings = overview?.wildcard?.standings || [];
-                groupTitle = 'Wildcard Stage Standings';
-                groupSubtitle = 'Round-robin between the 3 runners-up. Top team qualifies as Final Four Seed #4.';
+                groupSubtitle = 'Top team qualifies directly for Final Four (Seed #1/#2). 2nd advances to Match 9. 3rd advances to Match 10. 4th eliminated.';
               }
 
               return (
@@ -1439,9 +1431,7 @@ export default function LiveScoreWidget() {
                         Standings Pending Match Data
                       </div>
                       <p style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.5)', margin: 0, maxWidth: '520px', marginLeft: 'auto', marginRight: 'auto' }}>
-                        {tableGroup === 'wildcard'
-                          ? 'Wildcard standings will generate once the 3 Group Stage runners-up are determined.'
-                          : `Standings for ${groupTitle} will update automatically as matches in this group are completed.`}
+                        {`Standings for ${groupTitle} will update automatically as matches in this group are completed.`}
                       </p>
                     </div>
                   ) : (
@@ -1465,19 +1455,25 @@ export default function LiveScoreWidget() {
                         </thead>
                         <tbody>
                           {activeStandings.map((s: any, idx: number) => {
-                            const isQual = idx === 0;
-                            const isWild = idx === 1 && tableGroup !== 'wildcard';
-                            const isElim = (idx === 2 && tableGroup !== 'wildcard') || (idx > 0 && tableGroup === 'wildcard');
+                            const isPlayoff = idx === 0;
+                            const isM9 = idx === 1;
+                            const isM10 = idx === 2;
+                            const isElim = idx === 3;
+
+                            const statusColor = isPlayoff ? '#10B981' : isM9 ? '#3B82F6' : isM10 ? '#F59E0B' : '#EF4444';
+                            const statusBg = isPlayoff ? 'rgba(16, 185, 129, 0.18)' : isM9 ? 'rgba(59, 130, 246, 0.18)' : isM10 ? 'rgba(245, 158, 11, 0.18)' : 'rgba(239, 68, 68, 0.18)';
+                            const statusBorder = isPlayoff ? 'rgba(16, 185, 129, 0.35)' : isM9 ? 'rgba(59, 130, 246, 0.35)' : isM10 ? 'rgba(245, 158, 11, 0.35)' : 'rgba(239, 68, 68, 0.35)';
+                            const statusLabel = isPlayoff ? 'PLAYOFF' : isM9 ? 'MATCH 9' : isM10 ? 'MATCH 10' : 'ELIMINATED';
 
                             return (
                               <tr
                                 key={s.teamId || idx}
                                 style={{
                                   borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
-                                  background: isQual ? 'rgba(16, 185, 129, 0.05)' : isWild ? 'rgba(245, 158, 11, 0.04)' : 'transparent',
+                                  background: isPlayoff ? 'rgba(16, 185, 129, 0.05)' : isM9 ? 'rgba(59, 130, 246, 0.04)' : isM10 ? 'rgba(245, 158, 11, 0.04)' : 'transparent',
                                 }}
                               >
-                                <td style={{ padding: '12px 14px', fontWeight: 800, color: isQual ? '#10B981' : isWild ? '#F59E0B' : '#EF4444' }}>
+                                <td style={{ padding: '12px 14px', fontWeight: 800, color: statusColor }}>
                                   {s.pos || idx + 1}
                                 </td>
                                 <td style={{ padding: '12px 14px', fontWeight: 700, color: '#FFF' }}>
@@ -1516,12 +1512,12 @@ export default function LiveScoreWidget() {
                                       fontSize: '0.7rem',
                                       fontWeight: 800,
                                       letterSpacing: '0.04em',
-                                      background: isQual ? 'rgba(16, 185, 129, 0.18)' : isWild ? 'rgba(245, 158, 11, 0.18)' : 'rgba(239, 68, 68, 0.18)',
-                                      color: isQual ? '#10B981' : isWild ? '#F59E0B' : '#EF4444',
-                                      border: `1px solid ${isQual ? 'rgba(16, 185, 129, 0.35)' : isWild ? 'rgba(245, 158, 11, 0.35)' : 'rgba(239, 68, 68, 0.35)'}`,
+                                      background: statusBg,
+                                      color: statusColor,
+                                      border: `1px solid ${statusBorder}`,
                                     }}
                                   >
-                                    {isQual ? (tableGroup === 'wildcard' ? 'SEED #4' : 'QUALIFIED') : isWild ? 'WILDCARD' : 'ELIMINATED'}
+                                    {statusLabel}
                                   </span>
                                 </td>
                               </tr>

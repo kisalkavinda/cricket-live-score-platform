@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { TournamentOverview } from '@/lib/tournament/tournament-service';
 import { TeamStanding } from '@/lib/tournament/nrr-engine';
+import { normalizeImageUrl } from '@/lib/utils/image-utils';
 import MobileTournamentHub from './MobileTournamentHub';
 
 interface Props {
@@ -68,7 +69,7 @@ export default function TournamentHubClient({ initialOverview }: Props) {
     );
   }
 
-  const { groups, wildcard, playoffs, matches, progress, tournament } = overview;
+  const { groups, qualification, playoffs, matches, progress, tournament } = overview;
 
   // -------------------------------------------------------------
   // Dynamic Live / Next Match / Champion Derivations
@@ -103,8 +104,6 @@ export default function TournamentHubClient({ initialOverview }: Props) {
   const allCurrentStandings = [
     ...(groups.groupA?.standings || []),
     ...(groups.groupB?.standings || []),
-    ...(groups.groupC?.standings || []),
-    ...(wildcard?.standings || []),
   ];
   allCurrentStandings.forEach((s) => {
     if (s.nrr > highestNRR && s.played > 0) {
@@ -114,7 +113,7 @@ export default function TournamentHubClient({ initialOverview }: Props) {
   });
 
   // Stage indicator state
-  const stageOrder = ['GROUP', 'WILDCARD', 'PLAYOFFS', 'FINAL', 'COMPLETED'];
+  const stageOrder = ['GROUP', 'QUALIFICATION', 'PLAYOFFS', 'FINAL', 'COMPLETED'];
   const currentStageIdx = stageOrder.indexOf(progress.currentStage);
 
   // Authoritative Seed Resolution
@@ -294,7 +293,7 @@ export default function TournamentHubClient({ initialOverview }: Props) {
               CPL <span style={{ color: 'var(--color-accent, #C0272D)' }}>Championship</span> Hub
             </h1>
             <p style={{ fontSize: '1rem', color: 'rgba(255, 255, 255, 0.65)', marginTop: '8px', marginBottom: 0, maxWidth: '640px', lineHeight: 1.5 }}>
-              9 Teams · 16 Matches · 4 Stages · Ball-Based Softball Net Run Rate (NRR)
+              8 Teams · 15 Matches · 4 Stages · Ball-Based Softball Net Run Rate (NRR)
             </p>
           </div>
 
@@ -400,7 +399,7 @@ export default function TournamentHubClient({ initialOverview }: Props) {
               Tournament Progression Sequence
             </span>
             <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', fontFamily: 'var(--font-data)' }}>
-              {Math.round((progress.completedMatches / 16) * 100)}% Complete
+              {Math.round((progress.completedMatches / 15) * 100)}% Complete
             </span>
           </div>
 
@@ -416,26 +415,26 @@ export default function TournamentHubClient({ initialOverview }: Props) {
               {
                 id: 'GROUP',
                 label: '1. Group Stage',
-                matches: 'Matches 1–9',
-                desc: '3 Groups × 3 Teams. Top 1 → Final Four; 2nd → Wildcard.',
+                matches: 'Matches 1–8',
+                desc: '2 Groups × 4 Teams. 1st → Playoff; 2nd → M9; 3rd → M10; 4th eliminated.',
               },
               {
-                id: 'WILDCARD',
-                label: '2. Wildcard Stage',
-                matches: 'Matches 10–12',
-                desc: '3 Runners-up round-robin. 1st → Seed #4.',
+                id: 'QUALIFICATION',
+                label: '2. Playoff Qualification',
+                matches: 'Matches 9–11',
+                desc: '2nd vs 2nd, 3rd vs 3rd, Final Qualifier. Determines Seeds #3 & #4.',
               },
               {
                 id: 'PLAYOFFS',
-                label: '3. Final Four',
-                matches: 'Matches 13–15',
-                desc: 'Qualifier 1, Eliminator, Qualifier 2 (Double chance).',
+                label: '3. Four-Team Playoff',
+                matches: 'Matches 12–14',
+                desc: '1st vs 2nd (M12), 3rd vs 4th (M13), Final Qualifier (M14).',
               },
               {
                 id: 'FINAL',
                 label: '4. Grand Final',
-                matches: 'Match 16',
-                desc: 'Winner Q1 vs Winner Q2 for the Trophy.',
+                matches: 'Match 15',
+                desc: 'M12 Winner vs M14 Winner for the CPL Trophy.',
               },
             ].map((stage, idx) => {
               const isCompleted = currentStageIdx > idx || progress.currentStage === 'COMPLETED';
@@ -536,11 +535,20 @@ export default function TournamentHubClient({ initialOverview }: Props) {
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginTop: '10px', flexWrap: 'wrap' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  {liveMatch.teamA?.logoUrl ? (
-                    <img src={liveMatch.teamA.logoUrl} alt={liveMatch.teamA.name} style={{ width: '36px', height: '36px', borderRadius: '50%', objectFit: 'cover' }} />
-                  ) : (
-                    <span style={{ fontSize: '1.5rem' }}>🏏</span>
-                  )}
+                  {normalizeImageUrl(liveMatch.teamA?.logoUrl) ? (
+                    <img
+                      src={normalizeImageUrl(liveMatch.teamA.logoUrl)!}
+                      alt={liveMatch.teamA.name}
+                      referrerPolicy="no-referrer"
+                      style={{ width: '36px', height: '36px', borderRadius: '50%', objectFit: 'cover' }}
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                        const fallback = e.currentTarget.parentElement?.querySelector('.team-logo-fallback');
+                        if (fallback) (fallback as HTMLElement).style.display = 'inline';
+                      }}
+                    />
+                  ) : null}
+                  <span className="team-logo-fallback" style={{ fontSize: '1.5rem', display: normalizeImageUrl(liveMatch.teamA?.logoUrl) ? 'none' : 'inline' }}>🏏</span>
                   <div>
                     <div style={{ fontSize: '1.1rem', fontWeight: 900, color: '#FFF' }}>{liveMatch.teamA?.name}</div>
                     <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)' }}>({liveMatch.teamA?.shortName})</div>
@@ -550,11 +558,20 @@ export default function TournamentHubClient({ initialOverview }: Props) {
                 <span style={{ fontFamily: 'var(--font-display)', fontSize: '1.3rem', fontWeight: 900, color: '#FFB800' }}>VS</span>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  {liveMatch.teamB?.logoUrl ? (
-                    <img src={liveMatch.teamB.logoUrl} alt={liveMatch.teamB.name} style={{ width: '36px', height: '36px', borderRadius: '50%', objectFit: 'cover' }} />
-                  ) : (
-                    <span style={{ fontSize: '1.5rem' }}>🦁</span>
-                  )}
+                  {normalizeImageUrl(liveMatch.teamB?.logoUrl) ? (
+                    <img
+                      src={normalizeImageUrl(liveMatch.teamB.logoUrl)!}
+                      alt={liveMatch.teamB.name}
+                      referrerPolicy="no-referrer"
+                      style={{ width: '36px', height: '36px', borderRadius: '50%', objectFit: 'cover' }}
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                        const fallback = e.currentTarget.parentElement?.querySelector('.team-logo-fallback');
+                        if (fallback) (fallback as HTMLElement).style.display = 'inline';
+                      }}
+                    />
+                  ) : null}
+                  <span className="team-logo-fallback" style={{ fontSize: '1.5rem', display: normalizeImageUrl(liveMatch.teamB?.logoUrl) ? 'none' : 'inline' }}>🦁</span>
                   <div>
                     <div style={{ fontSize: '1.1rem', fontWeight: 900, color: '#FFF' }}>{liveMatch.teamB?.name}</div>
                     <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)' }}>({liveMatch.teamB?.shortName})</div>
@@ -724,7 +741,7 @@ export default function TournamentHubClient({ initialOverview }: Props) {
         {/* ── SEEDING COMMAND STRIP (4 SEEDS TRACKER) ──────────────── */}
         <div style={{ marginBottom: '20px' }}>
           <div style={{ fontSize: '0.72rem', fontWeight: 900, textTransform: 'uppercase', color: 'rgba(255,255,255,0.45)', letterSpacing: '0.1em', marginBottom: '10px' }}>
-            🌱 Final Four Seeding Allocation
+            🌱 Four-Team Playoff Seeding Allocation
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '12px' }}>
             {/* Seed 1 */}
@@ -743,12 +760,12 @@ export default function TournamentHubClient({ initialOverview }: Props) {
                 <span style={{ padding: '3px 7px', borderRadius: '6px', background: '#10B981', color: '#000', fontWeight: 900, fontSize: '0.72rem' }}>#1</span>
                 <div>
                   <div style={{ fontSize: '0.88rem', fontWeight: 800, color: seed1 ? '#FFF' : 'rgba(255,255,255,0.45)' }}>
-                    {seed1 ? seed1.name : 'TBD (Group Winner #1)'}
+                    {seed1 ? seed1.name : 'TBD (Top Group Winner)'}
                   </div>
-                  <div style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,0.45)' }}>Best Group Winner</div>
+                  <div style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,0.45)' }}>Top Group Winner</div>
                 </div>
               </div>
-              <span style={{ fontSize: '0.7rem', color: '#10B981', fontWeight: 700 }}>→ Q1</span>
+              <span style={{ fontSize: '0.7rem', color: '#10B981', fontWeight: 700 }}>→ M12</span>
             </div>
 
             {/* Seed 2 */}
@@ -767,12 +784,12 @@ export default function TournamentHubClient({ initialOverview }: Props) {
                 <span style={{ padding: '3px 7px', borderRadius: '6px', background: '#10B981', color: '#000', fontWeight: 900, fontSize: '0.72rem' }}>#2</span>
                 <div>
                   <div style={{ fontSize: '0.88rem', fontWeight: 800, color: seed2 ? '#FFF' : 'rgba(255,255,255,0.45)' }}>
-                    {seed2 ? seed2.name : 'TBD (Group Winner #2)'}
+                    {seed2 ? seed2.name : 'TBD (2nd Group Winner)'}
                   </div>
-                  <div style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,0.45)' }}>2nd Best Winner</div>
+                  <div style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,0.45)' }}>2nd Group Winner</div>
                 </div>
               </div>
-              <span style={{ fontSize: '0.7rem', color: '#10B981', fontWeight: 700 }}>→ Q1</span>
+              <span style={{ fontSize: '0.7rem', color: '#10B981', fontWeight: 700 }}>→ M12</span>
             </div>
 
             {/* Seed 3 */}
@@ -790,13 +807,13 @@ export default function TournamentHubClient({ initialOverview }: Props) {
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <span style={{ padding: '3px 7px', borderRadius: '6px', background: '#F59E0B', color: '#000', fontWeight: 900, fontSize: '0.72rem' }}>#3</span>
                 <div>
-                  <div style={{ fontSize: '0.88rem', fontWeight: 800, color: seed3 ? '#FFF' : 'rgba(255,255,255,0.45)' }}>
-                    {seed3 ? seed3.name : 'TBD (Group Winner #3)'}
+                  <div style={{ fontSize: '0.88rem', fontWeight: 800, color: seed3 ? seed3.name : 'TBD (Winner Match 9)' }}>
+                    {seed3 ? seed3.name : 'TBD (Winner Match 9)'}
                   </div>
-                  <div style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,0.45)' }}>3rd Best Winner</div>
+                  <div style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,0.45)' }}>Winner 2nd vs 2nd</div>
                 </div>
               </div>
-              <span style={{ fontSize: '0.7rem', color: '#F59E0B', fontWeight: 700 }}>→ Elim</span>
+              <span style={{ fontSize: '0.7rem', color: '#F59E0B', fontWeight: 700 }}>→ M13</span>
             </div>
 
             {/* Seed 4 */}
@@ -814,13 +831,13 @@ export default function TournamentHubClient({ initialOverview }: Props) {
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <span style={{ padding: '3px 7px', borderRadius: '6px', background: '#F59E0B', color: '#000', fontWeight: 900, fontSize: '0.72rem' }}>#4</span>
                 <div>
-                  <div style={{ fontSize: '0.88rem', fontWeight: 800, color: seed4 ? '#FFF' : 'rgba(255,255,255,0.45)' }}>
-                    {seed4 ? seed4.name : 'TBD (Wildcard Winner)'}
+                  <div style={{ fontSize: '0.88rem', fontWeight: 800, color: seed4 ? seed4.name : 'TBD (Winner Match 11)' }}>
+                    {seed4 ? seed4.name : 'TBD (Winner Match 11)'}
                   </div>
-                  <div style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,0.45)' }}>Wildcard Winner</div>
+                  <div style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,0.45)' }}>Winner Final Qualifier</div>
                 </div>
               </div>
-              <span style={{ fontSize: '0.7rem', color: '#F59E0B', fontWeight: 700 }}>→ Elim</span>
+              <span style={{ fontSize: '0.7rem', color: '#F59E0B', fontWeight: 700 }}>→ M13</span>
             </div>
           </div>
         </div>
@@ -836,16 +853,16 @@ export default function TournamentHubClient({ initialOverview }: Props) {
           }}
         >
           {/* ══════════════════════════════════════════════════════════════ */}
-          {/* COLUMN 1: ROUND 1 (QUALIFIER 1 & ELIMINATOR)                 */}
+          {/* COLUMN 1: ROUND 1 (MATCH 12 & MATCH 13)                      */}
           {/* ══════════════════════════════════════════════════════════════ */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.72rem', fontWeight: 900, textTransform: 'uppercase', color: 'rgba(255,255,255,0.5)', letterSpacing: '0.08em' }}>
               <span>ROUND 1</span>
               <span style={{ color: 'rgba(255,255,255,0.2)' }}>•</span>
-              <span style={{ color: '#C0272D' }}>SEMI-FINALS</span>
+              <span style={{ color: '#C0272D' }}>PLAYOFF SEMIS</span>
             </div>
 
-            {/* MATCH 13: QUALIFIER 1 */}
+            {/* MATCH 12: 1ST VS 2ND */}
             <div
               style={{
                 background: 'linear-gradient(180deg, rgba(24, 24, 32, 0.95) 0%, rgba(16, 16, 22, 0.98) 100%)',
@@ -863,7 +880,7 @@ export default function TournamentHubClient({ initialOverview }: Props) {
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#C0272D' }} />
                     <span style={{ fontSize: '0.74rem', fontWeight: 900, color: '#C0272D', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                      QUALIFIER 1 · #13
+                      1ST VS 2ND · #12
                     </span>
                   </div>
                   <span
@@ -880,7 +897,7 @@ export default function TournamentHubClient({ initialOverview }: Props) {
                   </span>
                 </div>
 
-                {/* Team 1 in Q1 */}
+                {/* Team 1 in M12 */}
                 <div
                   style={{
                     display: 'flex',
@@ -915,7 +932,7 @@ export default function TournamentHubClient({ initialOverview }: Props) {
                   </span>
                 </div>
 
-                {/* Team 2 in Q1 */}
+                {/* Team 2 in M12 */}
                 <div
                   style={{
                     display: 'flex',
@@ -952,7 +969,7 @@ export default function TournamentHubClient({ initialOverview }: Props) {
 
               <div style={{ marginTop: '12px', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span style={{ fontSize: '0.68rem', color: q1Winner ? '#10B981' : 'rgba(255,255,255,0.5)' }}>
-                  {q1Winner ? `✓ ${q1Winner.shortName || q1Winner.name} → Final` : 'Winner → Final · Loser → Q2'}
+                  {q1Winner ? `✓ ${q1Winner.shortName || q1Winner.name} → Grand Final` : 'Winner → Grand Final · Loser → M14'}
                 </span>
                 {q1 && (
                   <Link href={`/scorecard?matchId=${q1.id}`} style={{ fontSize: '0.72rem', color: '#FFB800', fontWeight: 700, textDecoration: 'none' }}>
@@ -962,7 +979,7 @@ export default function TournamentHubClient({ initialOverview }: Props) {
               </div>
             </div>
 
-            {/* MATCH 14: ELIMINATOR */}
+            {/* MATCH 13: 3RD VS 4TH */}
             <div
               style={{
                 background: 'linear-gradient(180deg, rgba(24, 24, 32, 0.95) 0%, rgba(16, 16, 22, 0.98) 100%)',
@@ -980,7 +997,7 @@ export default function TournamentHubClient({ initialOverview }: Props) {
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#F59E0B' }} />
                     <span style={{ fontSize: '0.74rem', fontWeight: 900, color: '#F59E0B', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                      ELIMINATOR · #14
+                      3RD VS 4TH · #13
                     </span>
                   </div>
                   <span
@@ -997,7 +1014,7 @@ export default function TournamentHubClient({ initialOverview }: Props) {
                   </span>
                 </div>
 
-                {/* Team 1 in Eliminator */}
+                {/* Team 1 in M13 */}
                 <div
                   style={{
                     display: 'flex',
@@ -1032,7 +1049,7 @@ export default function TournamentHubClient({ initialOverview }: Props) {
                   </span>
                 </div>
 
-                {/* Team 2 in Eliminator */}
+                {/* Team 2 in M13 */}
                 <div
                   style={{
                     display: 'flex',
@@ -1055,7 +1072,7 @@ export default function TournamentHubClient({ initialOverview }: Props) {
                         whiteSpace: 'nowrap',
                       }}
                     >
-                      {elim?.teamB?.name || seed4?.name || 'TBD (Wildcard Qualifier)'}
+                      {elim?.teamB?.name || seed4?.name || 'TBD (Seed #4)'}
                     </strong>
                     {elimWinner && elim?.teamBId && elimWinner.id === elim.teamBId && <span style={{ color: '#10B981', fontSize: '0.75rem' }}>✓</span>}
                   </div>
@@ -1069,7 +1086,7 @@ export default function TournamentHubClient({ initialOverview }: Props) {
 
               <div style={{ marginTop: '12px', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span style={{ fontSize: '0.68rem', color: elimWinner ? '#10B981' : 'rgba(255,255,255,0.5)' }}>
-                  {elimWinner ? `✓ ${elimWinner.shortName || elimWinner.name} → Q2` : 'Winner → Q2 · Loser Out'}
+                  {elimWinner ? `✓ ${elimWinner.shortName || elimWinner.name} → M14` : 'Winner → M14 · Loser Eliminated'}
                 </span>
                 {elim && (
                   <Link href={`/scorecard?matchId=${elim.id}`} style={{ fontSize: '0.72rem', color: '#FFB800', fontWeight: 700, textDecoration: 'none' }}>
@@ -1081,16 +1098,16 @@ export default function TournamentHubClient({ initialOverview }: Props) {
           </div>
 
           {/* ══════════════════════════════════════════════════════════════ */}
-          {/* COLUMN 2: ROUND 2 (QUALIFIER 2)                              */}
+          {/* COLUMN 2: ROUND 2 (MATCH 14: FINAL QUALIFIER)                */}
           {/* ══════════════════════════════════════════════════════════════ */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', justifyContent: 'center' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.72rem', fontWeight: 900, textTransform: 'uppercase', color: 'rgba(255,255,255,0.5)', letterSpacing: '0.08em' }}>
               <span>ROUND 2</span>
               <span style={{ color: 'rgba(255,255,255,0.2)' }}>•</span>
-              <span style={{ color: '#FFB800' }}>FINAL SPOT</span>
+              <span style={{ color: '#FFB800' }}>FINAL QUALIFIER</span>
             </div>
 
-            {/* MATCH 15: QUALIFIER 2 */}
+            {/* MATCH 14: FINAL QUALIFIER */}
             <div
               style={{
                 background: 'linear-gradient(180deg, rgba(24, 24, 32, 0.95) 0%, rgba(16, 16, 22, 0.98) 100%)',
@@ -1104,7 +1121,7 @@ export default function TournamentHubClient({ initialOverview }: Props) {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#FFB800' }} />
                   <span style={{ fontSize: '0.74rem', fontWeight: 900, color: '#FFB800', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                    QUALIFIER 2 · #15
+                    FINAL QUALIFIER · #14
                   </span>
                 </div>
                 <span
@@ -1121,7 +1138,7 @@ export default function TournamentHubClient({ initialOverview }: Props) {
                 </span>
               </div>
 
-              {/* Team 1 in Q2: Loser Q1 */}
+              {/* Team 1 in M14: Loser M12 */}
               <div
                 style={{
                   display: 'flex',
@@ -1135,7 +1152,7 @@ export default function TournamentHubClient({ initialOverview }: Props) {
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
-                  <span style={{ fontSize: '0.66rem', color: 'rgba(255,255,255,0.4)', fontWeight: 800 }}>LQ1:</span>
+                  <span style={{ fontSize: '0.66rem', color: 'rgba(255,255,255,0.4)', fontWeight: 800 }}>LM12:</span>
                   <strong
                     style={{
                       fontSize: '0.88rem',
@@ -1145,7 +1162,7 @@ export default function TournamentHubClient({ initialOverview }: Props) {
                       whiteSpace: 'nowrap',
                     }}
                   >
-                    {q2?.teamA?.name || q1Loser?.name || 'TBD (Loser Qualifier 1)'}
+                    {q2?.teamA?.name || q1Loser?.name || 'TBD (Loser Match 12)'}
                   </strong>
                   {q2Winner && (q2Winner.id === (q2?.teamAId || q1Loser?.id)) && <span style={{ color: '#10B981', fontSize: '0.75rem' }}>✓</span>}
                 </div>
@@ -1156,7 +1173,7 @@ export default function TournamentHubClient({ initialOverview }: Props) {
                 </span>
               </div>
 
-              {/* Team 2 in Q2: Winner Eliminator */}
+              {/* Team 2 in M14: Winner M13 */}
               <div
                 style={{
                   display: 'flex',
@@ -1169,7 +1186,7 @@ export default function TournamentHubClient({ initialOverview }: Props) {
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
-                  <span style={{ fontSize: '0.66rem', color: 'rgba(255,255,255,0.4)', fontWeight: 800 }}>WEL:</span>
+                  <span style={{ fontSize: '0.66rem', color: 'rgba(255,255,255,0.4)', fontWeight: 800 }}>WM13:</span>
                   <strong
                     style={{
                       fontSize: '0.88rem',
@@ -1179,7 +1196,7 @@ export default function TournamentHubClient({ initialOverview }: Props) {
                       whiteSpace: 'nowrap',
                     }}
                   >
-                    {q2?.teamB?.name || elimWinner?.name || 'TBD (Winner Eliminator)'}
+                    {q2?.teamB?.name || elimWinner?.name || 'TBD (Winner Match 13)'}
                   </strong>
                   {q2Winner && (q2Winner.id === (q2?.teamBId || elimWinner?.id)) && <span style={{ color: '#10B981', fontSize: '0.75rem' }}>✓</span>}
                 </div>
@@ -1192,7 +1209,7 @@ export default function TournamentHubClient({ initialOverview }: Props) {
 
               <div style={{ marginTop: '12px', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span style={{ fontSize: '0.68rem', color: q2Winner ? '#10B981' : 'rgba(255,255,255,0.5)' }}>
-                  {q2Winner ? `✓ ${q2Winner.shortName || q2Winner.name} → Final` : 'Winner → Final · Loser Out'}
+                  {q2Winner ? `✓ ${q2Winner.shortName || q2Winner.name} → Grand Final` : 'Winner → Grand Final · Loser Eliminated'}
                 </span>
                 {q2 && (
                   <Link href={`/scorecard?matchId=${q2.id}`} style={{ fontSize: '0.72rem', color: '#FFB800', fontWeight: 700, textDecoration: 'none' }}>
@@ -1204,7 +1221,7 @@ export default function TournamentHubClient({ initialOverview }: Props) {
           </div>
 
           {/* ══════════════════════════════════════════════════════════════ */}
-          {/* COLUMN 3: GRAND FINAL (MATCH 16)                             */}
+          {/* COLUMN 3: GRAND FINAL (MATCH 15)                             */}
           {/* ══════════════════════════════════════════════════════════════ */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', justifyContent: 'center' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.72rem', fontWeight: 900, textTransform: 'uppercase', color: '#FFD700', letterSpacing: '0.08em' }}>
@@ -1213,7 +1230,7 @@ export default function TournamentHubClient({ initialOverview }: Props) {
               <span>🏆 GRAND FINAL</span>
             </div>
 
-            {/* MATCH 16: GRAND FINAL */}
+            {/* MATCH 15: GRAND FINAL */}
             <div
               style={{
                 background: 'linear-gradient(180deg, rgba(32, 28, 16, 0.95) 0%, rgba(20, 18, 12, 0.98) 100%)',
@@ -1227,7 +1244,7 @@ export default function TournamentHubClient({ initialOverview }: Props) {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <span style={{ fontSize: '1rem' }}>🏆</span>
                   <span style={{ fontSize: '0.76rem', fontWeight: 900, color: '#FFD700', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                    GRAND FINAL · #16
+                    GRAND FINAL · #15
                   </span>
                 </div>
                 <span
@@ -1244,7 +1261,7 @@ export default function TournamentHubClient({ initialOverview }: Props) {
                 </span>
               </div>
 
-              {/* Finalist 1 (Winner Q1) */}
+              {/* Finalist 1 (Winner M12) */}
               <div
                 style={{
                   display: 'flex',
@@ -1258,7 +1275,7 @@ export default function TournamentHubClient({ initialOverview }: Props) {
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
-                  <span style={{ fontSize: '0.66rem', color: 'rgba(255,255,255,0.45)', fontWeight: 800 }}>WQ1:</span>
+                  <span style={{ fontSize: '0.66rem', color: 'rgba(255,255,255,0.45)', fontWeight: 800 }}>WM12:</span>
                   <strong
                     style={{
                       fontSize: '0.92rem',
@@ -1268,7 +1285,7 @@ export default function TournamentHubClient({ initialOverview }: Props) {
                       whiteSpace: 'nowrap',
                     }}
                   >
-                    {finalMatch?.teamA?.name || q1Winner?.name || 'TBD (Winner Qualifier 1)'}
+                    {finalMatch?.teamA?.name || q1Winner?.name || 'TBD (Winner Match 12)'}
                   </strong>
                   {crownedChampion && (crownedChampion.id === (finalMatch?.teamAId || q1Winner?.id)) && <span style={{ color: '#FFD700', fontSize: '0.85rem' }}>👑</span>}
                 </div>
@@ -1279,7 +1296,7 @@ export default function TournamentHubClient({ initialOverview }: Props) {
                 </span>
               </div>
 
-              {/* Finalist 2 (Winner Q2) */}
+              {/* Finalist 2 (Winner M14) */}
               <div
                 style={{
                   display: 'flex',
@@ -1292,7 +1309,7 @@ export default function TournamentHubClient({ initialOverview }: Props) {
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
-                  <span style={{ fontSize: '0.66rem', color: 'rgba(255,255,255,0.45)', fontWeight: 800 }}>WQ2:</span>
+                  <span style={{ fontSize: '0.66rem', color: 'rgba(255,255,255,0.45)', fontWeight: 800 }}>WM14:</span>
                   <strong
                     style={{
                       fontSize: '0.92rem',
@@ -1302,7 +1319,7 @@ export default function TournamentHubClient({ initialOverview }: Props) {
                       whiteSpace: 'nowrap',
                     }}
                   >
-                    {finalMatch?.teamB?.name || q2Winner?.name || 'TBD (Winner Qualifier 2)'}
+                    {finalMatch?.teamB?.name || q2Winner?.name || 'TBD (Winner Match 14)'}
                   </strong>
                   {crownedChampion && (crownedChampion.id === (finalMatch?.teamBId || q2Winner?.id)) && <span style={{ color: '#FFD700', fontSize: '0.85rem' }}>👑</span>}
                 </div>
@@ -1371,7 +1388,7 @@ export default function TournamentHubClient({ initialOverview }: Props) {
                 {crownedChampion ? crownedChampion.name : 'Awaiting Final'}
               </h3>
               <p style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.55)', margin: '6px 0 0', lineHeight: 1.3 }}>
-                {crownedChampion ? 'Official Tournament Winner' : 'Winner of Match 16 Claims the Trophy'}
+                {crownedChampion ? 'Official Tournament Winner' : 'Winner of Match 15 Claims the Trophy'}
               </p>
             </div>
           </div>
@@ -1379,7 +1396,7 @@ export default function TournamentHubClient({ initialOverview }: Props) {
       </section>
 
       {/* ───────────────────────────────────────────────────────────── */}
-      {/* 5. GROUP STAGE OVERVIEW (3 COMPACT GROUP CARDS)               */}
+      {/* 5. GROUP STAGE OVERVIEW (2 COMPACT GROUP CARDS)               */}
       {/* ───────────────────────────────────────────────────────────── */}
       <section id="groups" style={{ marginBottom: '54px', scrollMarginTop: '90px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '18px', flexWrap: 'wrap', gap: '12px' }}>
@@ -1387,27 +1404,27 @@ export default function TournamentHubClient({ initialOverview }: Props) {
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
               <span style={{ width: '8px', height: '2px', background: 'var(--color-accent, #C0272D)' }} />
               <span style={{ fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.14em', color: 'var(--color-accent, #C0272D)' }}>
-                Stage 1 · 9 Teams
+                Stage 1 · 8 Teams · 2 Groups
               </span>
             </div>
             <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(1.8rem, 4vw, 2.4rem)', fontWeight: 900, textTransform: 'uppercase', color: '#FFF', margin: 0 }}>
               Group Stage <span style={{ color: 'var(--color-accent, #C0272D)' }}>Standings</span>
             </h2>
             <p style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.55)', margin: '4px 0 0' }}>
-              1st place qualifies directly for Final Four (Seeds #1–#3). 2nd place enters Wildcard. 3rd place eliminated.
+              1st qualifies directly for Four-Team Playoff. 2nd enters Match 9. 3rd enters Match 10. 4th eliminated.
             </p>
           </div>
         </div>
 
-        {/* 3 Group Cards Grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px' }}>
-          {(['groupA', 'groupB', 'groupC'] as const).map((gKey) => {
+        {/* 2 Group Cards Grid */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '20px' }}>
+          {(['groupA', 'groupB'] as const).map((gKey) => {
             const groupObj = groups[gKey];
-            const gLabel = gKey === 'groupA' ? 'Group A' : gKey === 'groupB' ? 'Group B' : 'Group C';
+            const gLabel = gKey === 'groupA' ? 'Group A' : 'Group B';
             const standings = groupObj?.standings || [];
             const isGroupActive = groupObj?.matches?.some((m: any) => m.status === 'LIVE');
             const completedCount = groupObj?.matches?.filter((m: any) => m.status === 'COMPLETED').length || 0;
-            const isGroupDone = completedCount === 3;
+            const isGroupDone = completedCount === 4;
 
             return (
               <div
@@ -1432,7 +1449,7 @@ export default function TournamentHubClient({ initialOverview }: Props) {
                     )}
                   </div>
                   <span style={{ fontSize: '0.74rem', color: 'rgba(255,255,255,0.4)', fontFamily: 'var(--font-data)' }}>
-                    {completedCount}/3 Completed
+                    {completedCount}/4 Completed
                   </span>
                 </div>
 
@@ -1456,22 +1473,32 @@ export default function TournamentHubClient({ initialOverview }: Props) {
                       <tbody>
                         {standings.map((s, idx) => {
                           const isQual = idx === 0;
-                          const isWild = idx === 1;
-                          const isElim = idx === 2;
+                          const isM9 = idx === 1;
+                          const isM10 = idx === 2;
+                          const isElim = idx === 3;
 
                           return (
                             <tr key={s.teamId} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-                              <td style={{ padding: '10px 8px', fontWeight: 800, color: isQual ? '#10B981' : isWild ? '#F59E0B' : '#EF4444' }}>
+                              <td style={{ padding: '10px 8px', fontWeight: 800, color: isQual ? '#10B981' : isM9 || isM10 ? '#F59E0B' : '#EF4444' }}>
                                 {idx + 1}
                               </td>
                               <td style={{ padding: '10px 8px', fontWeight: 700, color: '#FFF' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                  {s.logoUrl ? (
-                                    <img src={s.logoUrl} alt={s.teamName} style={{ width: '18px', height: '18px', borderRadius: '50%', objectFit: 'cover' }} />
-                                  ) : (
-                                    <span>🏏</span>
-                                  )}
-                                  <span>{s.teamShortName || s.teamName}</span>
+                                  {normalizeImageUrl(s.logoUrl) ? (
+                                    <img
+                                      src={normalizeImageUrl(s.logoUrl)!}
+                                      alt={s.teamName}
+                                      referrerPolicy="no-referrer"
+                                      style={{ width: '18px', height: '18px', borderRadius: '50%', objectFit: 'cover' }}
+                                      onError={(e) => {
+                                        e.currentTarget.style.display = 'none';
+                                        const fallback = e.currentTarget.parentElement?.querySelector('.table-logo-fallback');
+                                        if (fallback) (fallback as HTMLElement).style.display = 'inline';
+                                      }}
+                                    />
+                                  ) : null}
+                                  <span className="table-logo-fallback" style={{ display: normalizeImageUrl(s.logoUrl) ? 'none' : 'inline', fontSize: '11px' }}>🏏</span>
+                                  <span>{s.teamName}</span>
                                 </div>
                               </td>
                               <td style={{ padding: '10px 6px', textAlign: 'center', fontFamily: 'var(--font-data)', color: 'rgba(255,255,255,0.7)' }}>
@@ -1491,16 +1518,16 @@ export default function TournamentHubClient({ initialOverview }: Props) {
                                     padding: '2px 6px',
                                     borderRadius: '4px',
                                     background: isGroupDone
-                                      ? isQual ? 'rgba(16, 185, 129, 0.15)' : isWild ? 'rgba(245, 158, 11, 0.15)' : 'rgba(239, 68, 68, 0.15)'
+                                      ? isQual ? 'rgba(16, 185, 129, 0.15)' : isM9 || isM10 ? 'rgba(245, 158, 11, 0.15)' : 'rgba(239, 68, 68, 0.15)'
                                       : 'rgba(255, 255, 255, 0.05)',
                                     color: isGroupDone
-                                      ? isQual ? '#10B981' : isWild ? '#F59E0B' : '#EF4444'
+                                      ? isQual ? '#10B981' : isM9 || isM10 ? '#F59E0B' : '#EF4444'
                                       : 'rgba(255, 255, 255, 0.6)',
                                   }}
                                 >
                                   {isGroupDone
-                                    ? isQual ? '✓ Qualified' : isWild ? '→ Wildcard' : '✕ Out'
-                                    : isQual ? '1st (In Play)' : isWild ? '2nd (In Play)' : '3rd (In Play)'}
+                                    ? isQual ? '✓ Playoff' : isM9 ? '→ Match 9' : isM10 ? '→ Match 10' : '✕ Out'
+                                    : isQual ? '1st (Playoff)' : isM9 ? '2nd (M9)' : isM10 ? '3rd (M10)' : '4th (Out)'}
                                 </span>
                               </td>
                             </tr>
@@ -1517,9 +1544,9 @@ export default function TournamentHubClient({ initialOverview }: Props) {
       </section>
 
       {/* ───────────────────────────────────────────────────────────── */}
-      {/* 6. WILDCARD MINI-LEAGUE (MATCHES 10-12)                       */}
+      {/* 6. PLAYOFF QUALIFICATION (MATCHES 9-11)                       */}
       {/* ───────────────────────────────────────────────────────────── */}
-      <section id="wildcard" style={{ marginBottom: '54px', scrollMarginTop: '90px' }}>
+      <section id="qualification" style={{ marginBottom: '54px', scrollMarginTop: '90px' }}>
         <div
           style={{
             background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0%, rgba(15, 15, 20, 0.98) 100%)',
@@ -1528,96 +1555,345 @@ export default function TournamentHubClient({ initialOverview }: Props) {
             padding: '24px 28px',
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
             <div>
               <div style={{ fontSize: '0.72rem', fontWeight: 900, color: '#F59E0B', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '4px' }}>
-                Stage 2 · Bridge to Final Four
+                Stage 2 · Bridge to Four-Team Playoff
               </div>
               <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.6rem', fontWeight: 900, textTransform: 'uppercase', color: '#FFF', margin: 0 }}>
-                ⚡ Wildcard Mini-League (Matches 10–12)
+                ⚡ Playoff Qualification (Matches 9–11)
               </h3>
               <p style={{ fontSize: '0.84rem', color: 'rgba(255,255,255,0.6)', margin: '4px 0 0' }}>
-                Single round-robin between the 3 Group Stage runners-up. The team finishing 1st claims <strong>Seed #4</strong> in the Final Four.
+                Matches 9–11 determine the remaining two playoff teams (Seeds #3 & #4) to join the two group winners.
               </p>
             </div>
 
-            {wildcard.qualifier ? (
-              <div style={{ padding: '8px 16px', borderRadius: '10px', background: 'rgba(16, 185, 129, 0.15)', border: '1px solid #10B981', color: '#10B981', fontWeight: 800, fontSize: '0.85rem' }}>
-                ✓ QUALIFIED AS SEED #4: <strong>{wildcard.qualifier.name}</strong>
-              </div>
-            ) : (
-              <div style={{ padding: '6px 14px', borderRadius: '9999px', background: 'rgba(255,255,255,0.06)', fontSize: '0.75rem', color: 'rgba(255,255,255,0.6)' }}>
-                {wildcard.matches.length > 0 ? `${wildcard.matches.filter((m: any) => m.status === 'COMPLETED').length}/3 Matches Completed` : 'Awaiting Group Stage Completion'}
-              </div>
-            )}
+            <div style={{ padding: '6px 14px', borderRadius: '9999px', background: 'rgba(255,255,255,0.06)', fontSize: '0.75rem', color: 'rgba(255,255,255,0.6)' }}>
+              {qualification?.matches?.length > 0
+                ? `${qualification.matches.filter((m: any) => m.status === 'COMPLETED').length}/3 Matches Completed`
+                : 'Awaiting Group Stage Completion'}
+            </div>
           </div>
 
-          {wildcard.standings.length === 0 ? (
-            <div style={{ padding: '24px', textAlign: 'center', color: 'rgba(255,255,255,0.45)', background: 'rgba(255,255,255,0.02)', borderRadius: '10px' }}>
-              The 3 second-placed teams from Groups A, B, and C will automatically populate this table once the 9 Group Stage fixtures conclude.
-            </div>
-          ) : (
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem', textAlign: 'left' }}>
-                <thead>
-                  <tr style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.72rem', textTransform: 'uppercase', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-                    <th style={{ padding: '8px 10px', width: '40px' }}>POS</th>
-                    <th style={{ padding: '8px 10px' }}>TEAM</th>
-                    <th style={{ padding: '8px 8px', textAlign: 'center' }}>P</th>
-                    <th style={{ padding: '8px 8px', textAlign: 'center' }}>W</th>
-                    <th style={{ padding: '8px 8px', textAlign: 'center' }}>L</th>
-                    <th style={{ padding: '8px 10px', textAlign: 'center', color: '#FFB800' }}>PTS</th>
-                    <th style={{ padding: '8px 10px', textAlign: 'right' }}>NRR</th>
-                    <th style={{ padding: '8px 12px', textAlign: 'center' }}>OUTCOME</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {(() => {
-                    const isWildcardDone = wildcard.matches.length === 3 && wildcard.matches.every((m: any) => m.status === 'COMPLETED');
-                    return wildcard.standings.map((s, idx) => (
-                      <tr key={s.teamId} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-                        <td style={{ padding: '10px', fontWeight: 800, color: idx === 0 ? '#10B981' : '#EF4444' }}>
-                          {idx + 1}
-                        </td>
-                        <td style={{ padding: '10px', fontWeight: 700, color: '#FFF' }}>
-                          {s.teamName} ({s.teamShortName})
-                        </td>
-                        <td style={{ padding: '10px 8px', textAlign: 'center', fontFamily: 'var(--font-data)' }}>{s.played}</td>
-                        <td style={{ padding: '10px 8px', textAlign: 'center', fontFamily: 'var(--font-data)' }}>{s.won}</td>
-                        <td style={{ padding: '10px 8px', textAlign: 'center', fontFamily: 'var(--font-data)' }}>{s.lost}</td>
-                        <td style={{ padding: '10px 10px', textAlign: 'center', fontFamily: 'var(--font-data)', fontWeight: 900, color: '#FFB800' }}>
-                          {s.points}
-                        </td>
-                        <td style={{ padding: '10px', textAlign: 'right', fontFamily: 'var(--font-data)', fontWeight: 800, color: s.nrr >= 0 ? '#10B981' : '#EF4444' }}>
-                          {s.displayNRR}
-                        </td>
-                        <td style={{ padding: '10px 12px', textAlign: 'center' }}>
-                          <span
-                            style={{
-                              fontSize: '0.72rem',
-                              fontWeight: 800,
-                              padding: '3px 8px',
-                              borderRadius: '4px',
-                              background: isWildcardDone
-                                ? idx === 0 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.15)'
-                                : 'rgba(255, 255, 255, 0.05)',
-                              color: isWildcardDone
-                                ? idx === 0 ? '#10B981' : '#EF4444'
-                                : 'rgba(255, 255, 255, 0.6)',
-                            }}
-                          >
-                            {isWildcardDone
-                              ? idx === 0 ? '✓ Advances to Eliminator (Seed #4)' : '✕ Eliminated'
-                              : idx === 0 ? '1st (In Play)' : 'In Contention'}
-                          </span>
-                        </td>
-                      </tr>
-                    ));
-                  })()}
-                </tbody>
-              </table>
-            </div>
-          )}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '16px' }}>
+            {/* MATCH 9: 2ND VS 2ND */}
+            {(() => {
+              const m9 = qualification?.match9;
+              const m9Winner = m9?.status === 'COMPLETED' && m9?.winnerTeamId ? m9.winnerTeam : null;
+              return (
+                <div
+                  style={{
+                    background: 'rgba(24, 24, 32, 0.95)',
+                    borderRadius: '14px',
+                    border: m9?.status === 'LIVE' ? '1.5px solid #EF4444' : m9Winner ? '1px solid rgba(16, 185, 129, 0.4)' : '1px solid rgba(255, 255, 255, 0.08)',
+                    padding: '16px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'space-between',
+                  }}
+                >
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#F59E0B' }} />
+                        <span style={{ fontSize: '0.74rem', fontWeight: 900, color: '#F59E0B', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                          MATCH 9 · 2ND VS 2ND
+                        </span>
+                      </div>
+                      <span
+                        style={{
+                          fontSize: '0.66rem',
+                          fontWeight: 800,
+                          padding: '2px 6px',
+                          borderRadius: '4px',
+                          background: m9?.status === 'LIVE' ? '#EF4444' : m9Winner ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255,255,255,0.06)',
+                          color: m9Winner ? '#10B981' : '#FFF',
+                        }}
+                      >
+                        {m9?.status || 'SCHEDULED'}
+                      </span>
+                    </div>
+
+                    {/* Team A */}
+                    <div
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        padding: '8px 10px',
+                        borderRadius: '8px',
+                        background: m9Winner && m9?.teamAId && m9Winner.id === m9.teamAId ? 'rgba(16, 185, 129, 0.12)' : 'rgba(255,255,255,0.02)',
+                        borderLeft: m9Winner && m9?.teamAId && m9Winner.id === m9.teamAId ? '3px solid #10B981' : '3px solid transparent',
+                        marginBottom: '6px',
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+                        <span style={{ fontSize: '0.68rem', fontWeight: 800, color: 'rgba(255,255,255,0.45)' }}>A2</span>
+                        <strong style={{ fontSize: '0.88rem', color: m9Winner && m9?.teamAId && m9Winner.id === m9.teamAId ? '#FFB800' : m9?.teamA ? '#FFF' : 'rgba(255,255,255,0.45)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {m9?.teamA?.name || 'Group A 2nd'}
+                        </strong>
+                        {m9Winner && m9?.teamAId && m9Winner.id === m9.teamAId && <span style={{ color: '#10B981', fontSize: '0.75rem' }}>✓</span>}
+                      </div>
+                      <span style={{ fontFamily: 'var(--font-data)', fontSize: '0.82rem', fontWeight: 800, color: '#FFB800', flexShrink: 0 }}>
+                        {m9?.innings?.find((i: any) => i.battingTeamId === m9?.teamAId && !i.isSuperOver)
+                          ? `${m9.innings.find((i: any) => i.battingTeamId === m9.teamAId && !i.isSuperOver).runs}/${m9.innings.find((i: any) => i.battingTeamId === m9.teamAId && !i.isSuperOver).wickets}`
+                          : '-'}
+                      </span>
+                    </div>
+
+                    {/* Team B */}
+                    <div
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        padding: '8px 10px',
+                        borderRadius: '8px',
+                        background: m9Winner && m9?.teamBId && m9Winner.id === m9.teamBId ? 'rgba(16, 185, 129, 0.12)' : 'rgba(255,255,255,0.02)',
+                        borderLeft: m9Winner && m9?.teamBId && m9Winner.id === m9.teamBId ? '3px solid #10B981' : '3px solid transparent',
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+                        <span style={{ fontSize: '0.68rem', fontWeight: 800, color: 'rgba(255,255,255,0.45)' }}>B2</span>
+                        <strong style={{ fontSize: '0.88rem', color: m9Winner && m9?.teamBId && m9Winner.id === m9.teamBId ? '#FFB800' : m9?.teamB ? '#FFF' : 'rgba(255,255,255,0.45)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {m9?.teamB?.name || 'Group B 2nd'}
+                        </strong>
+                        {m9Winner && m9?.teamBId && m9Winner.id === m9.teamBId && <span style={{ color: '#10B981', fontSize: '0.75rem' }}>✓</span>}
+                      </div>
+                      <span style={{ fontFamily: 'var(--font-data)', fontSize: '0.82rem', fontWeight: 800, color: '#FFB800', flexShrink: 0 }}>
+                        {m9?.innings?.find((i: any) => i.battingTeamId === m9?.teamBId && !i.isSuperOver)
+                          ? `${m9.innings.find((i: any) => i.battingTeamId === m9.teamBId && !i.isSuperOver).runs}/${m9.innings.find((i: any) => i.battingTeamId === m9.teamBId && !i.isSuperOver).wickets}`
+                          : '-'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div style={{ marginTop: '12px', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: '0.68rem', color: m9Winner ? '#10B981' : 'rgba(255,255,255,0.5)' }}>
+                      {m9Winner ? `✓ Winner → Seed #3 · Loser → M11` : 'Winner → Seed #3 · Loser → M11'}
+                    </span>
+                    {m9 && (
+                      <Link href={`/scorecard?matchId=${m9.id}`} style={{ fontSize: '0.72rem', color: '#FFB800', fontWeight: 700, textDecoration: 'none' }}>
+                        Scorecard →
+                      </Link>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* MATCH 10: 3RD VS 3RD */}
+            {(() => {
+              const m10 = qualification?.match10;
+              const m10Winner = m10?.status === 'COMPLETED' && m10?.winnerTeamId ? m10.winnerTeam : null;
+              return (
+                <div
+                  style={{
+                    background: 'rgba(24, 24, 32, 0.95)',
+                    borderRadius: '14px',
+                    border: m10?.status === 'LIVE' ? '1.5px solid #EF4444' : m10Winner ? '1px solid rgba(16, 185, 129, 0.4)' : '1px solid rgba(255, 255, 255, 0.08)',
+                    padding: '16px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'space-between',
+                  }}
+                >
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#F59E0B' }} />
+                        <span style={{ fontSize: '0.74rem', fontWeight: 900, color: '#F59E0B', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                          MATCH 10 · 3RD VS 3RD
+                        </span>
+                      </div>
+                      <span
+                        style={{
+                          fontSize: '0.66rem',
+                          fontWeight: 800,
+                          padding: '2px 6px',
+                          borderRadius: '4px',
+                          background: m10?.status === 'LIVE' ? '#EF4444' : m10Winner ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255,255,255,0.06)',
+                          color: m10Winner ? '#10B981' : '#FFF',
+                        }}
+                      >
+                        {m10?.status || 'SCHEDULED'}
+                      </span>
+                    </div>
+
+                    {/* Team A */}
+                    <div
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        padding: '8px 10px',
+                        borderRadius: '8px',
+                        background: m10Winner && m10?.teamAId && m10Winner.id === m10.teamAId ? 'rgba(16, 185, 129, 0.12)' : 'rgba(255,255,255,0.02)',
+                        borderLeft: m10Winner && m10?.teamAId && m10Winner.id === m10.teamAId ? '3px solid #10B981' : '3px solid transparent',
+                        marginBottom: '6px',
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+                        <span style={{ fontSize: '0.68rem', fontWeight: 800, color: 'rgba(255,255,255,0.45)' }}>A3</span>
+                        <strong style={{ fontSize: '0.88rem', color: m10Winner && m10?.teamAId && m10Winner.id === m10.teamAId ? '#FFB800' : m10?.teamA ? '#FFF' : 'rgba(255,255,255,0.45)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {m10?.teamA?.name || 'Group A 3rd'}
+                        </strong>
+                        {m10Winner && m10?.teamAId && m10Winner.id === m10.teamAId && <span style={{ color: '#10B981', fontSize: '0.75rem' }}>✓</span>}
+                      </div>
+                      <span style={{ fontFamily: 'var(--font-data)', fontSize: '0.82rem', fontWeight: 800, color: '#FFB800', flexShrink: 0 }}>
+                        {m10?.innings?.find((i: any) => i.battingTeamId === m10?.teamAId && !i.isSuperOver)
+                          ? `${m10.innings.find((i: any) => i.battingTeamId === m10.teamAId && !i.isSuperOver).runs}/${m10.innings.find((i: any) => i.battingTeamId === m10.teamAId && !i.isSuperOver).wickets}`
+                          : '-'}
+                      </span>
+                    </div>
+
+                    {/* Team B */}
+                    <div
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        padding: '8px 10px',
+                        borderRadius: '8px',
+                        background: m10Winner && m10?.teamBId && m10Winner.id === m10.teamBId ? 'rgba(16, 185, 129, 0.12)' : 'rgba(255,255,255,0.02)',
+                        borderLeft: m10Winner && m10?.teamBId && m10Winner.id === m10.teamBId ? '3px solid #10B981' : '3px solid transparent',
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+                        <span style={{ fontSize: '0.68rem', fontWeight: 800, color: 'rgba(255,255,255,0.45)' }}>B3</span>
+                        <strong style={{ fontSize: '0.88rem', color: m10Winner && m10?.teamBId && m10Winner.id === m10.teamBId ? '#FFB800' : m10?.teamB ? '#FFF' : 'rgba(255,255,255,0.45)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {m10?.teamB?.name || 'Group B 3rd'}
+                        </strong>
+                        {m10Winner && m10?.teamBId && m10Winner.id === m10.teamBId && <span style={{ color: '#10B981', fontSize: '0.75rem' }}>✓</span>}
+                      </div>
+                      <span style={{ fontFamily: 'var(--font-data)', fontSize: '0.82rem', fontWeight: 800, color: '#FFB800', flexShrink: 0 }}>
+                        {m10?.innings?.find((i: any) => i.battingTeamId === m10?.teamBId && !i.isSuperOver)
+                          ? `${m10.innings.find((i: any) => i.battingTeamId === m10.teamBId && !i.isSuperOver).runs}/${m10.innings.find((i: any) => i.battingTeamId === m10.teamBId && !i.isSuperOver).wickets}`
+                          : '-'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div style={{ marginTop: '12px', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: '0.68rem', color: m10Winner ? '#10B981' : 'rgba(255,255,255,0.5)' }}>
+                      {m10Winner ? `✓ Winner → M11 · Loser Eliminated` : 'Winner → M11 · Loser Eliminated'}
+                    </span>
+                    {m10 && (
+                      <Link href={`/scorecard?matchId=${m10.id}`} style={{ fontSize: '0.72rem', color: '#FFB800', fontWeight: 700, textDecoration: 'none' }}>
+                        Scorecard →
+                      </Link>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* MATCH 11: FINAL QUALIFIER */}
+            {(() => {
+              const m11 = qualification?.match11;
+              const m11Winner = m11?.status === 'COMPLETED' && m11?.winnerTeamId ? m11.winnerTeam : null;
+              return (
+                <div
+                  style={{
+                    background: 'rgba(24, 24, 32, 0.95)',
+                    borderRadius: '14px',
+                    border: m11?.status === 'LIVE' ? '1.5px solid #EF4444' : m11Winner ? '1px solid rgba(16, 185, 129, 0.4)' : '1px solid rgba(255, 255, 255, 0.08)',
+                    padding: '16px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'space-between',
+                  }}
+                >
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#FFB800' }} />
+                        <span style={{ fontSize: '0.74rem', fontWeight: 900, color: '#FFB800', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                          MATCH 11 · FINAL QUALIFIER
+                        </span>
+                      </div>
+                      <span
+                        style={{
+                          fontSize: '0.66rem',
+                          fontWeight: 800,
+                          padding: '2px 6px',
+                          borderRadius: '4px',
+                          background: m11?.status === 'LIVE' ? '#EF4444' : m11Winner ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255,255,255,0.06)',
+                          color: m11Winner ? '#10B981' : '#FFF',
+                        }}
+                      >
+                        {m11?.status || 'SCHEDULED'}
+                      </span>
+                    </div>
+
+                    {/* Team A */}
+                    <div
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        padding: '8px 10px',
+                        borderRadius: '8px',
+                        background: m11Winner && m11?.teamAId && m11Winner.id === m11.teamAId ? 'rgba(16, 185, 129, 0.12)' : 'rgba(255,255,255,0.02)',
+                        borderLeft: m11Winner && m11?.teamAId && m11Winner.id === m11.teamAId ? '3px solid #10B981' : '3px solid transparent',
+                        marginBottom: '6px',
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+                        <span style={{ fontSize: '0.68rem', fontWeight: 800, color: 'rgba(255,255,255,0.45)' }}>LM9</span>
+                        <strong style={{ fontSize: '0.88rem', color: m11Winner && m11?.teamAId && m11Winner.id === m11.teamAId ? '#FFB800' : m11?.teamA ? '#FFF' : 'rgba(255,255,255,0.45)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {m11?.teamA?.name || 'Loser Match 9'}
+                        </strong>
+                        {m11Winner && m11?.teamAId && m11Winner.id === m11.teamAId && <span style={{ color: '#10B981', fontSize: '0.75rem' }}>✓</span>}
+                      </div>
+                      <span style={{ fontFamily: 'var(--font-data)', fontSize: '0.82rem', fontWeight: 800, color: '#FFB800', flexShrink: 0 }}>
+                        {m11?.innings?.find((i: any) => i.battingTeamId === m11?.teamAId && !i.isSuperOver)
+                          ? `${m11.innings.find((i: any) => i.battingTeamId === m11.teamAId && !i.isSuperOver).runs}/${m11.innings.find((i: any) => i.battingTeamId === m11.teamAId && !i.isSuperOver).wickets}`
+                          : '-'}
+                      </span>
+                    </div>
+
+                    {/* Team B */}
+                    <div
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        padding: '8px 10px',
+                        borderRadius: '8px',
+                        background: m11Winner && m11?.teamBId && m11Winner.id === m11.teamBId ? 'rgba(16, 185, 129, 0.12)' : 'rgba(255,255,255,0.02)',
+                        borderLeft: m11Winner && m11?.teamBId && m11Winner.id === m11.teamBId ? '3px solid #10B981' : '3px solid transparent',
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+                        <span style={{ fontSize: '0.68rem', fontWeight: 800, color: 'rgba(255,255,255,0.45)' }}>WM10</span>
+                        <strong style={{ fontSize: '0.88rem', color: m11Winner && m11?.teamBId && m11Winner.id === m11.teamBId ? '#FFB800' : m11?.teamB ? '#FFF' : 'rgba(255,255,255,0.45)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {m11?.teamB?.name || 'Winner Match 10'}
+                        </strong>
+                        {m11Winner && m11?.teamBId && m11Winner.id === m11.teamBId && <span style={{ color: '#10B981', fontSize: '0.75rem' }}>✓</span>}
+                      </div>
+                      <span style={{ fontFamily: 'var(--font-data)', fontSize: '0.82rem', fontWeight: 800, color: '#FFB800', flexShrink: 0 }}>
+                        {m11?.innings?.find((i: any) => i.battingTeamId === m11?.teamBId && !i.isSuperOver)
+                          ? `${m11.innings.find((i: any) => i.battingTeamId === m11.teamBId && !i.isSuperOver).runs}/${m11.innings.find((i: any) => i.battingTeamId === m11.teamBId && !i.isSuperOver).wickets}`
+                          : '-'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div style={{ marginTop: '12px', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: '0.68rem', color: m11Winner ? '#10B981' : 'rgba(255,255,255,0.5)' }}>
+                      {m11Winner ? `✓ Winner → Seed #4 · Loser Eliminated` : 'Winner → Seed #4 · Loser Eliminated'}
+                    </span>
+                    {m11 && (
+                      <Link href={`/scorecard?matchId=${m11.id}`} style={{ fontSize: '0.72rem', color: '#FFB800', fontWeight: 700, textDecoration: 'none' }}>
+                        Scorecard →
+                      </Link>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
+          </div>
         </div>
       </section>
 
@@ -1762,7 +2038,7 @@ export default function TournamentHubClient({ initialOverview }: Props) {
             <div style={{ fontFamily: 'var(--font-data)', fontSize: '1.6rem', fontWeight: 900, color: 'var(--color-accent, #C0272D)' }}>
               {progress.completedMatches} / {progress.totalMatches}
             </div>
-            <div style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.5)' }}>16 Total Scheduled</div>
+            <div style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.5)' }}>15 Total Scheduled</div>
           </div>
 
           <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.07)', borderRadius: '12px', padding: '16px' }}>
@@ -1780,9 +2056,9 @@ export default function TournamentHubClient({ initialOverview }: Props) {
               Registered Teams
             </div>
             <div style={{ fontFamily: 'var(--font-data)', fontSize: '1.6rem', fontWeight: 900, color: '#FFF' }}>
-              9 Teams
+              8 Teams
             </div>
-            <div style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.5)' }}>Across Groups A, B, C</div>
+            <div style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.5)' }}>Across Groups A & B</div>
           </div>
 
           <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.07)', borderRadius: '12px', padding: '16px' }}>
