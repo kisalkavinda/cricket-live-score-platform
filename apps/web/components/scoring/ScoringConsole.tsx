@@ -87,13 +87,14 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
     }
   }, [projectedMatch, match.id, initialMatch]);
 
-  // Sync active innings tab whenever the authoritative currentInnings changes
-  // (handles both direct server response AND realtime-broadcast-driven updates)
+  const prevCurrentInningsRef = useRef<number>(initialMatch?.currentInnings || 1);
+
+  // Sync active innings tab only when authoritative currentInnings transitions to a NEW innings (e.g. 1 -> 2)
   useEffect(() => {
-    if (match.currentInnings && match.currentInnings !== activeInningsTabNumber) {
+    if (match.currentInnings && match.currentInnings !== prevCurrentInningsRef.current) {
+      prevCurrentInningsRef.current = match.currentInnings;
       setActiveInningsTabNumber(match.currentInnings);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [match.currentInnings]);
 
   // Super Over State
