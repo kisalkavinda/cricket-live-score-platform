@@ -252,33 +252,43 @@ export default function Navbar() {
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
-                gap: '6px',
+                gap: '7px',
                 justifyContent: 'center',
                 height: '32px',
-                padding: '0 14px',
-                background: 'rgba(239, 68, 68, 0.16)',
-                color: '#FCA5A5',
+                padding: '0 15px',
+                background: scrolled
+                  ? 'linear-gradient(135deg, #DC2626 0%, #B91C1C 100%)'
+                  : 'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)',
+                color: '#FFFFFF',
                 fontFamily: 'var(--font-display)',
-                fontSize: '0.8rem',
+                fontSize: '0.82rem',
                 fontWeight: 800,
-                letterSpacing: '0.05em',
+                letterSpacing: '0.06em',
                 textTransform: 'uppercase',
                 textDecoration: 'none',
                 borderRadius: '9999px',
-                boxShadow: '0 2px 12px rgba(239, 68, 68, 0.25)',
-                border: '1px solid rgba(239, 68, 68, 0.45)',
+                boxShadow: scrolled
+                  ? '0 2px 10px rgba(185, 28, 28, 0.35)'
+                  : '0 2px 12px rgba(239, 68, 68, 0.45)',
+                border: scrolled
+                  ? '1px solid rgba(185, 28, 28, 0.5)'
+                  : '1px solid rgba(255, 255, 255, 0.25)',
                 transition: 'all var(--dur-fast) var(--ease-out)',
                 whiteSpace: 'nowrap',
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'rgba(239, 68, 68, 0.28)';
-                e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.7)';
+                e.currentTarget.style.background = 'linear-gradient(135deg, #EF4444 0%, #B91C1C 100%)';
                 e.currentTarget.style.transform = 'translateY(-1px)';
+                e.currentTarget.style.boxShadow = '0 4px 14px rgba(220, 38, 38, 0.45)';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'rgba(239, 68, 68, 0.16)';
-                e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.45)';
+                e.currentTarget.style.background = scrolled
+                  ? 'linear-gradient(135deg, #DC2626 0%, #B91C1C 100%)'
+                  : 'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)';
                 e.currentTarget.style.transform = 'none';
+                e.currentTarget.style.boxShadow = scrolled
+                  ? '0 2px 10px rgba(185, 28, 28, 0.35)'
+                  : '0 2px 12px rgba(239, 68, 68, 0.45)';
               }}
             >
               <span
@@ -286,8 +296,8 @@ export default function Navbar() {
                   width: '7px',
                   height: '7px',
                   borderRadius: '50%',
-                  background: '#EF4444',
-                  boxShadow: '0 0 8px #EF4444',
+                  background: '#FFFFFF',
+                  boxShadow: '0 0 8px rgba(255, 255, 255, 0.95)',
                   display: 'inline-block',
                 }}
               />
@@ -370,15 +380,16 @@ export default function Navbar() {
               gap: '8px',
               padding: '0 16px',
               borderRadius: 'var(--radius-md)',
-              color: '#FCA5A5',
+              color: '#FFFFFF',
               fontFamily: 'var(--font-display)',
               textTransform: 'uppercase',
               letterSpacing: '0.04em',
               fontWeight: 800,
               fontSize: '1rem',
               textDecoration: 'none',
-              background: 'rgba(239, 68, 68, 0.16)',
-              border: '1px solid rgba(239, 68, 68, 0.5)',
+              background: 'linear-gradient(135deg, #DC2626 0%, #B91C1C 100%)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              boxShadow: '0 2px 10px rgba(185, 28, 28, 0.35)',
               transition: 'all var(--dur-fast)',
             }}
           >
@@ -387,8 +398,8 @@ export default function Navbar() {
                 width: '8px',
                 height: '8px',
                 borderRadius: '50%',
-                background: '#EF4444',
-                boxShadow: '0 0 8px #EF4444',
+                background: '#FFFFFF',
+                boxShadow: '0 0 8px rgba(255, 255, 255, 0.95)',
                 display: 'inline-block',
               }}
             />
