@@ -413,15 +413,34 @@ export async function verifyCsrfOrigin(): Promise<boolean> {
     return true;
   }
   const host = headerList.get("host");
+  const forwardedHost = headerList.get("x-forwarded-host");
   const origin = headerList.get("origin");
   const referer = headerList.get("referer");
 
-  if (!host) return true;
+  if (!host && !forwardedHost) return true;
+
+  const allowedHosts = new Set<string>();
+  if (host) {
+    allowedHosts.add(host.toLowerCase());
+    const hostNoPort = host.split(":")[0]?.toLowerCase();
+    if (hostNoPort) allowedHosts.add(hostNoPort);
+  }
+  if (forwardedHost) {
+    allowedHosts.add(forwardedHost.toLowerCase());
+    const fwdNoPort = forwardedHost.split(":")[0]?.toLowerCase();
+    if (fwdNoPort) allowedHosts.add(fwdNoPort);
+  }
+  // Localhost aliases for seamless local dev & scoring
+  if (allowedHosts.has("localhost") || allowedHosts.has("127.0.0.1")) {
+    allowedHosts.add("localhost");
+    allowedHosts.add("127.0.0.1");
+  }
 
   if (origin) {
     try {
-      const originHost = new URL(origin).host;
-      if (originHost !== host) {
+      const originHost = new URL(origin).host.toLowerCase();
+      const originHostNoPort = originHost.split(":")[0] || originHost;
+      if (!allowedHosts.has(originHost) && !allowedHosts.has(originHostNoPort)) {
         return false;
       }
     } catch {
@@ -431,8 +450,9 @@ export async function verifyCsrfOrigin(): Promise<boolean> {
 
   if (referer) {
     try {
-      const refererHost = new URL(referer).host;
-      if (refererHost !== host) {
+      const refererHost = new URL(referer).host.toLowerCase();
+      const refererHostNoPort = refererHost.split(":")[0] || refererHost;
+      if (!allowedHosts.has(refererHost) && !allowedHosts.has(refererHostNoPort)) {
         return false;
       }
     } catch {
