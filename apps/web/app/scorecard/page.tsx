@@ -654,110 +654,105 @@ function ScorecardContent() {
               </div>
             </div>
 
-            {/* Mobile View (< 768px): Google Cricket Standard Side-by-Side Dual Team View */}
+            {/* Mobile View (< 768px): Google Cricket Standard Dual-Row Stacked Team Layout */}
             <div className="scorecard-mobile-view">
-              <div className="scorecard-mobile-dual-grid">
-                {/* Left Team Card (Batting 1st) */}
-                <div className={`scorecard-mobile-team-card left ${isLeftBattingCurrent ? 'is-batting' : ''}`}>
-                  <div className="scorecard-mobile-card-header">
+              <div className="scorecard-mobile-stacked-teams">
+                {/* Row 1: Left Team (Batting 1st) */}
+                <div className={`scorecard-mobile-team-row ${isLeftBattingCurrent ? 'is-batting' : ''}`}>
+                  <div className="scorecard-mobile-team-left">
                     {leftTeam?.logoUrl ? (
-                      <img src={leftTeam.logoUrl} alt={leftTeam.name} className="scorecard-mobile-logo" />
+                      <img src={leftTeam.logoUrl} alt={leftTeam.name} className="scorecard-mobile-team-logo" />
                     ) : (
-                      <div className="scorecard-mobile-logo-placeholder">🏏</div>
+                      <div className="scorecard-mobile-team-logo-placeholder">🏏</div>
                     )}
-                    <div className="scorecard-mobile-card-names">
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexWrap: 'wrap' }}>
-                        <span className="scorecard-mobile-card-title">{leftTeam?.name || 'Team 1'}</span>
+                    <div className="scorecard-mobile-team-meta">
+                      <div className="scorecard-mobile-team-name-row">
+                        <span className="scorecard-mobile-team-title">{leftTeam?.name || 'Team 1'}</span>
+                        {isLeftBattingCurrent && (
+                          <span className="scorecard-mobile-batting-badge">🏏 BATTING</span>
+                        )}
                       </div>
-                      {isLeftBattingCurrent && <span className="scorecard-mobile-batting-badge">🏏 BATTING</span>}
                       <span className="scorecard-mobile-shortname">{leftTeam?.shortName}</span>
                     </div>
                   </div>
 
-                  <div className="scorecard-mobile-card-scores left">
+                  <div className="scorecard-mobile-team-right">
                     {isSuperOverMatch ? (
-                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-                        <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
-                          <span className="scorecard-mobile-big-score" style={{ color: '#F59E0B' }}>
-                            {leftSO ? `${leftSO.runs}/${leftSO.wickets}` : isLeftBattingCurrent ? `${currentInnings?.runs ?? 0}/${currentInnings?.wickets ?? 0}` : '-'}
-                          </span>
-                          <span className="scorecard-mobile-overs-tag">
-                            ({leftSO ? `${leftSO.overs}.${leftSO.balls}` : isLeftBattingCurrent ? `${currentInnings?.overs ?? 0}.${currentInnings?.balls ?? 0}` : '0.0'} ov)
-                          </span>
-                        </div>
+                      <>
+                        <span className="scorecard-mobile-team-score" style={{ color: '#F59E0B' }}>
+                          {leftSO ? `${leftSO.runs}/${leftSO.wickets}` : isLeftBattingCurrent ? `${currentInnings?.runs ?? 0}/${currentInnings?.wickets ?? 0}` : '-'}
+                        </span>
+                        <span className="scorecard-mobile-team-overs">
+                          SO: ({leftSO ? `${leftSO.overs}.${leftSO.balls}` : isLeftBattingCurrent ? `${currentInnings?.overs ?? 0}.${currentInnings?.balls ?? 0}` : '0.0'} ov)
+                        </span>
                         {leftTeamInnings && (
                           <span style={{ fontSize: '0.68rem', color: 'rgba(255, 255, 255, 0.4)', marginTop: '1px' }}>
                             Main: {leftTeamInnings.runs}/{leftTeamInnings.wickets}
                           </span>
                         )}
-                      </div>
+                      </>
                     ) : leftTeamInnings ? (
                       <>
-                        <span className="scorecard-mobile-big-score">{leftTeamInnings.runs}/{leftTeamInnings.wickets}</span>
-                        <span className="scorecard-mobile-overs-tag">({leftTeamInnings.overs}.{leftTeamInnings.balls} ov)</span>
+                        <span className="scorecard-mobile-team-score">{leftTeamInnings.runs}/{leftTeamInnings.wickets}</span>
+                        <span className="scorecard-mobile-team-overs">({leftTeamInnings.overs}.{leftTeamInnings.balls} ov)</span>
                       </>
                     ) : isLeftBattingCurrent && currentInnings ? (
                       <>
-                        <span className="scorecard-mobile-big-score">{currentInnings.runs}/{currentInnings.wickets}</span>
-                        <span className="scorecard-mobile-overs-tag">({currentInnings.overs}.{currentInnings.balls} ov)</span>
+                        <span className="scorecard-mobile-team-score">{currentInnings.runs}/{currentInnings.wickets}</span>
+                        <span className="scorecard-mobile-team-overs">({currentInnings.overs}.{currentInnings.balls} ov)</span>
                       </>
                     ) : (
-                      <span className="scorecard-mobile-yet-text">{isPreMatch ? leftTeam?.shortName : 'Yet to bat'}</span>
+                      <span className="scorecard-mobile-team-yet">{isPreMatch ? 'Ready' : 'Yet to bat'}</span>
                     )}
                   </div>
                 </div>
 
-                {/* Center Divider / VS Badge */}
-                <div className="scorecard-mobile-vs-divider">
-                  <span className="scorecard-mobile-vs-badge">VS</span>
-                </div>
-
-                {/* Right Team Card (Batting 2nd) */}
-                <div className={`scorecard-mobile-team-card right ${isRightBattingCurrent ? 'is-batting' : ''}`}>
-                  <div className="scorecard-mobile-card-header right">
+                {/* Row 2: Right Team (Batting 2nd) */}
+                <div className={`scorecard-mobile-team-row ${isRightBattingCurrent ? 'is-batting' : ''}`}>
+                  <div className="scorecard-mobile-team-left">
                     {rightTeam?.logoUrl ? (
-                      <img src={rightTeam.logoUrl} alt={rightTeam.name} className="scorecard-mobile-logo" />
+                      <img src={rightTeam.logoUrl} alt={rightTeam.name} className="scorecard-mobile-team-logo" />
                     ) : (
-                      <div className="scorecard-mobile-logo-placeholder">🦁</div>
+                      <div className="scorecard-mobile-team-logo-placeholder">🦁</div>
                     )}
-                    <div className="scorecard-mobile-card-names right">
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '4px', flexWrap: 'wrap' }}>
-                        <span className="scorecard-mobile-card-title">{rightTeam?.name || 'Team 2'}</span>
+                    <div className="scorecard-mobile-team-meta">
+                      <div className="scorecard-mobile-team-name-row">
+                        <span className="scorecard-mobile-team-title">{rightTeam?.name || 'Team 2'}</span>
+                        {isRightBattingCurrent && (
+                          <span className="scorecard-mobile-batting-badge">🏏 BATTING</span>
+                        )}
                       </div>
-                      {isRightBattingCurrent && <span className="scorecard-mobile-batting-badge">🏏 BATTING</span>}
                       <span className="scorecard-mobile-shortname">{rightTeam?.shortName}</span>
                     </div>
                   </div>
 
-                  <div className="scorecard-mobile-card-scores right">
+                  <div className="scorecard-mobile-team-right">
                     {isSuperOverMatch ? (
-                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-                        <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
-                          <span className="scorecard-mobile-big-score" style={{ color: '#F59E0B' }}>
-                            {rightSO ? `${rightSO.runs}/${rightSO.wickets}` : isRightBattingCurrent ? `${currentInnings?.runs ?? 0}/${currentInnings?.wickets ?? 0}` : '-'}
-                          </span>
-                          <span className="scorecard-mobile-overs-tag">
-                            ({rightSO ? `${rightSO.overs}.${rightSO.balls}` : isRightBattingCurrent ? `${currentInnings?.overs ?? 0}.${currentInnings?.balls ?? 0}` : '0.0'} ov)
-                          </span>
-                        </div>
+                      <>
+                        <span className="scorecard-mobile-team-score" style={{ color: '#F59E0B' }}>
+                          {rightSO ? `${rightSO.runs}/${rightSO.wickets}` : isRightBattingCurrent ? `${currentInnings?.runs ?? 0}/${currentInnings?.wickets ?? 0}` : '-'}
+                        </span>
+                        <span className="scorecard-mobile-team-overs">
+                          SO: ({rightSO ? `${rightSO.overs}.${rightSO.balls}` : isRightBattingCurrent ? `${currentInnings?.overs ?? 0}.${currentInnings?.balls ?? 0}` : '0.0'} ov)
+                        </span>
                         {rightTeamInnings && (
                           <span style={{ fontSize: '0.68rem', color: 'rgba(255, 255, 255, 0.4)', marginTop: '1px' }}>
                             Main: {rightTeamInnings.runs}/{rightTeamInnings.wickets}
                           </span>
                         )}
-                      </div>
+                      </>
                     ) : rightTeamInnings ? (
                       <>
-                        <span className="scorecard-mobile-big-score">{rightTeamInnings.runs}/{rightTeamInnings.wickets}</span>
-                        <span className="scorecard-mobile-overs-tag">({rightTeamInnings.overs}.{rightTeamInnings.balls} ov)</span>
+                        <span className="scorecard-mobile-team-score">{rightTeamInnings.runs}/{rightTeamInnings.wickets}</span>
+                        <span className="scorecard-mobile-team-overs">({rightTeamInnings.overs}.{rightTeamInnings.balls} ov)</span>
                       </>
                     ) : isRightBattingCurrent && currentInnings ? (
                       <>
-                        <span className="scorecard-mobile-big-score">{currentInnings.runs}/{currentInnings.wickets}</span>
-                        <span className="scorecard-mobile-overs-tag">({currentInnings.overs}.{currentInnings.balls} ov)</span>
+                        <span className="scorecard-mobile-team-score">{currentInnings.runs}/{currentInnings.wickets}</span>
+                        <span className="scorecard-mobile-team-overs">({currentInnings.overs}.{currentInnings.balls} ov)</span>
                       </>
                     ) : (
-                      <span className="scorecard-mobile-yet-text">{isPreMatch ? rightTeam?.shortName : 'Yet to bat'}</span>
+                      <span className="scorecard-mobile-team-yet">{isPreMatch ? 'Ready' : 'Yet to bat'}</span>
                     )}
                   </div>
                 </div>

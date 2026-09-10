@@ -1103,7 +1103,7 @@ export async function recordDelivery(inningsId: string, input: RecordDeliveryInp
         matchFinished = true;
         inningsFinished = true;
         winnerTeamId = innings.battingTeamId;
-        const wicketsRemaining = wicketLimit - nextWickets;
+        const wicketsRemaining = Math.max(1, Math.min(10, wicketLimit - nextWickets));
         resultNote = `${battingTeamName} won by ${wicketsRemaining} wicket${wicketsRemaining === 1 ? '' : 's'}`;
       } else if (isTeamAllOut || (isOverComplete && nextOvers >= innings.match.oversPerInnings)) {
         // Bowling team wins or Tie
@@ -2250,8 +2250,9 @@ export async function undoSuperOver(matchId: string) {
       if (inn2Runs > inn1Runs) {
         restoredWinnerTeamId = inn2.battingTeamId;
         const winnerName = inn2.battingTeamId === match.teamAId ? match.teamA.name : match.teamB.name;
-        const marginWkts = Math.max(1, 10 - inn2.wickets);
-        restoredResultNote = `${winnerName} won by ${marginWkts} wickets`;
+        const inn2Limit = getInningsWicketLimit(inn2, match);
+        const marginWkts = Math.max(1, Math.min(10, inn2Limit - inn2.wickets));
+        restoredResultNote = `${winnerName} won by ${marginWkts} wicket${marginWkts === 1 ? '' : 's'}`;
       } else if (inn1Runs > inn2Runs) {
         restoredWinnerTeamId = inn1?.battingTeamId ?? null;
         const winnerName = inn1?.battingTeamId === match.teamAId ? match.teamA.name : match.teamB.name;

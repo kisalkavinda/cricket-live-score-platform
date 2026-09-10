@@ -307,11 +307,11 @@ export function getInningsWicketLimit(
   }
 
   if (innings?.maxWickets && innings.maxWickets > 0) {
-    return innings.maxWickets;
+    return Math.min(10, Math.max(1, innings.maxWickets));
   }
 
   if (innings?.battingLineupSize && innings.battingLineupSize > 1) {
-    return innings.battingLineupSize - 1;
+    return Math.min(10, Math.max(1, innings.battingLineupSize - 1));
   }
 
   // Check batting team's actual squad in match or innings
@@ -331,6 +331,8 @@ export function getInningsWicketLimit(
       squadCount = battingTeam.tournamentSquads.length;
     } else if (Array.isArray(battingTeam.teamPlayers) && battingTeam.teamPlayers.length > 0) {
       squadCount = battingTeam.teamPlayers.length;
+    } else if (Array.isArray(battingTeam.players) && battingTeam.players.length > 0) {
+      squadCount = battingTeam.players.length;
     }
   }
 
@@ -339,11 +341,11 @@ export function getInningsWicketLimit(
   }
 
   if (squadCount > 1) {
-    return squadCount - 1;
+    return Math.min(10, Math.max(1, squadCount - 1));
   }
 
   if (fallbackLineupSize && fallbackLineupSize > 1) {
-    return fallbackLineupSize - 1;
+    return Math.min(10, Math.max(1, fallbackLineupSize - 1));
   }
 
   // Standard cricket default (11-player lineup -> 10 wickets)

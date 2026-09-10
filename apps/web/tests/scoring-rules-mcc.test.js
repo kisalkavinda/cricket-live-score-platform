@@ -222,6 +222,15 @@ console.log('\n--- TEST GROUP 6: Dynamic All-Out Thresholds ---');
 assert.strictEqual(getInningsWicketLimit({ battingLineupSize: 11 }), 10, '11-player lineup: maxWickets = 10');
 assert.strictEqual(getInningsWicketLimit({ battingTeam: { players: new Array(11) } }), 10, '11 players via battingTeam: maxWickets = 10');
 
+// 13-player tournament squad -> capped at 10 wickets (never 12)
+assert.strictEqual(getInningsWicketLimit({ battingTeam: { tournamentSquads: new Array(13) } }), 10, '13 tournament squad players: maxWickets capped at 10');
+// 15-player team squad -> capped at 10 wickets (never 14)
+assert.strictEqual(getInningsWicketLimit({ battingTeam: { teamPlayers: new Array(15) } }), 10, '15 team players: maxWickets capped at 10');
+// 14-player lineup -> capped at 10 wickets
+assert.strictEqual(getInningsWicketLimit({ battingLineupSize: 14 }), 10, '14-player lineup: maxWickets capped at 10');
+// Explicit maxWickets > 10 -> capped at 10 wickets
+assert.strictEqual(getInningsWicketLimit({ maxWickets: 12 }), 10, 'Explicit maxWickets=12: capped at 10');
+
 // 8-player lineup -> 7 wickets
 assert.strictEqual(getInningsWicketLimit({ battingLineupSize: 8 }), 7, '8-player lineup: maxWickets = 7');
 
@@ -241,7 +250,7 @@ assert.strictEqual(isAuthoritativeAllOut({ wickets: 6, battingLineupSize: 8 }), 
 assert.strictEqual(isAuthoritativeAllOut({ wickets: 10, battingLineupSize: 11 }), true, '10 wickets with 11 players is All Out');
 assert.strictEqual(isAuthoritativeAllOut({ wickets: 9, battingLineupSize: 11 }), false, '9 wickets with 11 players is NOT All Out');
 assert.strictEqual(isAuthoritativeAllOut({ isAllOut: true }), true, 'Explicit isAllOut=true is All Out');
-console.log('  PASS  6.1: Dynamic All-Out (8->7, 11->10, Super Over->2) works authoritatively');
+console.log('  PASS  6.1: Dynamic All-Out (8->7, 11->10, 13->10 cap, Super Over->2) works authoritatively');
 
 
 // -------------------------------------------------------------
