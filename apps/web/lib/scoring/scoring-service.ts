@@ -1163,12 +1163,40 @@ export async function recordDelivery(inningsId: string, input: RecordDeliveryInp
       },
     });
 
-    // 8.1 If Super Over 1 completed, set informative match note
-    if (inningsFinished && !matchFinished && innings.inningsNumber >= 3 && innings.inningsNumber % 2 === 1) {
+    // 8.1 Auto-advance to Next Innings (Innings 2 or Super Over 2) if 1st innings ended and match not finished
+    if (inningsFinished && !matchFinished && (innings.inningsNumber === 1 || (innings.inningsNumber >= 3 && innings.inningsNumber % 2 === 1))) {
+      const nextInn = innings.inningsNumber + 1;
+      await tx.innings.upsert({
+        where: { matchId_inningsNumber: { matchId: innings.matchId, inningsNumber: nextInn } },
+        create: {
+          matchId: innings.matchId,
+          inningsNumber: nextInn,
+          battingTeamId: innings.bowlingTeamId,
+          bowlingTeamId: innings.battingTeamId,
+          status: 'IN_PROGRESS',
+          runs: 0,
+          wickets: 0,
+          overs: 0,
+          balls: 0,
+          currentStrikerId: null,
+          currentNonStrikerId: null,
+          currentBowlerId: null,
+        },
+        update: {
+          battingTeamId: innings.bowlingTeamId,
+          bowlingTeamId: innings.battingTeamId,
+          status: 'IN_PROGRESS',
+        },
+      });
+
       await tx.match.update({
         where: { id: innings.matchId },
         data: {
-          resultNote: `Super Over 1 Completed (Target: ${nextRuns + 1} runs)`,
+          status: 'LIVE',
+          currentInnings: nextInn,
+          resultNote: innings.inningsNumber >= 3
+            ? `Super Over 2 Chase In Progress (Target: ${nextRuns + 1} runs)`
+            : innings.match.resultNote,
         },
       });
     }
