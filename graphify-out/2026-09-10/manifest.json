@@ -246,8 +246,8 @@
     "semantic_hash": "1e68eee1d8e9045dfdb62ea2b96f5748"
   },
   "apps/web/components/Navbar.tsx": {
-    "mtime": 1789048117.8789895,
-    "seen": 1789048136.2841702,
+    "mtime": 1789048191.4280338,
+    "seen": 1789048357.196533,
     "ast_hash": "79cf4a9161309bb80c74d663eeac79a3",
     "semantic_hash": ""
   },
@@ -270,9 +270,9 @@
     "semantic_hash": "eabb0c2cefd710e4cb00352e5f66d6bb"
   },
   "apps/web/components/TournamentBracket.tsx": {
-    "mtime": 1789022195.0174136,
-    "seen": 1789023426.4457533,
-    "ast_hash": "80078646a4a7d2606da0bec87baacca4",
+    "mtime": 1789048304.4529223,
+    "seen": 1789048357.196906,
+    "ast_hash": "35915be39bc3ee263708f24cdcdc9b4c",
     "semantic_hash": ""
   },
   "apps/web/components/admin/AdminNavLinks.tsx": {

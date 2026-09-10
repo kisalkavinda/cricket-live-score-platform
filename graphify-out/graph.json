@@ -2885,7 +2885,7 @@
       "file_type": "code",
       "norm_label": "createclient()",
       "source_file": "apps/web/utils/supabase/client.ts",
-      "source_location": "L6"
+      "source_location": "L8"
     },
     {
       "id": "apps_web_app_secretpath_admin_registration_exceptions_page_registrationexceptionspage",
@@ -13977,7 +13977,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/app/display/GroundDisplayClient.tsx",
-      "source_location": "L1145",
+      "source_location": "L1148",
       "weight": 1.0
     },
     {
@@ -13989,7 +13989,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/app/display/GroundDisplayClient.tsx",
-      "source_location": "L162",
+      "source_location": "L165",
       "weight": 1.0
     },
     {
@@ -15525,7 +15525,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/components/LiveScoreWidget.tsx",
-      "source_location": "L105",
+      "source_location": "L110",
       "weight": 1.0
     },
     {
@@ -15537,7 +15537,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/components/LiveScoreWidget.tsx",
-      "source_location": "L1495",
+      "source_location": "L1489",
       "weight": 1.0
     },
     {
@@ -15549,7 +15549,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/components/LiveScoreWidget.tsx",
-      "source_location": "L170",
+      "source_location": "L164",
       "weight": 1.0
     },
     {
@@ -17457,7 +17457,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/offline/useOfflineScorer.ts",
-      "source_location": "L102",
+      "source_location": "L104",
       "weight": 1.0
     },
     {
@@ -17469,7 +17469,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/offline/useOfflineScorer.ts",
-      "source_location": "L30",
+      "source_location": "L32",
       "weight": 1.0
     },
     {
@@ -17481,7 +17481,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/offline/useOfflineScorer.ts",
-      "source_location": "L36",
+      "source_location": "L38",
       "weight": 1.0
     },
     {
@@ -17493,7 +17493,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/offline/useOfflineScorer.ts",
-      "source_location": "L38",
+      "source_location": "L40",
       "weight": 1.0
     },
     {
@@ -17505,7 +17505,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/offline/useOfflineScorer.ts",
-      "source_location": "L93",
+      "source_location": "L95",
       "weight": 1.0
     },
     {
@@ -39968,7 +39968,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/utils/supabase/client.ts",
-      "source_location": "L6",
+      "source_location": "L8",
       "weight": 1.0
     },
     {
@@ -41824,5 +41824,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "9e00a2d405681f1dae7a96b9a7ff74e71bb44c9d"
+  "built_at_commit": "fc860404ea54b54f41ff1dcdcde4b6928515a29e"
 }

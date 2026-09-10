@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   openOfflineDB,
   enqueueOperation,
@@ -25,6 +25,8 @@ export function useOfflineScorer(matchId: string, inningsId?: string, initialMat
 
   const [projectedMatch, setProjectedMatch] = useState<any>(initialMatch || null);
   const [clientId, setClientId] = useState<string>('');
+  const initialMatchRef = useRef(initialMatch);
+  initialMatchRef.current = initialMatch;
 
   useEffect(() => {
     setClientId(getPersistentClientId());
@@ -34,8 +36,8 @@ export function useOfflineScorer(matchId: string, inningsId?: string, initialMat
 
     // Initialize DB and cache initial match
     openOfflineDB().then(async () => {
-      if (initialMatch) {
-        await saveAuthoritativeSnapshot(matchId, initialMatch);
+      if (initialMatchRef.current) {
+        await saveAuthoritativeSnapshot(matchId, initialMatchRef.current);
       }
 
       syncEngine.setActiveContext(matchId, inningsId);
@@ -48,8 +50,8 @@ export function useOfflineScorer(matchId: string, inningsId?: string, initialMat
       if (proj) {
         setProjectedMatch((prev: any) => {
           // Never let a stale offline projection downgrade a LIVE match
-          if ((prev?.status === 'LIVE' || initialMatch?.status === 'LIVE') && proj.status === 'UPCOMING') {
-            return prev || initialMatch;
+          if ((prev?.status === 'LIVE' || initialMatchRef.current?.status === 'LIVE') && proj.status === 'UPCOMING') {
+            return prev || initialMatchRef.current;
           }
           return proj;
         });
@@ -59,7 +61,7 @@ export function useOfflineScorer(matchId: string, inningsId?: string, initialMat
     return () => {
       unsubscribe();
     };
-  }, [matchId, inningsId, initialMatch]);
+  }, [matchId, inningsId]);
 
   /**
    * Authoritative snapshot update called after server actions (start match, set lineup, etc.)
