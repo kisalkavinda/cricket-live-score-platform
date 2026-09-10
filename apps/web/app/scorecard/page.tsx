@@ -21,6 +21,8 @@ function ScorecardContent() {
   const [lastLivePing, setLastLivePing] = useState<string>('');
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const inFlightRef = useRef<boolean>(false);
+  const userSelectedTabRef = useRef<boolean>(false);
+  const initialTabSetRef = useRef<boolean>(false);
 
   const fetchScorecard = useCallback(async (manual = false, force = false) => {
     if (inFlightRef.current && !force) return;
@@ -38,8 +40,9 @@ function ScorecardContent() {
         const data = await res.json();
         if (data.success && data.match) {
           setMatch(data.match);
-          if (data.match.currentInnings && !manual) {
-            setActiveTab((prev) => (!prev || prev === 'inn1' ? `inn${data.match.currentInnings}` : prev));
+          if (data.match.currentInnings && !userSelectedTabRef.current && !initialTabSetRef.current) {
+            initialTabSetRef.current = true;
+            setActiveTab(`inn${data.match.currentInnings}`);
           }
           setLastLivePing(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
         }
@@ -60,8 +63,9 @@ function ScorecardContent() {
           const matchData = await matchRes.json();
           if (matchData.success && matchData.match) {
             setMatch(matchData.match);
-            if (matchData.match.currentInnings && !manual) {
-              setActiveTab((prev) => (!prev || prev === 'inn1' ? `inn${matchData.match.currentInnings}` : prev));
+            if (matchData.match.currentInnings && !userSelectedTabRef.current && !initialTabSetRef.current) {
+              initialTabSetRef.current = true;
+              setActiveTab(`inn${matchData.match.currentInnings}`);
             }
             setLastLivePing(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
           }
@@ -97,11 +101,8 @@ function ScorecardContent() {
       const supabase = createClient();
       matchChannel = supabase.channel(`match:${activeMatchId}`);
       matchChannel
-        .on('broadcast', { event: 'score_update' }, (msg: any) => {
-          if (msg?.payload?.currentInnings) {
-            setActiveTab(`inn${msg.payload.currentInnings}`);
-          }
-          // Fast refresh from in-memory warm cache
+        .on('broadcast', { event: 'score_update' }, () => {
+          // Fast refresh score data WITHOUT overriding viewer's currently selected tab
           fetchScorecard(false, true);
         })
         .subscribe();
@@ -1060,7 +1061,10 @@ function ScorecardContent() {
             {activeTab !== `inn${match.currentInnings}` && (
               <button
                 type="button"
-                onClick={() => setActiveTab(`inn${match.currentInnings}`)}
+                onClick={() => {
+                  userSelectedTabRef.current = true;
+                  setActiveTab(`inn${match.currentInnings}`);
+                }}
                 style={{
                   background: '#F59E0B',
                   color: '#000000',
@@ -1222,7 +1226,10 @@ function ScorecardContent() {
                 return (
                   <button
                     key={`comm-${inn.id}`}
-                    onClick={() => setActiveTab(`inn${inn.inningsNumber}`)}
+                    onClick={() => {
+                      userSelectedTabRef.current = true;
+                      setActiveTab(`inn${inn.inningsNumber}`);
+                    }}
                     style={{
                       padding: '7px 14px',
                       fontSize: '0.8rem',
@@ -1550,7 +1557,10 @@ function ScorecardContent() {
                 return (
                   <button
                     key={inn.id}
-                    onClick={() => setActiveTab(`inn${inn.inningsNumber}`)}
+                    onClick={() => {
+                      userSelectedTabRef.current = true;
+                      setActiveTab(`inn${inn.inningsNumber}`);
+                    }}
                     style={{
                       flex: '1 1 auto',
                       minWidth: '130px',
