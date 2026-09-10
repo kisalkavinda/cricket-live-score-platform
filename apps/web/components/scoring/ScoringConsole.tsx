@@ -4347,6 +4347,33 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                 </button>
               )}
 
+              {/* UNDO SUPER OVER BUTTON (COMPLETED SCREEN) */}
+              {(match.innings || []).some((i: any) => i.inningsNumber >= 3) && (
+                <button
+                  type="button"
+                  onClick={handleUndoSuperOver}
+                  disabled={isUndoSuperOverSaving}
+                  title="Cancel and undo the Super Over, restoring match to Innings 2"
+                  style={{
+                    background: 'rgba(239, 68, 68, 0.2)',
+                    border: '1.5px solid #EF4444',
+                    color: '#FCA5A5',
+                    padding: '12px 20px',
+                    borderRadius: '8px',
+                    fontSize: '0.92rem',
+                    fontWeight: 900,
+                    cursor: isUndoSuperOverSaving ? 'not-allowed' : 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    boxShadow: '0 0 12px rgba(239, 68, 68, 0.3)',
+                  }}
+                >
+                  <span>↩️</span>
+                  <span>{isUndoSuperOverSaving ? 'Undoing Super Over...' : 'Undo Super Over'}</span>
+                </button>
+              )}
+
               <a
                 href={`/scorecard?matchId=${match.id}`}
                 target="_blank"
