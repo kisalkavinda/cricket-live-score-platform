@@ -1,42 +1,33 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { tournamentConfig } from '@/config/tournament';
 
 export default function TournamentBracket() {
-  const quarterFinals = [
-    { id: 'QF1', title: 'Quarter-Final 01', time: '08:30 AM', pitch: 'Pitch 01' },
-    { id: 'QF2', title: 'Quarter-Final 02', time: '09:45 AM', pitch: 'Pitch 02' },
-    { id: 'QF3', title: 'Quarter-Final 03', time: '11:00 AM', pitch: 'Pitch 01' },
-    { id: 'QF4', title: 'Quarter-Final 04', time: '12:15 PM', pitch: 'Pitch 02' },
-  ];
-
-  const semiFinals = [
-    { id: 'SF1', title: 'Semi-Final 01', time: '02:00 PM', match: 'Winner QF1 vs Winner QF2' },
-    { id: 'SF2', title: 'Semi-Final 02', time: '03:15 PM', match: 'Winner QF3 vs Winner QF4' },
-  ];
+  const [activeStageTab, setActiveStageTab] = useState<'all' | 'groups' | 'qualification' | 'playoffs' | 'final'>('all');
 
   return (
     <section
       id="fixtures"
       style={{
-        padding: 'clamp(60px, 8vw, 100px) var(--space-md)',
+        padding: 'clamp(50px, 7vw, 90px) var(--space-md)',
         background: 'var(--color-paper)',
         borderTop: '1px solid var(--color-border)',
         position: 'relative',
         overflow: 'hidden',
       }}
     >
-      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-        {/* Section Header (Hallmark Sport Red & White Style) */}
-        <div style={{ marginBottom: 'clamp(32px, 5vw, 48px)' }}>
+      <div style={{ maxWidth: '1240px', margin: '0 auto' }}>
+        {/* Section Header */}
+        <div style={{ marginBottom: 'clamp(28px, 4vw, 40px)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-            <span style={{ width: '12px', height: '2px', background: 'var(--color-accent)', display: 'inline-block' }} />
+            <span style={{ width: '12px', height: '2.5px', background: 'var(--color-accent)', display: 'inline-block', borderRadius: '2px' }} />
             <span
               style={{
                 fontFamily: 'var(--font-body)',
-                fontSize: '0.75rem',
-                fontWeight: 700,
+                fontSize: '0.78rem',
+                fontWeight: 800,
                 letterSpacing: '0.14em',
                 textTransform: 'uppercase',
                 color: 'var(--color-accent)',
@@ -51,12 +42,13 @@ export default function TournamentBracket() {
               <h2
                 style={{
                   fontFamily: 'var(--font-display)',
-                  fontSize: 'clamp(2.2rem, 5vw, 3.6rem)',
+                  fontSize: 'clamp(2rem, 4.5vw, 3.2rem)',
                   fontWeight: 900,
                   textTransform: 'uppercase',
                   color: 'var(--color-ink)',
                   margin: 0,
                   lineHeight: 1.05,
+                  letterSpacing: '0.02em',
                 }}
               >
                 Tournament <span style={{ color: 'var(--color-accent)' }}>Bracket</span> & Fixtures
@@ -64,329 +56,518 @@ export default function TournamentBracket() {
               <p
                 style={{
                   fontFamily: 'var(--font-body)',
-                  fontSize: '0.95rem',
+                  fontSize: '0.92rem',
                   color: 'var(--color-ink-muted)',
-                  marginTop: '8px',
+                  marginTop: '6px',
                   marginBottom: 0,
-                  maxWidth: '620px',
+                  maxWidth: '640px',
                 }}
               >
-                Knockout elimination tree and match roadmap for {tournamentConfig.name} at Ratmalana CGR Ground.
+                Official 8-team, 15-match championship progression across Group Stage, Playoff Qualification, 4-Team Playoffs, and the Grand Final.
               </p>
             </div>
 
-            {/* Stage Status Badge */}
-            <div
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '8px',
-                padding: '6px 14px',
-                borderRadius: 'var(--radius-pill)',
-                background: 'var(--color-accent-soft)',
-                border: '1px solid rgba(192, 39, 45, 0.25)',
-                color: 'var(--color-accent)',
-                fontFamily: 'var(--font-body)',
-                fontSize: '0.78rem',
-                fontWeight: 700,
-                letterSpacing: '0.04em',
-              }}
-            >
-              <span
+            {/* Quick Actions & Badges */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+              <div
                 style={{
-                  width: '6px',
-                  height: '6px',
-                  borderRadius: '50%',
-                  background: 'var(--color-accent)',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '6px 14px',
+                  borderRadius: 'var(--radius-pill)',
+                  background: 'var(--color-accent-soft)',
+                  border: '1px solid rgba(192, 39, 45, 0.25)',
+                  color: 'var(--color-accent)',
+                  fontFamily: 'var(--font-body)',
+                  fontSize: '0.78rem',
+                  fontWeight: 800,
+                  letterSpacing: '0.04em',
                 }}
-              />
-              <span>8 Teams · 15 Matches · 4 Stages</span>
+              >
+                <span
+                  style={{
+                    width: '6px',
+                    height: '6px',
+                    borderRadius: '50%',
+                    background: 'var(--color-accent)',
+                    boxShadow: '0 0 6px var(--color-accent)',
+                  }}
+                />
+                <span>8 Teams · 15 Matches · 4 Stages</span>
+              </div>
+
+              <Link
+                href="/tournament"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '6px 16px',
+                  borderRadius: 'var(--radius-pill)',
+                  background: 'var(--color-accent)',
+                  color: '#FFF',
+                  fontFamily: 'var(--font-display)',
+                  fontSize: '0.82rem',
+                  fontWeight: 800,
+                  letterSpacing: '0.04em',
+                  textTransform: 'uppercase',
+                  textDecoration: 'none',
+                  boxShadow: '0 2px 10px rgba(192, 39, 45, 0.35)',
+                  transition: 'all var(--dur-fast)',
+                }}
+              >
+                <span>🏆 Full Hub & Standings ➔</span>
+              </Link>
             </div>
+          </div>
+
+          {/* Mobile Filter Tabs */}
+          <div
+            className="md:hidden flex"
+            style={{
+              marginTop: '18px',
+              gap: '6px',
+              overflowX: 'auto',
+              paddingBottom: '4px',
+              scrollbarWidth: 'none',
+            }}
+          >
+            {[
+              { id: 'all', label: 'All Stages' },
+              { id: 'groups', label: 'Stage 1: Groups' },
+              { id: 'qualification', label: 'Stage 2: Qualifiers' },
+              { id: 'playoffs', label: 'Stage 3: Playoffs' },
+              { id: 'final', label: 'Stage 4: Final' },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveStageTab(tab.id as any)}
+                style={{
+                  padding: '6px 12px',
+                  borderRadius: 'var(--radius-pill)',
+                  fontFamily: 'var(--font-body)',
+                  fontSize: '0.78rem',
+                  fontWeight: 700,
+                  whiteSpace: 'nowrap',
+                  background: activeStageTab === tab.id ? 'var(--color-accent)' : 'var(--color-paper-alt)',
+                  color: activeStageTab === tab.id ? '#FFF' : 'var(--color-ink)',
+                  border: activeStageTab === tab.id ? '1px solid var(--color-accent)' : '1px solid var(--color-border)',
+                  cursor: 'pointer',
+                  transition: 'all var(--dur-fast)',
+                }}
+              >
+                {tab.label}
+              </button>
+            ))}
           </div>
         </div>
 
-        {/* Outer Container with Stylized Stadium Glass Overlay */}
+        {/* Outer Container for Bracket Tree */}
         <div
-          className="bracket-container"
           style={{
-            position: 'relative',
             background: 'var(--color-paper-card)',
             border: '1.5px solid var(--color-border)',
             borderRadius: 'var(--radius-lg)',
-            padding: 'clamp(24px, 4vw, 40px)',
-            boxShadow: '0 12px 35px rgba(0, 0, 0, 0.04)',
-            overflow: 'hidden',
+            padding: 'clamp(20px, 3.5vw, 32px)',
+            boxShadow: '0 10px 30px rgba(0, 0, 0, 0.04)',
           }}
         >
-          {/* ========================================================================= */}
-          {/* SKELETON BRACKET TREE (SUBTLE BACKGROUND PREVIEW)                          */}
-          {/* ========================================================================= */}
+          {/* 4-Column Responsive Grid */}
           <div
-            className="bracket-skeleton hidden md:block"
             style={{
-              filter: 'blur(3px)',
-              opacity: 0.55,
-              pointerEvents: 'none',
-              userSelect: 'none',
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+              gap: '20px',
+              alignItems: 'stretch',
             }}
           >
-            <div
-              className="bracket-grid"
-              style={{
-                display: 'grid',
-                gap: '24px',
-                alignItems: 'center',
-              }}
-            >
-              {/* Column 1: Stage 1 Groups */}
-              <div>
-                <div style={{ fontFamily: 'var(--font-display)', fontSize: '0.95rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--color-accent)', marginBottom: '12px', letterSpacing: '0.06em' }}>
-                  Stage 1 · Groups A & B (M1–M8)
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  {['Group A (4 Teams)', 'Group B (4 Teams)'].map((grp, i) => (
-                    <div
-                      key={i}
-                      style={{
-                        background: 'var(--color-paper-alt)',
-                        border: '1px solid var(--color-border)',
-                        borderRadius: 'var(--radius-md)',
-                        padding: '10px 14px',
-                      }}
-                    >
-                      <div style={{ fontSize: '0.78rem', fontWeight: 800, color: 'var(--color-ink)' }}>{grp}</div>
-                      <div style={{ fontSize: '0.72rem', color: 'var(--color-ink-muted)', marginTop: '2px' }}>
-                        1st → Playoff · 2nd → M9 · 3rd → M10 · 4th → Out
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Column 2: Stage 2 Playoff Qualification */}
-              <div>
-                <div style={{ fontFamily: 'var(--font-display)', fontSize: '0.95rem', fontWeight: 800, textTransform: 'uppercase', color: '#D97706', marginBottom: '12px', letterSpacing: '0.06em' }}>
-                  Stage 2 · Qualification (M9–M11)
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <div style={{ background: 'var(--color-paper-alt)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', padding: '10px 12px' }}>
-                    <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#D97706' }}>M9 · 2nd vs 2nd</div>
-                    <div style={{ fontSize: '0.74rem', color: 'var(--color-ink-muted)' }}>Winner → Seed #3 · Loser → M11</div>
-                  </div>
-                  <div style={{ background: 'var(--color-paper-alt)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', padding: '10px 12px' }}>
-                    <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#DC2626' }}>M10 · 3rd vs 3rd</div>
-                    <div style={{ fontSize: '0.74rem', color: 'var(--color-ink-muted)' }}>Winner → M11 · Loser Out</div>
-                  </div>
-                  <div style={{ background: 'var(--color-paper-alt)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', padding: '10px 12px' }}>
-                    <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#2563EB' }}>M11 · Final Qualifier</div>
-                    <div style={{ fontSize: '0.74rem', color: 'var(--color-ink-muted)' }}>Winner → Seed #4 · Loser Out</div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Column 3: Stage 3 Four-Team Playoff */}
-              <div>
-                <div style={{ fontFamily: 'var(--font-display)', fontSize: '0.95rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--color-accent)', marginBottom: '12px', letterSpacing: '0.06em' }}>
-                  Stage 3 · Playoff (M12–M14)
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <div style={{ background: 'var(--color-paper-alt)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', padding: '10px 12px' }}>
-                    <div style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--color-accent)' }}>M12 · 1st vs 2nd</div>
-                    <div style={{ fontSize: '0.74rem', color: 'var(--color-ink-muted)' }}>Seed #1 vs Seed #2 · Winner → M15</div>
-                  </div>
-                  <div style={{ background: 'var(--color-paper-alt)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', padding: '10px 12px' }}>
-                    <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#DC2626' }}>M13 · 3rd vs 4th</div>
-                    <div style={{ fontSize: '0.74rem', color: 'var(--color-ink-muted)' }}>Seed #3 vs Seed #4 · Winner → M14</div>
-                  </div>
-                  <div style={{ background: 'var(--color-paper-alt)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', padding: '10px 12px' }}>
-                    <div style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--color-accent)' }}>M14 · Qualifier 2</div>
-                    <div style={{ fontSize: '0.74rem', color: 'var(--color-ink-muted)' }}>M12 Loser vs M13 Winner → M15</div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Column 4: The Grand Final */}
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontFamily: 'var(--font-display)', fontSize: '0.95rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--color-gold)', marginBottom: '12px', letterSpacing: '0.06em' }}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
-                    <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
-                    <path d="M4 22h16" />
-                    <path d="M10 14.66V17c0 .55-.45 1-1 1H7v4h10v-4h-2c-.55 0-1-.45-1-1v-2.34" />
-                    <path d="M18 4H6v7a6 6 0 0 0 12 0V4Z" />
-                  </svg>
-                  <span>Grand Final (M15)</span>
-                </div>
-                <div
-                  style={{
-                    background: 'linear-gradient(135deg, var(--color-accent-soft) 0%, var(--color-paper-card) 100%)',
-                    border: '2px solid var(--color-accent)',
-                    borderRadius: 'var(--radius-lg)',
-                    padding: '20px 16px',
-                    textAlign: 'center',
-                  }}
-                >
-                  <div style={{ width: '36px', height: '36px', margin: '0 auto 6px', borderRadius: '50%', background: 'var(--color-accent)', color: '#FFF', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    🏆
-                  </div>
-                  <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.2rem', fontWeight: 900, textTransform: 'uppercase', color: 'var(--color-ink)' }}>
-                    CPL 2026 Final
-                  </div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--color-ink-muted)', marginTop: '4px' }}>
-                    Winner M12 vs Winner M14
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* ========================================================================= */}
-          {/* HALLMARK TEASER OVERLAY & CTA CARD                                        */}
-          {/* ========================================================================= */}
-          <div
-            className="bracket-overlay"
-            style={{
-              position: 'absolute',
-              inset: 0,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              padding: 'clamp(10px, 3vw, 24px)',
-              background: 'radial-gradient(ellipse at center, rgba(255, 255, 255, 0.94) 20%, rgba(248, 249, 250, 0.98) 100%)',
-              backdropFilter: 'blur(6px)',
-              WebkitBackdropFilter: 'blur(6px)',
-            }}
-          >
-            <div
-              className="bracket-notice-card"
-              style={{
-                width: '100%',
-                maxWidth: '540px',
-                textAlign: 'center',
-                background: 'var(--color-paper-card)',
-                border: '1.5px solid var(--color-border)',
-                borderRadius: 'var(--radius-lg)',
-                padding: 'clamp(20px, 4.5vw, 36px) clamp(16px, 4vw, 32px)',
-                boxShadow: '0 16px 40px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(192, 39, 45, 0.12)',
-              }}
-            >
-              {/* Seal Icon */}
+            {/* ========================================================================= */}
+            {/* STAGE 1: GROUP STAGE                                                      */}
+            {/* ========================================================================= */}
+            {(activeStageTab === 'all' || activeStageTab === 'groups') && (
               <div
                 style={{
-                  width: '48px',
-                  height: '48px',
-                  borderRadius: '50%',
-                  background: 'var(--color-accent-soft)',
-                  border: '1.5px solid var(--color-accent)',
-                  color: 'var(--color-accent)',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  marginBottom: '12px',
+                  background: 'var(--color-paper-alt)',
+                  border: '1.5px solid var(--color-border)',
+                  borderRadius: 'var(--radius-md)',
+                  padding: '18px 16px',
+                  display: 'flex',
+                  flexDirection: 'column',
                 }}
               >
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                </svg>
-              </div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                  <div style={{ fontFamily: 'var(--font-display)', fontSize: '0.95rem', fontWeight: 900, textTransform: 'uppercase', color: 'var(--color-accent)', letterSpacing: '0.04em' }}>
+                    Stage 1 · Groups
+                  </div>
+                  <span style={{ fontSize: '0.72rem', fontWeight: 800, background: 'var(--color-accent-soft)', color: 'var(--color-accent)', padding: '2px 8px', borderRadius: '4px' }}>
+                    M1–M8
+                  </span>
+                </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '6px' }}>
-                <span style={{ width: '10px', height: '2px', background: 'var(--color-accent)', display: 'inline-block' }} />
-                <span
+                <p style={{ fontSize: '0.78rem', color: 'var(--color-ink-muted)', margin: '0 0 14px 0', lineHeight: 1.4 }}>
+                  Round-robin inside 2 groups of 4. Top 3 from each group advance into the qualification paths.
+                </p>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', flex: 1 }}>
+                  {/* Group A Card */}
+                  <div
+                    style={{
+                      background: 'var(--color-paper-card)',
+                      border: '1px solid var(--color-border)',
+                      borderRadius: 'var(--radius-sm)',
+                      padding: '12px 14px',
+                      borderLeft: '4px solid #EF4444',
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--color-ink)' }}>Group A (4 Teams)</span>
+                      <span style={{ fontSize: '0.7rem', color: 'var(--color-ink-muted)' }}>4 Matches</span>
+                    </div>
+                    <div style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '0.75rem' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', color: '#16A34A', fontWeight: 700 }}>
+                        <span>1st Place</span>
+                        <span>Direct → Playoff Seed #1</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', color: '#D97706', fontWeight: 600 }}>
+                        <span>2nd Place</span>
+                        <span>Advances to M9</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', color: '#DC2626', fontWeight: 600 }}>
+                        <span>3rd Place</span>
+                        <span>Advances to M10</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--color-ink-muted)', fontStyle: 'italic' }}>
+                        <span>4th Place</span>
+                        <span>Eliminated</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Group B Card */}
+                  <div
+                    style={{
+                      background: 'var(--color-paper-card)',
+                      border: '1px solid var(--color-border)',
+                      borderRadius: 'var(--radius-sm)',
+                      padding: '12px 14px',
+                      borderLeft: '4px solid #3B82F6',
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--color-ink)' }}>Group B (4 Teams)</span>
+                      <span style={{ fontSize: '0.7rem', color: 'var(--color-ink-muted)' }}>4 Matches</span>
+                    </div>
+                    <div style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '0.75rem' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', color: '#16A34A', fontWeight: 700 }}>
+                        <span>1st Place</span>
+                        <span>Direct → Playoff Seed #2</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', color: '#D97706', fontWeight: 600 }}>
+                        <span>2nd Place</span>
+                        <span>Advances to M9</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', color: '#DC2626', fontWeight: 600 }}>
+                        <span>3rd Place</span>
+                        <span>Advances to M10</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--color-ink-muted)', fontStyle: 'italic' }}>
+                        <span>4th Place</span>
+                        <span>Eliminated</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ========================================================================= */}
+            {/* STAGE 2: PLAYOFF QUALIFICATION                                            */}
+            {/* ========================================================================= */}
+            {(activeStageTab === 'all' || activeStageTab === 'qualification') && (
+              <div
+                style={{
+                  background: 'var(--color-paper-alt)',
+                  border: '1.5px solid var(--color-border)',
+                  borderRadius: 'var(--radius-md)',
+                  padding: '18px 16px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                  <div style={{ fontFamily: 'var(--font-display)', fontSize: '0.95rem', fontWeight: 900, textTransform: 'uppercase', color: '#D97706', letterSpacing: '0.04em' }}>
+                    Stage 2 · Qualification
+                  </div>
+                  <span style={{ fontSize: '0.72rem', fontWeight: 800, background: 'rgba(217, 119, 6, 0.15)', color: '#D97706', padding: '2px 8px', borderRadius: '4px' }}>
+                    M9–M11
+                  </span>
+                </div>
+
+                <p style={{ fontSize: '0.78rem', color: 'var(--color-ink-muted)', margin: '0 0 14px 0', lineHeight: 1.4 }}>
+                  Decides Seeds #3 & #4 for the 4-team playoff bracket with double-chance qualifiers.
+                </p>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', flex: 1 }}>
+                  {/* Match 09 */}
+                  <div
+                    style={{
+                      background: 'var(--color-paper-card)',
+                      border: '1px solid var(--color-border)',
+                      borderRadius: 'var(--radius-sm)',
+                      padding: '10px 12px',
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: '0.8rem', fontWeight: 800, color: '#D97706' }}>Match 09 · 2nd vs 2nd</span>
+                      <span style={{ fontSize: '0.68rem', background: 'rgba(217, 119, 6, 0.12)', color: '#D97706', padding: '1px 6px', borderRadius: '3px', fontWeight: 700 }}>M9</span>
+                    </div>
+                    <div style={{ fontSize: '0.76rem', color: 'var(--color-ink)', fontWeight: 600, marginTop: '4px' }}>
+                      Group A (2nd) vs Group B (2nd)
+                    </div>
+                    <div style={{ fontSize: '0.72rem', color: '#16A34A', fontWeight: 700, marginTop: '4px' }}>
+                      Winner ➔ Seed #3 | Loser ➔ M11
+                    </div>
+                  </div>
+
+                  {/* Match 10 */}
+                  <div
+                    style={{
+                      background: 'var(--color-paper-card)',
+                      border: '1px solid var(--color-border)',
+                      borderRadius: 'var(--radius-sm)',
+                      padding: '10px 12px',
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: '0.8rem', fontWeight: 800, color: '#DC2626' }}>Match 10 · 3rd vs 3rd</span>
+                      <span style={{ fontSize: '0.68rem', background: 'rgba(220, 38, 38, 0.12)', color: '#DC2626', padding: '1px 6px', borderRadius: '3px', fontWeight: 700 }}>M10</span>
+                    </div>
+                    <div style={{ fontSize: '0.76rem', color: 'var(--color-ink)', fontWeight: 600, marginTop: '4px' }}>
+                      Group A (3rd) vs Group B (3rd)
+                    </div>
+                    <div style={{ fontSize: '0.72rem', color: '#D97706', fontWeight: 700, marginTop: '4px' }}>
+                      Winner ➔ M11 | Loser ➔ Eliminated
+                    </div>
+                  </div>
+
+                  {/* Match 11 */}
+                  <div
+                    style={{
+                      background: 'var(--color-paper-card)',
+                      border: '1px solid var(--color-border)',
+                      borderRadius: 'var(--radius-sm)',
+                      padding: '10px 12px',
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: '0.8rem', fontWeight: 800, color: '#2563EB' }}>Match 11 · Final Qualifier</span>
+                      <span style={{ fontSize: '0.68rem', background: 'rgba(37, 99, 235, 0.12)', color: '#2563EB', padding: '1px 6px', borderRadius: '3px', fontWeight: 700 }}>M11</span>
+                    </div>
+                    <div style={{ fontSize: '0.76rem', color: 'var(--color-ink)', fontWeight: 600, marginTop: '4px' }}>
+                      M9 Loser vs M10 Winner
+                    </div>
+                    <div style={{ fontSize: '0.72rem', color: '#16A34A', fontWeight: 700, marginTop: '4px' }}>
+                      Winner ➔ Seed #4 | Loser ➔ Eliminated
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ========================================================================= */}
+            {/* STAGE 3: FOUR-TEAM PLAYOFFS                                               */}
+            {/* ========================================================================= */}
+            {(activeStageTab === 'all' || activeStageTab === 'playoffs') && (
+              <div
+                style={{
+                  background: 'var(--color-paper-alt)',
+                  border: '1.5px solid var(--color-border)',
+                  borderRadius: 'var(--radius-md)',
+                  padding: '18px 16px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                  <div style={{ fontFamily: 'var(--font-display)', fontSize: '0.95rem', fontWeight: 900, textTransform: 'uppercase', color: 'var(--color-accent)', letterSpacing: '0.04em' }}>
+                    Stage 3 · Playoffs
+                  </div>
+                  <span style={{ fontSize: '0.72rem', fontWeight: 800, background: 'var(--color-accent-soft)', color: 'var(--color-accent)', padding: '2px 8px', borderRadius: '4px' }}>
+                    M12–M14
+                  </span>
+                </div>
+
+                <p style={{ fontSize: '0.78rem', color: 'var(--color-ink-muted)', margin: '0 0 14px 0', lineHeight: 1.4 }}>
+                  IPL-style 4-team playoff format with Qualifier 1, Eliminator, and Qualifier 2.
+                </p>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', flex: 1 }}>
+                  {/* Match 12 (Qualifier 1) */}
+                  <div
+                    style={{
+                      background: 'var(--color-paper-card)',
+                      border: '1px solid var(--color-border)',
+                      borderRadius: 'var(--radius-sm)',
+                      padding: '10px 12px',
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--color-accent)' }}>M12 · Qualifier 1</span>
+                      <span style={{ fontSize: '0.68rem', background: 'var(--color-accent-soft)', color: 'var(--color-accent)', padding: '1px 6px', borderRadius: '3px', fontWeight: 700 }}>M12</span>
+                    </div>
+                    <div style={{ fontSize: '0.76rem', color: 'var(--color-ink)', fontWeight: 600, marginTop: '4px' }}>
+                      Seed #1 vs Seed #2
+                    </div>
+                    <div style={{ fontSize: '0.72rem', color: '#16A34A', fontWeight: 700, marginTop: '4px' }}>
+                      Winner ➔ Final (M15) | Loser ➔ M14
+                    </div>
+                  </div>
+
+                  {/* Match 13 (Eliminator) */}
+                  <div
+                    style={{
+                      background: 'var(--color-paper-card)',
+                      border: '1px solid var(--color-border)',
+                      borderRadius: 'var(--radius-sm)',
+                      padding: '10px 12px',
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: '0.8rem', fontWeight: 800, color: '#DC2626' }}>M13 · Eliminator</span>
+                      <span style={{ fontSize: '0.68rem', background: 'rgba(220, 38, 38, 0.12)', color: '#DC2626', padding: '1px 6px', borderRadius: '3px', fontWeight: 700 }}>M13</span>
+                    </div>
+                    <div style={{ fontSize: '0.76rem', color: 'var(--color-ink)', fontWeight: 600, marginTop: '4px' }}>
+                      Seed #3 vs Seed #4
+                    </div>
+                    <div style={{ fontSize: '0.72rem', color: '#D97706', fontWeight: 700, marginTop: '4px' }}>
+                      Winner ➔ M14 | Loser ➔ Eliminated
+                    </div>
+                  </div>
+
+                  {/* Match 14 (Qualifier 2) */}
+                  <div
+                    style={{
+                      background: 'var(--color-paper-card)',
+                      border: '1px solid var(--color-border)',
+                      borderRadius: 'var(--radius-sm)',
+                      padding: '10px 12px',
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--color-accent)' }}>M14 · Qualifier 2</span>
+                      <span style={{ fontSize: '0.68rem', background: 'var(--color-accent-soft)', color: 'var(--color-accent)', padding: '1px 6px', borderRadius: '3px', fontWeight: 700 }}>M14</span>
+                    </div>
+                    <div style={{ fontSize: '0.76rem', color: 'var(--color-ink)', fontWeight: 600, marginTop: '4px' }}>
+                      M12 Loser vs M13 Winner
+                    </div>
+                    <div style={{ fontSize: '0.72rem', color: '#16A34A', fontWeight: 700, marginTop: '4px' }}>
+                      Winner ➔ Final (M15) | Loser ➔ Eliminated
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ========================================================================= */}
+            {/* STAGE 4: THE GRAND FINAL                                                  */}
+            {/* ========================================================================= */}
+            {(activeStageTab === 'all' || activeStageTab === 'final') && (
+              <div
+                style={{
+                  background: 'linear-gradient(135deg, rgba(254, 242, 242, 0.9) 0%, rgba(255, 255, 255, 0.95) 100%)',
+                  border: '2px solid var(--color-accent)',
+                  borderRadius: 'var(--radius-md)',
+                  padding: '20px 16px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  textAlign: 'center',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', marginBottom: '8px' }}>
+                  <span style={{ fontSize: '0.75rem', fontWeight: 800, background: 'var(--color-accent)', color: '#FFF', padding: '2px 10px', borderRadius: 'var(--radius-pill)', textTransform: 'uppercase' }}>
+                    Match 15 · Grand Final
+                  </span>
+                </div>
+
+                <div
                   style={{
-                    fontFamily: 'var(--font-body)',
-                    fontSize: '0.72rem',
-                    fontWeight: 800,
-                    letterSpacing: '0.14em',
-                    textTransform: 'uppercase',
-                    color: 'var(--color-accent)',
+                    width: '46px',
+                    height: '46px',
+                    margin: '10px auto',
+                    borderRadius: '50%',
+                    background: 'linear-gradient(135deg, #EF4444, #B91C1C)',
+                    color: '#FFF',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '1.4rem',
+                    boxShadow: '0 4px 14px rgba(239, 68, 68, 0.4)',
                   }}
                 >
-                  8-Team Championship Bracket
-                </span>
-                <span style={{ width: '10px', height: '2px', background: 'var(--color-accent)', display: 'inline-block' }} />
-              </div>
+                  🏆
+                </div>
 
-              <h3
-                style={{
-                  fontFamily: 'var(--font-display)',
-                  fontSize: 'clamp(1.4rem, 4.5vw, 2.2rem)',
-                  fontWeight: 900,
-                  textTransform: 'uppercase',
-                  letterSpacing: '-0.01em',
-                  color: 'var(--color-ink)',
-                  margin: '0 0 8px 0',
-                  lineHeight: 1.15,
-                }}
-              >
-                Fixture Pairings & Match Progression
-              </h3>
+                <h3
+                  style={{
+                    fontFamily: 'var(--font-display)',
+                    fontSize: '1.25rem',
+                    fontWeight: 900,
+                    textTransform: 'uppercase',
+                    color: 'var(--color-ink)',
+                    margin: '0 0 6px 0',
+                    lineHeight: 1.15,
+                  }}
+                >
+                  CPL 2026 Champion
+                </h3>
 
-              <p
-                style={{
-                  fontFamily: 'var(--font-body)',
-                  fontSize: '0.86rem',
-                  color: 'var(--color-ink-muted)',
-                  lineHeight: 1.5,
-                  margin: '0 0 18px 0',
-                }}
-              >
-                The complete 15-match championship roadmap across 2 groups, playoff qualification, 4-team playoffs, and grand final is active on the live tournament hub.
-              </p>
+                <p style={{ fontSize: '0.8rem', color: 'var(--color-ink-muted)', margin: '0 0 16px 0', lineHeight: 1.4 }}>
+                  Winner M12 (Qualifier 1) vs Winner M14 (Qualifier 2)
+                </p>
 
-              {/* Action Buttons */}
-              <div className="bracket-overlay-cta-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap', gap: '10px' }}>
+                <div
+                  style={{
+                    marginTop: 'auto',
+                    background: 'rgba(239, 68, 68, 0.08)',
+                    border: '1px dashed var(--color-accent)',
+                    borderRadius: 'var(--radius-sm)',
+                    padding: '12px 10px',
+                  }}
+                >
+                  <div style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--color-accent)' }}>
+                    👑 Ratmalana CGR Ground
+                  </div>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--color-ink-muted)', marginTop: '2px' }}>
+                    The ultimate championship showdown
+                  </div>
+                </div>
+
                 <Link
                   href="/tournament"
                   style={{
-                    height: '42px',
-                    padding: '0 20px',
-                    borderRadius: 'var(--radius-sm)',
-                    border: 'none',
+                    marginTop: '14px',
+                    height: '38px',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
                     background: 'var(--color-accent)',
                     color: '#FFF',
                     fontFamily: 'var(--font-display)',
-                    fontSize: '0.92rem',
+                    fontSize: '0.82rem',
                     fontWeight: 800,
                     textTransform: 'uppercase',
                     letterSpacing: '0.04em',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
                     textDecoration: 'none',
-                    boxShadow: '0 4px 14px rgba(192, 39, 45, 0.3)',
-                    transition: 'all var(--dur-fast)',
-                  }}
-                >
-                  <span>🏆 Open Full Tournament Hub & Standings</span>
-                </Link>
-
-                <a
-                  href="#details"
-                  style={{
-                    height: '42px',
-                    padding: '0 16px',
                     borderRadius: 'var(--radius-sm)',
-                    border: '1.5px solid var(--color-border)',
-                    background: 'var(--color-paper-alt)',
-                    color: 'var(--color-ink)',
-                    fontFamily: 'var(--font-display)',
-                    fontSize: '0.88rem',
-                    fontWeight: 800,
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.04em',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    textDecoration: 'none',
+                    boxShadow: '0 2px 10px rgba(192, 39, 45, 0.3)',
                     transition: 'all var(--dur-fast)',
                   }}
                 >
-                  <span>View Guidelines</span>
-                </a>
+                  View Live Tournament Hub ➔
+                </Link>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </div>
