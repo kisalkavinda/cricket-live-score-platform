@@ -234,9 +234,9 @@
     "semantic_hash": ""
   },
   "apps/web/components/LiveScoreWidget.tsx": {
-    "mtime": 1789047593.124854,
-    "seen": 1789048136.2840567,
-    "ast_hash": "c48b4ef18c498a00f65ded00c9b9fb8b",
+    "mtime": 1789048825.2611084,
+    "seen": 1789048879.7389042,
+    "ast_hash": "ff75607dc4427f0feaaa33ed4bad2110",
     "semantic_hash": ""
   },
   "apps/web/components/LottieAnimation.tsx": {
@@ -270,9 +270,9 @@
     "semantic_hash": "eabb0c2cefd710e4cb00352e5f66d6bb"
   },
   "apps/web/components/TournamentBracket.tsx": {
-    "mtime": 1789048304.4529223,
-    "seen": 1789048357.196906,
-    "ast_hash": "35915be39bc3ee263708f24cdcdc9b4c",
+    "mtime": 1789048403.4541898,
+    "seen": 1789048879.7403305,
+    "ast_hash": "aa98f2bfa57ab8dafd7249354aa7cbcd",
     "semantic_hash": ""
   },
   "apps/web/components/admin/AdminNavLinks.tsx": {
@@ -522,10 +522,10 @@
     "semantic_hash": ""
   },
   "apps/web/utils/supabase/client.ts": {
-    "mtime": 1786218603.3610516,
-    "seen": 1788034975.2229645,
-    "ast_hash": "d9a8562863eff569d393d34609f50ef8",
-    "semantic_hash": "d9a8562863eff569d393d34609f50ef8"
+    "mtime": 1789048701.7493882,
+    "seen": 1789048879.765566,
+    "ast_hash": "4a62656e9a09a749978ec3d7049013da",
+    "semantic_hash": ""
   },
   "apps/web/utils/supabase/middleware.ts": {
     "mtime": 1786218611.2979014,
@@ -894,9 +894,9 @@
     "semantic_hash": ""
   },
   "apps/web/lib/offline/useOfflineScorer.ts": {
-    "mtime": 1788731695.691128,
-    "seen": 1788763599.9004283,
-    "ast_hash": "17f0f2f34cc2d99d0fcd8694180b8ba8",
+    "mtime": 1789048734.0622013,
+    "seen": 1789048879.7495112,
+    "ast_hash": "c383936f1e5e55fc2a1a06a43a97b77c",
     "semantic_hash": ""
   },
   "apps/web/public/sw.js": {
@@ -1092,9 +1092,9 @@
     "semantic_hash": ""
   },
   "apps/web/app/display/GroundDisplayClient.tsx": {
-    "mtime": 1789047593.120465,
-    "seen": 1789048136.2815502,
-    "ast_hash": "a02ef30beff60712c77c62986d063ad3",
+    "mtime": 1789048776.801046,
+    "seen": 1789048879.731353,
+    "ast_hash": "bbc889e2e73606c83bb8e9bcd3c178d2",
     "semantic_hash": ""
   },
   "apps/web/app/display/page.tsx": {

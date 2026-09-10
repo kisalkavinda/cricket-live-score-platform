@@ -40,10 +40,15 @@ export default function LiveScoreWidget() {
   const [statsLoading, setStatsLoading] = useState<boolean>(false);
   const [matchFilter, setMatchFilter] = useState<'ALL' | 'COMPLETED' | 'LIVE' | 'UPCOMING'>('ALL');
 
+  const activeMatchIdRef = useRef<string | null>(activeMatchId);
+  activeMatchIdRef.current = activeMatchId;
+
+  const navTabRef = useRef<NavTab>(navTab);
+  navTabRef.current = navTab;
+
   // 1. Fetch initial live matches from database
   const fetchLiveMatches = useCallback(async (force = false) => {
     if (inFlightRef.current && !force) {
-      setTimeout(() => fetchLiveMatches(true), 250);
       return;
     }
     inFlightRef.current = true;
@@ -96,17 +101,17 @@ export default function LiveScoreWidget() {
   }, []);
 
   useEffect(() => {
-    fetchLiveMatches();
+    fetchLiveMatches(true);
     fetchTournamentStats();
   }, [fetchLiveMatches, fetchTournamentStats]);
 
-  // 3. Real-time Subscription via Supabase Realtime
+  // 3. Real-time Subscription via Supabase Realtime (Single persistent channel)
   useEffect(() => {
     const supabase = createClient();
 
     const handleBroadcastUpdate = (msg?: any) => {
       if (msg?.payload?.matchId) {
-        // Instant 0ms in-memory update directly from the broadcast payload
+        // Instant in-memory update directly from the broadcast payload
         setMatches((prevMatches) => {
           const index = prevMatches.findIndex((m) => m.matchId === msg.payload.matchId);
           if (index !== -1) {
@@ -127,36 +132,25 @@ export default function LiveScoreWidget() {
 
     liveChannel
       .on('broadcast', { event: 'score_update' }, handleBroadcastUpdate)
-      .subscribe((status) => {
+      .subscribe((status: any) => {
         if (status === 'SUBSCRIBED') {
-          fetchLiveMatches();
-          fetchTournamentStats();
+          fetchLiveMatches(true);
         }
       });
 
-    // Also subscribe specifically to active match channel if set
-    let matchChannel: any = null;
-    if (activeMatchId) {
-      matchChannel = supabase.channel(`match:${activeMatchId}`);
-      matchChannel
-        .on('broadcast', { event: 'score_update' }, handleBroadcastUpdate)
-        .subscribe();
-    }
-
-    // Rapid 3.5s safety sync fallback (ensures score is never stale even if connection drops)
+    // 4. Reliable 4s safety sync fallback
     const interval = setInterval(() => {
       fetchLiveMatches();
-      if (navTab !== 'LIVE') fetchTournamentStats();
-    }, 3500);
+      if (navTabRef.current !== 'LIVE') fetchTournamentStats();
+    }, 4000);
 
     return () => {
       try {
         supabase.removeChannel(liveChannel);
-        if (matchChannel) supabase.removeChannel(matchChannel);
       } catch (e) {}
       clearInterval(interval);
     };
-  }, [activeMatchId, fetchLiveMatches, fetchTournamentStats, navTab]);
+  }, [fetchLiveMatches, fetchTournamentStats]);
 
   const currentMatch = matches.find((m) => m.matchId === activeMatchId) || matches[0];
   const currentInnings = currentMatch?.innings;

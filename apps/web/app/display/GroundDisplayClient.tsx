@@ -136,6 +136,9 @@ export default function GroundDisplayClient({
     }
   }, []);
 
+  const activeMatchIdRef = useRef<string | null>(activeMatchId);
+  activeMatchIdRef.current = activeMatchId;
+
   // Auto-refresh loop: every 4 seconds
   useEffect(() => {
     fetchLiveMatches();
@@ -147,13 +150,13 @@ export default function GroundDisplayClient({
     const interval = setInterval(() => {
       fetchLiveMatches();
       fetchTournamentStats();
-      if (activeMatchId) {
-        fetchActiveScorecard(activeMatchId);
+      if (activeMatchIdRef.current) {
+        fetchActiveScorecard(activeMatchIdRef.current);
       }
     }, 4000);
 
     return () => clearInterval(interval);
-  }, [activeMatchId, fetchLiveMatches, fetchActiveScorecard, fetchTournamentStats]);
+  }, [fetchLiveMatches, fetchActiveScorecard, fetchTournamentStats]);
 
   // Supabase Realtime subscription for instantaneous ball-by-ball updates
   useEffect(() => {
@@ -174,8 +177,8 @@ export default function GroundDisplayClient({
               }
               return [msg.payload, ...prev];
             });
-            if (activeMatchId) {
-              fetchActiveScorecard(activeMatchId);
+            if (activeMatchIdRef.current) {
+              fetchActiveScorecard(activeMatchIdRef.current);
             }
           }
         })
@@ -192,7 +195,7 @@ export default function GroundDisplayClient({
         } catch {}
       }
     };
-  }, [activeMatchId, fetchActiveScorecard]);
+  }, [fetchActiveScorecard]);
 
   // Currently active match payload
   const currentMatch = useMemo(() => {
