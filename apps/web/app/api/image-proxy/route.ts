@@ -12,7 +12,11 @@ const ALLOWED_HOSTS = new Set([
 
 function isAllowedHost(hostname: string): boolean {
   if (ALLOWED_HOSTS.has(hostname)) return true;
-  if (hostname.endsWith('.googleusercontent.com') || hostname.endsWith('.supabase.co')) {
+  if (
+    hostname.endsWith('.googleusercontent.com') ||
+    hostname.endsWith('.google.com') ||
+    hostname.endsWith('.supabase.co')
+  ) {
     return true;
   }
   return false;
@@ -35,8 +39,8 @@ export async function GET(req: NextRequest) {
 
   let targetUrl = '';
   if (id) {
-    // Sanitize Google Drive file ID (must be alphanumeric, hyphen, underscore only)
-    if (!/^[a-zA-Z0-9_-]{10,64}$/.test(id)) {
+    // Sanitize Google Drive file ID (alphanumeric, hyphen, underscore)
+    if (!/^[a-zA-Z0-9_-]{5,128}$/.test(id)) {
       return new NextResponse('Invalid image ID format', { status: 400 });
     }
     targetUrl = `https://lh3.googleusercontent.com/d/${id}`;
