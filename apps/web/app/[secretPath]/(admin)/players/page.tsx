@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { getAdminEntryPath, requireAdminAuth } from '@/lib/auth/admin-auth';
 import { createPerfTracker, logPerfMetric } from '@/lib/utils/perf-logger';
 import DeletePlayerButton from '@/components/admin/DeletePlayerButton';
+import { normalizeImageUrl } from '@/lib/utils/image-utils';
 
 export const dynamic = 'force-dynamic';
 
@@ -145,10 +146,11 @@ export default async function AdminPlayersPage() {
                   <tr key={player.id} style={{ borderBottom: '1px solid #161D2B' }}>
                     <td style={{ padding: '14px 18px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        {player.profileImageUrl ? (
+                        {normalizeImageUrl(player.profileImageUrl) ? (
                           <img
-                            src={player.profileImageUrl}
+                            src={normalizeImageUrl(player.profileImageUrl)!}
                             alt={player.name}
+                            referrerPolicy="no-referrer"
                             style={{
                               width: '36px',
                               height: '36px',
@@ -211,8 +213,8 @@ export default async function AdminPlayersPage() {
                                 border: '1px solid #2A364E',
                               }}
                             >
-                              {tp.team?.logoUrl ? (
-                                <img src={tp.team.logoUrl} alt="" style={{ width: '14px', height: '14px', borderRadius: '2px', objectFit: 'cover' }} />
+                              {normalizeImageUrl(tp.team?.logoUrl) ? (
+                                <img src={normalizeImageUrl(tp.team.logoUrl)!} alt="" referrerPolicy="no-referrer" style={{ width: '14px', height: '14px', borderRadius: '2px', objectFit: 'cover' }} />
                               ) : (
                                 <span>🛡️</span>
                               )}

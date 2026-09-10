@@ -179,6 +179,7 @@ export default async function AdminTeamsPage() {
                     <img
                       src={normalizeImageUrl(team.logoUrl)!}
                       alt={team.name}
+                      referrerPolicy="no-referrer"
                       style={{
                         width: '48px',
                         height: '48px',

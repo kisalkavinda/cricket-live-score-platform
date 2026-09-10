@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { requireAdminAuth, getAdminEntryPath } from '@/lib/auth/admin-auth';
 import {
   assignTeamsToGroups,
+  unassignAllTeams,
   generateGroupStageFixtures,
   checkAndAdvanceTournament,
   recalculateTournamentStandings,
@@ -12,18 +13,42 @@ import { prisma } from 'database';
 
 export async function assignTeamsToGroupsAction(
   tournamentId: string,
-  assignments: Record<string, 'GROUP_A' | 'GROUP_B' | 'GROUP_C'>
+  assignments: Record<string, 'GROUP_A' | 'GROUP_B'>,
+  positions?: Record<string, number>
 ) {
-  await requireAdminAuth();
-  const entryPath = getAdminEntryPath();
+  try {
+    await requireAdminAuth();
+    const entryPath = getAdminEntryPath();
 
-  const result = await assignTeamsToGroups(tournamentId, assignments);
-  if (result.success) {
-    revalidatePath(`/${entryPath}/tournament-bracket`);
-    revalidatePath('/tournament');
-    revalidatePath('/');
+    const result = await assignTeamsToGroups(tournamentId, assignments, positions);
+    if (result.success) {
+      revalidatePath(`/${entryPath}/tournament-bracket`);
+      revalidatePath('/tournament');
+      revalidatePath('/');
+    }
+    return result;
+  } catch (err: any) {
+    console.error('[assignTeamsToGroupsAction] error:', err);
+    return { success: false, error: err.message || 'Failed to assign teams to groups.' };
   }
-  return result;
+}
+
+export async function unassignAllTeamsAction(tournamentId: string) {
+  try {
+    await requireAdminAuth();
+    const entryPath = getAdminEntryPath();
+
+    const result = await unassignAllTeams(tournamentId);
+    if (result.success) {
+      revalidatePath(`/${entryPath}/tournament-bracket`);
+      revalidatePath('/tournament');
+      revalidatePath('/');
+    }
+    return result;
+  } catch (err: any) {
+    console.error('[unassignAllTeamsAction] error:', err);
+    return { success: false, error: err.message || 'Failed to unassign teams.' };
+  }
 }
 
 export async function configureTournamentStagesAction(
@@ -31,7 +56,8 @@ export async function configureTournamentStagesAction(
   settings: {
     ballsPerOver?: number;
     groupOvers?: number;
-    wildcardOvers?: number;
+    qualificationOvers?: number;
+    wildcardOvers?: number; // legacy alias
     playoffOvers?: number;
     finalOvers?: number;
   }
@@ -72,6 +98,7 @@ export async function generateGroupFixturesAction(
     oversPerInnings?: number;
     ballsPerOver?: number;
     groupOvers?: number;
+    qualificationOvers?: number;
     wildcardOvers?: number;
     playoffOvers?: number;
     finalOvers?: number;

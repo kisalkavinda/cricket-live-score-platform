@@ -20,8 +20,9 @@ async function fetchFreshStats() {
     }),
   ]);
 
-  const data = { ...stats, overview };
-  statsCache = { data, expiresAt: Date.now() + 3500 };
+  const preservedOverview = overview || statsCache?.data?.overview || null;
+  const data = { ...stats, overview: preservedOverview };
+  statsCache = { data, expiresAt: Date.now() + 10000 };
   return data;
 }
 

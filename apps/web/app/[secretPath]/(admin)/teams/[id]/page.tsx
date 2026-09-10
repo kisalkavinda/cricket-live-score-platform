@@ -119,6 +119,7 @@ export default async function TeamDetailPage({
               <img
                 src={normalizeImageUrl(team.logoUrl)!}
                 alt={team.name}
+                referrerPolicy="no-referrer"
                 style={{
                   width: '64px',
                   height: '64px',
