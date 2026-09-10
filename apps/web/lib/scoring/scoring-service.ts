@@ -767,6 +767,9 @@ export async function recordDelivery(inningsId: string, input: RecordDeliveryInp
       where: { operationId: input.operationId },
     });
     if (existingOp && existingOp.status === 'PROCESSED' && existingOp.result) {
+      if (existingOp.inningsId !== inningsId) {
+        throw new Error('Operation ID was already used for a different innings.');
+      }
       let updatedMatch: any = null;
       if (process.env.NODE_ENV !== 'test') {
         try {
@@ -811,6 +814,9 @@ export async function recordDelivery(inningsId: string, input: RecordDeliveryInp
         where: { operationId: input.operationId },
       });
       if (existingOp && existingOp.status === 'PROCESSED' && existingOp.result) {
+        if (existingOp.inningsId !== inningsId) {
+          throw new Error('Operation ID was already used for a different innings.');
+        }
         return existingOp.result;
       }
     }
@@ -1360,6 +1366,9 @@ export async function undoLastDelivery(inningsId: string, operationId?: string, 
       where: { operationId },
     });
     if (existingOp && existingOp.status === 'PROCESSED' && existingOp.result) {
+      if (existingOp.inningsId !== inningsId) {
+        throw new Error('Operation ID was already used for a different innings.');
+      }
       let updatedMatch: any = null;
       if (process.env.NODE_ENV !== 'test') {
         try {
@@ -1384,6 +1393,9 @@ export async function undoLastDelivery(inningsId: string, operationId?: string, 
         where: { operationId },
       });
       if (existingOp && existingOp.status === 'PROCESSED' && existingOp.result) {
+        if (existingOp.inningsId !== inningsId) {
+          throw new Error('Operation ID was already used for a different innings.');
+        }
         return existingOp.result;
       }
     }
@@ -1589,6 +1601,9 @@ export async function changeBowler(inningsId: string, bowlerId: string, operatio
       where: { operationId },
     });
     if (existingOp && existingOp.status === 'PROCESSED' && existingOp.result) {
+      if (existingOp.inningsId !== inningsId) {
+        return { success: false, error: 'Operation ID was already used for a different innings.' };
+      }
       let updatedMatch: any = null;
       if (process.env.NODE_ENV !== 'test') {
         try {
@@ -1633,6 +1648,9 @@ export async function changeBowler(inningsId: string, bowlerId: string, operatio
         where: { operationId },
       });
       if (existingOp && existingOp.status === 'PROCESSED' && existingOp.result) {
+        if (existingOp.inningsId !== inningsId) {
+          throw new Error('Operation ID was already used for a different innings.');
+        }
         return existingOp.result;
       }
     }
@@ -1720,6 +1738,9 @@ export async function swapStriker(inningsId: string, operationId?: string, clien
       where: { operationId },
     });
     if (existingOp && existingOp.status === 'PROCESSED' && existingOp.result) {
+      if (existingOp.inningsId !== inningsId) {
+        return { success: false, error: 'Operation ID was already used for a different innings.' };
+      }
       let updatedMatch: any = null;
       if (process.env.NODE_ENV !== 'test') {
         try {
@@ -1756,6 +1777,9 @@ export async function swapStriker(inningsId: string, operationId?: string, clien
         where: { operationId },
       });
       if (existingOp && existingOp.status === 'PROCESSED' && existingOp.result) {
+        if (existingOp.inningsId !== inningsId) {
+          throw new Error('Operation ID was already used for a different innings.');
+        }
         return existingOp.result;
       }
     }
@@ -1838,6 +1862,9 @@ export async function switchBatter(inningsId: string, role: 'striker' | 'nonStri
       where: { operationId },
     });
     if (existingOp && existingOp.status === 'PROCESSED' && existingOp.result) {
+      if (existingOp.inningsId !== inningsId) {
+        return { success: false, error: 'Operation ID was already used for a different innings.' };
+      }
       let updatedMatch: any = null;
       if (process.env.NODE_ENV !== 'test') {
         try {
@@ -1905,6 +1932,9 @@ export async function switchBatter(inningsId: string, role: 'striker' | 'nonStri
         where: { operationId },
       });
       if (existingOp && existingOp.status === 'PROCESSED' && existingOp.result) {
+        if (existingOp.inningsId !== inningsId) {
+          throw new Error('Operation ID was already used for a different innings.');
+        }
         return existingOp.result;
       }
     }
