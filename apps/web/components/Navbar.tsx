@@ -61,11 +61,9 @@ export default function Navbar() {
   }, [pathname]);
 
   const navLinks = [
-    { label: '🔴 Match Center', href: '/#live-scores', id: 'nav-scores' },
     { label: '🏆 Tournament Hub', href: '/tournament', id: 'nav-tournament' },
     { label: '🖥️ Ground Display', href: '/display', id: 'nav-display' },
     { label: '📜 Match Rules', href: '/rules', id: 'nav-rules' },
-    { label: 'Overview', href: '/#overview', id: 'nav-overview' },
     { label: 'Tournament Info', href: '/#details', id: 'nav-details' },
     ...(tournamentConfig.registrationOpen
       ? [{ label: 'Register Squad', href: '/register', id: 'nav-register' }]
@@ -91,22 +89,22 @@ export default function Navbar() {
         style={{
           pointerEvents: 'auto',
           width: '100%',
-          maxWidth: '960px',
+          maxWidth: '1040px',
           height: '52px',
           borderRadius: '9999px',
-          background: scrolled ? 'rgba(255, 255, 255, 0.95)' : 'rgba(15, 12, 12, 0.88)',
+          background: scrolled ? 'rgba(255, 255, 255, 0.95)' : 'rgba(15, 12, 12, 0.90)',
           backdropFilter: 'blur(16px)',
           WebkitBackdropFilter: 'blur(16px)',
           border: scrolled
             ? '1.5px solid var(--color-border)'
-            : '1.5px solid rgba(255, 255, 255, 0.15)',
+            : '1.5px solid rgba(255, 255, 255, 0.14)',
           boxShadow: scrolled
             ? '0 8px 30px rgba(0, 0, 0, 0.08)'
-            : '0 12px 40px rgba(0, 0, 0, 0.35)',
+            : '0 12px 40px rgba(0, 0, 0, 0.40)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          padding: '0 16px 0 20px',
+          padding: '0 12px 0 18px',
           transition: 'all var(--dur-base) var(--ease-out)',
           position: 'relative',
         }}
@@ -120,21 +118,22 @@ export default function Navbar() {
             alignItems: 'center',
             gap: '10px',
             textDecoration: 'none',
+            flexShrink: 0,
           }}
         >
           <div
             style={{
-              width: '30px',
-              height: '30px',
+              width: '32px',
+              height: '32px',
               borderRadius: '50%',
-              background: 'var(--color-accent)',
+              background: 'linear-gradient(135deg, #EF4444, #B91C1C)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: 'var(--color-accent-ink)',
+              color: '#FFF',
               fontWeight: 900,
-              fontSize: '0.8rem',
-              fontFamily: 'var(--font-display)',
+              fontSize: '0.9rem',
+              boxShadow: '0 2px 8px rgba(239, 68, 68, 0.4)',
             }}
           >
             🏏
@@ -143,7 +142,7 @@ export default function Navbar() {
             style={{
               fontFamily: 'var(--font-display)',
               fontWeight: 900,
-              fontSize: '1.4rem',
+              fontSize: '1.35rem',
               letterSpacing: '0.04em',
               color: scrolled ? 'var(--color-ink)' : 'var(--color-paper)',
               whiteSpace: 'nowrap',
@@ -163,41 +162,55 @@ export default function Navbar() {
           aria-label="Main Navigation"
           className="hidden md:flex md-flex"
         >
-          {navLinks.map((link) => (
-            <Link
-              key={link.id}
-              id={link.id}
-              href={link.href}
-              onClick={(e) => handleNavClick(e, link.href)}
-              style={{
-                padding: '6px 14px',
-                borderRadius: '9999px',
-                fontFamily: 'var(--font-body)',
-                fontSize: '0.875rem',
-                fontWeight: 600,
-                color: scrolled ? 'var(--color-ink)' : 'rgba(255, 255, 255, 0.85)',
-                textDecoration: 'none',
-                whiteSpace: 'nowrap',
-                transition: 'background var(--dur-fast), color var(--dur-fast)',
-              }}
-              onMouseEnter={(e) => {
-                const target = e.currentTarget;
-                target.style.background = scrolled
-                  ? 'var(--color-paper-alt)'
-                  : 'rgba(255, 255, 255, 0.12)';
-              }}
-              onMouseLeave={(e) => {
-                const target = e.currentTarget;
-                target.style.background = 'transparent';
-              }}
-            >
-              {link.label}
-            </Link>
-          ))}
+          {navLinks.map((link) => {
+            const isActive = pathname === link.href || (link.href === '/#details' && pathname === '/' && typeof window !== 'undefined' && window.location.hash === '#details');
+            return (
+              <Link
+                key={link.id}
+                id={link.id}
+                href={link.href}
+                onClick={(e) => handleNavClick(e, link.href)}
+                style={{
+                  padding: '6px 13px',
+                  borderRadius: '9999px',
+                  fontFamily: 'var(--font-body)',
+                  fontSize: '0.84rem',
+                  fontWeight: 600,
+                  color: isActive
+                    ? (scrolled ? 'var(--color-accent)' : '#FFF')
+                    : (scrolled ? 'var(--color-ink)' : 'rgba(255, 255, 255, 0.78)'),
+                  background: isActive
+                    ? (scrolled ? 'rgba(0, 0, 0, 0.06)' : 'rgba(255, 255, 255, 0.12)')
+                    : 'transparent',
+                  textDecoration: 'none',
+                  whiteSpace: 'nowrap',
+                  transition: 'background var(--dur-fast), color var(--dur-fast)',
+                }}
+                onMouseEnter={(e) => {
+                  const target = e.currentTarget;
+                  if (!isActive) {
+                    target.style.background = scrolled
+                      ? 'var(--color-paper-alt)'
+                      : 'rgba(255, 255, 255, 0.10)';
+                    target.style.color = scrolled ? 'var(--color-ink)' : '#FFF';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  const target = e.currentTarget;
+                  if (!isActive) {
+                    target.style.background = 'transparent';
+                    target.style.color = scrolled ? 'var(--color-ink)' : 'rgba(255, 255, 255, 0.78)';
+                  }
+                }}
+              >
+                {link.label}
+              </Link>
+            );
+          })}
         </nav>
 
         {/* Action Button & Mobile Hamburger Toggle */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
           {tournamentConfig.registrationOpen ? (
             <Link
               href="/register"
@@ -205,7 +218,7 @@ export default function Navbar() {
                 display: 'inline-flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                height: '30px',
+                height: '32px',
                 padding: '0 14px',
                 background: 'var(--color-accent)',
                 color: 'var(--color-accent-ink)',
@@ -235,35 +248,49 @@ export default function Navbar() {
           ) : (
             <Link
               href="/#live-scores"
+              onClick={(e) => handleNavClick(e, '/#live-scores')}
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
+                gap: '6px',
                 justifyContent: 'center',
-                height: '30px',
+                height: '32px',
                 padding: '0 14px',
-                background: 'rgba(192, 39, 45, 0.15)',
-                color: 'var(--color-accent-bright)',
+                background: 'rgba(239, 68, 68, 0.16)',
+                color: '#FCA5A5',
                 fontFamily: 'var(--font-display)',
                 fontSize: '0.8rem',
                 fontWeight: 800,
-                letterSpacing: '0.06em',
+                letterSpacing: '0.05em',
                 textTransform: 'uppercase',
                 textDecoration: 'none',
                 borderRadius: '9999px',
-                boxShadow: '0 2px 10px rgba(192, 39, 45, 0.2)',
-                border: '1px solid rgba(192, 39, 45, 0.5)',
+                boxShadow: '0 2px 12px rgba(239, 68, 68, 0.25)',
+                border: '1px solid rgba(239, 68, 68, 0.45)',
                 transition: 'all var(--dur-fast) var(--ease-out)',
                 whiteSpace: 'nowrap',
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'rgba(192, 39, 45, 0.3)';
+                e.currentTarget.style.background = 'rgba(239, 68, 68, 0.28)';
+                e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.7)';
                 e.currentTarget.style.transform = 'translateY(-1px)';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'rgba(192, 39, 45, 0.15)';
+                e.currentTarget.style.background = 'rgba(239, 68, 68, 0.16)';
+                e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.45)';
                 e.currentTarget.style.transform = 'none';
               }}
             >
+              <span
+                style={{
+                  width: '7px',
+                  height: '7px',
+                  borderRadius: '50%',
+                  background: '#EF4444',
+                  boxShadow: '0 0 8px #EF4444',
+                  display: 'inline-block',
+                }}
+              />
               Match Center
             </Link>
           )}
@@ -332,6 +359,42 @@ export default function Navbar() {
             zIndex: 101,
           }}
         >
+          {/* Mobile Match Center Link */}
+          <Link
+            href="/#live-scores"
+            onClick={(e) => handleNavClick(e, '/#live-scores')}
+            style={{
+              height: '44px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '0 16px',
+              borderRadius: 'var(--radius-md)',
+              color: '#FCA5A5',
+              fontFamily: 'var(--font-display)',
+              textTransform: 'uppercase',
+              letterSpacing: '0.04em',
+              fontWeight: 800,
+              fontSize: '1rem',
+              textDecoration: 'none',
+              background: 'rgba(239, 68, 68, 0.16)',
+              border: '1px solid rgba(239, 68, 68, 0.5)',
+              transition: 'all var(--dur-fast)',
+            }}
+          >
+            <span
+              style={{
+                width: '8px',
+                height: '8px',
+                borderRadius: '50%',
+                background: '#EF4444',
+                boxShadow: '0 0 8px #EF4444',
+                display: 'inline-block',
+              }}
+            />
+            Match Center
+          </Link>
+
           {navLinks.map((link) => (
             <Link
               key={`mobile-${link.id}`}
@@ -350,8 +413,8 @@ export default function Navbar() {
                 fontWeight: 800,
                 fontSize: '1rem',
                 textDecoration: 'none',
-                background: link.id === 'nav-scores' ? 'rgba(192, 39, 45, 0.15)' : 'rgba(255, 255, 255, 0.03)',
-                border: link.id === 'nav-scores' ? '1px solid var(--color-accent)' : '1px solid rgba(255, 255, 255, 0.06)',
+                background: 'rgba(255, 255, 255, 0.03)',
+                border: '1px solid rgba(255, 255, 255, 0.06)',
                 transition: 'all var(--dur-fast)',
               }}
             >
