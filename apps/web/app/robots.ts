@@ -1,20 +1,11 @@
-import { MetadataRoute } from 'next';
-import { getAdminEntryPath } from '@/lib/auth/admin-auth';
+import type { MetadataRoute } from 'next';
 
 export default function robots(): MetadataRoute.Robots {
-  let adminDisallow = '/management*';
-  try {
-    const entryPath = getAdminEntryPath();
-    adminDisallow = `/${entryPath}*`;
-  } catch {
-    // If env is not loaded yet at build time, fall back
-  }
-
   return {
     rules: {
       userAgent: '*',
       allow: '/',
-      disallow: ['/admin*', adminDisallow, '/api/*'],
+      disallow: ['/admin*', '/api/*'],
     },
   };
 }

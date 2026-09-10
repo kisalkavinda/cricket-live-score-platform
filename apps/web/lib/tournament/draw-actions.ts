@@ -1,6 +1,7 @@
 'use server';
 
-import { requireAdminAuth } from '@/lib/auth/admin-auth';
+import { requireAdminAuth, getClientIp } from '@/lib/auth/admin-auth';
+import { checkRateLimit } from '@/lib/utils/rate-limiter';
 import {
   generateDraw,
   startCeremony,
@@ -114,6 +115,16 @@ export async function captainSelectChitAction(
     if (!passcode || !passcode.trim()) {
       return { success: false, error: 'Captain passcode is required.' };
     }
+
+    const ip = await getClientIp();
+    const rateLimit = await checkRateLimit(`draw_pass:${ip}:${drawId}`, 5, 600);
+    if (!rateLimit.allowed) {
+      return {
+        success: false,
+        error: 'Too many incorrect passcode attempts. Access temporarily locked for 10 minutes.',
+      };
+    }
+
     const result = await selectChit(drawId, chitPosition, {
       passcode: passcode.trim(),
       actor: 'Captain',
