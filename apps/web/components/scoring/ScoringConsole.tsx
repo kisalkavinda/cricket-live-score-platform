@@ -4305,6 +4305,27 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                onClick={() => router.push(`/${entryPath}/matches`)}
+                style={{
+                  background: 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)',
+                  color: '#FFF',
+                  border: 'none',
+                  padding: '12px 22px',
+                  borderRadius: '8px',
+                  fontWeight: 800,
+                  fontSize: '0.92rem',
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  boxShadow: '0 4px 14px rgba(37, 99, 235, 0.4)',
+                }}
+              >
+                ← Return to Matches List
+              </button>
+
               {(!match.winnerTeamId && (match.resultNote?.toLowerCase().includes('tie') || match.resultNote?.toLowerCase().includes('tied'))) && (
                 <button
                   type="button"
@@ -4345,6 +4366,25 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                 }}
               >
                 📊 Open Public Match Scorecard ↗
+              </a>
+
+              <a
+                href={`/${entryPath}/tournaments`}
+                style={{
+                  background: '#141A26',
+                  color: '#FBBF24',
+                  border: '1px solid rgba(245, 158, 11, 0.4)',
+                  padding: '12px 20px',
+                  borderRadius: '8px',
+                  fontWeight: 800,
+                  fontSize: '0.92rem',
+                  textDecoration: 'none',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                }}
+              >
+                🏆 Tournament Hub
               </a>
             </div>
           </div>
