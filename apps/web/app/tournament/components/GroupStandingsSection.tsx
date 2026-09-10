@@ -100,7 +100,7 @@ export default function GroupStandingsSection({ groups }: GroupStandingsSectionP
                   <th style={{ padding: '8px 4px', textAlign: 'center', width: '34px', color: '#FFB800' }}>PTS</th>
                   <th style={{ padding: '8px 6px', textAlign: 'right', width: '56px' }}>NRR</th>
                   <th style={{ padding: '8px 6px', textAlign: 'right', width: '80px' }}>
-                    {isGroupDone ? 'STATUS' : 'ROADMAP'}
+                    STATUS
                   </th>
                 </tr>
               </thead>
@@ -110,8 +110,18 @@ export default function GroupStandingsSection({ groups }: GroupStandingsSectionP
                   const is2nd = idx === 1;
                   const is3rd = idx === 2;
                   const is4th = idx === 3;
-                  const posColor = is1st ? '#10B981' : is2nd ? '#F59E0B' : is3rd ? '#FB923C' : '#EF4444';
-                  const logoUrl = s.logoUrl ? normalizeImageUrl(s.logoUrl) : null;
+                  const posColor = isGroupDone
+                    ? is1st
+                      ? '#10B981'
+                      : is2nd
+                      ? '#F59E0B'
+                      : is3rd
+                      ? '#FB923C'
+                      : '#EF4444'
+                    : is1st
+                    ? '#FFB800'
+                    : 'rgba(255, 255, 255, 0.7)';
+                  const logoUrl = normalizeImageUrl(s.logoUrl || (s as any).teamLogoUrl);
 
                   return (
                     <tr key={s.teamId} className={styles.tableRow}>
@@ -125,7 +135,7 @@ export default function GroupStandingsSection({ groups }: GroupStandingsSectionP
                             lineHeight: '18px',
                             textAlign: 'center',
                             borderRadius: '4px',
-                            background: is1st ? 'rgba(16, 185, 129, 0.15)' : 'rgba(255, 255, 255, 0.05)',
+                            background: isGroupDone && is1st ? 'rgba(16, 185, 129, 0.15)' : 'rgba(255, 255, 255, 0.05)',
                             color: posColor,
                             fontSize: '0.68rem',
                           }}
@@ -142,27 +152,33 @@ export default function GroupStandingsSection({ groups }: GroupStandingsSectionP
                               src={logoUrl}
                               alt={s.teamName}
                               referrerPolicy="no-referrer"
-                              style={{ width: '20px', height: '20px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }}
-                            />
-                          ) : (
-                            <div
-                              style={{
-                                width: '20px',
-                                height: '20px',
-                                borderRadius: '50%',
-                                background: 'rgba(255, 255, 255, 0.08)',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                fontSize: '0.62rem',
-                                fontWeight: 900,
-                                color: 'rgba(255,255,255,0.7)',
-                                flexShrink: 0,
+                              style={{ width: '20px', height: '20px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0, border: '1px solid rgba(255,255,255,0.12)' }}
+                              onError={(e) => {
+                                (e.currentTarget as HTMLElement).style.display = 'none';
+                                const fallback = (e.currentTarget.parentElement as HTMLElement)?.querySelector('.gss-fallback');
+                                if (fallback) (fallback as HTMLElement).style.display = 'flex';
                               }}
-                            >
-                              {s.teamShortName?.[0] || 'T'}
-                            </div>
-                          )}
+                            />
+                          ) : null}
+                          <div
+                            className="gss-fallback"
+                            style={{
+                              display: logoUrl ? 'none' : 'flex',
+                              width: '20px',
+                              height: '20px',
+                              borderRadius: '50%',
+                              background: 'rgba(255, 184, 0, 0.15)',
+                              border: '1px solid rgba(255, 184, 0, 0.3)',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontSize: '0.62rem',
+                              fontWeight: 900,
+                              color: 'var(--color-gold, #FFB800)',
+                              flexShrink: 0,
+                            }}
+                          >
+                            {(s.teamShortName || s.teamName || 'T').slice(0, 2).toUpperCase()}
+                          </div>
                           <span style={{ fontWeight: 800, color: '#FFFFFF', fontSize: '0.82rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '130px' }}>
                             {s.teamName}
                           </span>
@@ -195,55 +211,47 @@ export default function GroupStandingsSection({ groups }: GroupStandingsSectionP
 
                       {/* Status Badge */}
                       <td style={{ padding: '10px 6px', textAlign: 'right' }}>
-                        <span
-                          style={{
-                            display: 'inline-block',
-                            fontSize: '0.64rem',
-                            fontFamily: 'var(--font-data)',
-                            fontWeight: 800,
-                            padding: '2px 6px',
-                            borderRadius: '4px',
-                            background: isGroupDone
-                              ? is1st
+                        {isGroupDone ? (
+                          <span
+                            style={{
+                              display: 'inline-block',
+                              fontSize: '0.64rem',
+                              fontFamily: 'var(--font-data)',
+                              fontWeight: 800,
+                              padding: '2px 6px',
+                              borderRadius: '4px',
+                              background: is1st
                                 ? 'rgba(16, 185, 129, 0.15)'
                                 : is2nd
                                 ? 'rgba(245, 158, 11, 0.15)'
                                 : is3rd
                                 ? 'rgba(251, 146, 60, 0.15)'
-                                : 'rgba(239, 68, 68, 0.15)'
-                              : 'rgba(255, 255, 255, 0.04)',
-                            border: `1px solid ${
-                              isGroupDone
-                                ? is1st
+                                : 'rgba(239, 68, 68, 0.15)',
+                              border: `1px solid ${
+                                is1st
                                   ? 'rgba(16, 185, 129, 0.35)'
                                   : is2nd
                                   ? 'rgba(245, 158, 11, 0.35)'
                                   : is3rd
                                   ? 'rgba(251, 146, 60, 0.35)'
                                   : 'rgba(239, 68, 68, 0.35)'
-                                : 'rgba(255, 255, 255, 0.08)'
-                            }`,
-                            color: isGroupDone ? posColor : 'rgba(255, 255, 255, 0.65)',
-                            textTransform: 'uppercase',
-                            whiteSpace: 'nowrap',
-                          }}
-                        >
-                          {isGroupDone
-                            ? is1st
+                              }`,
+                              color: posColor,
+                              textTransform: 'uppercase',
+                              whiteSpace: 'nowrap',
+                            }}
+                          >
+                            {is1st
                               ? '✓ PLAYOFF'
                               : is2nd
                               ? '→ MATCH 9'
                               : is3rd
                               ? '→ MATCH 10'
-                              : '✕ ELIMINATED'
-                            : is1st
-                            ? '1ST (PLAYOFF)'
-                            : is2nd
-                            ? '2ND (M9)'
-                            : is3rd
-                            ? '3RD (M10)'
-                            : '4TH (OUT)'}
-                        </span>
+                              : '✕ ELIMINATED'}
+                          </span>
+                        ) : (
+                          <span style={{ color: 'rgba(255, 255, 255, 0.3)', fontSize: '0.78rem', fontWeight: 600 }}>—</span>
+                        )}
                       </td>
                     </tr>
                   );

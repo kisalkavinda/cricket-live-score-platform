@@ -1618,9 +1618,7 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
 
   const getMaxWicketsForInnings = (inn: any) => {
     if (!inn) return 10;
-    if (inn.inningsNumber >= 3) return 2; // Super over: 2 wickets max
-    const squad = getTeamPlayers(inn.battingTeamId);
-    return squad.length > 1 ? squad.length - 1 : 10;
+    return getInningsWicketLimit(inn, match);
   };
 
   const renderInningsDeliveryLog = (inn: any) => {
