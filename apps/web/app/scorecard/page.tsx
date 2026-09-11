@@ -182,17 +182,27 @@ function ScorecardContent() {
     let color = '#FFFFFF';
 
     if (b.isWicket) {
-      if (b.extraType === 'WIDE') {
+      if (b.wicketType === 'RETIRED_HURT') {
+        label = runs > 0 ? `${runs}+RH` : 'RH';
+        bg = '#0284C7';
+        color = '#FFFFFF';
+      } else if (b.extraType === 'WIDE') {
         label = runs > 0 ? `WD+${runs}+W` : (extraRuns > 1 ? `WD+${extraRuns - 1}+W` : 'WD+W');
+        bg = '#EF4444';
+        color = '#FFFFFF';
       } else if (b.extraType === 'NO_BALL') {
         label = runs > 0 ? `NB+${runs}+W` : 'NB+W';
+        bg = '#EF4444';
+        color = '#FFFFFF';
       } else if (runs > 0) {
         label = `${runs}+W`;
+        bg = '#EF4444';
+        color = '#FFFFFF';
       } else {
         label = 'W';
+        bg = '#EF4444';
+        color = '#FFFFFF';
       }
-      bg = '#EF4444';
-      color = '#FFFFFF';
     } else if (runs === 4) {
       label = '4';
       bg = '#10B981';
@@ -300,9 +310,10 @@ function ScorecardContent() {
     }
   }
 
-  const isSuperOverMatch = (match.currentInnings || 1) >= 3;
-  const leftSO = match.innings?.find((i: any) => i.battingTeamId === leftTeam?.id && i.inningsNumber >= 3);
-  const rightSO = match.innings?.find((i: any) => i.battingTeamId === rightTeam?.id && i.inningsNumber >= 3);
+  const isSuperOverMatch = (match.currentInnings || 1) >= 3 || (match.innings || []).some((i: any) => i.inningsNumber >= 3);
+  const allSOInnings = (match.innings || []).filter((i: any) => i.inningsNumber >= 3).sort((a: any, b: any) => a.inningsNumber - b.inningsNumber);
+  const leftSOList = allSOInnings.filter((i: any) => i.battingTeamId === leftTeam?.id);
+  const rightSOList = allSOInnings.filter((i: any) => i.battingTeamId === rightTeam?.id);
 
   return (
     <main style={{ paddingTop: '86px', paddingBottom: 'var(--space-3xl)' }}>
@@ -510,9 +521,24 @@ function ScorecardContent() {
                     </div>
                     {isSuperOverMatch ? (
                       <div style={{ marginTop: '2px' }}>
-                        <div style={{ fontFamily: 'var(--font-data)', fontSize: '0.85rem', color: '#F59E0B', fontWeight: 800 }}>
-                          ⚡ SO: {leftSO ? `${leftSO.runs}/${leftSO.wickets} (${leftSO.overs}.${leftSO.balls} ov)` : (isLeftBattingCurrent ? `${currentInnings?.runs ?? 0}/${currentInnings?.wickets ?? 0} (${currentInnings?.overs ?? 0}.${currentInnings?.balls ?? 0} ov)` : 'Yet to bat')}
-                        </div>
+                        {leftSOList.length > 0 ? (
+                          leftSOList.map((so: any) => {
+                            const soRound = Math.floor((so.inningsNumber - 3) / 2) + 1;
+                            return (
+                              <div key={so.id} style={{ fontFamily: 'var(--font-data)', fontSize: '0.85rem', color: '#F59E0B', fontWeight: 800 }}>
+                                ⚡ SO {soRound}: {so.runs}/{so.wickets} ({so.overs}.{so.balls} ov)
+                              </div>
+                            );
+                          })
+                        ) : isLeftBattingCurrent ? (
+                          <div style={{ fontFamily: 'var(--font-data)', fontSize: '0.85rem', color: '#F59E0B', fontWeight: 800 }}>
+                            ⚡ SO {Math.floor(((currentInnings?.inningsNumber ?? 3) - 3) / 2) + 1}: {currentInnings?.runs ?? 0}/${currentInnings?.wickets ?? 0} ({currentInnings?.overs ?? 0}.${currentInnings?.balls ?? 0} ov)
+                          </div>
+                        ) : (
+                          <div style={{ fontFamily: 'var(--font-data)', fontSize: '0.85rem', color: '#F59E0B', fontWeight: 800 }}>
+                            ⚡ SO: Yet to bat
+                          </div>
+                        )}
                         {leftTeamInnings && (
                           <div style={{ fontFamily: 'var(--font-data)', fontSize: '0.72rem', color: 'rgba(255, 255, 255, 0.4)' }}>
                             Main: {leftTeamInnings.runs}/{leftTeamInnings.wickets} ({leftTeamInnings.overs}.{leftTeamInnings.balls} ov)
@@ -552,11 +578,16 @@ function ScorecardContent() {
                       <div className="scorecard-overs-text" style={{ fontFamily: 'var(--font-data)', fontSize: '0.85rem', fontWeight: 700, color: 'var(--color-paper)', whiteSpace: 'nowrap' }}>
                         {currentInnings.overs}.{currentInnings.balls} / {isSuperOverMatch ? '1.0' : match.oversPerInnings} Overs
                       </div>
-                      {isSuperOverMatch && (
-                        <div style={{ marginTop: '4px', display: 'inline-block', background: 'rgba(245, 158, 11, 0.2)', border: '1px solid #F59E0B', color: '#FBBF24', fontSize: '0.72rem', fontWeight: 800, padding: '2px 8px', borderRadius: '4px' }}>
-                          ⚡ SUPER OVER {match.currentInnings % 2 === 1 ? '1' : '2 (CHASE)'} (1 OV • 2 WKTS MAX)
-                        </div>
-                      )}
+                      {isSuperOverMatch && (() => {
+                        const curInnNum = match.currentInnings || 3;
+                        const soRound = Math.floor((curInnNum - 3) / 2) + 1;
+                        const soType = (curInnNum - 3) % 2 === 0 ? '1' : '2 (CHASE)';
+                        return (
+                          <div style={{ marginTop: '4px', display: 'inline-block', background: 'rgba(245, 158, 11, 0.2)', border: '1px solid #F59E0B', color: '#FBBF24', fontSize: '0.72rem', fontWeight: 800, padding: '2px 8px', borderRadius: '4px' }}>
+                            ⚡ SUPER OVER {soRound} • INNINGS {soType} (1 OV • 2 WKTS MAX)
+                          </div>
+                        );
+                      })()}
                       <div style={{ fontFamily: 'var(--font-body)', fontSize: '0.72rem', color: 'rgba(255, 255, 255, 0.5)', marginTop: '2px', whiteSpace: 'nowrap' }}>
                         CRR: {getRunRate(currentInnings.runs, currentInnings.overs, currentInnings.balls)} {requiredRunRate !== '0.00' ? `• RRR: ${requiredRunRate}` : ''}
                       </div>
@@ -599,9 +630,24 @@ function ScorecardContent() {
                     </div>
                     {isSuperOverMatch ? (
                       <div style={{ marginTop: '2px' }}>
-                        <div style={{ fontFamily: 'var(--font-data)', fontSize: '0.85rem', color: '#F59E0B', fontWeight: 800 }}>
-                          ⚡ SO: {rightSO ? `${rightSO.runs}/${rightSO.wickets} (${rightSO.overs}.${rightSO.balls} ov)` : (isRightBattingCurrent ? `${currentInnings?.runs ?? 0}/${currentInnings?.wickets ?? 0} (${currentInnings?.overs ?? 0}.${currentInnings?.balls ?? 0} ov)` : 'Yet to bat')}
-                        </div>
+                        {rightSOList.length > 0 ? (
+                          rightSOList.map((so: any) => {
+                            const soRound = Math.floor((so.inningsNumber - 3) / 2) + 1;
+                            return (
+                              <div key={so.id} style={{ fontFamily: 'var(--font-data)', fontSize: '0.85rem', color: '#F59E0B', fontWeight: 800 }}>
+                                ⚡ SO {soRound}: {so.runs}/{so.wickets} ({so.overs}.{so.balls} ov)
+                              </div>
+                            );
+                          })
+                        ) : isRightBattingCurrent ? (
+                          <div style={{ fontFamily: 'var(--font-data)', fontSize: '0.85rem', color: '#F59E0B', fontWeight: 800 }}>
+                            ⚡ SO {Math.floor(((currentInnings?.inningsNumber ?? 3) - 3) / 2) + 1}: {currentInnings?.runs ?? 0}/${currentInnings?.wickets ?? 0} ({currentInnings?.overs ?? 0}.${currentInnings?.balls ?? 0} ov)
+                          </div>
+                        ) : (
+                          <div style={{ fontFamily: 'var(--font-data)', fontSize: '0.85rem', color: '#F59E0B', fontWeight: 800 }}>
+                            ⚡ SO: Yet to bat
+                          </div>
+                        )}
                         {rightTeamInnings && (
                           <div style={{ fontFamily: 'var(--font-data)', fontSize: '0.72rem', color: 'rgba(255, 255, 255, 0.4)' }}>
                             Main: {rightTeamInnings.runs}/{rightTeamInnings.wickets} ({rightTeamInnings.overs}.{rightTeamInnings.balls} ov)
@@ -680,12 +726,32 @@ function ScorecardContent() {
                   <div className="scorecard-mobile-team-right">
                     {isSuperOverMatch ? (
                       <>
-                        <span className="scorecard-mobile-team-score" style={{ color: '#F59E0B' }}>
-                          {leftSO ? `${leftSO.runs}/${leftSO.wickets}` : isLeftBattingCurrent ? `${currentInnings?.runs ?? 0}/${currentInnings?.wickets ?? 0}` : '-'}
-                        </span>
-                        <span className="scorecard-mobile-team-overs">
-                          SO: ({leftSO ? `${leftSO.overs}.${leftSO.balls}` : isLeftBattingCurrent ? `${currentInnings?.overs ?? 0}.${currentInnings?.balls ?? 0}` : '0.0'} ov)
-                        </span>
+                        {leftSOList.length > 0 ? (
+                          leftSOList.map((so: any) => {
+                            const soRound = Math.floor((so.inningsNumber - 3) / 2) + 1;
+                            return (
+                              <div key={so.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                                <span className="scorecard-mobile-team-score" style={{ color: '#F59E0B' }}>
+                                  {so.runs}/{so.wickets}
+                                </span>
+                                <span className="scorecard-mobile-team-overs">
+                                  SO {soRound}: ({so.overs}.{so.balls} ov)
+                                </span>
+                              </div>
+                            );
+                          })
+                        ) : isLeftBattingCurrent ? (
+                          <>
+                            <span className="scorecard-mobile-team-score" style={{ color: '#F59E0B' }}>
+                              {currentInnings?.runs ?? 0}/{currentInnings?.wickets ?? 0}
+                            </span>
+                            <span className="scorecard-mobile-team-overs">
+                              SO: ({currentInnings?.overs ?? 0}.${currentInnings?.balls ?? 0} ov)
+                            </span>
+                          </>
+                        ) : (
+                          <span className="scorecard-mobile-team-yet">SO: Yet to bat</span>
+                        )}
                         {leftTeamInnings && (
                           <span style={{ fontSize: '0.68rem', color: 'rgba(255, 255, 255, 0.4)', marginTop: '1px' }}>
                             Main: {leftTeamInnings.runs}/{leftTeamInnings.wickets}
@@ -730,12 +796,32 @@ function ScorecardContent() {
                   <div className="scorecard-mobile-team-right">
                     {isSuperOverMatch ? (
                       <>
-                        <span className="scorecard-mobile-team-score" style={{ color: '#F59E0B' }}>
-                          {rightSO ? `${rightSO.runs}/${rightSO.wickets}` : isRightBattingCurrent ? `${currentInnings?.runs ?? 0}/${currentInnings?.wickets ?? 0}` : '-'}
-                        </span>
-                        <span className="scorecard-mobile-team-overs">
-                          SO: ({rightSO ? `${rightSO.overs}.${rightSO.balls}` : isRightBattingCurrent ? `${currentInnings?.overs ?? 0}.${currentInnings?.balls ?? 0}` : '0.0'} ov)
-                        </span>
+                        {rightSOList.length > 0 ? (
+                          rightSOList.map((so: any) => {
+                            const soRound = Math.floor((so.inningsNumber - 3) / 2) + 1;
+                            return (
+                              <div key={so.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                                <span className="scorecard-mobile-team-score" style={{ color: '#F59E0B' }}>
+                                  {so.runs}/{so.wickets}
+                                </span>
+                                <span className="scorecard-mobile-team-overs">
+                                  SO {soRound}: ({so.overs}.{so.balls} ov)
+                                </span>
+                              </div>
+                            );
+                          })
+                        ) : isRightBattingCurrent ? (
+                          <>
+                            <span className="scorecard-mobile-team-score" style={{ color: '#F59E0B' }}>
+                              {currentInnings?.runs ?? 0}/{currentInnings?.wickets ?? 0}
+                            </span>
+                            <span className="scorecard-mobile-team-overs">
+                              SO: ({currentInnings?.overs ?? 0}.${currentInnings?.balls ?? 0} ov)
+                            </span>
+                          </>
+                        ) : (
+                          <span className="scorecard-mobile-team-yet">SO: Yet to bat</span>
+                        )}
                         {rightTeamInnings && (
                           <span style={{ fontSize: '0.68rem', color: 'rgba(255, 255, 255, 0.4)', marginTop: '1px' }}>
                             Main: {rightTeamInnings.runs}/{rightTeamInnings.wickets}
@@ -767,7 +853,12 @@ function ScorecardContent() {
                       <span className="dot" />
                       <span>
                         {isSuperOverMatch
-                          ? `⚡ SUPER OVER ${match.currentInnings % 2 === 1 ? '1' : '2 (CHASE)'} • ${currentInnings?.overs}.${currentInnings?.balls}/1.0 OV`
+                          ? (() => {
+                              const curInn = match.currentInnings || 3;
+                              const soRound = Math.floor((curInn - 3) / 2) + 1;
+                              const soType = (curInn - 3) % 2 === 0 ? '1' : '2 (CHASE)';
+                              return `⚡ SUPER OVER ${soRound} • INNINGS ${soType} • ${currentInnings?.overs}.${currentInnings?.balls}/1.0 OV`;
+                            })()
                           : `INNINGS ${match.currentInnings} • ${currentInnings?.overs}.${currentInnings?.balls}/${match.oversPerInnings} OV`}
                       </span>
                     </>
@@ -1051,7 +1142,12 @@ function ScorecardContent() {
               <span style={{ fontSize: '1.3rem' }}>⚡</span>
               <div>
                 <strong style={{ color: '#FBBF24', fontSize: '0.92rem', textTransform: 'uppercase', fontFamily: 'var(--font-display)', letterSpacing: '0.04em' }}>
-                  Super Over In Progress ({match.currentInnings === 3 ? 'Super Over 1' : 'Super Over 2'})
+                  Super Over In Progress ({(() => {
+                    const curInn = match.currentInnings || 3;
+                    const soRound = Math.floor((curInn - 3) / 2) + 1;
+                    const soType = (curInn - 3) % 2 === 0 ? '1st Innings' : 'Chase';
+                    return `Super Over ${soRound} - ${soType}`;
+                  })()})
                 </strong>
                 <div style={{ fontSize: '0.78rem', color: 'rgba(255, 255, 255, 0.75)' }}>
                   Viewing real-time ball-by-ball tie-breaker updates.
@@ -1222,7 +1318,10 @@ function ScorecardContent() {
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
               {allInnings.map((inn: any) => {
                 const isSelected = activeTab ? activeTab === `inn${inn.inningsNumber}` : inn.id === selectedInnings?.id;
-                const label = inn.inningsNumber === 1 ? '1st Inn' : inn.inningsNumber === 2 ? '2nd Inn' : `Super Over ${inn.inningsNumber - 2}`;
+                const isSuperOver = inn.inningsNumber >= 3;
+                const soRound = Math.floor((inn.inningsNumber - 3) / 2) + 1;
+                const soType = (inn.inningsNumber - 3) % 2 === 0 ? '1' : 'Chase';
+                const label = inn.inningsNumber === 1 ? '1st Inn' : inn.inningsNumber === 2 ? '2nd Inn' : `SO ${soRound} (${soType})`;
                 return (
                   <button
                     key={`comm-${inn.id}`}
@@ -1553,7 +1652,9 @@ function ScorecardContent() {
               {allInnings.map((inn: any) => {
                 const isSelected = activeTab ? activeTab === `inn${inn.inningsNumber}` : inn.id === selectedInnings?.id;
                 const isSuperOver = inn.inningsNumber >= 3;
-                const label = inn.inningsNumber === 1 ? '1st Inn' : inn.inningsNumber === 2 ? '2nd Inn' : inn.inningsNumber === 3 ? '⚡ Super Over 1' : `⚡ Super Over ${inn.inningsNumber - 2}`;
+                const soRound = Math.floor((inn.inningsNumber - 3) / 2) + 1;
+                const soType = (inn.inningsNumber - 3) % 2 === 0 ? '1' : 'Chase';
+                const label = inn.inningsNumber === 1 ? '1st Inn' : inn.inningsNumber === 2 ? '2nd Inn' : `⚡ Super Over ${soRound} (${soType})`;
                 return (
                   <button
                     key={inn.id}
@@ -1760,7 +1861,7 @@ function ScorecardContent() {
                     {(() => {
                       const battingList = (selectedInnings.battingScores || []).filter((b: any) => {
                         const isCurrent = b.playerId === selectedInnings.currentStrikerId || b.playerId === selectedInnings.currentNonStrikerId;
-                        const hasParticipated = (b.balls > 0 || b.runs > 0 || b.isOut);
+                        const hasParticipated = (b.balls > 0 || b.runs > 0 || b.isOut || Boolean(b.dismissal));
                         return isCurrent || hasParticipated;
                       });
 
@@ -1796,8 +1897,8 @@ function ScorecardContent() {
                                   <span style={{ color: 'var(--color-gold)', fontWeight: 900, fontSize: '0.8rem' }}>*</span>
                                 )}
                               </div>
-                              <div style={{ color: b.isOut ? 'rgba(255, 255, 255, 0.5)' : '#34D399', fontSize: '0.72rem', marginTop: '2px', fontFamily: 'var(--font-body)' }}>
-                                {b.isOut ? (b.dismissal || 'Out') : 'not out'}
+                              <div style={{ color: b.isOut ? 'rgba(255, 255, 255, 0.5)' : (b.dismissal?.toLowerCase().includes('retired hurt') && !isStriker && !isNonStriker ? '#38BDF8' : '#34D399'), fontSize: '0.72rem', marginTop: '2px', fontFamily: 'var(--font-body)', fontWeight: b.dismissal?.toLowerCase().includes('retired hurt') && !isStriker && !isNonStriker ? 600 : 400 }}>
+                                {b.isOut ? (b.dismissal || 'Out') : (b.dismissal?.toLowerCase().includes('retired hurt') && !isStriker && !isNonStriker ? 'retired hurt' : 'not out')}
                               </div>
                             </td>
 
@@ -1827,10 +1928,10 @@ function ScorecardContent() {
               {/* EXTRAS ROW */}
               {(() => {
                 const balls = selectedInnings.ballEvents || [];
-                const wides = balls.filter((b: any) => b.extraType === 'WIDE').reduce((acc: number, b: any) => acc + (b.extras || 1), 0);
-                const noBalls = balls.filter((b: any) => b.extraType === 'NO_BALL').reduce((acc: number, b: any) => acc + (b.extras || 1), 0);
-                const byes = balls.filter((b: any) => b.extraType === 'BYE').reduce((acc: number, b: any) => acc + (b.byeRuns || b.extras || 1), 0);
-                const legByes = balls.filter((b: any) => b.extraType === 'LEG_BYE').reduce((acc: number, b: any) => acc + (b.legByeRuns || b.extras || 1), 0);
+                const wides = balls.filter((b: any) => b.extraType === 'WIDE').reduce((acc: number, b: any) => acc + (b.byeRuns > 0 ? Math.max(1, (b.extras || 1) - b.byeRuns) : 1), 0);
+                const noBalls = balls.filter((b: any) => b.extraType === 'NO_BALL').reduce((acc: number, b: any) => acc + (b.byeRuns > 0 ? Math.max(1, (b.extras || 1) - b.byeRuns) : 1), 0);
+                const byes = balls.reduce((acc: number, b: any) => acc + (b.extraType === 'BYE' ? (b.byeRuns || b.extras || 1) : (b.byeRuns || 0)), 0);
+                const legByes = balls.reduce((acc: number, b: any) => acc + (b.extraType === 'LEG_BYE' ? (b.legByeRuns || b.extras || 1) : (b.legByeRuns || 0)), 0);
                 const penalty = balls.filter((b: any) => b.extraType === 'PENALTY').reduce((acc: number, b: any) => acc + (b.extras || 0), 0);
                 const totalExtras = wides + noBalls + byes + legByes + penalty;
 
@@ -1987,9 +2088,10 @@ function ScorecardContent() {
             {(() => {
               const allBalls = selectedInnings.ballEvents || [];
               const chronologicalBalls = [...allBalls].sort((a: any, b: any) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
-              const wicketBalls = chronologicalBalls.filter((b: any) => b.isWicket);
+              const wicketBalls = chronologicalBalls.filter((b: any) => b.isWicket && b.wicketType !== 'RETIRED_HURT');
+              const retiredBalls = chronologicalBalls.filter((b: any) => b.isWicket && b.wicketType === 'RETIRED_HURT');
 
-              if (wicketBalls.length === 0) return null;
+              if (wicketBalls.length === 0 && retiredBalls.length === 0) return null;
 
               return (
                 <div
@@ -2005,43 +2107,76 @@ function ScorecardContent() {
                     <span>⚡</span> Fall of Wickets
                   </div>
 
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
-                    {wicketBalls.map((b: any, idx: number) => {
-                      const ballIndex = chronologicalBalls.findIndex((cb: any) => cb.id === b.id);
-                      const runsUpToWicket = chronologicalBalls
-                        .slice(0, ballIndex + 1)
-                        .reduce((sum: number, cb: any) => sum + (cb.runs || 0) + (cb.extras || 0), 0);
+                  {wicketBalls.length > 0 ? (
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+                      {wicketBalls.map((b: any, idx: number) => {
+                        const ballIndex = chronologicalBalls.findIndex((cb: any) => cb.id === b.id);
+                        const runsUpToWicket = chronologicalBalls
+                          .slice(0, ballIndex + 1)
+                          .reduce((sum: number, cb: any) => sum + (cb.runs || 0) + (cb.extras || 0), 0);
 
-                      const batterName = b.dismissedPlayer?.name || b.batsman?.name || 'Batter';
-                      const overStr = `${b.overNumber}.${b.ballNumber}`;
+                        const batterName = b.dismissedPlayer?.name || b.batsman?.name || 'Batter';
+                        const overStr = `${b.overNumber}.${b.ballNumber}`;
 
-                      return (
-                        <div
-                          key={b.id || idx}
-                          style={{
-                            background: 'rgba(255, 255, 255, 0.04)',
-                            border: '1px solid rgba(255, 255, 255, 0.08)',
-                            borderRadius: '8px',
-                            padding: '8px 12px',
-                            fontSize: '0.84rem',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '6px',
-                          }}
-                        >
-                          <span style={{ fontWeight: 900, color: '#EF4444', fontFamily: 'var(--font-data)' }}>
-                            {idx + 1}-{runsUpToWicket}
+                        return (
+                          <div
+                            key={b.id || idx}
+                            style={{
+                              background: 'rgba(255, 255, 255, 0.04)',
+                              border: '1px solid rgba(255, 255, 255, 0.08)',
+                              borderRadius: '8px',
+                              padding: '8px 12px',
+                              fontSize: '0.84rem',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '6px',
+                            }}
+                          >
+                            <span style={{ fontWeight: 900, color: '#EF4444', fontFamily: 'var(--font-data)' }}>
+                              {idx + 1}-{runsUpToWicket}
+                            </span>
+                            <span style={{ color: 'var(--color-paper)', fontWeight: 600 }}>
+                              {batterName}
+                            </span>
+                            <span style={{ color: 'rgba(255, 255, 255, 0.45)', fontSize: '0.75rem', fontFamily: 'var(--font-data)' }}>
+                              ({overStr} ov)
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.84rem', fontStyle: 'italic', marginBottom: retiredBalls.length > 0 ? '10px' : '0' }}>
+                      No wickets fallen yet.
+                    </div>
+                  )}
+
+                  {retiredBalls.length > 0 && (
+                    <div style={{ marginTop: wicketBalls.length > 0 ? '12px' : '0', paddingTop: wicketBalls.length > 0 ? '10px' : '0', borderTop: wicketBalls.length > 0 ? '1px dashed rgba(255,255,255,0.1)' : 'none', display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
+                      <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#38BDF8', textTransform: 'uppercase' }}>
+                        🏥 Retired Hurt (Not Out):
+                      </span>
+                      {retiredBalls.map((rb: any, rIdx: number) => {
+                        const rBatterName = rb.dismissedPlayer?.name || rb.batsman?.name || 'Batter';
+                        return (
+                          <span
+                            key={rb.id || rIdx}
+                            style={{
+                              background: 'rgba(2, 132, 199, 0.15)',
+                              border: '1px solid rgba(2, 132, 199, 0.35)',
+                              color: '#BAE6FD',
+                              borderRadius: '6px',
+                              padding: '4px 8px',
+                              fontSize: '0.78rem',
+                              fontWeight: 600,
+                            }}
+                          >
+                            {rBatterName} ({rb.overNumber}.${rb.ballNumber} ov)
                           </span>
-                          <span style={{ color: 'var(--color-paper)', fontWeight: 600 }}>
-                            {batterName}
-                          </span>
-                          <span style={{ color: 'rgba(255, 255, 255, 0.45)', fontSize: '0.75rem', fontFamily: 'var(--font-data)' }}>
-                            ({overStr} ov)
-                          </span>
-                        </div>
-                      );
-                    })}
-                  </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               );
             })()}

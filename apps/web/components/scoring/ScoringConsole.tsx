@@ -589,18 +589,20 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
   const matchBallsPerOver = match.ballsPerOver || 6;
   const maxOversPerBowler = 1;
 
-  // Bowler who bowled the last delivery of the previous over (cannot bowl consecutive overs)
-  const lastBowledBall = currentInnings?.ballEvents?.[0];
-  const previousOverBowlerId = (currentInnings?.balls === 0 && (currentInnings?.overs || 0) > 0) ? lastBowledBall?.bowlerId : null;
+  // Bowler who bowled in the immediately preceding over (cannot bowl consecutive overs - MCC Law 17.8)
+  const prevOverNum = (currentInnings?.balls === 0 && (currentInnings?.overs || 0) > 0) ? (currentInnings?.overs || 0) - 1 : null;
+  const previousOverBowlerIds = prevOverNum !== null
+    ? new Set((currentInnings?.ballEvents || []).filter((b: any) => b.overNumber === prevOverNum).map((b: any) => b.bowlerId))
+    : new Set<string>();
 
-  // Available bowlers (players who have not exceeded the max overs limit and didn't bowl the immediately preceding over)
+  // Available bowlers (players who have not exceeded the max balls/overs quota and didn't bowl the immediately preceding over)
   const availableBowlers = bowlingSquad.filter((p: any) => {
-    if (previousOverBowlerId && p.id === previousOverBowlerId) {
+    if (previousOverBowlerIds.has(p.id)) {
       return false;
     }
     const score = currentInnings?.bowlingScores?.find((b: any) => b.playerId === p.id);
-    const completedOvers = score?.overs || 0;
-    return completedOvers < maxOversPerBowler;
+    const totalBallsBowled = (score?.overs || 0) * matchBallsPerOver + (score?.balls || 0);
+    return totalBallsBowled < maxOversPerBowler * matchBallsPerOver;
   });
 
   // Free Hit evaluation: Under tournament rules, there is NO Free Hit after a No-Ball
@@ -751,14 +753,12 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
     const maxOvers = isSuperOver ? 1 : (match.oversPerInnings || 20);
     const matchBallsPerOver = match.ballsPerOver || 6;
 
-    // Check if the previous over finished and a new bowler needs to be chosen for the new over (cannot bowl consecutive overs)
-    const lastBall = currentInnings?.ballEvents?.[0];
-    const isConsecutiveOverForSameBowler = Boolean(
-      lastBall && currentInnings.currentBowlerId === lastBall.bowlerId
-    );
+    // Check if the previous over finished and a new bowler needs to be chosen for the new over (cannot bowl consecutive overs - MCC Law 17.8)
+    const prevOverDeliveries = (currentInnings?.ballEvents || []).filter((b: any) => b.overNumber === currentInnings.overs - 1);
+    const isConsecutiveOverForSameBowler = prevOverDeliveries.some((b: any) => b.bowlerId === currentInnings.currentBowlerId);
     if (!isSuperOver && currentInnings.balls === 0 && currentInnings.overs > 0 && currentInnings.overs < maxOvers && isConsecutiveOverForSameBowler) {
       setShowBowlerModal(true);
-      setError(`⚠️ Over ${currentInnings.overs + 1} is starting. A bowler cannot bowl consecutive overs. Please select the next bowler.`);
+      setError(`⚠️ Over ${currentInnings.overs + 1} is starting. A bowler who bowled in the previous over cannot bowl consecutive overs. Please select the next bowler.`);
       return;
     }
 
@@ -795,8 +795,8 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
     let nextStrikerId = currentInnings.currentStrikerId;
     let nextNonStrikerId = currentInnings.currentNonStrikerId;
 
-    const wideRanRuns = (extraType === 'WIDE') ? Math.max(0, deliveryCalc.wideRuns - 1) : 0;
-    const isWideBoundary = (extraType === 'WIDE') && (deliveryCalc.wideRuns === 5 || commentary?.toLowerCase().includes('boundary'));
+    const wideRanRuns = (extraType === 'WIDE') ? deliveryCalc.byeRuns : 0;
+    const isWideBoundary = (extraType === 'WIDE') && (deliveryCalc.byeRuns === 4 || commentary?.toLowerCase().includes('boundary'));
     const shouldRotateWide = (extraType === 'WIDE') && !isWideBoundary && (wideRanRuns % 2 !== 0);
     const shouldRotateOther = isLegal && (runsOffBat % 2 === 1 || (extraType === 'BYE' && byeRuns % 2 === 1) || (extraType === 'LEG_BYE' && legByeRuns % 2 === 1));
 
@@ -1025,14 +1025,12 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
     const isSuperOver = currentInnings.inningsNumber >= 3;
     const maxOvers = isSuperOver ? 1 : (match.oversPerInnings || 20);
 
-    // Check if previous over finished and a new bowler needs to be chosen for the new over (cannot bowl consecutive overs)
-    const lastBallWicket = currentInnings?.ballEvents?.[0];
-    const isConsecutiveOverForSameBowlerWicket = Boolean(
-      lastBallWicket && currentInnings.currentBowlerId === lastBallWicket.bowlerId
-    );
+    // Check if previous over finished and a new bowler needs to be chosen for the new over (cannot bowl consecutive overs - MCC Law 17.8)
+    const prevOverDeliveriesWicket = (currentInnings?.ballEvents || []).filter((b: any) => b.overNumber === currentInnings.overs - 1);
+    const isConsecutiveOverForSameBowlerWicket = prevOverDeliveriesWicket.some((b: any) => b.bowlerId === currentInnings.currentBowlerId);
     if (!isSuperOver && currentInnings.balls === 0 && currentInnings.overs > 0 && currentInnings.overs < maxOvers && isConsecutiveOverForSameBowlerWicket) {
       setShowBowlerModal(true);
-      setError(`⚠️ Over ${currentInnings.overs + 1} is starting. A bowler cannot bowl consecutive overs. Please select the next bowler before recording a wicket.`);
+      setError(`⚠️ Over ${currentInnings.overs + 1} is starting. A bowler who bowled in the previous over cannot bowl consecutive overs. Please select the next bowler before recording a wicket.`);
       return;
     }
 
@@ -1170,19 +1168,29 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
         });
       }
 
-      // If incoming batter exists, add to battingScores
-      if (incomingBatterId && !updatedBattingScores.some((b: any) => b.playerId === incomingBatterId)) {
-        const newPlayerObj = allKnownPlayers.find((p: any) => p.id === incomingBatterId);
-        updatedBattingScores.push({
-          id: `temp-new-${Date.now()}`,
-          playerId: incomingBatterId,
-          player: newPlayerObj,
-          runs: 0,
-          balls: 0,
-          fours: 0,
-          sixes: 0,
-          isOut: false,
-        });
+      // If incoming batter exists, add to battingScores or restore if returning from retired hurt
+      if (incomingBatterId) {
+        if (!updatedBattingScores.some((b: any) => b.playerId === incomingBatterId)) {
+          const newPlayerObj = allKnownPlayers.find((p: any) => p.id === incomingBatterId);
+          updatedBattingScores.push({
+            id: `temp-new-${Date.now()}`,
+            playerId: incomingBatterId,
+            player: newPlayerObj,
+            runs: 0,
+            balls: 0,
+            fours: 0,
+            sixes: 0,
+            isOut: false,
+            dismissal: null,
+          });
+        } else {
+          updatedBattingScores = updatedBattingScores.map((b: any) => {
+            if (b.playerId === incomingBatterId) {
+              return { ...b, isOut: false, dismissal: null };
+            }
+            return b;
+          });
+        }
       }
 
       const updatedBowlingScores = (curInn.bowlingScores || []).map((bw: any) => {
@@ -1667,7 +1675,7 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                 return tA - tB;
               });
               const overRuns = overBalls.reduce((sum: number, b: any) => sum + calculateDeliveryRuns(b).totalRuns, 0);
-              const overWickets = overBalls.filter((b: any) => b.isWicket).length;
+              const overWickets = overBalls.filter((b: any) => b.isWicket && b.wicketType !== 'RETIRED_HURT').length;
               const bowlerName = overBalls[0]?.bowler?.name || 'Bowler';
 
               return (
@@ -1699,17 +1707,27 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
 
                       if (b.isWicket) {
                         const r = bCalc.batterRuns || b.runs || 0;
-                        if (b.extraType === 'WIDE') {
+                        if (b.wicketType === 'RETIRED_HURT') {
+                          label = r > 0 ? `${r}+RH` : 'RH';
+                          bg = '#0284C7';
+                          border = '1px solid #0369A1';
+                        } else if (b.extraType === 'WIDE') {
                           label = r > 0 ? `WD+${r}+W` : (b.extras > 1 ? `WD+${b.extras - 1}+W` : 'WD+W');
+                          bg = '#EF4444';
+                          border = '1px solid #DC2626';
                         } else if (b.extraType === 'NO_BALL') {
                           label = r > 0 ? `NB+${r}+W` : 'NB+W';
+                          bg = '#EF4444';
+                          border = '1px solid #DC2626';
                         } else if (r > 0) {
                           label = `${r}+W`;
+                          bg = '#EF4444';
+                          border = '1px solid #DC2626';
                         } else {
                           label = 'W';
+                          bg = '#EF4444';
+                          border = '1px solid #DC2626';
                         }
-                        bg = '#EF4444';
-                        border = '1px solid #DC2626';
                       } else if (b.extraType === 'WIDE') {
                         label = b.extras > 1 ? `WD+${b.extras - 1}` : 'WD';
                         bg = '#F59E0B';
@@ -2043,8 +2061,8 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
           let rightTeam: any;
           let leftInnings: any = null;
           let rightInnings: any = null;
-          let leftSO: any = null;
-          let rightSO: any = null;
+          let leftSOList: any[] = [];
+          let rightSOList: any[] = [];
           let leftSquadCount = 0;
           let rightSquadCount = 0;
           let isLeftBattingCurrent = false;
@@ -2073,8 +2091,9 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
             leftInnings = inn1 || match.innings?.find((i: any) => i.battingTeamId === leftTeam?.id && i.inningsNumber === 1);
             rightInnings = inn2 || match.innings?.find((i: any) => i.battingTeamId === rightTeam?.id && i.inningsNumber === 2);
 
-            leftSO = isSuperOver ? match.innings?.find((i: any) => i.battingTeamId === leftTeam?.id && i.inningsNumber >= 3) : null;
-            rightSO = isSuperOver ? match.innings?.find((i: any) => i.battingTeamId === rightTeam?.id && i.inningsNumber >= 3) : null;
+            const allSO = (match.innings || []).filter((i: any) => i.inningsNumber >= 3).sort((a: any, b: any) => a.inningsNumber - b.inningsNumber);
+            leftSOList = allSO.filter((i: any) => i.battingTeamId === leftTeam?.id);
+            rightSOList = allSO.filter((i: any) => i.battingTeamId === rightTeam?.id);
 
             // Indicator: A badge or 🏏 next to the team currently batting
             if (match.status === 'LIVE' && currentInnings) {
@@ -2116,11 +2135,16 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                       <div style={{ fontSize: '0.82rem', color: '#94A3B8', fontFamily: 'monospace' }}>
                         {leftTeam?.shortName} • ({leftSquadCount} players)
                       </div>
-                      {leftSO ? (
+                      {leftSOList.length > 0 ? (
                         <div>
-                          <div style={{ fontSize: '1rem', color: '#FBBF24', fontFamily: 'monospace', fontWeight: 900, marginTop: '2px' }}>
-                            ⚡ SO: {leftSO.runs}/{leftSO.wickets} ({leftSO.overs}.{leftSO.balls} ov)
-                          </div>
+                          {leftSOList.map((so: any) => {
+                            const soRound = Math.floor((so.inningsNumber - 3) / 2) + 1;
+                            return (
+                              <div key={so.id} style={{ fontSize: '0.95rem', color: '#FBBF24', fontFamily: 'monospace', fontWeight: 900, marginTop: '2px' }}>
+                                ⚡ SO {soRound}: {so.runs}/{so.wickets} ({so.overs}.{so.balls} ov)
+                              </div>
+                            );
+                          })}
                           {leftInnings && (
                             <div style={{ fontSize: '0.76rem', color: '#94A3B8', fontFamily: 'monospace' }}>
                               Main: {leftInnings.runs}/{leftInnings.wickets} ({leftInnings.overs}.{leftInnings.balls} ov)
@@ -2149,11 +2173,16 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                         <div style={{ fontSize: '0.92rem', fontWeight: 700, color: 'rgba(255, 255, 255, 0.8)', marginTop: '4px' }}>
                           {currentInnings.overs}.{currentInnings.balls} / {effectiveOversLimit} {effectiveOversLimit === 1 ? 'Over' : 'Overs'}
                         </div>
-                        {isSuperOver && (
-                          <div style={{ marginTop: '5px', display: 'inline-flex', alignItems: 'center', gap: '4px', background: 'rgba(245, 158, 11, 0.2)', border: '1.5px solid #F59E0B', color: '#FBBF24', fontSize: '0.74rem', fontWeight: 900, padding: '2px 8px', borderRadius: '4px', letterSpacing: '0.04em' }}>
-                            ⚡ SUPER OVER {currentInnings.inningsNumber === 3 ? '1' : currentInnings.inningsNumber === 4 ? '2 (CHASE)' : currentInnings.inningsNumber - 2} (1 OV • 2 WKTS MAX)
-                          </div>
-                        )}
+                        {isSuperOver && (() => {
+                          const curInn = currentInnings.inningsNumber;
+                          const soRound = Math.floor((curInn - 3) / 2) + 1;
+                          const soType = (curInn - 3) % 2 === 0 ? '1' : '2 (CHASE)';
+                          return (
+                            <div style={{ marginTop: '5px', display: 'inline-flex', alignItems: 'center', gap: '4px', background: 'rgba(245, 158, 11, 0.2)', border: '1.5px solid #F59E0B', color: '#FBBF24', fontSize: '0.74rem', fontWeight: 900, padding: '2px 8px', borderRadius: '4px', letterSpacing: '0.04em' }}>
+                              ⚡ SUPER OVER {soRound} • INNINGS {soType} (1 OV • 2 WKTS MAX)
+                            </div>
+                          );
+                        })()}
                       </div>
                     ) : (
                       <div style={{ fontSize: '1.2rem', fontWeight: 800, color: 'rgba(255, 255, 255, 0.5)' }}>
@@ -2190,11 +2219,16 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                       <div style={{ fontSize: '0.82rem', color: '#94A3B8', fontFamily: 'monospace' }}>
                         {rightTeam?.shortName} • ({rightSquadCount} players)
                       </div>
-                      {rightSO ? (
+                      {rightSOList.length > 0 ? (
                         <div>
-                          <div style={{ fontSize: '1rem', color: '#FBBF24', fontFamily: 'monospace', fontWeight: 900, marginTop: '2px' }}>
-                            ⚡ SO: {rightSO.runs}/{rightSO.wickets} ({rightSO.overs}.{rightSO.balls} ov)
-                          </div>
+                          {rightSOList.map((so: any) => {
+                            const soRound = Math.floor((so.inningsNumber - 3) / 2) + 1;
+                            return (
+                              <div key={so.id} style={{ fontSize: '0.95rem', color: '#FBBF24', fontFamily: 'monospace', fontWeight: 900, marginTop: '2px' }}>
+                                ⚡ SO {soRound}: {so.runs}/{so.wickets} ({so.overs}.{so.balls} ov)
+                              </div>
+                            );
+                          })}
                           {rightInnings && (
                             <div style={{ fontSize: '0.76rem', color: '#94A3B8', fontFamily: 'monospace' }}>
                               Main: {rightInnings.runs}/{rightInnings.wickets} ({rightInnings.overs}.{rightInnings.balls} ov)
@@ -2234,10 +2268,17 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                     </div>
 
                     <div className="scorecard-mobile-card-scores left">
-                      {leftSO ? (
+                      {leftSOList.length > 0 ? (
                         <>
-                          <span className="scorecard-mobile-big-score" style={{ color: '#FBBF24' }}>{leftSO.runs}/{leftSO.wickets}</span>
-                          <span className="scorecard-mobile-overs-tag">({leftSO.overs}.{leftSO.balls} ov [SO])</span>
+                          {leftSOList.map((so: any) => {
+                            const soRound = Math.floor((so.inningsNumber - 3) / 2) + 1;
+                            return (
+                              <div key={so.id}>
+                                <span className="scorecard-mobile-big-score" style={{ color: '#FBBF24' }}>{so.runs}/{so.wickets}</span>
+                                <span className="scorecard-mobile-overs-tag">({so.overs}.{so.balls} ov [SO {soRound}])</span>
+                              </div>
+                            );
+                          })}
                           {leftInnings && <span style={{ fontSize: '0.72rem', color: '#94A3B8', display: 'block', marginTop: '1px' }}>Main: {leftInnings.runs}/{leftInnings.wickets}</span>}
                         </>
                       ) : leftInnings ? (
@@ -2277,10 +2318,17 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                     </div>
 
                     <div className="scorecard-mobile-card-scores right">
-                      {rightSO ? (
+                      {rightSOList.length > 0 ? (
                         <>
-                          <span className="scorecard-mobile-big-score" style={{ color: '#FBBF24' }}>{rightSO.runs}/{rightSO.wickets}</span>
-                          <span className="scorecard-mobile-overs-tag">({rightSO.overs}.{rightSO.balls} ov [SO])</span>
+                          {rightSOList.map((so: any) => {
+                            const soRound = Math.floor((so.inningsNumber - 3) / 2) + 1;
+                            return (
+                              <div key={so.id}>
+                                <span className="scorecard-mobile-big-score" style={{ color: '#FBBF24' }}>{so.runs}/{so.wickets}</span>
+                                <span className="scorecard-mobile-overs-tag">({so.overs}.{so.balls} ov [SO {soRound}])</span>
+                              </div>
+                            );
+                          })}
                           {rightInnings && <span style={{ fontSize: '0.72rem', color: '#94A3B8', display: 'block', marginTop: '1px' }}>Main: {rightInnings.runs}/{rightInnings.wickets}</span>}
                         </>
                       ) : rightInnings ? (
@@ -2307,7 +2355,12 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                     <span>
                       {match.status === 'LIVE' && currentInnings
                         ? (isSuperOver
-                            ? `⚡ SUPER OVER ${currentInnings.inningsNumber === 3 ? 1 : currentInnings.inningsNumber === 4 ? 2 : currentInnings.inningsNumber - 2} (${currentInnings.overs}.${currentInnings.balls}/1.0 OV)`
+                            ? (() => {
+                                const curInn = currentInnings.inningsNumber;
+                                const soRound = Math.floor((curInn - 3) / 2) + 1;
+                                const soType = (curInn - 3) % 2 === 0 ? '1' : '2 (CHASE)';
+                                return `⚡ SUPER OVER ${soRound} • INNINGS ${soType} (${currentInnings.overs}.${currentInnings.balls}/1.0 OV)`;
+                              })()
                             : `INNINGS ${currentInnings.inningsNumber} (${currentInnings.overs}.${currentInnings.balls}/${match.oversPerInnings} OV)`)
                         : match.status}
                     </span>
@@ -2712,7 +2765,7 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
               <div style={{ background: isSOChase ? 'rgba(245, 158, 11, 0.15)' : 'rgba(16, 185, 129, 0.1)', border: isSOChase ? '1.5px solid #F59E0B' : '1px solid #10B981', borderRadius: '8px', padding: '12px 16px', marginBottom: '18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
                 <div>
                   <span style={{ fontSize: '0.75rem', color: isSOChase ? '#FBBF24' : '#10B981', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                    {isSOChase ? '⚡ Super Over 2 Target Chase' : '🎯 2nd Innings Target Chase'}
+                    {isSOChase ? `⚡ Super Over ${Math.floor((currentInnings.inningsNumber - 3) / 2) + 1} Target Chase` : '🎯 2nd Innings Target Chase'}
                   </span>
                   <div style={{ fontSize: '1.1rem', fontWeight: 900, color: '#FFF', fontFamily: 'monospace' }}>
                     Target: {target} Runs in {oversLimit} {oversLimit === 1 ? 'Over' : 'Overs'}
@@ -3060,9 +3113,9 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                       setSelectedBowlerId(activeBowler?.id || '');
                       setShowBowlerModal(true);
                     }}
-                    style={{ background: '#1E2638', border: '1px solid #2A364E', color: '#FBBF24', borderRadius: '4px', padding: '3px 9px', fontSize: '0.75rem', cursor: 'pointer', fontWeight: 700 }}
+                    style={{ background: '#1E2638', border: '1px solid #2A364E', color: currentInnings.balls > 0 ? '#60A5FA' : '#FBBF24', borderRadius: '4px', padding: '3px 9px', fontSize: '0.75rem', cursor: 'pointer', fontWeight: 700 }}
                   >
-                    🔄 Change Bowler
+                    {currentInnings.balls > 0 ? '🚑 Replace Bowler (Injury)' : '🔄 Change Bowler'}
                   </button>
                   {activeBowler && (
                     <button
@@ -3091,14 +3144,15 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                   const isSuperOver = currentInnings.inningsNumber >= 3;
                   const maxOvers = isSuperOver ? 1 : (match.oversPerInnings || 20);
                   const matchBallsPerOver = match.ballsPerOver || 6;
-                  const isOverDone = (bowlerScore?.overs || 0) >= 1 || ((bowlerScore?.balls || 0) + (bowlerScore?.overs || 0) * matchBallsPerOver) >= matchBallsPerOver;
-                  const isNewOverPending = !isSuperOver && currentInnings.balls === 0 && currentInnings.overs > 0 && currentInnings.overs < maxOvers && isOverDone;
+                  const isNewOverPending = !isSuperOver && currentInnings.balls === 0 && currentInnings.overs > 0 && currentInnings.overs < maxOvers;
 
                   if (isSuperOver && (currentInnings.overs >= 1 || currentInnings.wickets >= 2)) {
+                    const soRound = Math.floor((currentInnings.inningsNumber - 3) / 2) + 1;
+                    const soType = (currentInnings.inningsNumber - 3) % 2 === 0 ? '1' : '2 (CHASE)';
                     return (
                       <div style={{ background: 'rgba(245, 158, 11, 0.15)', border: '1.5px solid #F59E0B', borderRadius: '8px', padding: '10px', marginTop: '6px' }}>
                         <div style={{ fontSize: '0.82rem', fontWeight: 900, color: '#FBBF24', marginBottom: '4px' }}>
-                          ⚡ SUPER OVER {currentInnings.inningsNumber === 3 ? '1' : '2'} COMPLETE!
+                          ⚡ SUPER OVER {soRound} • INNINGS {soType} COMPLETE!
                         </div>
                         <div style={{ fontSize: '0.78rem', color: '#CBD5E1' }}>
                           {currentInnings.overs}.{currentInnings.balls} ov bowled • {currentInnings.runs}/{currentInnings.wickets}
@@ -3117,7 +3171,7 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                           <span style={{ fontSize: '0.72rem', color: '#94A3B8', fontWeight: 600 }}>Team Break</span>
                         </div>
                         <div style={{ fontSize: '0.8rem', color: '#CBD5E1', marginBottom: '8px' }}>
-                          {activeBowler.name} finished 1.0 ov ({bowlerScore?.wickets || 0}w - {bowlerScore?.runsConceded || 0}r)
+                          {activeBowler.name} bowled {bowlerScore?.overs || 0}.{bowlerScore?.balls || 0} ov ({bowlerScore?.wickets || 0}w - {bowlerScore?.runsConceded || 0}r)
                         </div>
                         <button
                           onClick={() => {
@@ -3195,17 +3249,27 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
 
               if (b.isWicket) {
                 const r = bCalc.batterRuns || b.runs || 0;
-                if (b.extraType === 'WIDE') {
+                if (b.wicketType === 'RETIRED_HURT') {
+                  label = r > 0 ? `${r}+RH` : 'RH';
+                  bg = '#0284C7';
+                  border = '1px solid #0369A1';
+                } else if (b.extraType === 'WIDE') {
                   label = r > 0 ? `WD+${r}+W` : (b.extras > 1 ? `WD+${b.extras - 1}+W` : 'WD+W');
+                  bg = '#EF4444';
+                  border = '1px solid #DC2626';
                 } else if (b.extraType === 'NO_BALL') {
                   label = r > 0 ? `NB+${r}+W` : 'NB+W';
+                  bg = '#EF4444';
+                  border = '1px solid #DC2626';
                 } else if (r > 0) {
                   label = `${r}+W`;
+                  bg = '#EF4444';
+                  border = '1px solid #DC2626';
                 } else {
                   label = 'W';
+                  bg = '#EF4444';
+                  border = '1px solid #DC2626';
                 }
-                bg = '#EF4444';
-                border = '1px solid #DC2626';
               } else if (b.extraType === 'WIDE') {
                 label = b.extras > 1 ? `WD+${b.extras - 1}` : 'WD';
                 bg = '#F59E0B';
@@ -3386,8 +3450,50 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
             const inn1 = match.innings?.find((i: any) => i.inningsNumber === 1);
             const inn2 = match.innings?.find((i: any) => i.inningsNumber === 2);
             const inn2MaxWickets = getMaxWicketsForInnings(inn2);
-            const isTied = Boolean(inn1 && inn2 && inn1.runs === inn2.runs && (inn2.status === 'COMPLETED' || inn2.overs >= match.oversPerInnings || inn2.wickets >= inn2MaxWickets || match.status === 'COMPLETED') && match.currentInnings <= 2);
-            if (!isTied) return null;
+            const isMainTied = Boolean(
+              inn1 && inn2 && inn1.runs === inn2.runs &&
+              (inn2.status === 'COMPLETED' || inn2.overs >= match.oversPerInnings || inn2.wickets >= inn2MaxWickets || match.status === 'COMPLETED') &&
+              match.currentInnings <= 2
+            );
+
+            // Super Over Tie evaluation (Innings 4, 6, 8, etc.)
+            const allInnings = match.innings || [];
+            const completedSOChase = allInnings
+              .filter((i: any) => i.inningsNumber >= 4 && i.inningsNumber % 2 === 0)
+              .sort((a: any, b: any) => b.inningsNumber - a.inningsNumber)[0];
+
+            let isSOTied = false;
+            let tiedSORound = 1;
+            let tiedSORuns = 0;
+            let nextSORound = 2;
+
+            if (completedSOChase) {
+              const prevSO = allInnings.find((i: any) => i.inningsNumber === completedSOChase.inningsNumber - 1);
+              if (
+                prevSO &&
+                prevSO.runs === completedSOChase.runs &&
+                (completedSOChase.status === 'COMPLETED' || completedSOChase.overs >= 1 || completedSOChase.wickets >= 2 || (match.resultNote && match.resultNote.toLowerCase().includes('tied'))) &&
+                match.currentInnings <= completedSOChase.inningsNumber
+              ) {
+                isSOTied = true;
+                tiedSORound = Math.floor((completedSOChase.inningsNumber - 3) / 2) + 1;
+                tiedSORuns = completedSOChase.runs;
+                nextSORound = tiedSORound + 1;
+              }
+            }
+
+            if (!isMainTied && !isSOTied) return null;
+
+            const isSO = isSOTied;
+            const title = isSO
+              ? `🔥 SUPER OVER ${tiedSORound} TIED! (${tiedSORuns} - ${tiedSORuns})`
+              : `🔥 MATCH TIED! (${inn1.runs} - ${inn2.runs})`;
+            const subtitle = isSO
+              ? `Super Over ${tiedSORound} ended in a tie! You can start Super Over ${nextSORound} (Round ${nextSORound}), or declare the final match result.`
+              : `Scores are level! You can start an official 1-Over Super Over tie-breaker, or declare the match result.`;
+            const buttonLabel = isSO
+              ? `⚡ Start Super Over ${nextSORound} (Round ${nextSORound}) →`
+              : `⚡ Start Super Over (Tie-Breaker) →`;
 
             return (
               <div
@@ -3403,10 +3509,10 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '14px' }}>
                   <div>
                     <div style={{ fontSize: '1.15rem', fontWeight: 900, color: '#FBBF24', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span>🔥 MATCH TIED! ({inn1.runs} - {inn2.runs})</span>
+                      <span>{title}</span>
                     </div>
                     <div style={{ fontSize: '0.84rem', color: '#CBD5E1', marginTop: '4px' }}>
-                      Scores are level! You can start an official 1-Over Super Over tie-breaker, or declare the match result.
+                      {subtitle}
                     </div>
                   </div>
                   <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
@@ -3426,7 +3532,7 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                         boxShadow: '0 3px 12px rgba(245, 158, 11, 0.4)',
                       }}
                     >
-                      ⚡ Start Super Over (Tie-Breaker) →
+                      {buttonLabel}
                     </button>
                     <button
                       type="button"
@@ -3493,46 +3599,49 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
             </div>
           )}
 
-          {/* SUPER OVER 1 QUOTA REACHED BANNER */}
-          {match.currentInnings >= 3 && currentInnings.inningsNumber % 2 === 1 && (currentInnings.overs >= 1 || currentInnings.wickets >= 2 || currentInnings.status === 'COMPLETED') && (
-            <div
-              style={{
-                background: 'rgba(245, 158, 11, 0.15)',
-                border: '1.5px solid #F59E0B',
-                borderRadius: '14px',
-                padding: '18px 20px',
-                marginBottom: '20px',
-                boxShadow: '0 4px 14px rgba(245, 158, 11, 0.2)',
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '14px' }}>
-                <div>
-                  <div style={{ fontSize: '1.1rem', fontWeight: 900, color: '#FBBF24' }}>
-                    🔥 SUPER OVER 1 COMPLETED ({currentInnings.runs}/{currentInnings.wickets} in {currentInnings.overs}.{currentInnings.balls} ov)
+          {/* SUPER OVER 1ST INNINGS QUOTA REACHED BANNER */}
+          {match.currentInnings >= 3 && currentInnings.inningsNumber % 2 === 1 && (currentInnings.overs >= 1 || currentInnings.wickets >= 2 || currentInnings.status === 'COMPLETED') && (() => {
+            const currentSORound = Math.floor((currentInnings.inningsNumber - 3) / 2) + 1;
+            return (
+              <div
+                style={{
+                  background: 'rgba(245, 158, 11, 0.15)',
+                  border: '1.5px solid #F59E0B',
+                  borderRadius: '14px',
+                  padding: '18px 20px',
+                  marginBottom: '20px',
+                  boxShadow: '0 4px 14px rgba(245, 158, 11, 0.2)',
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '14px' }}>
+                  <div>
+                    <div style={{ fontSize: '1.1rem', fontWeight: 900, color: '#FBBF24' }}>
+                      🔥 SUPER OVER {currentSORound} (1st Innings) COMPLETED ({currentInnings.runs}/{currentInnings.wickets} in {currentInnings.overs}.{currentInnings.balls} ov)
+                    </div>
+                    <div style={{ fontSize: '0.84rem', color: '#CBD5E1', marginTop: '4px' }}>
+                      Super Over {currentSORound} 1st Innings finished! Target for Chase is {currentInnings.runs + 1} runs in 1.0 Over.
+                    </div>
                   </div>
-                  <div style={{ fontSize: '0.84rem', color: '#CBD5E1', marginTop: '4px' }}>
-                    Super Over 1 finished! Target for Super Over 2 is {currentInnings.runs + 1} runs in 1.0 Over.
-                  </div>
+                  <button
+                    onClick={handleEndInnings}
+                    disabled={isPending}
+                    style={{
+                      background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
+                      color: '#FFF',
+                      border: 'none',
+                      padding: '10px 20px',
+                      borderRadius: '8px',
+                      fontWeight: 800,
+                      fontSize: '0.92rem',
+                      cursor: isPending ? 'not-allowed' : 'pointer',
+                    }}
+                  >
+                    🏁 End 1st Innings & Start Super Over {currentSORound} Chase →
+                  </button>
                 </div>
-                <button
-                  onClick={handleEndInnings}
-                  disabled={isPending}
-                  style={{
-                    background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
-                    color: '#FFF',
-                    border: 'none',
-                    padding: '10px 20px',
-                    borderRadius: '8px',
-                    fontWeight: 800,
-                    fontSize: '0.92rem',
-                    cursor: isPending ? 'not-allowed' : 'pointer',
-                  }}
-                >
-                  🏁 End Super Over 1 & Start Super Over 2 →
-                </button>
               </div>
-            </div>
-          )}
+            );
+          })()}
 
           {/* WICKET FALLEN: PROMPT INCOMING BATTER */}
           {(!currentInnings.currentStrikerId || !currentInnings.currentNonStrikerId) && (
@@ -3558,7 +3667,7 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                     SCORING FROZEN: INCOMING BATTER REQUIRED
                   </div>
                   <div style={{ fontSize: '0.82rem', color: 'rgba(255, 255, 255, 0.7)', marginTop: '2px' }}>
-                    A wicket has fallen. Scoring is locked until you select the incoming {!currentInnings.currentStrikerId ? 'Striker' : 'Non-Striker'}.
+                    A batter has retired hurt or a wicket has fallen. Scoring is locked until you select the incoming {!currentInnings.currentStrikerId ? 'Striker' : 'Non-Striker'}.
                   </div>
                 </div>
               </div>
@@ -3918,11 +4027,11 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                   <button
                     type="button"
                     disabled={isScorePadLocked}
-                    title="MCC Law 22: Ball beats keeper to boundary fence (1 wide penalty + 4 boundary = 5 wides extras to batting team & bowler, delivery re-bowled)"
+                    title="Ball beats keeper to boundary fence (1 wide to bowler + 4 extras to batting team, delivery re-bowled)"
                     onClick={() => {
                       const bName = activeBowler?.name || 'Bowler';
                       const sName = activeStriker?.name || 'Striker';
-                      handleRecordBall(4, 'WIDE', 5, 0, 0, `5 WIDES! Wild delivery from ${bName} beats ${sName} and keeper, racing all the way to the boundary for 5 extras!`);
+                      handleRecordBall(4, 'WIDE', 5, 0, 0, `5 WIDES! Wild delivery from ${bName} beats ${sName} and keeper, racing all the way to the boundary for 5 extras (1 to bowler, 4 extras)!`);
                     }}
                     style={{
                       background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.22), rgba(217, 119, 6, 0.12))',
@@ -4028,24 +4137,27 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
               🏁 End Innings {currentInnings.inningsNumber}
             </button>
 
-            {currentInnings.inningsNumber <= 2 && (
-              <button
-                onClick={() => setShowSuperOverModal(true)}
-                disabled={isPending}
-                style={{
-                  flex: 1,
-                  background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.25) 0%, rgba(217, 119, 6, 0.25) 100%)',
-                  border: '1.5px solid #F59E0B',
-                  color: '#FBBF24',
-                  padding: '12px',
-                  borderRadius: '8px',
-                  fontWeight: 800,
-                  cursor: isPending ? 'not-allowed' : 'pointer',
-                }}
-              >
-                ⚡ Super Over
-              </button>
-            )}
+            {(currentInnings.inningsNumber <= 2 || currentInnings.inningsNumber % 2 === 0) && (() => {
+              const nextRoundNum = currentInnings.inningsNumber <= 2 ? 1 : Math.floor((currentInnings.inningsNumber - 3) / 2) + 2;
+              return (
+                <button
+                  onClick={() => setShowSuperOverModal(true)}
+                  disabled={isPending}
+                  style={{
+                    flex: 1,
+                    background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.25) 0%, rgba(217, 119, 6, 0.25) 100%)',
+                    border: '1.5px solid #F59E0B',
+                    color: '#FBBF24',
+                    padding: '12px',
+                    borderRadius: '8px',
+                    fontWeight: 800,
+                    cursor: isPending ? 'not-allowed' : 'pointer',
+                  }}
+                >
+                  ⚡ Super Over {nextRoundNum > 1 ? nextRoundNum : ''}
+                </button>
+              );
+            })()}
 
             <button
               onClick={() => setShowCompleteModal(true)}
@@ -4075,7 +4187,14 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
             <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '4px' }}>
               {(match.innings || []).map((inn: any) => {
                 const isSelected = (activeInningsTabNumber || match.currentInnings) === inn.inningsNumber;
-                const label = inn.inningsNumber === 1 ? '1st Innings' : inn.inningsNumber === 2 ? '2nd Innings' : inn.inningsNumber === 3 ? 'Super Over 1' : `Super Over ${inn.inningsNumber - 2}`;
+                const isSO = inn.inningsNumber >= 3;
+                const soRound = Math.floor((inn.inningsNumber - 3) / 2) + 1;
+                const soType = inn.inningsNumber % 2 === 1 ? '1st Inn' : 'Chase';
+                const label = inn.inningsNumber === 1
+                  ? '1st Innings'
+                  : inn.inningsNumber === 2
+                  ? '2nd Innings'
+                  : `⚡ Super Over ${soRound} (${soType})`;
                 return (
                   <button
                     key={inn.id}
@@ -4285,7 +4404,13 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
             <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', flexWrap: 'wrap', marginBottom: '18px' }}>
               {(match.innings || []).map((inn: any) => {
                 const isSuperOver = inn.inningsNumber >= 3;
-                const label = inn.inningsNumber === 1 ? '1st Innings' : inn.inningsNumber === 2 ? '2nd Innings' : inn.inningsNumber === 3 ? '⚡ Super Over 1' : `⚡ Super Over ${inn.inningsNumber - 2}`;
+                const soRound = Math.floor((inn.inningsNumber - 3) / 2) + 1;
+                const soType = inn.inningsNumber % 2 === 1 ? '1st Inn' : 'Chase';
+                const label = inn.inningsNumber === 1
+                  ? '1st Innings'
+                  : inn.inningsNumber === 2
+                  ? '2nd Innings'
+                  : `⚡ Super Over ${soRound} (${soType})`;
                 return (
                   <div
                     key={inn.id}
@@ -4427,7 +4552,14 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
             <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '4px' }}>
               {(match.innings || []).map((inn: any) => {
                 const isSelected = (activeInningsTabNumber || 1) === inn.inningsNumber;
-                const label = inn.inningsNumber === 1 ? '1st Innings' : inn.inningsNumber === 2 ? '2nd Innings' : inn.inningsNumber === 3 ? 'Super Over 1' : `Super Over ${inn.inningsNumber - 2}`;
+                const isSO = inn.inningsNumber >= 3;
+                const soRound = Math.floor((inn.inningsNumber - 3) / 2) + 1;
+                const soType = inn.inningsNumber % 2 === 1 ? '1st Inn' : 'Chase';
+                const label = inn.inningsNumber === 1
+                  ? '1st Innings'
+                  : inn.inningsNumber === 2
+                  ? '2nd Innings'
+                  : `⚡ Super Over ${soRound} (${soType})`;
                 return (
                   <button
                     key={inn.id}
@@ -4495,7 +4627,13 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                           <tr key={bs.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', color: '#FFF' }}>
                             <td style={{ padding: '6px 8px', fontWeight: 700 }}>
                               <span>{bs.player?.name || 'Player'}</span>
-                              {bs.isOut ? <span style={{ color: '#EF4444', fontSize: '0.72rem', marginLeft: '4px' }}>({bs.dismissal || 'out'})</span> : <span style={{ color: '#10B981', fontSize: '0.72rem', marginLeft: '4px' }}>*</span>}
+                              {bs.isOut ? (
+                                <span style={{ color: '#EF4444', fontSize: '0.72rem', marginLeft: '4px' }}>({bs.dismissal || 'out'})</span>
+                              ) : bs.dismissal?.toLowerCase().includes('retired hurt') && bs.playerId !== selectedInn.currentStrikerId && bs.playerId !== selectedInn.currentNonStrikerId ? (
+                                <span style={{ color: '#38BDF8', fontSize: '0.72rem', marginLeft: '4px', fontWeight: 600 }}>(retired hurt)</span>
+                              ) : (
+                                <span style={{ color: '#10B981', fontSize: '0.72rem', marginLeft: '4px' }}>*</span>
+                              )}
                               <button
                                 type="button"
                                 onClick={() => openRenameModal(bs.player?.id, bs.player?.name, bs.player?.jerseyNumber)}
@@ -4718,24 +4856,27 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                         🏁 End Innings {selectedInn.inningsNumber}
                       </button>
 
-                      {selectedInn.inningsNumber <= 2 && (
-                        <button
-                          onClick={() => setShowSuperOverModal(true)}
-                          disabled={isPending}
-                          style={{
-                            flex: 1,
-                            background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.25) 0%, rgba(217, 119, 6, 0.25) 100%)',
-                            border: '1.5px solid #F59E0B',
-                            color: '#FBBF24',
-                            padding: '12px',
-                            borderRadius: '8px',
-                            fontWeight: 800,
-                            cursor: isPending ? 'not-allowed' : 'pointer',
-                          }}
-                        >
-                          ⚡ Start Official Super Over
-                        </button>
-                      )}
+                      {(selectedInn.inningsNumber <= 2 || selectedInn.inningsNumber % 2 === 0) && (() => {
+                        const nextRoundNum = selectedInn.inningsNumber <= 2 ? 1 : Math.floor((selectedInn.inningsNumber - 3) / 2) + 2;
+                        return (
+                          <button
+                            onClick={() => setShowSuperOverModal(true)}
+                            disabled={isPending}
+                            style={{
+                              flex: 1,
+                              background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.25) 0%, rgba(217, 119, 6, 0.25) 100%)',
+                              border: '1.5px solid #F59E0B',
+                              color: '#FBBF24',
+                              padding: '12px',
+                              borderRadius: '8px',
+                              fontWeight: 800,
+                              cursor: isPending ? 'not-allowed' : 'pointer',
+                            }}
+                          >
+                            ⚡ Start Official Super Over {nextRoundNum > 1 ? nextRoundNum : ''}
+                          </button>
+                        );
+                      })()}
 
                       <button
                         onClick={() => setShowCompleteModal(true)}
@@ -4949,9 +5090,9 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                       </span>
                     </div>
                     <div style={{ fontSize: '0.75rem', color: '#CBD5E1', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                      <div>• <strong>1 Wide Penalty</strong> extra added to Extras & charged to {activeBowler?.name || 'Bowler'}</div>
+                      <div>• <strong>1 Wide Penalty</strong> (1 run charged to {activeBowler?.name || 'Bowler'})</div>
                       {wideRuns > 0 && (
-                        <div>• <strong>+{wideRuns} {wideIsBoundary ? 'Boundary Runs' : 'Running Extras'}</strong> scored as Wides (charged to {activeBowler?.name || 'Bowler'})</div>
+                        <div>• <strong>+{wideRuns} {wideIsBoundary ? 'Boundary Runs' : 'Running Extras'}</strong> scored as extras (NOT charged to {activeBowler?.name || 'Bowler'})</div>
                       )}
                       <div>• Strike: <strong style={{ color: willRotate ? '#34D399' : '#FBBF24' }}>{
                         willRotate
@@ -5340,9 +5481,9 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px', overflowY: 'auto' }}>
           <div style={{ background: '#10141E', border: '1.5px solid #EF4444', borderRadius: '16px', maxWidth: '450px', width: '100%', maxHeight: 'min(88vh, calc(100dvh - 32px))', display: 'flex', flexDirection: 'column', overflow: 'hidden', margin: 'auto' }}>
             {/* Header (Fixed) */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 20px 12px', borderBottom: '1px solid rgba(239, 68, 68, 0.25)', background: 'rgba(239, 68, 68, 0.05)', flexShrink: 0 }}>
-              <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#EF4444', margin: 0 }}>
-                🔴 Record Wicket Dismissal
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 20px 12px', borderBottom: `1px solid ${wicketType === 'RETIRED_HURT' ? 'rgba(2, 132, 199, 0.3)' : 'rgba(239, 68, 68, 0.25)'}`, background: wicketType === 'RETIRED_HURT' ? 'rgba(2, 132, 199, 0.08)' : 'rgba(239, 68, 68, 0.05)', flexShrink: 0 }}>
+              <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: wicketType === 'RETIRED_HURT' ? '#38BDF8' : '#EF4444', margin: 0 }}>
+                {wicketType === 'RETIRED_HURT' ? '🏥 Record Batter Retired Hurt' : '🔴 Record Wicket Dismissal'}
               </h3>
               <button
                 type="button"
@@ -5419,6 +5560,22 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                   <option value="OTHER">Other</option>
                 </select>
               </div>
+
+              {wicketType === 'RETIRED_HURT' && (
+                <div
+                  style={{
+                    background: 'rgba(2, 132, 199, 0.12)',
+                    border: '1.5px solid #0284C7',
+                    borderRadius: '8px',
+                    padding: '10px 12px',
+                    color: '#BAE6FD',
+                    fontSize: '0.8rem',
+                    lineHeight: 1.45,
+                  }}
+                >
+                  🏥 <strong>NOT A WICKET:</strong> Under MCC Law 25.4, Retired Hurt is <strong>NOT a wicket lost</strong>. Total team wickets will not increase, bowler will not be credited with a wicket, and this batter remains eligible to return and resume batting later.
+                </div>
+              )}
 
               {/* Delivery is a No-Ball Switch */}
               <div style={{ background: '#141A26', border: '1px solid #2A364E', borderRadius: '8px', padding: '10px 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
@@ -5523,9 +5680,9 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                 type="button"
                 onClick={handleRecordWicket}
                 disabled={isPending}
-                style={{ flex: 2, background: '#EF4444', border: 'none', color: '#FFF', padding: '11px', borderRadius: '8px', fontWeight: 800, cursor: isPending ? 'not-allowed' : 'pointer' }}
+                style={{ flex: 2, background: wicketType === 'RETIRED_HURT' ? '#0284C7' : '#EF4444', border: 'none', color: '#FFF', padding: '11px', borderRadius: '8px', fontWeight: 800, cursor: isPending ? 'not-allowed' : 'pointer' }}
               >
-                Confirm Wicket
+                {wicketType === 'RETIRED_HURT' ? 'Confirm Retired Hurt (Leaves Field)' : 'Confirm Wicket'}
               </button>
             </div>
           </div>
@@ -5539,11 +5696,13 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
             {/* Header (Fixed) */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 20px 12px', borderBottom: '1px solid rgba(245, 158, 11, 0.25)', background: 'rgba(245, 158, 11, 0.05)', flexShrink: 0 }}>
               <div>
-                <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#FBBF24', margin: 0 }}>
-                  🎯 Select / Change Active Bowler
+                <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#FBBF24', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span>{(currentInnings?.balls || 0) > 0 ? '🚑 Mid-Over Bowler Replacement (Injury)' : '🎯 Select / Change Active Bowler'}</span>
                 </h3>
                 <p style={{ fontSize: '0.78rem', color: '#94A3B8', margin: '2px 0 0' }}>
-                  Bowling Team: <strong style={{ color: '#FFF' }}>{currentInnings?.bowlingTeam?.name}</strong> (Max 1 over per bowler)
+                  {(currentInnings?.balls || 0) > 0
+                    ? `Over ${currentInnings.overs}.${currentInnings.balls} in progress (${matchBallsPerOver - currentInnings.balls} ball${(matchBallsPerOver - currentInnings.balls) === 1 ? '' : 's'} remaining). Replacement bowler will complete this over (MCC Law 17.8).`
+                    : `Bowling Team: ${currentInnings?.bowlingTeam?.name} (Max ${maxOversPerBowler} over${maxOversPerBowler === 1 ? '' : 's'} per bowler)`}
                 </p>
               </div>
               <button
@@ -5568,13 +5727,24 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                 <option value="">Select Bowler...</option>
                 {bowlingSquad.map((p: any) => {
                   const bScore = currentInnings?.bowlingScores?.find((b: any) => b.playerId === p.id);
-                  const completedOvers = bScore?.overs || 0;
-                  const isMaxReached = completedOvers >= maxOversPerBowler;
+                  const legalBallsBowled = (bScore?.overs || 0) * matchBallsPerOver + (bScore?.balls || 0);
+                  const maxBallsAllowed = maxOversPerBowler * matchBallsPerOver;
+                  const isMaxReached = legalBallsBowled >= maxBallsAllowed;
                   const isCurrent = p.id === currentInnings?.currentBowlerId;
+                  const bowledInPrevOver = previousOverBowlerIds.has(p.id);
+                  const isMidOver = (currentInnings?.balls || 0) > 0;
+                  const isDisabled = isMaxReached || bowledInPrevOver || (isMidOver && isCurrent);
                   const oversText = bScore ? `${bScore.overs}.${bScore.balls} ov (${bScore.wickets}w, ${bScore.runsConceded}r)` : 'Yet to bowl';
+                  
+                  let statusTag = '';
+                  if (isMidOver && isCurrent) statusTag = '🚑 [INCAPACITATED / CURRENT BOWLER]';
+                  else if (bowledInPrevOver) statusTag = '⛔ [BOWLED PREVIOUS OVER]';
+                  else if (isMaxReached) statusTag = `⛔ [MAX ${maxOversPerBowler} OVER QUOTA REACHED]`;
+                  else if (isCurrent) statusTag = '★ (Current)';
+
                   return (
-                    <option key={p.id} value={p.id} disabled={isMaxReached}>
-                      {p.name} — {oversText} {isMaxReached ? '⛔ [MAX 1 OVER REACHED - CPL RULE]' : ''} {isCurrent ? '★ (Current)' : ''}
+                    <option key={p.id} value={p.id} disabled={isDisabled}>
+                      {p.name} — {oversText} {statusTag}
                     </option>
                   );
                 })}
@@ -5594,9 +5764,18 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                 type="button"
                 onClick={handleChangeBowler}
                 disabled={isPending || !selectedBowlerId}
-                style={{ flex: 2, background: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)', border: 'none', color: '#000', padding: '11px', borderRadius: '8px', fontWeight: 800, cursor: isPending || !selectedBowlerId ? 'not-allowed' : 'pointer' }}
+                style={{
+                  flex: 2,
+                  background: (currentInnings?.balls || 0) > 0 ? 'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)' : 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)',
+                  border: 'none',
+                  color: (currentInnings?.balls || 0) > 0 ? '#FFF' : '#000',
+                  padding: '11px',
+                  borderRadius: '8px',
+                  fontWeight: 800,
+                  cursor: isPending || !selectedBowlerId ? 'not-allowed' : 'pointer',
+                }}
               >
-                Set Bowler
+                {(currentInnings?.balls || 0) > 0 ? '🚑 Confirm Mid-Over Replacement' : 'Set Bowler'}
               </button>
             </div>
           </div>
@@ -6029,14 +6208,19 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
       )}
 
       {/* SUPER OVER SETUP MODAL */}
-      {showSuperOverModal && (
+      {showSuperOverModal && (() => {
+        const existingSO = (match.innings || []).filter((i: any) => i.inningsNumber >= 3);
+        const nextSORound = existingSO.length > 0
+          ? Math.floor((Math.max(...existingSO.map((i: any) => i.inningsNumber)) - 3) / 2) + 2
+          : 1;
+        return (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px', overflowY: 'auto' }}>
           <div style={{ background: '#10141E', border: '1.5px solid #F59E0B', borderRadius: '16px', maxWidth: '460px', width: '100%', maxHeight: 'min(88vh, calc(100dvh - 32px))', display: 'flex', flexDirection: 'column', overflow: 'hidden', margin: 'auto', boxShadow: '0 8px 32px rgba(245, 158, 11, 0.3)' }}>
             {/* Header (Fixed) */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 20px 12px', borderBottom: '1px solid rgba(245, 158, 11, 0.25)', background: 'rgba(245, 158, 11, 0.05)', flexShrink: 0 }}>
               <div>
                 <h3 style={{ fontSize: '1.15rem', fontWeight: 900, color: '#FBBF24', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span>⚡ Launch Super Over Tie-Breaker</span>
+                  <span>⚡ Launch Super Over {nextSORound > 1 ? `${nextSORound} (Round ${nextSORound})` : 'Tie-Breaker'}</span>
                 </h3>
                 <div style={{ fontSize: '0.78rem', color: '#94A3B8', marginTop: '2px' }}>
                   1 Over per team • 2 Wickets maximum per innings
@@ -6170,12 +6354,13 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                 disabled={isEditingBallSaving}
                 style={{ flex: 2, background: '#F59E0B', border: 'none', color: '#000', padding: '11px', borderRadius: '8px', fontWeight: 900, cursor: 'pointer' }}
               >
-                {isEditingBallSaving ? 'Starting...' : '⚡ Begin Super Over →'}
+                {isEditingBallSaving ? 'Starting...' : `⚡ Begin Super Over ${nextSORound > 1 ? nextSORound : ''} →`}
               </button>
             </div>
           </div>
         </div>
-      )}
+        );
+      })()}
 
       {/* EDIT MATCH RULES (OVERS & BALLS PER OVER) MODAL */}
       {showRulesModal && (

@@ -177,25 +177,23 @@ async function run8TeamSimulation() {
       let winnerId = m.teamAId;
       let loserId = m.teamBId;
 
-      // Group A matches:
-      // M1: A1 vs A2 -> A1 wins (A1: 1W, A2: 1L)
-      // M2: A2 vs A3 -> A2 wins (A2: 1W-1L, A3: 1L)
-      // M3: A3 vs A4 -> A3 wins (A3: 1W-1L, A4: 1L)
-      // M4: A4 vs A1 -> A1 wins (A4: 2L, A1: 2W)
-      //
-      // Group B matches:
-      // M5: B1 vs B2 -> B1 wins
-      // M6: B2 vs B3 -> B2 wins
-      // M7: B3 vs B4 -> B3 wins
-      // M8: B4 vs B1 -> B1 wins
+      // Alternating & rest-optimized Group matches:
+      // M1 (Group A): A1 vs A2 -> A1 wins (A1: 1W, A2: 1L)
+      // M2 (Group B): B1 vs B2 -> B1 wins (B1: 1W, B2: 1L)
+      // M3 (Group A): A3 vs A4 -> A3 wins (A3: 1W, A4: 1L)
+      // M4 (Group B): B3 vs B4 -> B3 wins (B3: 1W, B4: 1L)
+      // M5 (Group A): A1 vs A4 -> A1 wins (A1: 2W, A4: 2L)
+      // M6 (Group B): B1 vs B4 -> B1 wins (B1: 2W, B4: 2L)
+      // M7 (Group A): A2 vs A3 -> A2 wins (A2: 1W-1L, A3: 1W-1L)
+      // M8 (Group B): B2 vs B3 -> B2 wins (B2: 1W-1L, B3: 1W-1L)
       if (m.matchNumber === 1) { winnerId = testTeams[0].id; loserId = testTeams[1].id; }
-      else if (m.matchNumber === 2) { winnerId = testTeams[1].id; loserId = testTeams[2].id; }
+      else if (m.matchNumber === 2) { winnerId = testTeams[4].id; loserId = testTeams[5].id; }
       else if (m.matchNumber === 3) { winnerId = testTeams[2].id; loserId = testTeams[3].id; }
-      else if (m.matchNumber === 4) { winnerId = testTeams[0].id; loserId = testTeams[3].id; }
-      else if (m.matchNumber === 5) { winnerId = testTeams[4].id; loserId = testTeams[5].id; }
-      else if (m.matchNumber === 6) { winnerId = testTeams[5].id; loserId = testTeams[6].id; }
-      else if (m.matchNumber === 7) { winnerId = testTeams[6].id; loserId = testTeams[7].id; }
-      else if (m.matchNumber === 8) { winnerId = testTeams[4].id; loserId = testTeams[7].id; }
+      else if (m.matchNumber === 4) { winnerId = testTeams[6].id; loserId = testTeams[7].id; }
+      else if (m.matchNumber === 5) { winnerId = testTeams[0].id; loserId = testTeams[3].id; }
+      else if (m.matchNumber === 6) { winnerId = testTeams[4].id; loserId = testTeams[7].id; }
+      else if (m.matchNumber === 7) { winnerId = testTeams[1].id; loserId = testTeams[2].id; }
+      else if (m.matchNumber === 8) { winnerId = testTeams[5].id; loserId = testTeams[6].id; }
 
       await prisma.match.update({
         where: { id: m.id },

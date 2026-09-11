@@ -26,10 +26,18 @@ async function fetchFreshStats() {
   return data;
 }
 
-export async function GET() {
+export async function GET(request?: Request) {
   try {
     const now = Date.now();
-    if (statsCache && statsCache.expiresAt > now) {
+    let isFreshRequested = false;
+    if (request) {
+      try {
+        const url = new URL(request.url);
+        isFreshRequested = url.searchParams.get('fresh') === '1';
+      } catch {}
+    }
+
+    if (!isFreshRequested && statsCache && statsCache.expiresAt > now) {
       return NextResponse.json(
         { success: true, ...statsCache.data },
         {

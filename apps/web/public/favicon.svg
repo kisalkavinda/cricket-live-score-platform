@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <!-- Rich 3D Spherical Leather Lighting -->
+    <radialGradient id="leatherGrad" cx="30%" cy="24%" r="72%">
+      <stop offset="0%" stop-color="#FF3B5F" />
+      <stop offset="26%" stop-color="#E60026" />
+      <stop offset="58%" stop-color="#990016" />
+      <stop offset="85%" stop-color="#56000D" />
+      <stop offset="100%" stop-color="#240005" />
+    </radialGradient>
+
+    <!-- Subtle Ambient Bounce Light (simulating ground/turf bounce reflection) -->
+    <radialGradient id="ambientBounce" cx="75%" cy="80%" r="50%">
+      <stop offset="0%" stop-color="rgba(255, 120, 150, 0.22)" />
+      <stop offset="60%" stop-color="rgba(255, 60, 90, 0.08)" />
+      <stop offset="100%" stop-color="rgba(0, 0, 0, 0)" />
+    </radialGradient>
+
+    <!-- Clip strictly to spherical ball -->
+    <clipPath id="ballClip">
+      <circle cx="256" cy="256" r="232" />
+    </clipPath>
+
+    <!-- Rim light gradient -->
+    <linearGradient id="rimGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="rgba(255, 255, 255, 0.35)" />
+      <stop offset="40%" stop-color="rgba(255, 150, 180, 0.15)" />
+      <stop offset="100%" stop-color="rgba(0, 0, 0, 0.4)" />
+    </linearGradient>
+  </defs>
+
+  <!-- 1. Ambient Drop Shadow for Light Browser Tabs & Bookmarks -->
+  <circle cx="256" cy="262" r="232" fill="rgba(0,0,0,0.38)" filter="blur(8px)" />
+
+  <!-- 2. Main Leather Sphere -->
+  <circle cx="256" cy="256" r="232" fill="url(#leatherGrad)" stroke="url(#rimGrad)" stroke-width="2.5" />
+
+  <g clip-path="url(#ballClip)">
+    <!-- 3. Soft Ambient Bounce on Shadow Hemisphere (smooth spherical gradient) -->
+    <circle cx="256" cy="256" r="232" fill="url(#ambientBounce)" />
+
+    <!-- ==================== AUTHENTIC 3D CRICKET SEAM ==================== -->
+    <!-- (a) Seam Cast Shadow (gives authentic raised relief above the red leather) -->
+    <path d="M 66 335 C 160 380, 330 330, 442 162" 
+          transform="translate(4, 7)" 
+          fill="none" stroke="rgba(14, 0, 3, 0.65)" stroke-width="22" stroke-linecap="round" />
+
+    <!-- (b) Raised Leather Welt Base -->
+    <path d="M 66 335 C 160 380, 330 330, 442 162" 
+          fill="none" stroke="#68000E" stroke-width="19" stroke-linecap="round" />
+
+    <!-- (c) Dual Stitched White Cords (Twin outer ridges) -->
+    <path d="M 66 335 C 160 380, 330 330, 442 162" 
+          transform="translate(2.5, 3)" 
+          fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round" />
+    <path d="M 66 335 C 160 380, 330 330, 442 162" 
+          transform="translate(-2.5, -3)" 
+          fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round" />
+
+    <!-- (d) Subtle Seam Groove Channel -->
+    <path d="M 66 335 C 160 380, 330 330, 442 162" 
+          fill="none" stroke="#7A0012" stroke-width="2.5" stroke-linecap="round" />
+
+    <!-- (e) Fine Linen Stitch Texture (authentic hand-stitched detailing) -->
+    <path d="M 66 335 C 160 380, 330 330, 442 162" 
+          transform="translate(2.5, 3)" 
+          fill="none" stroke="#E6D7C3" stroke-width="7" stroke-dasharray="2.5 8" stroke-linecap="round" />
+    <path d="M 66 335 C 160 380, 330 330, 442 162" 
+          transform="translate(-2.5, -3)" 
+          fill="none" stroke="#E6D7C3" stroke-width="7" stroke-dasharray="2.5 8" stroke-linecap="round" />
+
+    <!-- (f) High-Gloss Specular Shine on Seam Ridge -->
+    <path d="M 66 335 C 160 380, 330 330, 442 162" 
+          transform="translate(-2.5, -3)" 
+          fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" opacity="0.9" />
+
+    <!-- ==================== SPECULAR GLOSS HIGHLIGHTS ==================== -->
+    <!-- (a) Soft luminous aura -->
+    <ellipse cx="195" cy="160" rx="46" ry="24" transform="rotate(-45 195 160)" fill="rgba(255, 255, 255, 0.28)" />
+
+    <!-- (b) Primary sharp curved gloss arc -->
+    <path d="M 125 210 A 176 176 0 0 1 210 125" 
+          fill="none" stroke="#FFFFFF" stroke-width="18" stroke-linecap="round" opacity="0.82" />
+
+    <!-- (c) Intense core reflection -->
+    <path d="M 140 195 A 176 176 0 0 1 195 140" 
+          fill="none" stroke="#FFFFFF" stroke-width="8" stroke-linecap="round" opacity="0.98" />
+  </g>
+</svg>

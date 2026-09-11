@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { createClient } from '@/utils/supabase/client';
 import { ScoreBroadcastPayload } from '@/lib/scoring/scoring-realtime';
 import { TournamentOverview } from '@/lib/tournament/tournament-service';
+import { computeStageStandings } from '@/lib/tournament/nrr-engine';
 import { normalizeImageUrl } from '@/lib/utils/image-utils';
 
 interface Props {
@@ -31,10 +32,15 @@ export default function GroundDisplayClient({
   const [currentTime, setCurrentTime] = useState<string>('');
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
   const [lastSync, setLastSync] = useState<string>('');
+  const [isRealtimeConnected, setIsRealtimeConnected] = useState<boolean>(false);
 
   const inFlightScorecardRef = useRef<boolean>(false);
   const inFlightMatchesRef = useRef<boolean>(false);
   const inFlightStatsRef = useRef<boolean>(false);
+  const userHasManuallySelectedInningsTabRef = useRef<boolean>(false);
+  const scorecardReqSeqRef = useRef<number>(0);
+  const statsReqSeqRef = useRef<number>(0);
+  const statsDebounceTimeoutRef = useRef<any>(null);
 
   // Live ticking clock
   useEffect(() => {
@@ -78,12 +84,25 @@ export default function GroundDisplayClient({
     if (inFlightMatchesRef.current) return;
     inFlightMatchesRef.current = true;
     try {
-      const res = await fetch(`/api/matches/live?_t=${Date.now()}`, { cache: 'no-store' });
+      const res = await fetch(`/api/matches/live?_t=${Date.now()}&fresh=1`, {
+        cache: 'no-store',
+        headers: { 'Cache-Control': 'no-cache, no-store' },
+      });
       if (!res.ok) return;
       const data = await res.json();
       if (data.success && data.matches && data.matches.length > 0) {
         setMatches(data.matches);
-        setActiveMatchId((prev) => prev || data.matches[0].matchId);
+        setActiveMatchId((prev) => {
+          const liveMatch = data.matches.find((m: any) => m.status === 'LIVE');
+          const prevMatch = data.matches.find((m: any) => m.matchId === prev);
+          if (liveMatch && prevMatch?.status !== 'LIVE') {
+            return liveMatch.matchId;
+          }
+          if (prev && prevMatch) {
+            return prev;
+          }
+          return data.matches[0].matchId;
+        });
       }
     } catch (err) {
       console.warn('[GroundDisplay] Matches fetch error:', err);
@@ -92,20 +111,25 @@ export default function GroundDisplayClient({
     }
   }, []);
 
-  // 2. Fetch scorecard details for active match
-  const fetchActiveScorecard = useCallback(async (matchId: string) => {
-    if (!matchId || inFlightScorecardRef.current) return;
+  // 2. Fetch scorecard details for active match (with sequence token to prevent race conditions)
+  const fetchActiveScorecard = useCallback(async (matchId: string, force = false) => {
+    if (!matchId) return;
+    if (!force && inFlightScorecardRef.current) return;
     inFlightScorecardRef.current = true;
+    const reqSeq = ++scorecardReqSeqRef.current;
     try {
-      const res = await fetch(`/api/matches/${matchId}/scorecard?_t=${Date.now()}`, { cache: 'no-store' });
+      const res = await fetch(`/api/matches/${matchId}/scorecard?_t=${Date.now()}`, {
+        cache: 'no-store',
+        headers: { 'Cache-Control': 'no-cache, no-store' },
+      });
       if (!res.ok) return;
       const data = await res.json();
-      if (data.success && data.match) {
+      if (reqSeq === scorecardReqSeqRef.current && data.success && data.match) {
         setScorecard(data.match);
         setLastSync(new Date().toLocaleTimeString());
-        // Default to active innings
-        if (data.match.currentInnings) {
-          setActiveInningsTab((prev) => prev || `inn${data.match.currentInnings}`);
+        // Default to active innings if user hasn't explicitly locked another tab
+        if (!userHasManuallySelectedInningsTabRef.current && data.match.currentInnings) {
+          setActiveInningsTab(`inn${data.match.currentInnings}`);
         }
       }
     } catch (err) {
@@ -116,14 +140,19 @@ export default function GroundDisplayClient({
   }, []);
 
   // 3. Fetch tournament stats (Top Batters, Top Bowlers, Overview Standings)
-  const fetchTournamentStats = useCallback(async () => {
-    if (inFlightStatsRef.current) return;
+  const fetchTournamentStats = useCallback(async (forceFresh = false) => {
+    if (!forceFresh && inFlightStatsRef.current) return;
     inFlightStatsRef.current = true;
+    const reqSeq = ++statsReqSeqRef.current;
     try {
-      const res = await fetch(`/api/tournament/stats?_t=${Date.now()}`, { cache: 'no-store' });
+      const url = `/api/tournament/stats?_t=${Date.now()}${forceFresh ? '&fresh=1' : ''}`;
+      const res = await fetch(url, {
+        cache: 'no-store',
+        headers: { 'Cache-Control': 'no-cache, no-store' },
+      });
       if (!res.ok) return;
       const data = await res.json();
-      if (data.success) {
+      if (reqSeq === statsReqSeqRef.current && data.success) {
         setStats(data);
         if (data.overview) {
           setOverview(data.overview);
@@ -136,10 +165,132 @@ export default function GroundDisplayClient({
     }
   }, []);
 
+  const triggerDebouncedStatsUpdate = useCallback(() => {
+    if (statsDebounceTimeoutRef.current) {
+      clearTimeout(statsDebounceTimeoutRef.current);
+    }
+    statsDebounceTimeoutRef.current = setTimeout(() => {
+      fetchTournamentStats(true);
+    }, 350);
+  }, [fetchTournamentStats]);
+
   const activeMatchIdRef = useRef<string | null>(activeMatchId);
   activeMatchIdRef.current = activeMatchId;
 
-  // Auto-refresh loop: every 4 seconds
+  // Unified score broadcast handler (instantaneous 0ms local state update on every ball)
+  const handleBroadcastUpdate = useCallback((msg: any) => {
+    const payload: ScoreBroadcastPayload = msg?.payload;
+    if (!payload || !payload.matchId) return;
+
+    // 1. Instantaneous update to matches state
+    setMatches((prev) => {
+      const matchId = payload.matchId;
+      const idx = prev.findIndex((m) => m.matchId === matchId);
+      if (idx >= 0) {
+        const next = [...prev];
+        next[idx] = payload;
+        return next;
+      }
+      return [payload, ...prev];
+    });
+
+    // 2. Select this match if none active or if it is currently live
+    setActiveMatchId((prev) => {
+      if (!prev) return payload.matchId;
+      if (payload.status === 'LIVE' && prev !== payload.matchId) {
+        const prevMatch = matches.find((m) => m.matchId === prev);
+        if (prevMatch?.status !== 'LIVE') {
+          return payload.matchId;
+        }
+      }
+      return prev;
+    });
+
+    // 3. Auto-follow active innings
+    if (!userHasManuallySelectedInningsTabRef.current && payload.currentInnings) {
+      setActiveInningsTab(`inn${payload.currentInnings}`);
+    }
+
+    // 4. Force-fetch the fresh detailed scorecard immediately
+    const targetMatchId = activeMatchIdRef.current || payload.matchId;
+    if (targetMatchId) {
+      fetchActiveScorecard(targetMatchId, true);
+    }
+
+    // 5. Update tournament standings & leaderboards in real time
+    triggerDebouncedStatsUpdate();
+    setLastSync(new Date().toLocaleTimeString());
+    setIsRealtimeConnected(true);
+  }, [matches, fetchActiveScorecard, triggerDebouncedStatsUpdate]);
+
+  // Supabase Realtime multi-channel subscription:
+  // - Global broadcast channel 'matches:live'
+  // - Match-specific channel 'match:${activeMatchId}'
+  // - Postgres CDC changes channel 'ground_display_cdc_sync'
+  useEffect(() => {
+    let liveChannel: any = null;
+    let matchChannel: any = null;
+    let cdcChannel: any = null;
+
+    try {
+      const supabase = createClient();
+
+      // 1. Global live matches broadcast stream
+      liveChannel = supabase.channel('matches:live');
+      liveChannel
+        .on('broadcast', { event: 'score_update' }, handleBroadcastUpdate)
+        .subscribe((status: string) => {
+          if (status === 'SUBSCRIBED') {
+            setIsRealtimeConnected(true);
+            fetchLiveMatches();
+            if (activeMatchIdRef.current) fetchActiveScorecard(activeMatchIdRef.current, true);
+          } else if (status === 'CLOSED' || status === 'CHANNEL_ERROR') {
+            setIsRealtimeConnected(false);
+          }
+        });
+
+      // 2. Active match specific channel
+      if (activeMatchId) {
+        matchChannel = supabase.channel(`match:${activeMatchId}`);
+        matchChannel
+          .on('broadcast', { event: 'score_update' }, handleBroadcastUpdate)
+          .subscribe();
+      }
+
+      // 3. Postgres Changes CDC fallback (catches any direct DB mutations or admin edits)
+      cdcChannel = supabase.channel('ground_display_cdc_sync');
+      cdcChannel
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'BallEvent' }, () => {
+          fetchLiveMatches();
+          if (activeMatchIdRef.current) fetchActiveScorecard(activeMatchIdRef.current, true);
+          triggerDebouncedStatsUpdate();
+        })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'Innings' }, () => {
+          fetchLiveMatches();
+          if (activeMatchIdRef.current) fetchActiveScorecard(activeMatchIdRef.current, true);
+          triggerDebouncedStatsUpdate();
+        })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'Match' }, () => {
+          fetchLiveMatches();
+          if (activeMatchIdRef.current) fetchActiveScorecard(activeMatchIdRef.current, true);
+          triggerDebouncedStatsUpdate();
+        })
+        .subscribe();
+    } catch (err) {
+      console.warn('[GroundDisplay] Supabase Realtime initialization error:', err);
+    }
+
+    return () => {
+      try {
+        const supabase = createClient();
+        if (liveChannel) supabase.removeChannel(liveChannel);
+        if (matchChannel) supabase.removeChannel(matchChannel);
+        if (cdcChannel) supabase.removeChannel(cdcChannel);
+      } catch {}
+    };
+  }, [activeMatchId, handleBroadcastUpdate, fetchLiveMatches, fetchActiveScorecard, triggerDebouncedStatsUpdate]);
+
+  // Dynamic high-speed auto-refresh fallback (every 1.5s during LIVE match, 3.5s otherwise)
   useEffect(() => {
     fetchLiveMatches();
     fetchTournamentStats();
@@ -147,55 +298,38 @@ export default function GroundDisplayClient({
       fetchActiveScorecard(activeMatchId);
     }
 
+    const isLive = matches.some((m) => m.status === 'LIVE');
+    const intervalMs = isLive ? 1500 : 3500;
+
     const interval = setInterval(() => {
       fetchLiveMatches();
       fetchTournamentStats();
       if (activeMatchIdRef.current) {
         fetchActiveScorecard(activeMatchIdRef.current);
       }
-    }, 4000);
+    }, intervalMs);
 
     return () => clearInterval(interval);
-  }, [fetchLiveMatches, fetchActiveScorecard, fetchTournamentStats]);
+  }, [matches, activeMatchId, fetchLiveMatches, fetchActiveScorecard, fetchTournamentStats]);
 
-  // Supabase Realtime subscription for instantaneous ball-by-ball updates
+  // Window focus & document visibility change instant re-sync
   useEffect(() => {
-    let channel: any = null;
-    try {
-      const supabase = createClient();
-      channel = supabase
-        .channel('realtime:ground_display')
-        .on('broadcast', { event: 'score_update' }, (msg: any) => {
-          if (msg?.payload) {
-            setMatches((prev) => {
-              const matchId = msg.payload.matchId;
-              const idx = prev.findIndex((m) => m.matchId === matchId);
-              if (idx >= 0) {
-                const next = [...prev];
-                next[idx] = msg.payload;
-                return next;
-              }
-              return [msg.payload, ...prev];
-            });
-            if (activeMatchIdRef.current) {
-              fetchActiveScorecard(activeMatchIdRef.current);
-            }
-          }
-        })
-        .subscribe();
-    } catch (err) {
-      console.warn('[GroundDisplay] Supabase Realtime channel error:', err);
-    }
-
-    return () => {
-      if (channel) {
-        try {
-          const supabase = createClient();
-          supabase.removeChannel(channel);
-        } catch {}
+    const handleVisibilityOrFocus = () => {
+      if (document.visibilityState === 'visible') {
+        fetchLiveMatches();
+        if (activeMatchIdRef.current) {
+          fetchActiveScorecard(activeMatchIdRef.current, true);
+        }
+        fetchTournamentStats(true);
       }
     };
-  }, [fetchActiveScorecard]);
+    document.addEventListener('visibilitychange', handleVisibilityOrFocus);
+    window.addEventListener('focus', handleVisibilityOrFocus);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityOrFocus);
+      window.removeEventListener('focus', handleVisibilityOrFocus);
+    };
+  }, [fetchLiveMatches, fetchActiveScorecard, fetchTournamentStats]);
 
   // Currently active match payload
   const currentMatch = useMemo(() => {
@@ -225,9 +359,225 @@ export default function GroundDisplayClient({
     return (stats?.topBowlers || []).slice(0, 3);
   }, [stats]);
 
-  // Groups
-  const groupA = overview?.groups?.groupA?.standings || (overview as any)?.groupA || [];
-  const groupB = overview?.groups?.groupB?.standings || (overview as any)?.groupB || [];
+  // Resilient group standings extraction with multi-layer fallbacks
+  const { groupA, groupB } = useMemo(() => {
+    // 1. Direct standings from overview (supporting various key formats)
+    let gA =
+      overview?.groups?.groupA?.standings ||
+      (overview?.groups as any)?.['GROUP_A']?.standings ||
+      (overview?.groups as any)?.['Group A']?.standings ||
+      (overview as any)?.groupA ||
+      (overview as any)?.groupAStandings ||
+      [];
+
+    let gB =
+      overview?.groups?.groupB?.standings ||
+      (overview?.groups as any)?.['GROUP_B']?.standings ||
+      (overview?.groups as any)?.['Group B']?.standings ||
+      (overview as any)?.groupB ||
+      (overview as any)?.groupBStandings ||
+      [];
+
+    // 2. If standings array is empty but teams are present in overview, synthesize initial 0-stats standings
+    if (gA.length === 0 && overview?.groups?.groupA?.teams?.length) {
+      gA = overview.groups.groupA.teams.map((tm: any, i: number) => ({
+        pos: i + 1,
+        rank: i + 1,
+        teamId: tm.id || tm.teamId,
+        teamName: tm.name || tm.teamName,
+        teamShortName: tm.shortName || tm.teamShortName || tm.name,
+        name: tm.name || tm.teamName,
+        shortName: tm.shortName || tm.teamShortName || tm.name,
+        logoUrl: tm.logoUrl,
+        played: 0,
+        won: 0,
+        lost: 0,
+        tied: 0,
+        noResult: 0,
+        points: 0,
+        nrr: 0,
+        displayNRR: '0.000',
+      }));
+    }
+
+    if (gB.length === 0 && overview?.groups?.groupB?.teams?.length) {
+      gB = overview.groups.groupB.teams.map((tm: any, i: number) => ({
+        pos: i + 1,
+        rank: i + 1,
+        teamId: tm.id || tm.teamId,
+        teamName: tm.name || tm.teamName,
+        teamShortName: tm.shortName || tm.teamShortName || tm.name,
+        name: tm.name || tm.teamName,
+        shortName: tm.shortName || tm.teamShortName || tm.name,
+        logoUrl: tm.logoUrl,
+        played: 0,
+        won: 0,
+        lost: 0,
+        tied: 0,
+        noResult: 0,
+        points: 0,
+        nrr: 0,
+        displayNRR: '0.000',
+      }));
+    }
+
+    // 3. Fallback: If overview is completely null/unavailable, extract teams from stats.allMatches or matches
+    if (gA.length === 0 || gB.length === 0) {
+      const sourceMatches = (stats?.allMatches && stats.allMatches.length > 0)
+        ? stats.allMatches
+        : matches;
+
+      if (sourceMatches && sourceMatches.length > 0) {
+        const mapTeam = (t: any) => ({
+          id: t.id,
+          name: t.name,
+          shortName: t.shortName || t.name,
+          logoUrl: t.logoUrl,
+        });
+
+        const teamsA = new Map<string, any>();
+        const teamsB = new Map<string, any>();
+
+        sourceMatches.forEach((m: any, idx: number) => {
+          const num = m.matchNumber || idx + 1;
+          const grp = m.groupName || (num <= 4 ? 'GROUP_A' : num <= 8 ? 'GROUP_B' : null);
+          if (grp === 'GROUP_A' || grp === 'Group A' || num <= 4) {
+            if (m.teamA?.id) teamsA.set(m.teamA.id, mapTeam(m.teamA));
+            if (m.teamB?.id) teamsB.set(m.teamB.id, mapTeam(m.teamB));
+          } else if (grp === 'GROUP_B' || grp === 'Group B' || (num >= 5 && num <= 8)) {
+            if (m.teamA?.id) teamsB.set(m.teamA.id, mapTeam(m.teamA));
+            if (m.teamB?.id) teamsB.set(m.teamB.id, mapTeam(m.teamB));
+          }
+        });
+
+        if (gA.length === 0 && teamsA.size > 0) {
+          try {
+            const groupAMatches = sourceMatches.filter((m: any, idx: number) => {
+              const num = m.matchNumber || idx + 1;
+              return m.groupName === 'GROUP_A' || m.groupName === 'Group A' || (num >= 1 && num <= 4);
+            });
+            const formattedGroupAMatches = groupAMatches.map((m: any) => ({
+              id: m.id,
+              tournamentId: m.tournamentId || 'cpl-2026',
+              stage: 'GROUP',
+              groupName: 'GROUP_A',
+              matchNumber: m.matchNumber,
+              teamAId: m.teamA?.id || m.teamAId,
+              teamBId: m.teamB?.id || m.teamBId,
+              status: m.status,
+              result: m.status === 'COMPLETED' ? (m.winnerTeamId ? 'WIN' : 'TIE') : null,
+              winnerTeamId: m.winnerTeamId || null,
+              oversPerInnings: m.oversPerInnings || 4,
+              ballsPerOver: m.ballsPerOver || 4,
+              innings: (m.innings || []).map((inn: any) => ({
+                id: inn.id || `${m.id}-inn-${inn.inningsNumber}`,
+                inningsNumber: inn.inningsNumber,
+                battingTeamId: inn.battingTeamId || (inn.inningsNumber === 1 ? (m.teamA?.id || m.teamAId) : (m.teamB?.id || m.teamBId)),
+                bowlingTeamId: inn.bowlingTeamId || (inn.inningsNumber === 1 ? (m.teamB?.id || m.teamBId) : (m.teamA?.id || m.teamAId)),
+                runs: inn.runs || 0,
+                wickets: inn.wickets || 0,
+                overs: inn.overs || 0,
+                balls: inn.balls || 0,
+                status: inn.status || 'COMPLETED',
+                isAllOut: inn.isAllOut,
+                ballEvents: inn.ballEvents || [],
+              })),
+            }));
+
+            gA = computeStageStandings(
+              Array.from(teamsA.values()).map((t) => ({ ...t, groupName: 'GROUP_A' })),
+              formattedGroupAMatches,
+              'GROUP',
+              'GROUP_A'
+            );
+          } catch {
+            gA = Array.from(teamsA.values()).map((t, idx) => ({
+              pos: idx + 1,
+              rank: idx + 1,
+              teamId: t.id,
+              teamName: t.name,
+              teamShortName: t.shortName,
+              name: t.name,
+              shortName: t.shortName,
+              logoUrl: t.logoUrl,
+              played: 0,
+              won: 0,
+              lost: 0,
+              tied: 0,
+              noResult: 0,
+              points: 0,
+              nrr: 0,
+              displayNRR: '0.000',
+            }));
+          }
+        }
+
+        if (gB.length === 0 && teamsB.size > 0) {
+          try {
+            const groupBMatches = sourceMatches.filter((m: any, idx: number) => {
+              const num = m.matchNumber || idx + 1;
+              return m.groupName === 'GROUP_B' || m.groupName === 'Group B' || (num >= 5 && num <= 8);
+            });
+            const formattedGroupBMatches = groupBMatches.map((m: any) => ({
+              id: m.id,
+              tournamentId: m.tournamentId || 'cpl-2026',
+              stage: 'GROUP',
+              groupName: 'GROUP_B',
+              matchNumber: m.matchNumber,
+              teamAId: m.teamA?.id || m.teamAId,
+              teamBId: m.teamB?.id || m.teamBId,
+              status: m.status,
+              result: m.status === 'COMPLETED' ? (m.winnerTeamId ? 'WIN' : 'TIE') : null,
+              winnerTeamId: m.winnerTeamId || null,
+              oversPerInnings: m.oversPerInnings || 4,
+              ballsPerOver: m.ballsPerOver || 4,
+              innings: (m.innings || []).map((inn: any) => ({
+                id: inn.id || `${m.id}-inn-${inn.inningsNumber}`,
+                inningsNumber: inn.inningsNumber,
+                battingTeamId: inn.battingTeamId || (inn.inningsNumber === 1 ? (m.teamA?.id || m.teamAId) : (m.teamB?.id || m.teamBId)),
+                bowlingTeamId: inn.bowlingTeamId || (inn.inningsNumber === 1 ? (m.teamB?.id || m.teamBId) : (m.teamA?.id || m.teamAId)),
+                runs: inn.runs || 0,
+                wickets: inn.wickets || 0,
+                overs: inn.overs || 0,
+                balls: inn.balls || 0,
+                status: inn.status || 'COMPLETED',
+                isAllOut: inn.isAllOut,
+                ballEvents: inn.ballEvents || [],
+              })),
+            }));
+
+            gB = computeStageStandings(
+              Array.from(teamsB.values()).map((t) => ({ ...t, groupName: 'GROUP_B' })),
+              formattedGroupBMatches,
+              'GROUP',
+              'GROUP_B'
+            );
+          } catch {
+            gB = Array.from(teamsB.values()).map((t, idx) => ({
+              pos: idx + 1,
+              rank: idx + 1,
+              teamId: t.id,
+              teamName: t.name,
+              teamShortName: t.shortName,
+              name: t.name,
+              shortName: t.shortName,
+              logoUrl: t.logoUrl,
+              played: 0,
+              won: 0,
+              lost: 0,
+              tied: 0,
+              noResult: 0,
+              points: 0,
+              nrr: 0,
+              displayNRR: '0.000',
+            }));
+          }
+        }
+      }
+    }
+
+    return { groupA: gA, groupB: gB };
+  }, [overview, stats?.allMatches, matches]);
 
   return (
     <div style={{ padding: '16px 24px', maxWidth: '1800px', margin: '0 auto' }}>
@@ -329,8 +679,39 @@ export default function GroundDisplayClient({
           </div>
         )}
 
-        {/* Right Controls: Clock, Sync, Fullscreen & Hub Link */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
+        {/* Right Controls: Realtime Live Badge, Clock, Sync, Fullscreen & Hub Link */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+          {/* Realtime Live Indicator Badge */}
+          <div
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '7px',
+              background: isRealtimeConnected ? 'rgba(16, 185, 129, 0.18)' : 'rgba(245, 158, 11, 0.18)',
+              border: isRealtimeConnected ? '1.5px solid #10B981' : '1.5px solid #F59E0B',
+              color: isRealtimeConnected ? '#34D399' : '#FBBF24',
+              padding: '6px 14px',
+              borderRadius: '8px',
+              fontSize: '0.8rem',
+              fontWeight: 900,
+              letterSpacing: '0.04em',
+              boxShadow: isRealtimeConnected ? '0 0 16px rgba(16, 185, 129, 0.25)' : 'none',
+            }}
+            title={isRealtimeConnected ? 'Supabase Realtime Stream: 0ms instantaneous updates active' : 'High-speed auto-sync loop active'}
+          >
+            <span
+              style={{
+                width: '8px',
+                height: '8px',
+                borderRadius: '50%',
+                background: isRealtimeConnected ? '#10B981' : '#F59E0B',
+                boxShadow: isRealtimeConnected ? '0 0 8px #10B981' : '0 0 8px #F59E0B',
+                animation: 'pulse 1.4s infinite',
+              }}
+            />
+            <span>{isRealtimeConnected ? '⚡ REALTIME LIVE' : '🔄 AUTO-SYNC LIVE'}</span>
+          </div>
+
           {/* Live Clock */}
           <div
             style={{
@@ -712,7 +1093,8 @@ export default function GroundDisplayClient({
                           const runs = Number(b.runs || 0);
                           const extraRuns = Number(b.extras || 0);
                           const displayLabel = b.display || (b.isWicket
-                            ? (b.extraType === 'WIDE' ? (runs > 0 ? `WD+${runs}+W` : (extraRuns > 1 ? `WD+${extraRuns - 1}+W` : 'WD+W'))
+                            ? (b.wicketType === 'RETIRED_HURT' ? (runs > 0 ? `${runs}+RH` : 'RH')
+                              : b.extraType === 'WIDE' ? (runs > 0 ? `WD+${runs}+W` : (extraRuns > 1 ? `WD+${extraRuns - 1}+W` : 'WD+W'))
                               : b.extraType === 'NO_BALL' ? (runs > 0 ? `NB+${runs}+W` : 'NB+W')
                               : (runs > 0 ? `${runs}+W` : 'W'))
                             : (b.extraType === 'WIDE' ? (extraRuns > 1 ? `WD+${extraRuns - 1}` : 'WD')
@@ -729,7 +1111,7 @@ export default function GroundDisplayClient({
                                 height: '32px',
                                 padding: displayLabel.length > 2 ? '0 6px' : '0',
                                 borderRadius: displayLabel.length > 2 ? '16px' : '50%',
-                                background: b.isWicket ? '#EF4444' : b.runs === 4 ? '#10B981' : b.runs === 6 ? '#8B5CF6' : b.extraType === 'WIDE' || b.extraType === 'NO_BALL' ? '#F59E0B' : 'rgba(255, 255, 255, 0.1)',
+                                background: b.isWicket && b.wicketType === 'RETIRED_HURT' ? '#0284C7' : b.isWicket ? '#EF4444' : b.runs === 4 ? '#10B981' : b.runs === 6 ? '#8B5CF6' : b.extraType === 'WIDE' || b.extraType === 'NO_BALL' ? '#F59E0B' : 'rgba(255, 255, 255, 0.1)',
                                 color: b.extraType === 'WIDE' || b.extraType === 'NO_BALL' ? '#000' : '#FFF',
                                 fontSize: displayLabel.length > 3 ? '0.68rem' : '0.82rem',
                                 fontWeight: 900,
@@ -814,14 +1196,17 @@ export default function GroundDisplayClient({
 
             {/* Inning Switcher Buttons */}
             {allScorecardInnings.length > 0 && (
-              <div style={{ display: 'flex', gap: '6px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
                 {allScorecardInnings.map((inn: any) => {
                   const isSelected = `inn${inn.inningsNumber}` === activeInningsTab;
                   const label = inn.inningsNumber === 1 ? '1st Inn' : inn.inningsNumber === 2 ? '2nd Inn' : `SO ${inn.inningsNumber - 2}`;
                   return (
                     <button
                       key={inn.id || inn.inningsNumber}
-                      onClick={() => setActiveInningsTab(`inn${inn.inningsNumber}`)}
+                      onClick={() => {
+                        userHasManuallySelectedInningsTabRef.current = true;
+                        setActiveInningsTab(`inn${inn.inningsNumber}`);
+                      }}
                       style={{
                         padding: '5px 12px',
                         borderRadius: '6px',
@@ -837,6 +1222,28 @@ export default function GroundDisplayClient({
                     </button>
                   );
                 })}
+                {userHasManuallySelectedInningsTabRef.current && (
+                  <button
+                    onClick={() => {
+                      userHasManuallySelectedInningsTabRef.current = false;
+                      const cur = currentMatch?.innings?.inningsNumber || scorecard?.currentInnings;
+                      if (cur) setActiveInningsTab(`inn${cur}`);
+                    }}
+                    style={{
+                      padding: '4px 8px',
+                      borderRadius: '6px',
+                      border: '1px solid #10B981',
+                      background: 'rgba(16, 185, 129, 0.15)',
+                      color: '#34D399',
+                      fontSize: '0.72rem',
+                      fontWeight: 800,
+                      cursor: 'pointer',
+                    }}
+                    title="Unlock and automatically follow current live innings"
+                  >
+                    ⚡ Auto-Follow Live
+                  </button>
+                )}
               </div>
             )}
           </div>
@@ -860,20 +1267,24 @@ export default function GroundDisplayClient({
                   <tbody>
                     {(selectedScorecardInnings.battingScores || []).length > 0 ? (
                       selectedScorecardInnings.battingScores.map((b: any, idx: number) => {
-                        const isNotOut = !b.isOut;
+                        const isAtCrease = b.playerId === selectedScorecardInnings.currentStrikerId || b.playerId === selectedScorecardInnings.currentNonStrikerId;
+                        const isRetiredHurt = Boolean(b.dismissal?.toLowerCase().includes('retired hurt'));
+                        const isNotOut = !b.isOut && !isRetiredHurt;
                         return (
                           <tr
                             key={b.id || idx}
                             style={{
                               borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
-                              background: isNotOut ? 'rgba(255, 184, 0, 0.03)' : 'transparent',
+                              background: isNotOut || isAtCrease ? 'rgba(255, 184, 0, 0.03)' : 'transparent',
                             }}
                           >
                             <td style={{ padding: '8px 10px', fontWeight: 800, color: '#FFF' }}>
-                              {b.player?.name || 'Batter'} {isNotOut && <span style={{ color: '#FFB800' }}>*</span>}
+                              {b.player?.name || 'Batter'} {isAtCrease && <span style={{ color: '#FFB800' }}>*</span>}
                             </td>
                             <td style={{ padding: '8px 10px', color: 'rgba(255, 255, 255, 0.5)', fontSize: '0.75rem' }}>
-                              {isNotOut ? (
+                              {isRetiredHurt && !isAtCrease ? (
+                                <span style={{ color: '#38BDF8', fontWeight: 700 }}>retired hurt</span>
+                              ) : isNotOut || isAtCrease ? (
                                 <span style={{ color: '#10B981', fontWeight: 700 }}>not out</span>
                               ) : (
                                 b.dismissal || b.dismissalType || 'out'
@@ -1140,30 +1551,34 @@ export default function GroundDisplayClient({
                   </thead>
                   <tbody>
                     {groupA.length > 0 ? (
-                      groupA.map((t: any) => {
+                      groupA.map((t: any, idx: number) => {
+                        const rank = t.pos || t.rank || idx + 1;
+                        const shortName = t.teamShortName || t.shortName || t.teamName || t.name || `Team ${rank}`;
                         const groupAMatches = overview?.groups?.groupA?.matches || [];
                         const groupACompleted = groupAMatches.filter((m: any) => m.status === 'COMPLETED').length;
                         const isGroupADone = groupACompleted >= 4 || (groupA.length === 4 && groupA.every((x: any) => Number(x.played || 0) >= 2));
-                        const isQualifying = isGroupADone && t.rank <= 2;
+                        const isQualifying = isGroupADone && rank <= 2;
                         const logo = normalizeImageUrl(t.logoUrl || t.teamLogoUrl);
+                        const nrrVal = typeof t.nrr === 'number' ? t.nrr : parseFloat(t.nrr || '0') || 0;
+                        const displayNrr = t.displayNRR || (nrrVal > 0 ? `+${nrrVal.toFixed(3)}` : nrrVal.toFixed(3));
 
                         return (
                           <tr
-                            key={t.teamId}
+                            key={t.teamId || t.id || idx}
                             style={{
                               borderBottom: '1px solid rgba(255, 255, 255, 0.04)',
                               background: isQualifying ? 'rgba(16, 185, 129, 0.04)' : 'transparent',
                             }}
                           >
-                            <td style={{ padding: '6px 8px', fontWeight: 800, color: isQualifying ? '#10B981' : t.rank === 1 ? '#FFB800' : 'rgba(255,255,255,0.7)' }}>
-                              #{t.rank}
+                            <td style={{ padding: '6px 8px', fontWeight: 800, color: isQualifying ? '#10B981' : rank === 1 ? '#FFB800' : 'rgba(255,255,255,0.7)' }}>
+                              #{rank}
                             </td>
                             <td style={{ padding: '6px 8px', fontWeight: 700, color: '#FFF', whiteSpace: 'nowrap' }}>
                               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                                 {logo ? (
                                   <img
                                     src={logo}
-                                    alt={t.shortName || t.name}
+                                    alt={shortName}
                                     referrerPolicy="no-referrer"
                                     style={{ width: '18px', height: '18px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0, border: '1px solid rgba(255,255,255,0.12)' }}
                                     onError={(e) => {
@@ -1190,25 +1605,25 @@ export default function GroundDisplayClient({
                                     flexShrink: 0,
                                   }}
                                 >
-                                  {(t.shortName || t.name || 'T').slice(0, 2).toUpperCase()}
+                                  {shortName.slice(0, 2).toUpperCase()}
                                 </div>
-                                <span>{t.shortName || t.name}</span>
+                                <span>{shortName}</span>
                               </div>
                             </td>
                             <td style={{ padding: '6px 8px', textAlign: 'right', color: 'rgba(255,255,255,0.7)' }}>
-                              {t.played}
+                              {t.played ?? 0}
                             </td>
                             <td style={{ padding: '6px 8px', textAlign: 'right', color: '#10B981', fontWeight: 700 }}>
-                              {t.won}
+                              {t.won ?? 0}
                             </td>
                             <td style={{ padding: '6px 8px', textAlign: 'right', color: '#EF4444', fontWeight: 700 }}>
-                              {t.lost}
+                              {t.lost ?? 0}
                             </td>
                             <td style={{ padding: '6px 8px', textAlign: 'right', fontFamily: 'var(--font-data, monospace)', fontWeight: 900, color: '#FFB800' }}>
-                              {t.points}
+                              {t.points ?? 0}
                             </td>
-                            <td style={{ padding: '6px 8px', textAlign: 'right', fontFamily: 'var(--font-data, monospace)', color: t.nrr >= 0 ? '#10B981' : '#EF4444' }}>
-                              {t.nrr > 0 ? `+${t.nrr.toFixed(3)}` : t.nrr.toFixed(3)}
+                            <td style={{ padding: '6px 8px', textAlign: 'right', fontFamily: 'var(--font-data, monospace)', color: nrrVal >= 0 ? '#10B981' : '#EF4444' }}>
+                              {displayNrr}
                             </td>
                           </tr>
                         );
@@ -1243,30 +1658,34 @@ export default function GroundDisplayClient({
                   </thead>
                   <tbody>
                     {groupB.length > 0 ? (
-                      groupB.map((t: any) => {
+                      groupB.map((t: any, idx: number) => {
+                        const rank = t.pos || t.rank || idx + 1;
+                        const shortName = t.teamShortName || t.shortName || t.teamName || t.name || `Team ${rank}`;
                         const groupBMatches = overview?.groups?.groupB?.matches || [];
                         const groupBCompleted = groupBMatches.filter((m: any) => m.status === 'COMPLETED').length;
                         const isGroupBDone = groupBCompleted >= 4 || (groupB.length === 4 && groupB.every((x: any) => Number(x.played || 0) >= 2));
-                        const isQualifying = isGroupBDone && t.rank <= 2;
+                        const isQualifying = isGroupBDone && rank <= 2;
                         const logo = normalizeImageUrl(t.logoUrl || t.teamLogoUrl);
+                        const nrrVal = typeof t.nrr === 'number' ? t.nrr : parseFloat(t.nrr || '0') || 0;
+                        const displayNrr = t.displayNRR || (nrrVal > 0 ? `+${nrrVal.toFixed(3)}` : nrrVal.toFixed(3));
 
                         return (
                           <tr
-                            key={t.teamId}
+                            key={t.teamId || t.id || idx}
                             style={{
                               borderBottom: '1px solid rgba(255, 255, 255, 0.04)',
                               background: isQualifying ? 'rgba(16, 185, 129, 0.04)' : 'transparent',
                             }}
                           >
-                            <td style={{ padding: '6px 8px', fontWeight: 800, color: isQualifying ? '#10B981' : t.rank === 1 ? '#FFB800' : 'rgba(255,255,255,0.7)' }}>
-                              #{t.rank}
+                            <td style={{ padding: '6px 8px', fontWeight: 800, color: isQualifying ? '#10B981' : rank === 1 ? '#FFB800' : 'rgba(255,255,255,0.7)' }}>
+                              #{rank}
                             </td>
                             <td style={{ padding: '6px 8px', fontWeight: 700, color: '#FFF', whiteSpace: 'nowrap' }}>
                               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                                 {logo ? (
                                   <img
                                     src={logo}
-                                    alt={t.shortName || t.name}
+                                    alt={shortName}
                                     referrerPolicy="no-referrer"
                                     style={{ width: '18px', height: '18px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0, border: '1px solid rgba(255,255,255,0.12)' }}
                                     onError={(e) => {
@@ -1293,25 +1712,25 @@ export default function GroundDisplayClient({
                                     flexShrink: 0,
                                   }}
                                 >
-                                  {(t.shortName || t.name || 'T').slice(0, 2).toUpperCase()}
+                                  {shortName.slice(0, 2).toUpperCase()}
                                 </div>
-                                <span>{t.shortName || t.name}</span>
+                                <span>{shortName}</span>
                               </div>
                             </td>
                             <td style={{ padding: '6px 8px', textAlign: 'right', color: 'rgba(255,255,255,0.7)' }}>
-                              {t.played}
+                              {t.played ?? 0}
                             </td>
                             <td style={{ padding: '6px 8px', textAlign: 'right', color: '#10B981', fontWeight: 700 }}>
-                              {t.won}
+                              {t.won ?? 0}
                             </td>
                             <td style={{ padding: '6px 8px', textAlign: 'right', color: '#EF4444', fontWeight: 700 }}>
-                              {t.lost}
+                              {t.lost ?? 0}
                             </td>
                             <td style={{ padding: '6px 8px', textAlign: 'right', fontFamily: 'var(--font-data, monospace)', fontWeight: 900, color: '#FFB800' }}>
-                              {t.points}
+                              {t.points ?? 0}
                             </td>
-                            <td style={{ padding: '6px 8px', textAlign: 'right', fontFamily: 'var(--font-data, monospace)', color: t.nrr >= 0 ? '#10B981' : '#EF4444' }}>
-                              {t.nrr > 0 ? `+${t.nrr.toFixed(3)}` : t.nrr.toFixed(3)}
+                            <td style={{ padding: '6px 8px', textAlign: 'right', fontFamily: 'var(--font-data, monospace)', color: nrrVal >= 0 ? '#10B981' : '#EF4444' }}>
+                              {displayNrr}
                             </td>
                           </tr>
                         );
@@ -1345,7 +1764,7 @@ export default function GroundDisplayClient({
         }}
       >
         <span>
-          🟢 Ground Monitor Active • Real-time Sync via Supabase Realtime • Last sync: {lastSync || 'Active'}
+          🟢 Ground Monitor Active • Real-time Sync via Supabase Realtime ({isRealtimeConnected ? 'WebSocket Stream Active' : 'Auto-Sync Stream Active'}) • Last sync: {lastSync || 'Connecting...'}
         </span>
         <span>
           2026 Computing Premier League • Ratmalana Ground Official Display

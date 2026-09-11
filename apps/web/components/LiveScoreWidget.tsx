@@ -7,6 +7,7 @@ import { createClient } from '@/utils/supabase/client';
 import { ScoreBroadcastPayload } from '@/lib/scoring/scoring-realtime';
 import { sortMatchesByPriority } from '@/lib/scoring/scoring-rules';
 import { normalizeImageUrl } from '@/lib/utils/image-utils';
+import { computeStageStandings } from '@/lib/tournament/nrr-engine';
 
 type NavTab = 'LIVE' | 'POINTS_TABLE' | 'ALL_MATCHES' | 'TOP_BATTERS' | 'TOP_BOWLERS';
 
@@ -60,8 +61,26 @@ export default function LiveScoreWidget() {
       if (!res.ok) return;
       const data = await res.json();
       if (data.success && data.matches && data.matches.length > 0) {
-        setMatches(data.matches);
-        setActiveMatchId((prev) => prev || data.matches[0].matchId);
+        const sorted = sortMatchesByPriority(data.matches);
+        setMatches(sorted);
+        setActiveMatchId((prev) => {
+          const liveMatch = sorted.find((m: any) => m.status === 'LIVE');
+          const prevMatch = sorted.find((m: any) => m.matchId === prev);
+
+          // If a match is LIVE, and current selection is not LIVE (e.g. was showing completed match),
+          // auto-switch to the new live match!
+          if (liveMatch && prevMatch?.status !== 'LIVE') {
+            return liveMatch.matchId;
+          }
+
+          // If previous selection is still valid in list, keep it
+          if (prev && prevMatch) {
+            return prev;
+          }
+
+          // Otherwise default to the top priority match (LIVE -> COMPLETED -> UPCOMING)
+          return sorted[0]?.matchId || null;
+        });
         setLastUpdated(new Date().toLocaleTimeString());
       }
     } catch (err) {
@@ -114,13 +133,27 @@ export default function LiveScoreWidget() {
         // Instant in-memory update directly from the broadcast payload
         setMatches((prevMatches) => {
           const index = prevMatches.findIndex((m) => m.matchId === msg.payload.matchId);
+          let updated: ScoreBroadcastPayload[];
           if (index !== -1) {
-            const updated = [...prevMatches];
+            updated = [...prevMatches];
             updated[index] = { ...updated[index], ...msg.payload };
-            return updated;
+          } else {
+            updated = [msg.payload, ...prevMatches];
           }
-          return [msg.payload, ...prevMatches];
+          return sortMatchesByPriority(updated);
         });
+
+        // If broadcasted match just went LIVE, auto-switch activeMatchId if not already on a live match
+        if (msg.payload.status === 'LIVE') {
+          setActiveMatchId((prev) => {
+            const prevMatch = matches.find((m) => m.matchId === prev);
+            if (!prev || !prevMatch || prevMatch.status !== 'LIVE') {
+              return msg.payload.matchId;
+            }
+            return prev;
+          });
+        }
+
         setLastUpdated(new Date().toLocaleTimeString());
       }
       // Authoritative re-sync in background to ensure all nested relations are current
@@ -150,14 +183,64 @@ export default function LiveScoreWidget() {
       } catch (e) {}
       clearInterval(interval);
     };
-  }, [fetchLiveMatches, fetchTournamentStats]);
+  }, [fetchLiveMatches, fetchTournamentStats, matches]);
 
-  const currentMatch = matches.find((m) => m.matchId === activeMatchId) || matches[0];
+  const displayMatches = useMemo<ScoreBroadcastPayload[]>(() => {
+    if (matches && matches.length > 0) return matches;
+    if (statsData.allMatches && statsData.allMatches.length > 0) {
+      return statsData.allMatches.map((m: any) => ({
+        matchId: m.id,
+        status: m.status,
+        matchNumber: m.matchNumber,
+        stage: m.stage,
+        groupName: m.groupName,
+        bracketSlot: m.bracketSlot,
+        currentInnings: m.innings?.length || 1,
+        match: {
+          id: m.id,
+          matchNumber: m.matchNumber,
+          stage: m.stage,
+          groupName: m.groupName,
+          bracketSlot: m.bracketSlot,
+          teamA: m.teamA,
+          teamB: m.teamB,
+          venue: m.venue,
+          oversPerInnings: m.oversPerInnings || 4,
+          ballsPerOver: m.ballsPerOver || 4,
+          resultNote: m.resultNote,
+          winnerTeamId: m.winnerTeamId,
+          scheduledAt: m.scheduledAt,
+          startedAt: m.startedAt,
+          completedAt: m.completedAt,
+          updatedAt: m.updatedAt,
+        },
+        innings: m.innings?.[m.innings.length - 1] || null,
+        striker: null,
+        nonStriker: null,
+        bowler: null,
+        recentBalls: [],
+      } as unknown as ScoreBroadcastPayload));
+    }
+    return [];
+  }, [matches, statsData.allMatches]);
+
+  const currentMatch = useMemo(() => {
+    if (displayMatches.length === 0) return null;
+    const selected = displayMatches.find((m: any) => m.matchId === activeMatchId);
+    if (selected) return selected;
+    // Priority fallback: LIVE -> recently COMPLETED -> first match
+    const live = displayMatches.find((m: any) => m.status === 'LIVE');
+    if (live) return live;
+    const completed = displayMatches.find((m: any) => m.status === 'COMPLETED');
+    if (completed) return completed;
+    return displayMatches[0];
+  }, [displayMatches, activeMatchId]);
   const currentInnings = currentMatch?.innings;
 
   const filteredMatches = useMemo(() => {
     const list = statsData.allMatches.filter((m) => {
       if (matchFilter === 'ALL') return true;
+      if (matchFilter === 'UPCOMING') return m.status === 'UPCOMING' || m.status === 'SCHEDULED';
       return m.status === matchFilter;
     });
 
@@ -227,6 +310,21 @@ export default function LiveScoreWidget() {
               }}
             />
             Match Center
+            {currentMatch?.status === 'COMPLETED' && (
+              <span
+                style={{
+                  fontSize: '0.66rem',
+                  padding: '1px 6px',
+                  borderRadius: '4px',
+                  background: 'rgba(16, 185, 129, 0.2)',
+                  color: '#34D399',
+                  fontWeight: 800,
+                  letterSpacing: '0.04em',
+                }}
+              >
+                Recent Result
+              </span>
+            )}
           </button>
 
           <button
@@ -366,8 +464,13 @@ export default function LiveScoreWidget() {
                     gap: '6px',
                     padding: '4px 10px',
                     borderRadius: '9999px',
-                    background: currentMatch?.status === 'LIVE' ? 'var(--color-accent)' : 'rgba(255, 255, 255, 0.1)',
-                    color: 'white',
+                    background: currentMatch?.status === 'LIVE'
+                      ? 'var(--color-accent)'
+                      : currentMatch?.status === 'COMPLETED'
+                      ? 'rgba(16, 185, 129, 0.2)'
+                      : 'rgba(255, 255, 255, 0.1)',
+                    border: currentMatch?.status === 'COMPLETED' ? '1px solid rgba(16, 185, 129, 0.4)' : 'none',
+                    color: currentMatch?.status === 'COMPLETED' ? '#34D399' : 'white',
                     fontSize: '0.72rem',
                     fontWeight: 900,
                     letterSpacing: '0.08em',
@@ -385,16 +488,21 @@ export default function LiveScoreWidget() {
                       }}
                     />
                   )}
-                  {currentMatch?.status || 'COMPLETED'}
+                  {currentMatch?.status === 'COMPLETED' ? 'RECENT RESULT' : (currentMatch?.status || 'UPCOMING')}
                 </span>
 
                 <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'rgba(255, 255, 255, 0.7)' }}>
-                  {currentMatch?.match.venue || 'Main Stadium'} • {currentMatch?.currentInnings >= 3 ? `⚡ Super Over ${currentMatch.currentInnings - 2}` : `Innings ${currentMatch?.currentInnings || 1}`}
+                  {currentMatch?.match.venue || 'Main Stadium'}
+                  {currentMatch?.status === 'LIVE'
+                    ? ` • ${currentMatch?.currentInnings >= 3 ? `⚡ Super Over ${Math.floor((currentMatch.currentInnings - 3) / 2) + 1} (${(currentMatch.currentInnings - 3) % 2 === 0 ? '1' : 'Chase'})` : `Innings ${currentMatch?.currentInnings || 1}`}`
+                    : currentMatch?.status === 'COMPLETED'
+                    ? ' • Final Result'
+                    : ''}
                 </span>
 
                 {lastUpdated && (
                   <span style={{ fontSize: '0.72rem', color: 'rgba(255, 255, 255, 0.4)' }}>
-                    (Live: {lastUpdated})
+                    ({currentMatch?.status === 'LIVE' ? `Live: ${lastUpdated}` : `Updated: ${lastUpdated}`})
                   </span>
                 )}
 
@@ -426,9 +534,9 @@ export default function LiveScoreWidget() {
               </div>
 
               {/* Match Switcher Tabs if multiple matches */}
-              {matches.length > 1 && (
+              {displayMatches.length > 1 && (
                 <div className="scorecard-match-chips-scroll" onClick={(e) => e.stopPropagation()}>
-                  {matches.map((m) => (
+                  {displayMatches.map((m) => (
                     <button
                       key={m.matchId}
                       onClick={(e) => {
@@ -438,7 +546,9 @@ export default function LiveScoreWidget() {
                       style={{
                         padding: '6px 12px',
                         borderRadius: '6px',
-                        border: 'none',
+                        border: m.matchId === activeMatchId
+                          ? '1px solid rgba(255, 184, 0, 0.45)'
+                          : '1px solid rgba(255, 255, 255, 0.08)',
                         background: m.matchId === activeMatchId ? 'rgba(255, 184, 0, 0.2)' : 'rgba(255, 255, 255, 0.05)',
                         color: m.matchId === activeMatchId ? '#FFB800' : 'rgba(255, 255, 255, 0.7)',
                         fontSize: '0.75rem',
@@ -446,9 +556,21 @@ export default function LiveScoreWidget() {
                         cursor: 'pointer',
                         whiteSpace: 'nowrap',
                         flexShrink: 0,
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px',
                       }}
                     >
-                      {m.match.teamA.shortName} vs {m.match.teamB.shortName}
+                      {m.status === 'LIVE' && (
+                        <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#EF4444' }} />
+                      )}
+                      {m.status === 'COMPLETED' && (
+                        <span style={{ fontSize: '0.72rem' }}>🏆</span>
+                      )}
+                      <span>{m.match.teamA.shortName} vs {m.match.teamB.shortName}</span>
+                      <span style={{ fontSize: '0.64rem', opacity: 0.75, textTransform: 'uppercase' }}>
+                        ({m.status === 'COMPLETED' ? 'Final' : m.status})
+                      </span>
                     </button>
                   ))}
                 </div>
@@ -545,25 +667,31 @@ export default function LiveScoreWidget() {
                 const teamBId = currentMatch.match.teamB.id;
                 const allInnings = currentMatch.allInningsSummary || [];
 
-                const teamAReg = allInnings.find((i) => i.battingTeamId === teamAId && !i.isSuperOver);
-                const teamASO = allInnings.find((i) => i.battingTeamId === teamAId && i.isSuperOver);
+                const isTeamAWinner = currentMatch.match.winnerTeamId === teamAId;
+                const isTeamBWinner = currentMatch.match.winnerTeamId === teamBId;
 
-                const teamBReg = allInnings.find((i) => i.battingTeamId === teamBId && !i.isSuperOver);
-                const teamBSO = allInnings.find((i) => i.battingTeamId === teamBId && i.isSuperOver);
+                const teamAReg = allInnings.find((i) => i.battingTeamId === teamAId && !i.isSuperOver && i.inningsNumber <= 2);
+                const teamASOList = allInnings.filter((i) => i.battingTeamId === teamAId && (i.isSuperOver || (i.inningsNumber && i.inningsNumber >= 3)));
+
+                const teamBReg = allInnings.find((i) => i.battingTeamId === teamBId && !i.isSuperOver && i.inningsNumber <= 2);
+                const teamBSOList = allInnings.filter((i) => i.battingTeamId === teamBId && (i.isSuperOver || (i.inningsNumber && i.inningsNumber >= 3)));
 
                 let teamAScoreText = teamAReg ? `${teamAReg.runs}/${teamAReg.wickets}` : (currentInnings?.battingTeam?.id === teamAId ? `${currentInnings.runs}/${currentInnings.wickets}` : '-');
-                let teamAOversText = teamAReg ? `(${teamAReg.overs}${teamAReg.balls > 0 ? `.${teamAReg.balls}` : ''})` : '';
-                if (teamASO) {
-                  teamAScoreText += ` & ${teamASO.runs}/${teamASO.wickets}`;
-                  teamAOversText += ` & (${teamASO.overs}.${teamASO.balls})`;
-                }
+                let teamAOversText = teamAReg ? `(${teamAReg.overs}${teamAReg.balls > 0 ? `.${teamAReg.balls}` : ''} ov)` : '';
+                teamASOList.forEach((so) => {
+                  teamAScoreText += ` & ${so.runs}/${so.wickets}`;
+                  teamAOversText += ` & (${so.overs}.${so.balls} ov)`;
+                });
 
                 let teamBScoreText = teamBReg ? `${teamBReg.runs}/${teamBReg.wickets}` : (currentInnings?.battingTeam?.id === teamBId ? `${currentInnings.runs}/${currentInnings.wickets}` : '-');
-                let teamBOversText = teamBReg ? `(${teamBReg.overs}${teamBReg.balls > 0 ? `.${teamBReg.balls}` : ''})` : '';
-                if (teamBSO) {
-                  teamBScoreText += ` & ${teamBSO.runs}/${teamBSO.wickets}`;
-                  teamBOversText += ` & (${teamBSO.overs}.${teamBSO.balls})`;
-                }
+                let teamBOversText = teamBReg ? `(${teamBReg.overs}${teamBReg.balls > 0 ? `.${teamBReg.balls}` : ''} ov)` : '';
+                teamBSOList.forEach((so) => {
+                  teamBScoreText += ` & ${so.runs}/${so.wickets}`;
+                  teamBOversText += ` & (${so.overs}.${so.balls} ov)`;
+                });
+
+                // Check for upcoming match teaser
+                const nextUpcomingMatch = matches.find((m) => m.status === 'UPCOMING' || (m.status as string) === 'SCHEDULED');
 
                 return (
                   <div
@@ -580,8 +708,26 @@ export default function LiveScoreWidget() {
                     style={{ padding: '20px 16px 0', textAlign: 'center' }}
                   >
                     {/* Header Subtitle */}
-                    <div style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.4)', fontWeight: 600, marginBottom: '18px', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
-                      2026 Computing Premier League &nbsp;•&nbsp; Match Completed
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '16px', flexWrap: 'wrap' }}>
+                      <span style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '5px',
+                        fontSize: '0.7rem',
+                        fontWeight: 800,
+                        letterSpacing: '0.08em',
+                        textTransform: 'uppercase',
+                        color: '#34D399',
+                        background: 'rgba(16, 185, 129, 0.14)',
+                        border: '1px solid rgba(16, 185, 129, 0.35)',
+                        padding: '3px 10px',
+                        borderRadius: '9999px',
+                      }}>
+                        <span>🏆</span> Most Recently Completed Match
+                      </span>
+                      <span style={{ fontSize: '0.74rem', color: 'rgba(255,255,255,0.5)', fontWeight: 600 }}>
+                        Result displayed until next match starts
+                      </span>
                     </div>
 
                     {/* Teams & Scores Grid */}
@@ -602,20 +748,39 @@ export default function LiveScoreWidget() {
                         flexDirection: 'column',
                         alignItems: 'center',
                         textAlign: 'center',
-                        background: 'rgba(255,255,255,0.04)',
-                        border: '1px solid rgba(255,255,255,0.09)',
+                        background: isTeamAWinner ? 'linear-gradient(180deg, rgba(255, 184, 0, 0.14) 0%, rgba(255,255,255,0.04) 100%)' : 'rgba(255,255,255,0.04)',
+                        border: isTeamAWinner ? '1.5px solid rgba(255, 184, 0, 0.6)' : '1px solid rgba(255,255,255,0.09)',
+                        boxShadow: isTeamAWinner ? '0 0 20px rgba(255, 184, 0, 0.15)' : 'none',
                         borderRadius: '10px',
-                        padding: '14px 10px',
+                        padding: '16px 10px 14px',
                         gap: '8px',
+                        position: 'relative',
                       }}>
+                        {isTeamAWinner && (
+                          <div style={{
+                            position: 'absolute',
+                            top: '-10px',
+                            background: '#FFB800',
+                            color: '#000',
+                            fontSize: '0.62rem',
+                            fontWeight: 900,
+                            padding: '1px 8px',
+                            borderRadius: '9999px',
+                            letterSpacing: '0.06em',
+                            textTransform: 'uppercase',
+                            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
+                          }}>
+                            👑 Winner
+                          </div>
+                        )}
                         {currentMatch.match.teamA.logoUrl ? (
                           <img
                             src={currentMatch.match.teamA.logoUrl}
                             alt={currentMatch.match.teamA.name}
-                            style={{ width: '44px', height: '44px', borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(255,255,255,0.15)' }}
+                            style={{ width: '44px', height: '44px', borderRadius: '50%', objectFit: 'cover', border: isTeamAWinner ? '2px solid #FFB800' : '2px solid rgba(255,255,255,0.15)' }}
                           />
                         ) : (
-                          <div style={{ width: '44px', height: '44px', borderRadius: '50%', background: 'rgba(255,255,255,0.08)', border: '2px solid rgba(255,255,255,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem' }}>
+                          <div style={{ width: '44px', height: '44px', borderRadius: '50%', background: 'rgba(255,255,255,0.08)', border: isTeamAWinner ? '2px solid #FFB800' : '2px solid rgba(255,255,255,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem' }}>
                             🏏
                           </div>
                         )}
@@ -627,7 +792,7 @@ export default function LiveScoreWidget() {
                             {teamAOversText}
                           </div>
                         )}
-                        <div style={{ fontSize: '0.88rem', fontWeight: 700, color: 'rgba(255,255,255,0.85)' }}>
+                        <div style={{ fontSize: '0.88rem', fontWeight: 700, color: isTeamAWinner ? '#FFF' : 'rgba(255,255,255,0.85)' }}>
                           {currentMatch.match.teamA.name}
                         </div>
                       </div>
@@ -644,20 +809,39 @@ export default function LiveScoreWidget() {
                         flexDirection: 'column',
                         alignItems: 'center',
                         textAlign: 'center',
-                        background: 'rgba(255,255,255,0.04)',
-                        border: '1px solid rgba(255,255,255,0.09)',
+                        background: isTeamBWinner ? 'linear-gradient(180deg, rgba(255, 184, 0, 0.14) 0%, rgba(255,255,255,0.04) 100%)' : 'rgba(255,255,255,0.04)',
+                        border: isTeamBWinner ? '1.5px solid rgba(255, 184, 0, 0.6)' : '1px solid rgba(255,255,255,0.09)',
+                        boxShadow: isTeamBWinner ? '0 0 20px rgba(255, 184, 0, 0.15)' : 'none',
                         borderRadius: '10px',
-                        padding: '14px 10px',
+                        padding: '16px 10px 14px',
                         gap: '8px',
+                        position: 'relative',
                       }}>
+                        {isTeamBWinner && (
+                          <div style={{
+                            position: 'absolute',
+                            top: '-10px',
+                            background: '#FFB800',
+                            color: '#000',
+                            fontSize: '0.62rem',
+                            fontWeight: 900,
+                            padding: '1px 8px',
+                            borderRadius: '9999px',
+                            letterSpacing: '0.06em',
+                            textTransform: 'uppercase',
+                            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
+                          }}>
+                            👑 Winner
+                          </div>
+                        )}
                         {currentMatch.match.teamB.logoUrl ? (
                           <img
                             src={currentMatch.match.teamB.logoUrl}
                             alt={currentMatch.match.teamB.name}
-                            style={{ width: '44px', height: '44px', borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(255,255,255,0.15)' }}
+                            style={{ width: '44px', height: '44px', borderRadius: '50%', objectFit: 'cover', border: isTeamBWinner ? '2px solid #FFB800' : '2px solid rgba(255,255,255,0.15)' }}
                           />
                         ) : (
-                          <div style={{ width: '44px', height: '44px', borderRadius: '50%', background: 'rgba(255,255,255,0.08)', border: '2px solid rgba(255,255,255,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem' }}>
+                          <div style={{ width: '44px', height: '44px', borderRadius: '50%', background: 'rgba(255,255,255,0.08)', border: isTeamBWinner ? '2px solid #FFB800' : '2px solid rgba(255,255,255,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem' }}>
                             🦁
                           </div>
                         )}
@@ -669,7 +853,7 @@ export default function LiveScoreWidget() {
                             {teamBOversText}
                           </div>
                         )}
-                        <div style={{ fontSize: '0.88rem', fontWeight: 700, color: 'rgba(255,255,255,0.85)' }}>
+                        <div style={{ fontSize: '0.88rem', fontWeight: 700, color: isTeamBWinner ? '#FFF' : 'rgba(255,255,255,0.85)' }}>
                           {currentMatch.match.teamB.name}
                         </div>
                       </div>
@@ -684,6 +868,47 @@ export default function LiveScoreWidget() {
                     <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.35)', marginTop: '4px' }}>
                       {currentMatch.match.venue || 'Ratmalana Ground'}
                     </div>
+
+                    {/* Next Fixture Teaser */}
+                    {nextUpcomingMatch && (
+                      <div style={{
+                        marginTop: '12px',
+                        marginBottom: '4px',
+                        padding: '8px 14px',
+                        borderRadius: '8px',
+                        background: 'rgba(255, 255, 255, 0.04)',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '8px',
+                        fontSize: '0.75rem',
+                        color: 'rgba(255, 255, 255, 0.7)',
+                        flexWrap: 'wrap',
+                      }}>
+                        <span style={{ color: '#FFB800', fontWeight: 800, textTransform: 'uppercase', fontSize: '0.68rem', letterSpacing: '0.05em' }}>
+                          Next Up:
+                        </span>
+                        <span style={{ fontWeight: 800, color: '#FFF' }}>
+                          {nextUpcomingMatch.match.teamA.name} vs {nextUpcomingMatch.match.teamB.name}
+                        </span>
+                        {nextUpcomingMatch.match.venue && (
+                          <span style={{ color: 'rgba(255, 255, 255, 0.45)' }}>
+                            • {nextUpcomingMatch.match.venue}
+                          </span>
+                        )}
+                        <span style={{
+                          fontSize: '0.66rem',
+                          background: 'rgba(255, 184, 0, 0.15)',
+                          color: '#FFB800',
+                          padding: '1px 6px',
+                          borderRadius: '4px',
+                          fontWeight: 700,
+                        }}>
+                          Starts Soon
+                        </span>
+                      </div>
+                    )}
 
                     {/* Quick navigation after completed match */}
                     <div style={{ marginTop: '14px', marginBottom: '16px', display: 'flex', justifyContent: 'center', gap: '8px', flexWrap: 'wrap' }}>
@@ -872,11 +1097,16 @@ export default function LiveScoreWidget() {
                               {currentInnings ? `Overs: ${currentInnings.overs}.${currentInnings.balls}` : '0.0 Overs'}
                               {isSuperOver ? ' / 1.0 ov' : currentMatch.match.oversPerInnings ? ` / ${currentMatch.match.oversPerInnings} ov` : ''}
                             </div>
-                            {isSuperOver && (
-                              <div style={{ marginTop: '4px', display: 'inline-block', background: 'rgba(245, 158, 11, 0.2)', border: '1px solid #F59E0B', color: '#FBBF24', fontSize: '0.72rem', fontWeight: 800, padding: '2px 8px', borderRadius: '4px' }}>
-                                ⚡ SUPER OVER {currentMatch.currentInnings % 2 === 1 ? '1' : '2 (CHASE)'} (1 OV • 2 WKTS MAX)
-                              </div>
-                            )}
+                            {isSuperOver && (() => {
+                              const curInn = currentMatch.currentInnings || 3;
+                              const soRound = Math.floor((curInn - 3) / 2) + 1;
+                              const soType = (curInn - 3) % 2 === 0 ? '1' : '2 (CHASE)';
+                              return (
+                                <div style={{ marginTop: '4px', display: 'inline-block', background: 'rgba(245, 158, 11, 0.2)', border: '1px solid #F59E0B', color: '#FBBF24', fontSize: '0.72rem', fontWeight: 800, padding: '2px 8px', borderRadius: '4px' }}>
+                                  ⚡ SUPER OVER {soRound} • INNINGS {soType} (1 OV • 2 WKTS MAX)
+                                </div>
+                              );
+                            })()}
                           </div>
 
                           {/* Right Team (Batting 2nd) */}
@@ -1062,7 +1292,7 @@ export default function LiveScoreWidget() {
                             <span className="scorecard-live-dot" />
                             <span>
                               {isSuperOver
-                                ? `⚡ SUPER OVER ${currentMatch.currentInnings % 2 === 1 ? '1' : '2 (CHASE)'}`
+                                ? `⚡ SUPER OVER ${Math.floor(((currentMatch?.currentInnings || 3) - 3) / 2) + 1} • INNINGS ${((currentMatch?.currentInnings || 3) - 3) % 2 === 0 ? '1' : '2 (CHASE)'}`
                                 : `INNINGS ${currentMatch.currentInnings}`}
                               {currentInnings ? ` (${currentInnings.overs}.${currentInnings.balls}/${isSuperOver ? '1.0' : (currentMatch.match.oversPerInnings || 4)} OV)` : ''}
                             </span>
@@ -1228,7 +1458,8 @@ export default function LiveScoreWidget() {
                         const runs = Number(b.runs || 0);
                         const extraRuns = Number(b.extras || 0);
                         const displayLabel = b.display || (b.isWicket
-                          ? (b.extraType === 'WIDE' ? (runs > 0 ? `WD+${runs}+W` : (extraRuns > 1 ? `WD+${extraRuns - 1}+W` : 'WD+W'))
+                          ? (b.wicketType === 'RETIRED_HURT' ? (runs > 0 ? `${runs}+RH` : 'RH')
+                            : b.extraType === 'WIDE' ? (runs > 0 ? `WD+${runs}+W` : (extraRuns > 1 ? `WD+${extraRuns - 1}+W` : 'WD+W'))
                             : b.extraType === 'NO_BALL' ? (runs > 0 ? `NB+${runs}+W` : 'NB+W')
                             : (runs > 0 ? `${runs}+W` : 'W'))
                           : (b.extraType === 'WIDE' ? (extraRuns > 1 ? `WD+${extraRuns - 1}` : 'WD')
@@ -1246,7 +1477,7 @@ export default function LiveScoreWidget() {
                                 height: '30px',
                                 padding: displayLabel.length > 2 ? '0 6px' : '0',
                                 borderRadius: displayLabel.length > 2 ? '15px' : '50%',
-                                background: b.isWicket ? '#EF4444' : b.runs === 4 ? '#10B981' : b.runs === 6 ? '#8B5CF6' : b.extraType === 'WIDE' || b.extraType === 'NO_BALL' ? '#F59E0B' : 'rgba(255, 255, 255, 0.1)',
+                                background: b.isWicket && b.wicketType === 'RETIRED_HURT' ? '#0284C7' : b.isWicket ? '#EF4444' : b.runs === 4 ? '#10B981' : b.runs === 6 ? '#8B5CF6' : b.extraType === 'WIDE' || b.extraType === 'NO_BALL' ? '#F59E0B' : 'rgba(255, 255, 255, 0.1)',
                                 color: b.extraType === 'WIDE' || b.extraType === 'NO_BALL' ? '#000' : '#FFF',
                                 fontSize: displayLabel.length > 3 ? '0.65rem' : '0.75rem',
                                 fontWeight: 900,
@@ -1400,15 +1631,164 @@ export default function LiveScoreWidget() {
               let groupSubtitle = 'Top team qualifies directly for Final Four (Seed #1/#2). 2nd advances to Match 9. 3rd advances to Match 10. 4th eliminated.';
 
               if (tableGroup === 'A') {
-                activeStandings = overview?.groups?.groupA?.standings || [];
-                activeGroupMatches = overview?.groups?.groupA?.matches || [];
+                activeStandings =
+                  overview?.groups?.groupA?.standings ||
+                  (overview?.groups as any)?.['GROUP_A']?.standings ||
+                  (overview?.groups as any)?.['Group A']?.standings ||
+                  (overview as any)?.groupA ||
+                  [];
+                activeGroupMatches =
+                  overview?.groups?.groupA?.matches ||
+                  (overview?.groups as any)?.['GROUP_A']?.matches ||
+                  [];
                 groupTitle = 'Group A Standings';
                 groupSubtitle = 'Top team qualifies directly for Final Four (Seed #1/#2). 2nd advances to Match 9. 3rd advances to Match 10. 4th eliminated.';
               } else {
-                activeStandings = overview?.groups?.groupB?.standings || [];
-                activeGroupMatches = overview?.groups?.groupB?.matches || [];
+                activeStandings =
+                  overview?.groups?.groupB?.standings ||
+                  (overview?.groups as any)?.['GROUP_B']?.standings ||
+                  (overview?.groups as any)?.['Group B']?.standings ||
+                  (overview as any)?.groupB ||
+                  [];
+                activeGroupMatches =
+                  overview?.groups?.groupB?.matches ||
+                  (overview?.groups as any)?.['GROUP_B']?.matches ||
+                  [];
                 groupTitle = 'Group B Standings';
                 groupSubtitle = 'Top team qualifies directly for Final Four (Seed #1/#2). 2nd advances to Match 9. 3rd advances to Match 10. 4th eliminated.';
+              }
+
+              // 2. If standings array is empty but teams are in overview, synthesize initial 0-stats standings
+              const targetGroupTeams = tableGroup === 'A'
+                ? (overview?.groups?.groupA?.teams || (overview?.groups as any)?.['GROUP_A']?.teams || [])
+                : (overview?.groups?.groupB?.teams || (overview?.groups as any)?.['GROUP_B']?.teams || []);
+
+              if (activeStandings.length === 0 && targetGroupTeams.length > 0) {
+                activeStandings = targetGroupTeams.map((tm: any, i: number) => ({
+                  pos: i + 1,
+                  rank: i + 1,
+                  teamId: tm.id || tm.teamId,
+                  teamName: tm.name || tm.teamName,
+                  teamShortName: tm.shortName || tm.teamShortName || tm.name,
+                  name: tm.name || tm.teamName,
+                  shortName: tm.shortName || tm.teamShortName || tm.name,
+                  logoUrl: tm.logoUrl,
+                  played: 0,
+                  won: 0,
+                  lost: 0,
+                  tied: 0,
+                  noResult: 0,
+                  points: 0,
+                  runsFor: 0,
+                  oversFor: 0,
+                  displayOversFor: '0.00',
+                  runsAgainst: 0,
+                  oversAgainst: 0,
+                  displayOversAgainst: '0.00',
+                  nrr: 0,
+                  displayNRR: '0.00',
+                }));
+              }
+
+              // 3. Fallback: If overview is null/unavailable, extract from statsData.allMatches or matches
+              if (activeStandings.length === 0) {
+                const sourceMatches = (statsData.allMatches && statsData.allMatches.length > 0)
+                  ? statsData.allMatches
+                  : matches;
+
+                if (sourceMatches && sourceMatches.length > 0) {
+                  const mapTeam = (t: any) => ({
+                    id: t.id,
+                    name: t.name,
+                    shortName: t.shortName || t.name,
+                    logoUrl: t.logoUrl,
+                  });
+
+                  const teamsThisGroup = new Map<string, any>();
+                  sourceMatches.forEach((m: any, idx: number) => {
+                    const num = m.matchNumber || idx + 1;
+                    const isTarget = tableGroup === 'A'
+                      ? (m.groupName === 'GROUP_A' || m.groupName === 'Group A' || (!m.groupName && num <= 8 && num % 2 === 1))
+                      : (m.groupName === 'GROUP_B' || m.groupName === 'Group B' || (!m.groupName && num <= 8 && num % 2 === 0));
+
+                    if (isTarget) {
+                      if (m.teamA?.id) teamsThisGroup.set(m.teamA.id, mapTeam(m.teamA));
+                      if (m.teamB?.id) teamsThisGroup.set(m.teamB.id, mapTeam(m.teamB));
+                    }
+                  });
+
+                  if (teamsThisGroup.size > 0) {
+                    const filteredMatches = sourceMatches.filter((m: any, idx: number) => {
+                      const num = m.matchNumber || idx + 1;
+                      return tableGroup === 'A'
+                        ? (m.groupName === 'GROUP_A' || m.groupName === 'Group A' || (!m.groupName && num <= 8 && num % 2 === 1))
+                        : (m.groupName === 'GROUP_B' || m.groupName === 'Group B' || (!m.groupName && num <= 8 && num % 2 === 0));
+                    });
+                    activeGroupMatches = filteredMatches;
+
+                    try {
+                      const formattedMatches = filteredMatches.map((m: any) => ({
+                        id: m.id,
+                        tournamentId: m.tournamentId || 'cpl-2026',
+                        stage: 'GROUP',
+                        groupName: tableGroup === 'A' ? 'GROUP_A' : 'GROUP_B',
+                        matchNumber: m.matchNumber,
+                        teamAId: m.teamA?.id || m.teamAId,
+                        teamBId: m.teamB?.id || m.teamBId,
+                        status: m.status,
+                        result: m.status === 'COMPLETED' ? (m.winnerTeamId ? 'WIN' : 'TIE') : null,
+                        winnerTeamId: m.winnerTeamId || null,
+                        oversPerInnings: m.oversPerInnings || 4,
+                        ballsPerOver: m.ballsPerOver || 4,
+                        innings: (m.innings || []).map((inn: any) => ({
+                          id: inn.id || `${m.id}-inn-${inn.inningsNumber}`,
+                          inningsNumber: inn.inningsNumber,
+                          battingTeamId: inn.battingTeamId || (inn.inningsNumber === 1 ? (m.teamA?.id || m.teamAId) : (m.teamB?.id || m.teamBId)),
+                          bowlingTeamId: inn.bowlingTeamId || (inn.inningsNumber === 1 ? (m.teamB?.id || m.teamBId) : (m.teamA?.id || m.teamAId)),
+                          runs: inn.runs || 0,
+                          wickets: inn.wickets || 0,
+                          overs: inn.overs || 0,
+                          balls: inn.balls || 0,
+                          status: inn.status || 'COMPLETED',
+                          isAllOut: inn.isAllOut,
+                          ballEvents: inn.ballEvents || [],
+                        })),
+                      }));
+
+                      activeStandings = computeStageStandings(
+                        Array.from(teamsThisGroup.values()).map((t) => ({ ...t, groupName: tableGroup === 'A' ? 'GROUP_A' : 'GROUP_B' })),
+                        formattedMatches,
+                        'GROUP',
+                        tableGroup === 'A' ? 'GROUP_A' : 'GROUP_B'
+                      );
+                    } catch {
+                      activeStandings = Array.from(teamsThisGroup.values()).map((t, idx) => ({
+                        pos: idx + 1,
+                        rank: idx + 1,
+                        teamId: t.id,
+                        teamName: t.name,
+                        teamShortName: t.shortName,
+                        name: t.name,
+                        shortName: t.shortName,
+                        logoUrl: t.logoUrl,
+                        played: 0,
+                        won: 0,
+                        lost: 0,
+                        tied: 0,
+                        noResult: 0,
+                        points: 0,
+                        runsFor: 0,
+                        oversFor: 0,
+                        displayOversFor: '0.00',
+                        runsAgainst: 0,
+                        oversAgainst: 0,
+                        displayOversAgainst: '0.00',
+                        nrr: 0,
+                        displayNRR: '0.00',
+                      }));
+                    }
+                  }
+                }
               }
 
               const completedGroupMatches = activeGroupMatches.filter((m: any) => m.status === 'COMPLETED').length;
@@ -1542,22 +1922,22 @@ export default function LiveScoreWidget() {
                                     <span style={{ color: 'rgba(255, 255, 255, 0.45)', fontSize: '0.76rem', fontWeight: 600 }}>({s.teamShortName})</span>
                                   </div>
                                 </td>
-                                <td style={{ padding: '12px 10px', textAlign: 'center', fontFamily: 'var(--font-data, monospace)', color: 'rgba(255, 255, 255, 0.8)' }}>{s.played}</td>
-                                <td style={{ padding: '12px 10px', textAlign: 'center', fontFamily: 'var(--font-data, monospace)', color: '#10B981', fontWeight: 700 }}>{s.won}</td>
-                                <td style={{ padding: '12px 10px', textAlign: 'center', fontFamily: 'var(--font-data, monospace)', color: 'rgba(255, 255, 255, 0.6)' }}>{s.lost}</td>
-                                <td style={{ padding: '12px 10px', textAlign: 'center', fontFamily: 'var(--font-data, monospace)', color: 'rgba(255, 255, 255, 0.6)' }}>{s.tied}</td>
-                                <td style={{ padding: '12px 10px', textAlign: 'center', fontFamily: 'var(--font-data, monospace)', color: 'rgba(255, 255, 255, 0.6)' }}>{s.noResult}</td>
+                                <td style={{ padding: '12px 10px', textAlign: 'center', fontFamily: 'var(--font-data, monospace)', color: 'rgba(255, 255, 255, 0.8)' }}>{s.played ?? 0}</td>
+                                <td style={{ padding: '12px 10px', textAlign: 'center', fontFamily: 'var(--font-data, monospace)', color: '#10B981', fontWeight: 700 }}>{s.won ?? 0}</td>
+                                <td style={{ padding: '12px 10px', textAlign: 'center', fontFamily: 'var(--font-data, monospace)', color: 'rgba(255, 255, 255, 0.6)' }}>{s.lost ?? 0}</td>
+                                <td style={{ padding: '12px 10px', textAlign: 'center', fontFamily: 'var(--font-data, monospace)', color: 'rgba(255, 255, 255, 0.6)' }}>{s.tied ?? 0}</td>
+                                <td style={{ padding: '12px 10px', textAlign: 'center', fontFamily: 'var(--font-data, monospace)', color: 'rgba(255, 255, 255, 0.6)' }}>{s.noResult ?? 0}</td>
                                 <td style={{ padding: '12px 12px', textAlign: 'center', fontFamily: 'var(--font-data, monospace)', fontWeight: 900, fontSize: '1rem', color: 'var(--color-gold, #FFB800)' }}>
-                                  {s.points}
+                                  {s.points ?? 0}
                                 </td>
                                 <td style={{ padding: '12px 12px', textAlign: 'center', fontFamily: 'var(--font-data, monospace)', fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.75)' }}>
-                                  {s.runsFor} / {s.displayOversFor}
+                                  {s.runsFor ?? 0} / {s.displayOversFor || '0.00'}
                                 </td>
                                 <td style={{ padding: '12px 12px', textAlign: 'center', fontFamily: 'var(--font-data, monospace)', fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.75)' }}>
-                                  {s.runsAgainst} / {s.displayOversAgainst}
+                                  {s.runsAgainst ?? 0} / {s.displayOversAgainst || '0.00'}
                                 </td>
-                                <td style={{ padding: '12px 14px', textAlign: 'center', fontFamily: 'var(--font-data, monospace)', fontWeight: 900, color: s.nrr >= 0 ? '#10B981' : '#EF4444' }}>
-                                  {s.displayNRR}
+                                <td style={{ padding: '12px 14px', textAlign: 'center', fontFamily: 'var(--font-data, monospace)', fontWeight: 900, color: (typeof s.nrr === 'number' ? s.nrr : 0) >= 0 ? '#10B981' : '#EF4444' }}>
+                                  {s.displayNRR || (typeof s.nrr === 'number' ? (s.nrr > 0 ? `+${s.nrr.toFixed(2)}` : s.nrr.toFixed(2)) : '0.00')}
                                 </td>
                                 <td style={{ padding: '12px 14px', textAlign: 'center' }}>
                                   {isGroupFinished ? (
@@ -1690,10 +2070,13 @@ export default function LiveScoreWidget() {
             ) : (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px' }}>
                 {filteredMatches.map((m) => {
-                  const teamAReg = m.innings.find((i: any) => i.battingTeamId === m.teamA.id && !i.isSuperOver);
-                  const teamASO = m.innings.find((i: any) => i.battingTeamId === m.teamA.id && i.isSuperOver);
-                  const teamBReg = m.innings.find((i: any) => i.battingTeamId === m.teamB.id && !i.isSuperOver);
-                  const teamBSO = m.innings.find((i: any) => i.battingTeamId === m.teamB.id && i.isSuperOver);
+                  const inningsList = m.innings || [];
+                  const teamAId = m.teamA?.id || m.teamAId;
+                  const teamBId = m.teamB?.id || m.teamBId;
+                  const teamAReg = inningsList.find((i: any) => i.battingTeamId === teamAId && !i.isSuperOver);
+                  const teamASO = inningsList.find((i: any) => i.battingTeamId === teamAId && i.isSuperOver);
+                  const teamBReg = inningsList.find((i: any) => i.battingTeamId === teamBId && !i.isSuperOver);
+                  const teamBSO = inningsList.find((i: any) => i.battingTeamId === teamBId && i.isSuperOver);
 
                   let teamAScore = teamAReg ? `${teamAReg.runs}/${teamAReg.wickets} (${teamAReg.overs}.${teamAReg.balls})` : '-';
                   if (teamASO) teamAScore += ` & S/O ${teamASO.runs}/${teamASO.wickets}`;

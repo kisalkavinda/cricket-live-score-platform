@@ -65,6 +65,36 @@ assert.strictEqual(lb2.bowlerRuns, 0, '2 Leg Byes: bowlerRuns must be 0');
 assert.strictEqual(lb2.isLegal, true, '2 Leg Byes is a legal delivery');
 console.log('  PASS  1.4: 2 Leg Byes -> batterRuns=0, legByeRuns=2, totalRuns=2, bowlerRuns=0');
 
+// 1.5: 5 WIDES (5WD: Bowler charged 1 run, 4 extras)
+const wide5 = calculateDeliveryRuns({ extraType: 'WIDE', extras: 5 });
+assert.strictEqual(wide5.totalRuns, 5, '5WD: totalRuns must be 5');
+assert.strictEqual(wide5.bowlerRuns, 1, '5WD: bowler must be charged 1 run');
+assert.strictEqual(wide5.wideRuns, 1, '5WD: bowler credited 1 wide');
+assert.strictEqual(wide5.byeRuns, 4, '5WD: 4 extras/byes recorded');
+assert.strictEqual(wide5.batterRuns, 0, '5WD: batter gets 0 runs');
+assert.strictEqual(wide5.isLegal, false, '5WD: isLegal must be false');
+console.log('  PASS  1.5: 5WD -> totalRuns=5, bowlerRuns=1, wideRuns=1, byeRuns=4, batterRuns=0, isLegal=false');
+
+// 1.6: 2 WIDES (2WD: Bowler charged 1 run, 1 extra)
+const wide2 = calculateDeliveryRuns({ extraType: 'WIDE', extras: 2 });
+assert.strictEqual(wide2.totalRuns, 2, '2WD: totalRuns must be 2');
+assert.strictEqual(wide2.bowlerRuns, 1, '2WD: bowler must be charged 1 run');
+assert.strictEqual(wide2.wideRuns, 1, '2WD: bowler credited 1 wide');
+assert.strictEqual(wide2.byeRuns, 1, '2WD: 1 extra/bye recorded');
+assert.strictEqual(wide2.batterRuns, 0, '2WD: batter gets 0 runs');
+assert.strictEqual(wide2.isLegal, false, '2WD: isLegal must be false');
+console.log('  PASS  1.6: 2WD -> totalRuns=2, bowlerRuns=1, wideRuns=1, byeRuns=1, batterRuns=0, isLegal=false');
+
+// 1.7: 1 WIDE (Standard 1WD: Bowler charged 1 run, 0 extra)
+const wide1 = calculateDeliveryRuns({ extraType: 'WIDE', extras: 1 });
+assert.strictEqual(wide1.totalRuns, 1, '1WD: totalRuns must be 1');
+assert.strictEqual(wide1.bowlerRuns, 1, '1WD: bowler must be charged 1 run');
+assert.strictEqual(wide1.wideRuns, 1, '1WD: bowler credited 1 wide');
+assert.strictEqual(wide1.byeRuns, 0, '1WD: 0 bye runs');
+assert.strictEqual(wide1.batterRuns, 0, '1WD: batter gets 0 runs');
+assert.strictEqual(wide1.isLegal, false, '1WD: isLegal must be false');
+console.log('  PASS  1.7: 1WD -> totalRuns=1, bowlerRuns=1, wideRuns=1, byeRuns=0, batterRuns=0, isLegal=false');
+
 
 // -------------------------------------------------------------
 // 2. NO-BALL COMBINATIONS (MCC Law 18.10.2 separation)

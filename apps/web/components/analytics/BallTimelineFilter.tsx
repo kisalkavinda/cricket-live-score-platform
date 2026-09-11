@@ -74,7 +74,7 @@ export default function BallTimelineFilter({
     [rawBalls]
   );
   const wicketCount = useMemo(
-    () => rawBalls.filter((b: any) => Boolean(b.isWicket)).length,
+    () => rawBalls.filter((b: any) => Boolean(b.isWicket) && b.wicketType !== 'RETIRED_HURT').length,
     [rawBalls]
   );
 
@@ -101,7 +101,7 @@ export default function BallTimelineFilter({
     for (const ov of sortedOvers) {
       const balls = byOver.get(ov) || [];
       const overRuns = balls.reduce((sum, b) => sum + Number(b.runs || 0) + Number(b.extras || 0), 0);
-      const overWkts = balls.filter((b) => b.isWicket).length;
+      const overWkts = balls.filter((b) => b.isWicket && b.wicketType !== 'RETIRED_HURT').length;
       const legalCount = balls.filter((b) => b.isLegal).length;
       const isMaiden = legalCount >= ballsPerOver && overRuns === 0;
       cumRuns += overRuns;
@@ -530,7 +530,7 @@ export default function BallTimelineFilter({
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           {groupedByOver.map(([overNum, balls]) => {
             const overRuns = balls.reduce((sum, b) => sum + b.runs + b.extras, 0);
-            const overWkts = balls.filter((b) => b.isWicket).length;
+            const overWkts = balls.filter((b) => b.isWicket && b.wicketType !== 'RETIRED_HURT').length;
             const overStat = overStatsMap.get(overNum);
 
             return (
@@ -628,7 +628,9 @@ export default function BallTimelineFilter({
                         padding: '10px 14px',
                         borderBottom:
                           idx < balls.length - 1 ? '1px solid rgba(255, 255, 255, 0.03)' : 'none',
-                        background: b.isWicket
+                        background: b.isWicket && b.wicketType === 'RETIRED_HURT'
+                          ? 'rgba(2, 132, 199, 0.08)'
+                          : b.isWicket
                           ? 'rgba(239, 68, 68, 0.06)'
                           : b.runs === 6
                           ? 'rgba(139, 92, 246, 0.06)'
@@ -713,7 +715,7 @@ export default function BallTimelineFilter({
                           {b.isWicket && (
                             <span
                               style={{
-                                background: '#EF4444',
+                                background: b.wicketType === 'RETIRED_HURT' ? '#0284C7' : '#EF4444',
                                 color: '#FFFFFF',
                                 padding: '1px 6px',
                                 borderRadius: '4px',
@@ -721,7 +723,7 @@ export default function BallTimelineFilter({
                                 fontWeight: 800,
                               }}
                             >
-                              WICKET ({b.wicketType || 'OUT'})
+                              {b.wicketType === 'RETIRED_HURT' ? 'RETIRED HURT (NOT OUT)' : `WICKET (${b.wicketType || 'OUT'})`}
                             </span>
                           )}
 

@@ -174,9 +174,9 @@
     "semantic_hash": ""
   },
   "apps/web/app/layout.tsx": {
-    "mtime": 1789149438.2588453,
-    "seen": 1789150082.294879,
-    "ast_hash": "080769521619f2f4aae40aedc686566a",
+    "mtime": 1788732778.4853907,
+    "seen": 1788763599.8955314,
+    "ast_hash": "a08c3d582f17a5314a52236d8aea23b7",
     "semantic_hash": ""
   },
   "apps/web/app/page.tsx": {
@@ -234,9 +234,9 @@
     "semantic_hash": ""
   },
   "apps/web/components/LiveScoreWidget.tsx": {
-    "mtime": 1789152757.5844734,
-    "seen": 1789153268.7052734,
-    "ast_hash": "5aeecd34e33b186e14f7d6eb2c58d329",
+    "mtime": 1789148849.7924514,
+    "seen": 1789149183.9111323,
+    "ast_hash": "fcea518b81773061e6f7eb834ea6710a",
     "semantic_hash": ""
   },
   "apps/web/components/LottieAnimation.tsx": {
@@ -450,15 +450,15 @@
     "semantic_hash": ""
   },
   "apps/web/lib/scoring/scoring-realtime.ts": {
-    "mtime": 1789152525.0243983,
-    "seen": 1789153268.713581,
-    "ast_hash": "80fce4d06f7c41c3dfa622a623f8cf12",
+    "mtime": 1789143475.4580057,
+    "seen": 1789143986.0565147,
+    "ast_hash": "dab49c0313ca19091a9bea7bfa668097",
     "semantic_hash": ""
   },
   "apps/web/lib/scoring/scoring-service.ts": {
-    "mtime": 1789152617.1877084,
-    "seen": 1789153268.7137537,
-    "ast_hash": "44ff5135c6479c0d8ee4ac288bc1a715",
+    "mtime": 1789147879.0634296,
+    "seen": 1789148042.8109963,
+    "ast_hash": "258060bcba63d9dd2d8ec1feab2e958a",
     "semantic_hash": ""
   },
   "apps/web/lib/utils/perf-logger.ts": {
@@ -738,9 +738,9 @@
     "semantic_hash": ""
   },
   "apps/web/lib/tournament/tournament-service.ts": {
-    "mtime": 1789153106.771226,
-    "seen": 1789153268.7146657,
-    "ast_hash": "cf5692406a2c2ddac6f80b66ef4c624a",
+    "mtime": 1789148773.6192892,
+    "seen": 1789149183.9383776,
+    "ast_hash": "bf7f271ab2bec41b862a3b2fd751f6c5",
     "semantic_hash": ""
   },
   "apps/web/tests/cpl-tournament-simulation.test.js": {
@@ -1032,9 +1032,9 @@
     "semantic_hash": ""
   },
   "apps/web/tests/cpl-8team-tournament-simulation.test.ts": {
-    "mtime": 1789152723.93967,
-    "seen": 1789153268.7173593,
-    "ast_hash": "2cb2090cbfe7426456bad314069e23e8",
+    "mtime": 1789022195.0234294,
+    "seen": 1789023426.51574,
+    "ast_hash": "f90eca70b9f976e5d5c03100c1ade39b",
     "semantic_hash": ""
   },
   "apps/web/app/api/image-proxy/route.ts": {
@@ -1131,48 +1131,6 @@
     "mtime": 1789149068.1187067,
     "seen": 1789149183.9458618,
     "ast_hash": "822d47fa578d36cfb06b630264299f45",
-    "semantic_hash": ""
-  },
-  "apps/web/scripts/generate-favicons.js": {
-    "mtime": 1789149954.7141924,
-    "seen": 1789150082.3679743,
-    "ast_hash": "47987c7f24ec8135e7be954a8cad665d",
-    "semantic_hash": ""
-  },
-  "apps/web/scripts/generate-favicons.ts": {
-    "mtime": 1789149993.0965536,
-    "seen": 1789150082.3679776,
-    "ast_hash": "655d228e397c571d60fb6c49418c4ea3",
-    "semantic_hash": ""
-  },
-  "apps/web/app/icon.svg": {
-    "mtime": 1789149970.85586,
-    "seen": 1789150082.3922694,
-    "ast_hash": "735f063ad2926d280a5fd8f708f1e787",
-    "semantic_hash": ""
-  },
-  "apps/web/public/apple-touch-icon.png": {
-    "mtime": 1789149971.126501,
-    "seen": 1789150082.3922746,
-    "ast_hash": "c470c22a38ba7d476cd6db6e890883ca",
-    "semantic_hash": ""
-  },
-  "apps/web/public/favicon.svg": {
-    "mtime": 1789149970.85586,
-    "seen": 1789150082.3922784,
-    "ast_hash": "735f063ad2926d280a5fd8f708f1e787",
-    "semantic_hash": ""
-  },
-  "apps/web/public/icon-192.png": {
-    "mtime": 1789149971.126501,
-    "seen": 1789150082.3929887,
-    "ast_hash": "c7b0b4d1071cfb3fc2b0ae6ab35fbbda",
-    "semantic_hash": ""
-  },
-  "apps/web/public/icon-512.png": {
-    "mtime": 1789149971.1280258,
-    "seen": 1789150082.3929918,
-    "ast_hash": "3a17c6cf81820c1c3d7bc9319d0b4ccc",
     "semantic_hash": ""
   }
 }

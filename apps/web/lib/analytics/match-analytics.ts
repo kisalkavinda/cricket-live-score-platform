@@ -9,6 +9,8 @@
  * 5. Ball-by-ball commentary generation and filtering
  */
 
+import { isBowlerCreditedDismissal } from '../scoring/scoring-rules';
+
 export interface OverSummary {
   overNumber: number; // 1-indexed (e.g. 1 for Over 1)
   runsInOver: number;
@@ -395,7 +397,7 @@ export interface FormattedCommentaryBall {
     bg: string;
     color: string;
     borderColor: string;
-    type: 'FOUR' | 'SIX' | 'WICKET' | 'EXTRA' | 'DOT' | 'RUNS';
+    type: 'FOUR' | 'SIX' | 'WICKET' | 'EXTRA' | 'DOT' | 'RUNS' | 'RETIRED_HURT';
   };
   commentaryText: string;
   timestamp: string;
@@ -605,7 +607,7 @@ export function generateBallDescription(
   // CASE 3: SUPER OVER SPECIAL DELIVERIES
   // -------------------------------------------------------------------------
   if (isSuperOver) {
-    if (b.isWicket) {
+    if (b.isWicket && b.wicketType !== 'RETIRED_HURT') {
       return selectVariation([
         `OUT IN SUPER OVER! Critical breakthrough! ${bowler} removes ${dismissed} in this high-voltage tie-break shootout!`,
         `WICKET IN SUPER OVER! Massive blow! ${dismissed} departs as ${bowler}'s team strikes in the super over!`,
@@ -854,6 +856,15 @@ export function getBallBadgeStyle(b: any): FormattedCommentaryBall['outcomeBadge
   const batRuns = Number(b.runs || 0);
 
   if (b.isWicket) {
+    if (b.wicketType === 'RETIRED_HURT') {
+      return {
+        label: batRuns > 0 ? `${batRuns}+RH` : 'RH',
+        bg: '#0284C7',
+        color: '#FFFFFF',
+        borderColor: '#0369A1',
+        type: 'RETIRED_HURT',
+      };
+    }
     const extraRuns = Number(b.extras || 0);
     let label = 'W';
     if (b.extraType === 'WIDE') {
@@ -1226,7 +1237,7 @@ export function computeInningsSummary(
       const entry = bowlerMap.get(name)!;
       entry.runs += Number(b.runs || 0) + Number(b.extras || 0);
       if (b.isLegal) entry.legalBalls += 1;
-      if (b.isWicket && b.wicketType !== 'RUN_OUT') entry.wickets += 1;
+      if (b.isWicket && isBowlerCreditedDismissal(b.wicketType)) entry.wickets += 1;
     }
     topBowlers = Array.from(bowlerMap.entries())
       .map(([name, stats]) => {

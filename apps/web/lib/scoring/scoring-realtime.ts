@@ -10,6 +10,10 @@ export interface ScoreBroadcastPayload {
   matchId: string;
   status: 'UPCOMING' | 'LIVE' | 'COMPLETED' | 'ABANDONED';
   currentInnings: number;
+  matchNumber?: number | null;
+  stage?: string | null;
+  groupName?: string | null;
+  bracketSlot?: string | null;
   isFreeHit?: boolean;
   innings: {
     id: string;
@@ -44,6 +48,10 @@ export interface ScoreBroadcastPayload {
   } | null;
   match: {
     id: string;
+    matchNumber?: number | null;
+    stage?: string | null;
+    groupName?: string | null;
+    bracketSlot?: string | null;
     teamA: { id: string; name: string; shortName: string; logoUrl?: string | null };
     teamB: { id: string; name: string; shortName: string; logoUrl?: string | null };
     venue?: string | null;
@@ -53,6 +61,10 @@ export interface ScoreBroadcastPayload {
     winnerTeamId?: string | null;
     tossWinnerId?: string | null;
     tossDecision?: string | null;
+    completedAt?: string | null;
+    startedAt?: string | null;
+    scheduledAt?: string | null;
+    updatedAt?: string | null;
   };
   allInningsSummary?: Array<{
     inningsNumber: number;

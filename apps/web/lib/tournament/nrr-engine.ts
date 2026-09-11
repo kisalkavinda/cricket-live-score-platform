@@ -57,19 +57,38 @@ export interface MatchData {
   teamAId: string;
   teamBId: string;
   status: string; // 'UPCOMING' | 'LIVE' | 'COMPLETED' | 'ABANDONED'
-  result?: 'WIN' | 'TIE' | 'NO_RESULT' | null;
+  result?: 'WIN' | 'TIE' | 'NO_RESULT' | string | null;
   winnerTeamId?: string | null;
   oversPerInnings: number;
   ballsPerOver: number;
   innings: InningsData[];
 }
 
+export function normalizeGroupKey(val?: string | null): string | null {
+  if (!val) return null;
+  const s = val.trim().toUpperCase().replace(/[\s_-]/g, '');
+  if (s === 'GROUPA' || s === 'A') return 'GROUP_A';
+  if (s === 'GROUPB' || s === 'B') return 'GROUP_B';
+  if (s === 'GROUPC' || s === 'C') return 'GROUP_C';
+  return val.trim().toUpperCase();
+}
+
+export function isSameGroupName(a?: string | null, b?: string | null): boolean {
+  if (!a && !b) return true;
+  if (!a || !b) return false;
+  return normalizeGroupKey(a) === normalizeGroupKey(b);
+}
+
 export interface TeamStanding {
   pos: number;
+  rank?: number; // backwards-compatibility alias for pos
   teamId: string;
   teamName: string;
+  name?: string; // backwards-compatibility alias for teamName
   teamShortName: string;
+  shortName?: string; // backwards-compatibility alias for teamShortName
   logoUrl?: string | null;
+  teamLogoUrl?: string | null; // backwards-compatibility alias for logoUrl
   groupName?: string | null;
   played: number;
   won: number;
@@ -310,7 +329,7 @@ export function computeStageStandings(
   // 1. Filter matches for this exact stage and optional group
   const relevantMatches = matches.filter((m) => {
     if (m.stage !== stage) return false;
-    if (targetGroupName && m.groupName !== targetGroupName) return false;
+    if (targetGroupName && !isSameGroupName(m.groupName, targetGroupName)) return false;
     return m.status === 'COMPLETED' || m.status === 'NO_RESULT' || m.result === 'NO_RESULT';
   });
 
@@ -337,7 +356,7 @@ export function computeStageStandings(
   }>();
 
   for (const t of teams) {
-    if (targetGroupName && t.groupName && t.groupName !== targetGroupName) continue;
+    if (targetGroupName && t.groupName && !isSameGroupName(t.groupName, targetGroupName)) continue;
     teamStats.set(t.id, {
       teamId: t.id,
       teamName: t.name,
@@ -450,10 +469,14 @@ export function computeStageStandings(
 
     return {
       pos: 1,
+      rank: 1,
       teamId: s.teamId,
       teamName: s.teamName,
+      name: s.teamName,
       teamShortName: s.teamShortName,
+      shortName: s.teamShortName,
       logoUrl: s.logoUrl,
+      teamLogoUrl: s.logoUrl,
       groupName: s.groupName,
       played: s.played,
       won: s.won,
@@ -482,6 +505,7 @@ export function computeStageStandings(
   // Assign positions (1, 2, 3)
   standings.forEach((s, idx) => {
     s.pos = idx + 1;
+    s.rank = idx + 1;
   });
 
   return standings;

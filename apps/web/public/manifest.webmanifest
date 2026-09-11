@@ -1,7 +1,7 @@
 {
-  "name": "CPL Cricket Live Scorer",
-  "short_name": "CPL Scorer",
-  "description": "Production Offline-Resilient Cricket Live Scoring Platform",
+  "name": "Computing Premier League 2026",
+  "short_name": "CPL 2026",
+  "description": "The Biggest Cricket Event Where Passion Meets Glory",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0F0C0C",
@@ -9,9 +9,21 @@
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "/globe.svg",
+      "src": "/favicon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
       "purpose": "any maskable"
     }
   ]
