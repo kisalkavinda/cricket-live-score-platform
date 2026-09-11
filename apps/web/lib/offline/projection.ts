@@ -114,12 +114,10 @@ function applyOperationToProjection(match: any, op: OfflineOperation): void {
           innings.bowlingScores.push(bowler);
         }
         if (isLegal) {
-          if (isOverComplete) {
-            bowler.overs += 1;
-            bowler.balls = 0;
-          } else {
-            bowler.balls += 1;
-          }
+          const bpo = match.ballsPerOver || 6;
+          const currentTotalBalls = (bowler.overs || 0) * bpo + (bowler.balls || 0) + 1;
+          bowler.overs = Math.floor(currentTotalBalls / bpo);
+          bowler.balls = currentTotalBalls % bpo;
         }
         bowler.runsConceded += bowlerChargedRuns;
         if (isWicket && isBowlerCreditedDismissal(wicketType)) {
@@ -144,7 +142,8 @@ function applyOperationToProjection(match: any, op: OfflineOperation): void {
 
         if (newBatterId) {
           innings.battingScores = innings.battingScores || [];
-          if (!innings.battingScores.some((b: any) => b.playerId === newBatterId)) {
+          const existingIncoming = innings.battingScores.find((b: any) => b.playerId === newBatterId);
+          if (!existingIncoming) {
             innings.battingScores.push({
               playerId: newBatterId,
               runs: 0,
@@ -154,6 +153,10 @@ function applyOperationToProjection(match: any, op: OfflineOperation): void {
               isStriker: dismissedPlayerId === innings.currentStrikerId,
               isOut: false,
             });
+          } else {
+            existingIncoming.isOut = false;
+            existingIncoming.dismissal = null;
+            existingIncoming.isStriker = dismissedPlayerId === innings.currentStrikerId;
           }
           if (dismissedPlayerId === innings.currentStrikerId) {
             nextStrikerId = newBatterId;
@@ -194,6 +197,8 @@ function applyOperationToProjection(match: any, op: OfflineOperation): void {
         }
       }
 
+      const deliveryBowlerId = innings.currentBowlerId;
+
       // Update projected innings
       innings.runs = nextRuns;
       innings.wickets = nextWickets;
@@ -213,6 +218,7 @@ function applyOperationToProjection(match: any, op: OfflineOperation): void {
         isLocalPending: op.status !== 'SYNCED',
         overNumber: innings.overs,
         ballNumber: innings.balls,
+        bowlerId: deliveryBowlerId,
         runs: delivery.batterRuns,
         extras: delivery.wideRuns + delivery.noBallPenalty + delivery.byeRuns + delivery.legByeRuns,
         extraType,
@@ -280,15 +286,41 @@ function applyOperationToProjection(match: any, op: OfflineOperation): void {
         if (undone) {
           const runsToDeduct = (undone.runs || 0) + (undone.extras || 0);
           innings.runs = Math.max(0, innings.runs - runsToDeduct);
-          if (undone.isWicket) {
+          if (undone.isWicket && undone.wicketType !== 'RETIRED_HURT') {
             innings.wickets = Math.max(0, innings.wickets - 1);
           }
           if (undone.isLegal) {
             if (innings.balls === 0 && innings.overs > 0) {
               innings.overs -= 1;
               innings.balls = ballsPerOver - 1;
+              if (undone.bowlerId && !innings.currentBowlerId) {
+                innings.currentBowlerId = undone.bowlerId;
+              }
             } else if (innings.balls > 0) {
               innings.balls -= 1;
+            }
+          }
+          if (undone.bowlerId) {
+            const bowler = innings.bowlingScores?.find((b: any) => b.playerId === undone.bowlerId);
+            if (bowler) {
+              if (undone.isLegal) {
+                const currentTotal = (bowler.overs || 0) * ballsPerOver + (bowler.balls || 0);
+                const nextTotal = Math.max(0, currentTotal - 1);
+                bowler.overs = Math.floor(nextTotal / ballsPerOver);
+                bowler.balls = nextTotal % ballsPerOver;
+              }
+              const undoneDelivery = calculateDeliveryRuns(undone);
+              const bowlerCharged = undoneDelivery.bowlerRuns;
+              bowler.runsConceded = Math.max(0, (bowler.runsConceded || 0) - bowlerCharged);
+              if (undone.isWicket && isBowlerCreditedDismissal(undone.wicketType)) {
+                bowler.wickets = Math.max(0, (bowler.wickets || 0) - 1);
+              }
+              if (undone.extraType === 'WIDE') {
+                bowler.wides = Math.max(0, (bowler.wides || 0) - undoneDelivery.wideRuns);
+              }
+              if (undone.extraType === 'NO_BALL') {
+                bowler.noBalls = Math.max(0, (bowler.noBalls || 0) - undoneDelivery.noBallPenalty);
+              }
             }
           }
         }

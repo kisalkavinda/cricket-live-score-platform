@@ -7,9 +7,10 @@ import { normalizeImageUrl } from '@/lib/utils/image-utils';
 interface LiveOrNextMatchSpotlightProps {
   liveMatch: any;
   nextMatch: any;
+  recentMatch?: any;
 }
 
-export default function LiveOrNextMatchSpotlight({ liveMatch, nextMatch }: LiveOrNextMatchSpotlightProps) {
+export default function LiveOrNextMatchSpotlight({ liveMatch, nextMatch, recentMatch }: LiveOrNextMatchSpotlightProps) {
   if (liveMatch) {
     const teamAInn = liveMatch.innings?.find((i: any) => i.battingTeamId === liveMatch.teamA?.id && !i.isSuperOver);
     const teamBInn = liveMatch.innings?.find((i: any) => i.battingTeamId === liveMatch.teamB?.id && !i.isSuperOver);
@@ -201,6 +202,206 @@ export default function LiveOrNextMatchSpotlight({ liveMatch, nextMatch }: LiveO
                 <line x1="5" y1="12" x2="19" y2="12" />
                 <polyline points="12 5 19 12 12 19" />
               </svg>
+            </Link>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (recentMatch) {
+    const teamAInn = recentMatch.innings?.find((i: any) => i.battingTeamId === recentMatch.teamA?.id && !i.isSuperOver);
+    const teamBInn = recentMatch.innings?.find((i: any) => i.battingTeamId === recentMatch.teamB?.id && !i.isSuperOver);
+    const isTeamAWinner = recentMatch.winnerTeamId === recentMatch.teamA?.id;
+    const isTeamBWinner = recentMatch.winnerTeamId === recentMatch.teamB?.id;
+
+    return (
+      <section style={{ marginBottom: '36px' }}>
+        <div className={styles.cyberPanel} style={{ padding: '24px' }}>
+          {/* Top Banner */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '18px', flexWrap: 'wrap', gap: '12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <span className={`${styles.beaconDot} ${styles.beaconDotGreen}`} />
+              <span
+                style={{
+                  fontFamily: 'var(--font-data)',
+                  fontSize: '0.8rem',
+                  fontWeight: 900,
+                  color: '#10B981',
+                  letterSpacing: '0.12em',
+                  textTransform: 'uppercase',
+                }}
+              >
+                RECENT RESULT // MATCH #{recentMatch.matchNumber} · {recentMatch.stage}
+              </span>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', fontFamily: 'var(--font-data)' }}>
+                {recentMatch.venue || 'Ratmalana Ground'}
+              </span>
+              <span
+                style={{
+                  padding: '4px 10px',
+                  borderRadius: '6px',
+                  background: 'rgba(16, 185, 129, 0.15)',
+                  border: '1px solid rgba(16, 185, 129, 0.35)',
+                  color: '#34D399',
+                  fontSize: '0.72rem',
+                  fontWeight: 900,
+                  fontFamily: 'var(--font-data)',
+                }}
+              >
+                MATCH COMPLETED
+              </span>
+            </div>
+          </div>
+
+          {/* Teams Combat Layout */}
+          <div className="flex flex-col md:grid md:grid-cols-[1fr_auto_1fr] gap-3 md:gap-4 items-center mb-4">
+            {/* Team A Card */}
+            <div
+              style={{
+                width: '100%',
+                padding: '14px 16px',
+                borderRadius: '12px',
+                background: isTeamAWinner ? 'rgba(255, 184, 0, 0.08)' : 'rgba(255, 255, 255, 0.02)',
+                border: isTeamAWinner ? '1.5px solid rgba(255, 184, 0, 0.5)' : '1px solid rgba(255, 255, 255, 0.06)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                boxSizing: 'border-box',
+                position: 'relative',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
+                {normalizeImageUrl(recentMatch.teamA?.logoUrl) ? (
+                  <img
+                    src={normalizeImageUrl(recentMatch.teamA?.logoUrl)!}
+                    alt={recentMatch.teamA?.name}
+                    referrerPolicy="no-referrer"
+                    style={{ width: '36px', height: '36px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0, border: isTeamAWinner ? '2px solid #FFB800' : 'none' }}
+                  />
+                ) : (
+                  <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, color: '#FFF', flexShrink: 0 }}>
+                    {recentMatch.teamA?.shortName?.[0] || 'A'}
+                  </div>
+                )}
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontWeight: 800, fontSize: '0.98rem', color: '#FFF', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {recentMatch.teamA?.name}
+                  </div>
+                  <div style={{ fontSize: '0.68rem', color: isTeamAWinner ? '#FFB800' : 'rgba(255,255,255,0.4)', fontWeight: 800 }}>
+                    {isTeamAWinner ? '👑 WINNER' : ''}
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ textAlign: 'right', flexShrink: 0, marginLeft: '10px' }}>
+                <div style={{ fontFamily: 'var(--font-data)', fontSize: '1.4rem', fontWeight: 900, color: isTeamAWinner ? '#FFB800' : '#FFF' }}>
+                  {teamAInn ? `${teamAInn.runs}/${teamAInn.wickets}` : '-'}
+                </div>
+                <div style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.5)', fontFamily: 'var(--font-data)' }}>
+                  {teamAInn ? `${teamAInn.overs}.${teamAInn.balls} OV` : ''}
+                </div>
+              </div>
+            </div>
+
+            {/* VS Divider */}
+            <div className="flex items-center gap-3 w-full md:w-auto md:flex-col justify-center py-1">
+              <div className="h-px bg-white/10 flex-1 md:hidden" />
+              <span style={{ fontFamily: 'var(--font-display)', fontSize: '1.15rem', fontWeight: 900, color: 'rgba(255,255,255,0.4)' }}>
+                VS
+              </span>
+              <div className="h-px bg-white/10 flex-1 md:hidden" />
+            </div>
+
+            {/* Team B Card */}
+            <div
+              style={{
+                width: '100%',
+                padding: '14px 16px',
+                borderRadius: '12px',
+                background: isTeamBWinner ? 'rgba(255, 184, 0, 0.08)' : 'rgba(255, 255, 255, 0.02)',
+                border: isTeamBWinner ? '1.5px solid rgba(255, 184, 0, 0.5)' : '1px solid rgba(255, 255, 255, 0.06)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                boxSizing: 'border-box',
+                position: 'relative',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
+                {normalizeImageUrl(recentMatch.teamB?.logoUrl) ? (
+                  <img
+                    src={normalizeImageUrl(recentMatch.teamB?.logoUrl)!}
+                    alt={recentMatch.teamB?.name}
+                    referrerPolicy="no-referrer"
+                    style={{ width: '36px', height: '36px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0, border: isTeamBWinner ? '2px solid #FFB800' : 'none' }}
+                  />
+                ) : (
+                  <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, color: '#FFF', flexShrink: 0 }}>
+                    {recentMatch.teamB?.shortName?.[0] || 'B'}
+                  </div>
+                )}
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontWeight: 800, fontSize: '0.98rem', color: '#FFF', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {recentMatch.teamB?.name}
+                  </div>
+                  <div style={{ fontSize: '0.68rem', color: isTeamBWinner ? '#FFB800' : 'rgba(255,255,255,0.4)', fontWeight: 800 }}>
+                    {isTeamBWinner ? '👑 WINNER' : ''}
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ textAlign: 'right', flexShrink: 0, marginLeft: '10px' }}>
+                <div style={{ fontFamily: 'var(--font-data)', fontSize: '1.4rem', fontWeight: 900, color: isTeamBWinner ? '#FFB800' : '#FFF' }}>
+                  {teamBInn ? `${teamBInn.runs}/${teamBInn.wickets}` : '-'}
+                </div>
+                <div style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.5)', fontFamily: 'var(--font-data)' }}>
+                  {teamBInn ? `${teamBInn.overs}.${teamBInn.balls} OV` : ''}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Result Banner Note */}
+          <div style={{ background: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.25)', borderRadius: '8px', padding: '8px 14px', marginBottom: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
+            <span style={{ fontSize: '0.86rem', fontWeight: 800, color: '#34D399' }}>
+              🏆 {recentMatch.resultNote || 'Match Completed'}
+            </span>
+            {nextMatch && (
+              <span style={{ fontSize: '0.74rem', color: 'rgba(255, 255, 255, 0.65)' }}>
+                Next match: <strong style={{ color: '#FFB800' }}>{nextMatch.teamA?.name} vs {nextMatch.teamB?.name}</strong>
+              </span>
+            )}
+          </div>
+
+          {/* Action Footer */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '14px', flexWrap: 'wrap', gap: '12px' }}>
+            <div style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.5)' }}>
+              Full ball-by-ball timeline, wagon wheels, and worm charts available.
+            </div>
+
+            <Link
+              href={`/scorecard?matchId=${recentMatch.id}`}
+              className="w-full sm:w-auto justify-center"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '8px 20px',
+                borderRadius: '9999px',
+                background: 'rgba(255, 255, 255, 0.08)',
+                border: '1px solid rgba(255, 255, 255, 0.15)',
+                color: '#FFF',
+                fontWeight: 700,
+                fontSize: '0.8rem',
+                textDecoration: 'none',
+              }}
+            >
+              <span>View Full Match Scorecard</span>
+              <span style={{ color: '#FFB800' }}>→</span>
             </Link>
           </div>
         </div>

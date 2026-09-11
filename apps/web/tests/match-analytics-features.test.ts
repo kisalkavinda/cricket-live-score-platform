@@ -474,16 +474,19 @@ async function runTestSuite() {
     assert.strictEqual(mockSuperOverSummary.totalRuns, 16);
     assert(mockSuperOverSummary.targetEquationText?.includes('17 runs to win'), 'Super over target must be 17 runs');
 
-    // 7. Wide ball boundary (5 wides) and running extras calculation (MCC Law 22)
+    // 7. Wide ball boundary (5 wides) and running extras calculation (5WD: 1 run to bowler, 4 extras)
     const wide5 = calculateDeliveryRuns({ extraType: 'WIDE', extras: 5 });
     assert.strictEqual(wide5.totalRuns, 5, 'Boundary wide must yield 5 total runs');
-    assert.strictEqual(wide5.wideRuns, 5, 'Boundary wide must record 5 wide extras');
-    assert.strictEqual(wide5.bowlerRuns, 5, 'Bowler must be charged 5 runs for boundary wide');
+    assert.strictEqual(wide5.bowlerRuns, 1, 'Bowler must only be charged 1 run for wide penalty on 5WD');
+    assert.strictEqual(wide5.wideRuns, 1, 'Bowler credited 1 wide on 5WD');
+    assert.strictEqual(wide5.byeRuns, 4, '4 extras/byes recorded on 5WD');
     assert.strictEqual(wide5.isLegal, false, 'Wide ball is not a legal delivery and must be re-bowled');
 
     const wide2 = calculateDeliveryRuns({ extraType: 'WIDE', extras: 2 });
     assert.strictEqual(wide2.totalRuns, 2, 'Wide + 1 run must yield 2 total runs');
-    assert.strictEqual(wide2.wideRuns, 2, 'Wide + 1 run must record 2 wide extras');
+    assert.strictEqual(wide2.bowlerRuns, 1, 'Bowler must only be charged 1 run on 2WD');
+    assert.strictEqual(wide2.wideRuns, 1, 'Bowler credited 1 wide on 2WD');
+    assert.strictEqual(wide2.byeRuns, 1, '1 extra/bye recorded on 2WD');
 
     const descWide5 = generateBallDescription({
       extraType: 'WIDE',

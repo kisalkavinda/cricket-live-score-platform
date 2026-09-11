@@ -203,11 +203,15 @@ export function calculateDeliveryRuns(input: {
   }
 
   if (extraType === 'WIDE') {
-    // Under MCC Law 22:
-    // Every wide incurs at least a 1-run penalty.
-    // In addition, any runs completed by the batters or boundary runs are added to wides.
-    // E.g., boundary 4 + 1 wide penalty = 5 wides (all charged to bowler as extras).
-    // 1 run completed + 1 wide penalty = 2 wides.
+    // Under 5WD rule:
+    // Every wide incurs a 1-run wide penalty debited to the bowler (bowlerRuns = 1, wideRuns = 1).
+    // In addition, any runs completed by the batters or boundary runs (e.g. boundary 4)
+    // are scored as extras (byes / running extras) and are NOT debited to the bowler's runs conceded.
+    // E.g., on a 5WD (1 wide penalty + 4 boundary/running extras):
+    // - bowlerRuns = 1 (bowler gets 1 run conceded, 1 wide)
+    // - byeRuns = 4 (4 extras)
+    // - totalRuns = 5 (5 total runs added to batting side)
+    // - batterRuns = 0
     let totalWideRuns = 1;
     if (extraRunsParam > 0) {
       if (rawRuns > 0 && extraRunsParam === 1) {
@@ -217,15 +221,22 @@ export function calculateDeliveryRuns(input: {
       }
     } else if (rawRuns > 0) {
       totalWideRuns = 1 + rawRuns;
+    } else if (inputByeRuns > 0) {
+      totalWideRuns = 1 + inputByeRuns;
+    }
+
+    const additionalExtras = inputByeRuns > 0 ? inputByeRuns : Math.max(0, totalWideRuns - 1);
+    if (additionalExtras > 0 && totalWideRuns <= 1) {
+      totalWideRuns = 1 + additionalExtras;
     }
 
     return {
       totalRuns: totalWideRuns,
       batterRuns: 0,
-      bowlerRuns: totalWideRuns,
+      bowlerRuns: 1, // Bowler debited only 1 run for the wide penalty
       noBallPenalty: 0,
-      wideRuns: totalWideRuns,
-      byeRuns: 0,
+      wideRuns: 1,   // Bowler credited with 1 wide
+      byeRuns: additionalExtras, // Additional runs (e.g. 4 extras for 5WD)
       legByeRuns: 0,
       isLegal: false,
     };
@@ -465,14 +476,7 @@ export function calculateBowlerMaidens(
  * 2. COMPLETED matches next, ordered from recent to past (newest completedAt/updatedAt first)
  * 3. SCHEDULED / UPCOMING matches last, ordered chronologically (soonest scheduledAt first)
  */
-export function sortMatchesByPriority<T extends {
-  status?: string | null;
-  completedAt?: string | Date | null;
-  updatedAt?: string | Date | null;
-  scheduledAt?: string | Date | null;
-  startedAt?: string | Date | null;
-  createdAt?: string | Date | null;
-}>(matches: T[]): T[] {
+export function sortMatchesByPriority<T = any>(matches: T[]): T[] {
   const getStatusRank = (status?: string | null): number => {
     const s = (status || '').toUpperCase();
     if (s === 'LIVE') return 1;
@@ -481,9 +485,20 @@ export function sortMatchesByPriority<T extends {
     return 4; // ABANDONED / CANCELLED / other
   };
 
+  const getTimestamp = (m: any, ...fields: string[]): number => {
+    for (const f of fields) {
+      const val = m[f] || m.match?.[f];
+      if (val) {
+        const t = new Date(val).getTime();
+        if (!isNaN(t) && t > 0) return t;
+      }
+    }
+    return 0;
+  };
+
   return [...matches].sort((a, b) => {
-    const rankA = getStatusRank(a.status);
-    const rankB = getStatusRank(b.status);
+    const rankA = getStatusRank((a as any)?.status);
+    const rankB = getStatusRank((b as any)?.status);
 
     if (rankA !== rankB) {
       return rankA - rankB;
@@ -492,28 +507,28 @@ export function sortMatchesByPriority<T extends {
     // Secondary sorting within each status category:
     if (rankA === 1) {
       // LIVE: most recently started or updated first
-      const timeA = new Date(a.startedAt || a.updatedAt || a.createdAt || 0).getTime();
-      const timeB = new Date(b.startedAt || b.updatedAt || b.createdAt || 0).getTime();
+      const timeA = getTimestamp(a, 'startedAt', 'updatedAt', 'createdAt');
+      const timeB = getTimestamp(b, 'startedAt', 'updatedAt', 'createdAt');
       return timeB - timeA;
     }
 
     if (rankA === 2) {
       // COMPLETED: recent to past (descending)
-      const timeA = new Date(a.completedAt || a.updatedAt || a.scheduledAt || a.createdAt || 0).getTime();
-      const timeB = new Date(b.completedAt || b.updatedAt || b.scheduledAt || b.createdAt || 0).getTime();
+      const timeA = getTimestamp(a, 'completedAt', 'updatedAt', 'scheduledAt', 'createdAt');
+      const timeB = getTimestamp(b, 'completedAt', 'updatedAt', 'scheduledAt', 'createdAt');
       return timeB - timeA;
     }
 
     if (rankA === 3) {
       // UPCOMING / SCHEDULED: soonest upcoming first (ascending)
-      const timeA = new Date(a.scheduledAt || a.createdAt || 0).getTime();
-      const timeB = new Date(b.scheduledAt || b.createdAt || 0).getTime();
+      const timeA = getTimestamp(a, 'scheduledAt', 'createdAt');
+      const timeB = getTimestamp(b, 'scheduledAt', 'createdAt');
       return timeA - timeB;
     }
 
     // Other statuses (e.g. ABANDONED): most recent first
-    const timeA = new Date(a.updatedAt || a.createdAt || 0).getTime();
-    const timeB = new Date(b.updatedAt || b.createdAt || 0).getTime();
+    const timeA = getTimestamp(a, 'updatedAt', 'createdAt');
+    const timeB = getTimestamp(b, 'updatedAt', 'createdAt');
     return timeB - timeA;
   });
 }

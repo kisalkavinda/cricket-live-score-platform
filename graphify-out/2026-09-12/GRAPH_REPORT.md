@@ -1,7 +1,7 @@
-# Graph Report - cricket-platform  (2026-09-12)
+# Graph Report - cricket-platform  (2026-09-11)
 
 ## Corpus Check
-- 190 files · ~237,035 words
+- 190 files · ~236,577 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary

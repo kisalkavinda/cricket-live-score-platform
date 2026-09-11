@@ -27,7 +27,10 @@ export interface TournamentOverview {
   groups: {
     groupA: { teams: any[]; standings: TeamStanding[]; matches: any[] };
     groupB: { teams: any[]; standings: TeamStanding[]; matches: any[] };
+    [key: string]: any;
   };
+  groupA?: TeamStanding[];
+  groupB?: TeamStanding[];
   qualification: {
     matches: any[];
     match9: any | null; // Group A 2nd vs Group B 2nd
@@ -110,6 +113,18 @@ async function updateTeamsQualification(tournamentId: string, teamIds: string[],
   }
 }
 
+function isGroupA(name?: string | null): boolean {
+  if (!name) return false;
+  const n = name.trim().toUpperCase().replace(/[\s_-]/g, '');
+  return n === 'GROUPA' || n === 'A';
+}
+
+function isGroupB(name?: string | null): boolean {
+  if (!name) return false;
+  const n = name.trim().toUpperCase().replace(/[\s_-]/g, '');
+  return n === 'GROUPB' || n === 'B';
+}
+
 /**
  * Retrieves the comprehensive, data-driven tournament overview for 8 teams, 15 matches.
  * STANDINGS AND NRR ARE CALCULATED DIRECTLY FROM COMPLETED RAW MATCH RECORDS.
@@ -119,9 +134,35 @@ export async function getTournamentOverview(tournamentId?: string): Promise<Tour
   let tournament = tournamentId
     ? await (prisma as any).tournament.findUnique({ where: { id: tournamentId } })
     : await (prisma as any).tournament.findFirst({
-        where: { status: { in: ['REGISTRATION', 'SCHEDULED', 'LIVE', 'KNOCKOUT', 'DRAFT'] } },
-        orderBy: { createdAt: 'desc' },
+        where: {
+          status: { in: ['LIVE', 'KNOCKOUT', 'SCHEDULED', 'REGISTRATION', 'DRAFT'] },
+          NOT: [
+            { name: { startsWith: 'OFFLINE_TEST' } },
+            { name: { startsWith: 'TEST_' } },
+          ],
+        },
+        orderBy: [
+          { matches: { _count: 'desc' } },
+          { tournamentTeams: { _count: 'desc' } },
+          { createdAt: 'desc' },
+        ],
       });
+
+  if (!tournament) {
+    tournament = await (prisma as any).tournament.findFirst({
+      where: {
+        NOT: [
+          { name: { startsWith: 'OFFLINE_TEST' } },
+          { name: { startsWith: 'TEST_' } },
+        ],
+      },
+      orderBy: [
+        { matches: { _count: 'desc' } },
+        { tournamentTeams: { _count: 'desc' } },
+        { createdAt: 'desc' },
+      ],
+    });
+  }
 
   if (!tournament) {
     tournament = await (prisma as any).tournament.findFirst({ orderBy: { createdAt: 'desc' } });
@@ -213,27 +254,54 @@ export async function getTournamentOverview(tournamentId?: string): Promise<Tour
     })),
   }));
 
+  // Group Matches (4 matches per group, 8 total, alternating A and B)
+  const groupAMatches = rawMatches.filter(
+    (m: any) => isGroupA(m.groupName) || (!m.groupName && m.matchNumber && m.matchNumber <= 8 && m.matchNumber % 2 === 1)
+  );
+  const groupBMatches = rawMatches.filter(
+    (m: any) => isGroupB(m.groupName) || (!m.groupName && m.matchNumber && m.matchNumber <= 8 && m.matchNumber % 2 === 0)
+  );
+
+  // Group Teams with resilient inference (from groupName, match participation, or default registration order)
+  const groupATeamIds = new Set<string>();
+  const groupBTeamIds = new Set<string>();
+
+  groupAMatches.forEach((m: any) => {
+    if (m.teamAId) groupATeamIds.add(m.teamAId);
+    if (m.teamBId) groupATeamIds.add(m.teamBId);
+  });
+  groupBMatches.forEach((m: any) => {
+    if (m.teamAId) groupBTeamIds.add(m.teamAId);
+    if (m.teamBId) groupBTeamIds.add(m.teamBId);
+  });
+
+  const groupATeams = teams.filter((t: any, idx: number) => {
+    if (isGroupA(t.groupName)) return true;
+    if (groupATeamIds.has(t.id)) return true;
+    if (!t.groupName && !isGroupB(t.groupName) && !groupBTeamIds.has(t.id) && groupATeamIds.size === 0 && idx < 4) return true;
+    return false;
+  });
+
+  const groupBTeams = teams.filter((t: any, idx: number) => {
+    if (isGroupB(t.groupName)) return true;
+    if (groupBTeamIds.has(t.id)) return true;
+    if (!t.groupName && !isGroupA(t.groupName) && !groupATeamIds.has(t.id) && groupBTeamIds.size === 0 && idx >= 4) return true;
+    return false;
+  });
+
   // 3. Compute Group Stage Standings (Strictly ball-based Softball NRR)
   const groupAStandings = computeStageStandings(
-    teams.filter((t: any) => t.groupName === 'GROUP_A'),
+    groupATeams.map((t: any) => ({ ...t, groupName: 'GROUP_A' })),
     matches,
     'GROUP',
     'GROUP_A'
   );
 
   const groupBStandings = computeStageStandings(
-    teams.filter((t: any) => t.groupName === 'GROUP_B'),
+    groupBTeams.map((t: any) => ({ ...t, groupName: 'GROUP_B' })),
     matches,
     'GROUP',
     'GROUP_B'
-  );
-
-  // Group Matches (4 matches per group, 8 total)
-  const groupAMatches = rawMatches.filter(
-    (m: any) => m.groupName === 'GROUP_A' || (m.matchNumber && m.matchNumber >= 1 && m.matchNumber <= 4)
-  );
-  const groupBMatches = rawMatches.filter(
-    (m: any) => m.groupName === 'GROUP_B' || (m.matchNumber && m.matchNumber >= 5 && m.matchNumber <= 8)
   );
 
   const groupAComplete = groupAMatches.length === 4 && groupAMatches.every((m: any) => m.status === 'COMPLETED');
@@ -358,16 +426,28 @@ export async function getTournamentOverview(tournamentId?: string): Promise<Tour
     teams,
     groups: {
       groupA: {
-        teams: teams.filter((t: any) => t.groupName === 'GROUP_A'),
+        teams: groupATeams,
         standings: groupAStandings,
         matches: groupAMatches,
       },
       groupB: {
-        teams: teams.filter((t: any) => t.groupName === 'GROUP_B'),
+        teams: groupBTeams,
         standings: groupBStandings,
         matches: groupBMatches,
       },
-    },
+      GROUP_A: {
+        teams: groupATeams,
+        standings: groupAStandings,
+        matches: groupAMatches,
+      },
+      GROUP_B: {
+        teams: groupBTeams,
+        standings: groupBStandings,
+        matches: groupBMatches,
+      },
+    } as any,
+    groupA: groupAStandings,
+    groupB: groupBStandings,
     qualification: {
       matches: qualificationMatches,
       match9,
@@ -671,17 +751,21 @@ export async function resetTournamentFixtures(
 }
 
 /**
- * Generates the 8 group-stage matches for the 8-team square format:
- * Group A:
- *   Match 1: A1 vs A2 (G1)
- *   Match 2: A2 vs A3 (G2)
- *   Match 3: A3 vs A4 (G3)
- *   Match 4: A4 vs A1 (G4)
- * Group B:
- *   Match 5: B1 vs B2 (G5)
- *   Match 6: B2 vs B3 (G6)
- *   Match 7: B3 vs B4 (G7)
- *   Match 8: B4 vs B1 (G8)
+ * Generates the 8 group-stage matches for the 8-team format with alternating groups & rest optimization:
+ * Alternating Group Matches (A, B, A, B, A, B, A, B) with zero consecutive matches for any team.
+ * All 8 teams play Match 1 in Round 1 (M1-M4) before any team plays Match 2 in Round 2 (M5-M8).
+ *
+ * Round 1:
+ *   Match 1: Group A, A1 vs A2 (G1)
+ *   Match 2: Group B, B1 vs B2 (G2)
+ *   Match 3: Group A, A3 vs A4 (G3)
+ *   Match 4: Group B, B3 vs B4 (G4)
+ * Round 2:
+ *   Match 5: Group A, A1 vs A4 (G5) [A1 rested 3 matches, A4 rested 1 match]
+ *   Match 6: Group B, B1 vs B4 (G6) [B1 rested 3 matches, B4 rested 1 match]
+ *   Match 7: Group A, A2 vs A3 (G7) [A2 rested 5 matches, A3 rested 3 matches]
+ *   Match 8: Group B, B2 vs B3 (G8) [B2 rested 5 matches, B3 rested 3 matches]
+ *
  * Each team plays exactly 2 matches.
  */
 export async function generateGroupStageFixtures(
@@ -763,20 +847,20 @@ export async function generateGroupStageFixtures(
     );
   }
 
-  // Fixture plan: 4 square matches per group
-  // Group A: A1 vs A2, A2 vs A3, A3 vs A4, A4 vs A1
-  // Group B: B1 vs B2, B2 vs B3, B3 vs B4, B4 vs B1
+  // Alternating & non-consecutive fixture plan:
+  // Round 1: All 8 teams play 1 match, alternating A and B
+  // Round 2: All 8 teams play their 2nd match, alternating A and B, 0 consecutive matches
   const fixturePlan = [
-    // Group A
+    // Round 1
     { num: 1, group: 'GROUP_A', slot: 'G1', tA: groupA[0].teamId, tB: groupA[1].teamId, offsetHours: 0 },
-    { num: 2, group: 'GROUP_A', slot: 'G2', tA: groupA[1].teamId, tB: groupA[2].teamId, offsetHours: 1 },
+    { num: 2, group: 'GROUP_B', slot: 'G2', tA: groupB[0].teamId, tB: groupB[1].teamId, offsetHours: 1 },
     { num: 3, group: 'GROUP_A', slot: 'G3', tA: groupA[2].teamId, tB: groupA[3].teamId, offsetHours: 2 },
-    { num: 4, group: 'GROUP_A', slot: 'G4', tA: groupA[3].teamId, tB: groupA[0].teamId, offsetHours: 3 },
-    // Group B
-    { num: 5, group: 'GROUP_B', slot: 'G5', tA: groupB[0].teamId, tB: groupB[1].teamId, offsetHours: 4 },
-    { num: 6, group: 'GROUP_B', slot: 'G6', tA: groupB[1].teamId, tB: groupB[2].teamId, offsetHours: 5 },
-    { num: 7, group: 'GROUP_B', slot: 'G7', tA: groupB[2].teamId, tB: groupB[3].teamId, offsetHours: 6 },
-    { num: 8, group: 'GROUP_B', slot: 'G8', tA: groupB[3].teamId, tB: groupB[0].teamId, offsetHours: 7 },
+    { num: 4, group: 'GROUP_B', slot: 'G4', tA: groupB[2].teamId, tB: groupB[3].teamId, offsetHours: 3 },
+    // Round 2
+    { num: 5, group: 'GROUP_A', slot: 'G5', tA: groupA[0].teamId, tB: groupA[3].teamId, offsetHours: 4 },
+    { num: 6, group: 'GROUP_B', slot: 'G6', tA: groupB[0].teamId, tB: groupB[3].teamId, offsetHours: 5 },
+    { num: 7, group: 'GROUP_A', slot: 'G7', tA: groupA[1].teamId, tB: groupA[2].teamId, offsetHours: 6 },
+    { num: 8, group: 'GROUP_B', slot: 'G8', tA: groupB[1].teamId, tB: groupB[2].teamId, offsetHours: 7 },
   ];
 
   for (const f of fixturePlan) {

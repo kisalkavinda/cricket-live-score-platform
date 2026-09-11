@@ -612,7 +612,7 @@
       "file_type": "code",
       "norm_label": "tournamentstatsresult",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L2835"
+      "source_location": "L2827"
     },
     {
       "id": "apps_web_components_registration_confirmationchecklist_confirmationchecklistprops",
@@ -2263,7 +2263,7 @@
       "file_type": "code",
       "norm_label": "changebowler()",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L1618"
+      "source_location": "L1610"
     },
     {
       "id": "apps_web_lib_scoring_scoring_service_swapstriker",
@@ -2275,7 +2275,7 @@
       "file_type": "code",
       "norm_label": "swapstriker()",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L1755"
+      "source_location": "L1747"
     },
     {
       "id": "apps_web_lib_scoring_scoring_service_switchbatter",
@@ -2287,7 +2287,7 @@
       "file_type": "code",
       "norm_label": "switchbatter()",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L1879"
+      "source_location": "L1871"
     },
     {
       "id": "apps_web_tests_offline_resilient_scoring_test_cleanupallfixtures",
@@ -3199,7 +3199,7 @@
       "file_type": "code",
       "norm_label": "creatematch()",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L556"
+      "source_location": "L548"
     },
     {
       "id": "apps_web_tests_e2e_system_verification_test_assert",
@@ -3751,7 +3751,7 @@
       "file_type": "code",
       "norm_label": "broadcastscoreupdate()",
       "source_file": "apps/web/lib/scoring/scoring-realtime.ts",
-      "source_location": "L128"
+      "source_location": "L120"
     },
     {
       "id": "apps_web_lib_scoring_scoring_rules_sortmatchesbypriority",
@@ -3787,7 +3787,7 @@
       "file_type": "code",
       "norm_label": "completematch()",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L2387"
+      "source_location": "L2379"
     },
     {
       "id": "apps_web_lib_scoring_scoring_service_deleteballdelivery",
@@ -3799,7 +3799,7 @@
       "file_type": "code",
       "norm_label": "deleteballdelivery()",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L2785"
+      "source_location": "L2777"
     },
     {
       "id": "apps_web_lib_scoring_scoring_service_endinnings",
@@ -3811,7 +3811,7 @@
       "file_type": "code",
       "norm_label": "endinnings()",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L2081"
+      "source_location": "L2073"
     },
     {
       "id": "apps_web_lib_scoring_scoring_service_getlivematches",
@@ -3847,7 +3847,7 @@
       "file_type": "code",
       "norm_label": "gettournamentstats()",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L2908"
+      "source_location": "L2900"
     },
     {
       "id": "apps_web_lib_scoring_scoring_service_notifymatchupdated",
@@ -3871,7 +3871,7 @@
       "file_type": "code",
       "norm_label": "renameplayer()",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L3238"
+      "source_location": "L3222"
     },
     {
       "id": "apps_web_lib_scoring_scoring_service_setinningsopeninglineup",
@@ -3883,7 +3883,7 @@
       "file_type": "code",
       "norm_label": "setinningsopeninglineup()",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L693"
+      "source_location": "L685"
     },
     {
       "id": "apps_web_lib_scoring_scoring_service_startmatch",
@@ -3895,7 +3895,7 @@
       "file_type": "code",
       "norm_label": "startmatch()",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L612"
+      "source_location": "L604"
     },
     {
       "id": "apps_web_lib_scoring_scoring_service_startsuperover",
@@ -3907,7 +3907,7 @@
       "file_type": "code",
       "norm_label": "startsuperover()",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L2162"
+      "source_location": "L2154"
     },
     {
       "id": "apps_web_lib_scoring_scoring_service_undosuperover",
@@ -3919,7 +3919,7 @@
       "file_type": "code",
       "norm_label": "undosuperover()",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L2283"
+      "source_location": "L2275"
     },
     {
       "id": "apps_web_lib_scoring_scoring_service_updatematchrules",
@@ -4795,7 +4795,7 @@
       "file_type": "code",
       "norm_label": "editballdelivery()",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L2648"
+      "source_location": "L2640"
     },
     {
       "id": "apps_web_lib_scoring_scoring_service_recalculateinningsfromballs",
@@ -4807,7 +4807,7 @@
       "file_type": "code",
       "norm_label": "recalculateinningsfromballs()",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L2434"
+      "source_location": "L2426"
     },
     {
       "id": "apps_web_lib_scoring_scoring_service_recorddelivery",
@@ -4819,7 +4819,7 @@
       "file_type": "code",
       "norm_label": "recorddelivery()",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L778"
+      "source_location": "L770"
     },
     {
       "id": "apps_web_lib_tournament_nrr_engine_issamegroupname",
@@ -4879,7 +4879,7 @@
       "file_type": "code",
       "norm_label": "assignteamstogroups()",
       "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L490"
+      "source_location": "L464"
     },
     {
       "id": "apps_web_lib_tournament_tournament_service_checkandadvancetournament",
@@ -4891,7 +4891,7 @@
       "file_type": "code",
       "norm_label": "checkandadvancetournament()",
       "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L898"
+      "source_location": "L868"
     },
     {
       "id": "apps_web_lib_tournament_tournament_service_configuretournamentstages",
@@ -4903,7 +4903,7 @@
       "file_type": "code",
       "norm_label": "configuretournamentstages()",
       "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L603"
+      "source_location": "L577"
     },
     {
       "id": "apps_web_lib_tournament_tournament_service_creatematchrecord",
@@ -4927,7 +4927,7 @@
       "file_type": "code",
       "norm_label": "generategroupstagefixtures()",
       "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L771"
+      "source_location": "L741"
     },
     {
       "id": "apps_web_lib_tournament_tournament_service_gettournamentoverview",
@@ -4975,7 +4975,7 @@
       "file_type": "code",
       "norm_label": "recalculatetournamentstandings()",
       "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L1219"
+      "source_location": "L1189"
     },
     {
       "id": "apps_web_lib_tournament_tournament_service_updateteamsqualification",
@@ -5023,7 +5023,7 @@
       "file_type": "code",
       "norm_label": "undolastdelivery()",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L1391"
+      "source_location": "L1383"
     },
     {
       "id": "apps_web_tests_test_concurrency_deep_gate_cleanupfixture",
@@ -6115,7 +6115,7 @@
       "file_type": "code",
       "norm_label": "resettournamentfixtures()",
       "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L668"
+      "source_location": "L642"
     },
     {
       "id": "apps_web_lib_tournament_tournament_service_unassignallteams",
@@ -6127,7 +6127,7 @@
       "file_type": "code",
       "norm_label": "unassignallteams()",
       "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L570"
+      "source_location": "L544"
     },
     {
       "id": "apps_web_scripts_generate_favicons_js_apps_web_scripts_generate_favicons_buildfavicons",
@@ -16606,7 +16606,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/components/LiveScoreWidget.tsx",
-      "source_location": "L1758",
+      "source_location": "L1719",
       "weight": 1.0
     },
     {
@@ -16618,7 +16618,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/components/LiveScoreWidget.tsx",
-      "source_location": "L1869",
+      "source_location": "L1830",
       "weight": 1.0
     },
     {
@@ -19318,7 +19318,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L476",
+      "source_location": "L468",
       "weight": 1.0
     },
     {
@@ -19330,7 +19330,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L1619",
+      "source_location": "L1611",
       "weight": 1.0
     },
     {
@@ -19342,7 +19342,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L1632",
+      "source_location": "L1624",
       "weight": 1.0
     },
     {
@@ -19354,7 +19354,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L1746",
+      "source_location": "L1738",
       "weight": 1.0
     },
     {
@@ -19366,7 +19366,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L2388",
+      "source_location": "L2380",
       "weight": 1.0
     },
     {
@@ -19378,7 +19378,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L2417",
+      "source_location": "L2409",
       "weight": 1.0
     },
     {
@@ -19390,7 +19390,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L2419",
+      "source_location": "L2411",
       "weight": 1.0
     },
     {
@@ -19402,7 +19402,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L557",
+      "source_location": "L549",
       "weight": 1.0
     },
     {
@@ -19414,7 +19414,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L2786",
+      "source_location": "L2778",
       "weight": 1.0
     },
     {
@@ -19426,7 +19426,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L2804",
+      "source_location": "L2796",
       "weight": 1.0
     },
     {
@@ -19438,7 +19438,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L2821",
+      "source_location": "L2813",
       "weight": 1.0
     },
     {
@@ -19450,7 +19450,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L2823",
+      "source_location": "L2815",
       "weight": 1.0
     },
     {
@@ -19462,7 +19462,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L2824",
+      "source_location": "L2816",
       "weight": 1.0
     },
     {
@@ -19474,7 +19474,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L2660",
+      "source_location": "L2652",
       "weight": 1.0
     },
     {
@@ -19486,7 +19486,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L2686",
+      "source_location": "L2678",
       "weight": 1.0
     },
     {
@@ -19498,7 +19498,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L2689",
+      "source_location": "L2681",
       "weight": 1.0
     },
     {
@@ -19510,7 +19510,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L2699",
+      "source_location": "L2691",
       "weight": 1.0
     },
     {
@@ -19522,7 +19522,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L2736",
+      "source_location": "L2728",
       "weight": 1.0
     },
     {
@@ -19534,7 +19534,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L2772",
+      "source_location": "L2764",
       "weight": 1.0
     },
     {
@@ -19546,7 +19546,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L2774",
+      "source_location": "L2766",
       "weight": 1.0
     },
     {
@@ -19558,7 +19558,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L2775",
+      "source_location": "L2767",
       "weight": 1.0
     },
     {
@@ -19570,7 +19570,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L2082",
+      "source_location": "L2074",
       "weight": 1.0
     },
     {
@@ -19582,7 +19582,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L2152",
+      "source_location": "L2144",
       "weight": 1.0
     },
     {
@@ -19594,7 +19594,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L2153",
+      "source_location": "L2145",
       "weight": 1.0
     },
     {
@@ -19606,7 +19606,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L2156",
+      "source_location": "L2148",
       "weight": 1.0
     },
     {
@@ -19654,7 +19654,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L2948",
+      "source_location": "L2932",
       "weight": 1.0
     },
     {
@@ -19666,7 +19666,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L3227",
+      "source_location": "L3211",
       "weight": 1.0
     },
     {
@@ -19714,7 +19714,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L2488",
+      "source_location": "L2480",
       "weight": 1.0
     },
     {
@@ -19726,7 +19726,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L2537",
+      "source_location": "L2529",
       "weight": 1.0
     },
     {
@@ -19738,7 +19738,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L2544",
+      "source_location": "L2536",
       "weight": 1.0
     },
     {
@@ -19750,7 +19750,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L2574",
+      "source_location": "L2566",
       "weight": 1.0
     },
     {
@@ -19762,7 +19762,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L1300",
+      "source_location": "L1292",
       "weight": 1.0
     },
     {
@@ -19774,7 +19774,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L1372",
+      "source_location": "L1364",
       "weight": 1.0
     },
     {
@@ -19786,7 +19786,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L779",
+      "source_location": "L771",
       "weight": 1.0
     },
     {
@@ -19798,7 +19798,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L793",
+      "source_location": "L785",
       "weight": 1.0
     },
     {
@@ -19810,7 +19810,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L811",
+      "source_location": "L803",
       "weight": 1.0
     },
     {
@@ -19822,7 +19822,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L874",
+      "source_location": "L866",
       "weight": 1.0
     },
     {
@@ -19834,7 +19834,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L877",
+      "source_location": "L869",
       "weight": 1.0
     },
     {
@@ -19846,7 +19846,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L912",
+      "source_location": "L904",
       "weight": 1.0
     },
     {
@@ -19858,7 +19858,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L942",
+      "source_location": "L934",
       "weight": 1.0
     },
     {
@@ -19870,7 +19870,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L3244",
+      "source_location": "L3228",
       "weight": 1.0
     },
     {
@@ -19882,7 +19882,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L3307",
+      "source_location": "L3291",
       "weight": 1.0
     },
     {
@@ -19894,7 +19894,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L3309",
+      "source_location": "L3293",
       "weight": 1.0
     },
     {
@@ -19906,7 +19906,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L3310",
+      "source_location": "L3294",
       "weight": 1.0
     },
     {
@@ -19918,7 +19918,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L3311",
+      "source_location": "L3295",
       "weight": 1.0
     },
     {
@@ -19930,7 +19930,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L694",
+      "source_location": "L686",
       "weight": 1.0
     },
     {
@@ -19942,7 +19942,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L765",
+      "source_location": "L757",
       "weight": 1.0
     },
     {
@@ -19954,7 +19954,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L767",
+      "source_location": "L759",
       "weight": 1.0
     },
     {
@@ -19966,7 +19966,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L613",
+      "source_location": "L605",
       "weight": 1.0
     },
     {
@@ -19978,7 +19978,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L682",
+      "source_location": "L674",
       "weight": 1.0
     },
     {
@@ -19990,7 +19990,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L684",
+      "source_location": "L676",
       "weight": 1.0
     },
     {
@@ -20002,7 +20002,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L2163",
+      "source_location": "L2155",
       "weight": 1.0
     },
     {
@@ -20014,7 +20014,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L2272",
+      "source_location": "L2264",
       "weight": 1.0
     },
     {
@@ -20026,7 +20026,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L2274",
+      "source_location": "L2266",
       "weight": 1.0
     },
     {
@@ -20038,7 +20038,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L1756",
+      "source_location": "L1748",
       "weight": 1.0
     },
     {
@@ -20050,7 +20050,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L1769",
+      "source_location": "L1761",
       "weight": 1.0
     },
     {
@@ -20062,7 +20062,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L1869",
+      "source_location": "L1861",
       "weight": 1.0
     },
     {
@@ -20074,7 +20074,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L1880",
+      "source_location": "L1872",
       "weight": 1.0
     },
     {
@@ -20086,7 +20086,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L1893",
+      "source_location": "L1885",
       "weight": 1.0
     },
     {
@@ -20098,7 +20098,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L2072",
+      "source_location": "L2064",
       "weight": 1.0
     },
     {
@@ -20110,7 +20110,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L1392",
+      "source_location": "L1384",
       "weight": 1.0
     },
     {
@@ -20122,7 +20122,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L1405",
+      "source_location": "L1397",
       "weight": 1.0
     },
     {
@@ -20134,7 +20134,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L1452",
+      "source_location": "L1444",
       "weight": 1.0
     },
     {
@@ -20146,7 +20146,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L1483",
+      "source_location": "L1475",
       "weight": 1.0
     },
     {
@@ -20158,7 +20158,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L1609",
+      "source_location": "L1601",
       "weight": 1.0
     },
     {
@@ -20170,7 +20170,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L2284",
+      "source_location": "L2276",
       "weight": 1.0
     },
     {
@@ -20182,7 +20182,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L2333",
+      "source_location": "L2325",
       "weight": 1.0
     },
     {
@@ -20194,7 +20194,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L2373",
+      "source_location": "L2365",
       "weight": 1.0
     },
     {
@@ -20206,7 +20206,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L2375",
+      "source_location": "L2367",
       "weight": 1.0
     },
     {
@@ -20218,7 +20218,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L2376",
+      "source_location": "L2368",
       "weight": 1.0
     },
     {
@@ -20230,7 +20230,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L2377",
+      "source_location": "L2369",
       "weight": 1.0
     },
     {
@@ -21274,7 +21274,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L903",
+      "source_location": "L873",
       "weight": 1.0
     },
     {
@@ -21286,7 +21286,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L948",
+      "source_location": "L918",
       "weight": 1.0
     },
     {
@@ -21298,7 +21298,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L984",
+      "source_location": "L954",
       "weight": 1.0
     },
     {
@@ -21310,7 +21310,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L804",
+      "source_location": "L774",
       "weight": 1.0
     },
     {
@@ -21322,7 +21322,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L868",
+      "source_location": "L838",
       "weight": 1.0
     },
     {
@@ -21334,7 +21334,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L207",
+      "source_location": "L181",
       "weight": 1.0
     },
     {
@@ -21346,7 +21346,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L252",
+      "source_location": "L226",
       "weight": 1.0
     },
     {
@@ -21358,7 +21358,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L259",
+      "source_location": "L233",
       "weight": 1.0
     },
     {
@@ -21370,7 +21370,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L262",
+      "source_location": "L236",
       "weight": 1.0
     },
     {
@@ -21382,7 +21382,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L293",
+      "source_location": "L267",
       "weight": 1.0
     },
     {
@@ -21394,7 +21394,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L1220",
+      "source_location": "L1190",
       "weight": 1.0
     },
     {
@@ -21502,7 +21502,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/tests/cpl-8team-tournament-simulation.test.ts",
-      "source_location": "L239",
+      "source_location": "L241",
       "weight": 1.0
     },
     {
@@ -21514,7 +21514,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/tests/cpl-8team-tournament-simulation.test.ts",
-      "source_location": "L240",
+      "source_location": "L242",
       "weight": 1.0
     },
     {
@@ -21526,7 +21526,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/tests/cpl-8team-tournament-simulation.test.ts",
-      "source_location": "L260",
+      "source_location": "L262",
       "weight": 1.0
     },
     {
@@ -22751,7 +22751,7 @@
       "context": "import",
       "deferred": true,
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L2423",
+      "source_location": "L2415",
       "weight": 1.0
     },
     {
@@ -22764,7 +22764,7 @@
       "context": "import",
       "deferred": true,
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L1375",
+      "source_location": "L1367",
       "weight": 1.0
     },
     {
@@ -36441,7 +36441,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/scoring/scoring-realtime.ts",
-      "source_location": "L128",
+      "source_location": "L120",
       "weight": 1.0
     },
     {
@@ -36617,7 +36617,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L1391",
+      "source_location": "L1383",
       "weight": 1.0
     },
     {
@@ -36650,7 +36650,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L1618",
+      "source_location": "L1610",
       "weight": 1.0
     },
     {
@@ -36661,7 +36661,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L1755",
+      "source_location": "L1747",
       "weight": 1.0
     },
     {
@@ -36672,7 +36672,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L1879",
+      "source_location": "L1871",
       "weight": 1.0
     },
     {
@@ -36683,7 +36683,18 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L2081",
+      "source_location": "L2073",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_scoring_scoring_service",
+      "target": "apps_web_lib_scoring_scoring_service_startsuperover",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/lib/scoring/scoring-service.ts",
+      "source_location": "L2154",
       "weight": 1.0
     },
     {
@@ -36699,24 +36710,13 @@
     },
     {
       "source": "apps_web_lib_scoring_scoring_service",
-      "target": "apps_web_lib_scoring_scoring_service_startsuperover",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L2162",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_web_lib_scoring_scoring_service",
       "target": "apps_web_lib_scoring_scoring_service_undosuperover",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L2283",
+      "source_location": "L2275",
       "weight": 1.0
     },
     {
@@ -36727,7 +36727,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L2387",
+      "source_location": "L2379",
       "weight": 1.0
     },
     {
@@ -36749,7 +36749,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L2434",
+      "source_location": "L2426",
       "weight": 1.0
     },
     {
@@ -36771,7 +36771,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L2648",
+      "source_location": "L2640",
       "weight": 1.0
     },
     {
@@ -36782,7 +36782,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L2785",
+      "source_location": "L2777",
       "weight": 1.0
     },
     {
@@ -36793,7 +36793,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L2835",
+      "source_location": "L2827",
       "weight": 1.0
     },
     {
@@ -36804,7 +36804,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L2908",
+      "source_location": "L2900",
       "weight": 1.0
     },
     {
@@ -36826,7 +36826,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L3238",
+      "source_location": "L3222",
       "weight": 1.0
     },
     {
@@ -36870,7 +36870,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L556",
+      "source_location": "L548",
       "weight": 1.0
     },
     {
@@ -36881,7 +36881,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L612",
+      "source_location": "L604",
       "weight": 1.0
     },
     {
@@ -36897,6 +36897,17 @@
     },
     {
       "source": "apps_web_lib_scoring_scoring_service",
+      "target": "apps_web_lib_scoring_scoring_service_setinningsopeninglineup",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/lib/scoring/scoring-service.ts",
+      "source_location": "L685",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_scoring_scoring_service",
       "target": "apps_web_lib_scoring_scoring_service_openinglineupinput",
       "relation": "contains",
       "_origin": "ast",
@@ -36904,17 +36915,6 @@
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
       "source_location": "L69",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_web_lib_scoring_scoring_service",
-      "target": "apps_web_lib_scoring_scoring_service_setinningsopeninglineup",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L693",
       "weight": 1.0
     },
     {
@@ -36936,7 +36936,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L778",
+      "source_location": "L770",
       "weight": 1.0
     },
     {
@@ -37607,7 +37607,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L1219",
+      "source_location": "L1189",
       "weight": 1.0
     },
     {
@@ -37640,7 +37640,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L490",
+      "source_location": "L464",
       "weight": 1.0
     },
     {
@@ -37651,7 +37651,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L570",
+      "source_location": "L544",
       "weight": 1.0
     },
     {
@@ -37662,7 +37662,18 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L603",
+      "source_location": "L577",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_tournament_tournament_service",
+      "target": "apps_web_lib_tournament_tournament_service_resettournamentfixtures",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/lib/tournament/tournament-service.ts",
+      "source_location": "L642",
       "weight": 1.0
     },
     {
@@ -37678,24 +37689,13 @@
     },
     {
       "source": "apps_web_lib_tournament_tournament_service",
-      "target": "apps_web_lib_tournament_tournament_service_resettournamentfixtures",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L668",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_web_lib_tournament_tournament_service",
       "target": "apps_web_lib_tournament_tournament_service_generategroupstagefixtures",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L771",
+      "source_location": "L741",
       "weight": 1.0
     },
     {
@@ -37706,7 +37706,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L898",
+      "source_location": "L868",
       "weight": 1.0
     },
     {

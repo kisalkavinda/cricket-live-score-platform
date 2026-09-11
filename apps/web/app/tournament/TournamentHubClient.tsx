@@ -217,6 +217,7 @@ export default function TournamentHubClient({ initialOverview }: Props) {
       <LiveOrNextMatchSpotlight
         liveMatch={liveMatch}
         nextMatch={nextMatch}
+        recentMatch={completedMatchesList[0]}
       />
 
       {/* 3. The Playoff Bracket (Showpiece connected tree) */}
