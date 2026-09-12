@@ -41,6 +41,10 @@ export const createMatchSchema = z.object({
   scheduledAt: z.union([z.string(), z.date()]).optional(),
   oversPerInnings: z.number().int().min(1).max(100).default(20),
   ballsPerOver: z.number().int().min(1).max(20).default(6),
+  stage: z.string().trim().max(50).optional(),
+  groupName: z.string().trim().max(50).optional(),
+  matchNumber: z.coerce.number().int().min(1).max(200).optional(),
+  bracketSlot: z.string().trim().max(50).optional(),
 }).refine((data) => data.teamAId !== data.teamBId, {
   message: "Team A and Team B cannot be the same team",
   path: ["teamBId"],

@@ -6,6 +6,50 @@ import DeleteMatchButton from '@/components/admin/DeleteMatchButton';
 
 export const dynamic = 'force-dynamic';
 
+function getStageBadgeStyle(stage?: string | null) {
+  const s = stage?.toUpperCase();
+  if (s === 'FINAL') {
+    return { bg: 'rgba(239, 68, 68, 0.18)', border: 'rgba(239, 68, 68, 0.4)', text: '#FCA5A5', icon: '🏆' };
+  }
+  if (s === 'QUALIFIER' || s === 'PLAYOFF' || s === 'QUALIFIER_1' || s === 'QUALIFIER_2' || s === 'ELIMINATOR') {
+    return { bg: 'rgba(139, 92, 246, 0.18)', border: 'rgba(139, 92, 246, 0.4)', text: '#C4B5FD', icon: '⚡' };
+  }
+  if (s === 'WILDCARD') {
+    return { bg: 'rgba(245, 158, 11, 0.18)', border: 'rgba(245, 158, 11, 0.4)', text: '#FDE68A', icon: '🌟' };
+  }
+  return { bg: 'rgba(16, 185, 129, 0.15)', border: 'rgba(16, 185, 129, 0.35)', text: '#6EE7B7', icon: '🏏' };
+}
+
+function MatchStageBadge({ match }: { match: any }) {
+  if (!match.bracketSlot && !match.stage && !match.groupName) return null;
+  const style = getStageBadgeStyle(match.stage);
+  const label = match.bracketSlot || match.stage || 'MATCH';
+  const groupLabel = match.groupName ? (match.groupName === 'GROUP_A' ? ' · Grp A' : match.groupName === 'GROUP_B' ? ' · Grp B' : ` · ${match.groupName}`) : '';
+  const numLabel = match.matchNumber ? ` · #${match.matchNumber}` : '';
+
+  return (
+    <span
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '4px',
+        padding: '2px 8px',
+        borderRadius: '5px',
+        backgroundColor: style.bg,
+        border: `1px solid ${style.border}`,
+        color: style.text,
+        fontSize: '11px',
+        fontWeight: 800,
+        fontFamily: 'monospace',
+        letterSpacing: '0.02em',
+      }}
+    >
+      <span>{style.icon}</span>
+      <span>{label}{groupLabel}{numLabel}</span>
+    </span>
+  );
+}
+
 export default async function AdminMatchesPage() {
   const tracker = createPerfTracker();
   tracker.authStart = performance.now();
@@ -139,10 +183,13 @@ export default async function AdminMatchesPage() {
                     boxShadow: '0 4px 16px rgba(0,0,0,0.3)',
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '11px' }}>
-                    <span style={{ padding: '3px 8px', borderRadius: '4px', backgroundColor: '#EF4444', color: '#FFFFFF', fontWeight: 800, fontFamily: 'monospace' }}>
-                      ● LIVE INNINGS {m.currentInnings}
-                    </span>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '11px', flexWrap: 'wrap', gap: '8px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                      <span style={{ padding: '3px 8px', borderRadius: '4px', backgroundColor: '#EF4444', color: '#FFFFFF', fontWeight: 800, fontFamily: 'monospace' }}>
+                        ● LIVE INNINGS {m.currentInnings}
+                      </span>
+                      <MatchStageBadge match={m} />
+                    </div>
                     <span style={{ color: '#8B9BB4' }}>
                       📍 {m.venue || 'Main University Ground'}
                     </span>
@@ -274,10 +321,13 @@ export default async function AdminMatchesPage() {
                   boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '11px' }}>
-                  <span style={{ padding: '2px 8px', borderRadius: '4px', backgroundColor: '#1E2638', color: '#CBD5E1', fontFamily: 'monospace', fontWeight: 700 }}>
-                    {m.oversPerInnings} Overs
-                  </span>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '11px', flexWrap: 'wrap', gap: '8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                    <span style={{ padding: '2px 8px', borderRadius: '4px', backgroundColor: '#1E2638', color: '#CBD5E1', fontFamily: 'monospace', fontWeight: 700 }}>
+                      {m.oversPerInnings} Overs
+                    </span>
+                    <MatchStageBadge match={m} />
+                  </div>
                   <span style={{ color: '#8B9BB4' }}>
                     📍 {m.venue || 'Main Ground'}
                   </span>
@@ -354,11 +404,14 @@ export default async function AdminMatchesPage() {
                   gap: '10px',
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '11px', color: '#8B9BB4' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '11px', color: '#8B9BB4', flexWrap: 'wrap', gap: '8px' }}>
                   <span>{m.tournament?.name || 'Tournament'}</span>
-                  <span style={{ padding: '2px 6px', borderRadius: '4px', backgroundColor: 'rgba(16, 185, 129, 0.15)', color: '#34D399', fontFamily: 'monospace', fontWeight: 700 }}>
-                    FINISHED
-                  </span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                    <MatchStageBadge match={m} />
+                    <span style={{ padding: '2px 6px', borderRadius: '4px', backgroundColor: 'rgba(16, 185, 129, 0.15)', color: '#34D399', fontFamily: 'monospace', fontWeight: 700 }}>
+                      FINISHED
+                    </span>
+                  </div>
                 </div>
 
                 <div style={{ fontSize: '14px', fontWeight: 700, color: '#FFFFFF' }}>

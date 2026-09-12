@@ -37,6 +37,12 @@ export default function NewMatchForm({ tournaments, teams, entryPath }: Props) {
   const [oversPerInnings, setOversPerInnings] = useState<number>(firstStage?.oversPerInnings || 6);
   const [ballsPerOver, setBallsPerOver] = useState<number>(firstStage?.ballsPerOver || 6);
 
+  // Match Designation & Stage
+  const [stage, setStage] = useState<string>('GROUP');
+  const [matchName, setMatchName] = useState<string>('Group Stage M1');
+  const [groupName, setGroupName] = useState<string>('GROUP_A');
+  const [matchNumber, setMatchNumber] = useState<string>('1');
+
   const [startImmediately, setStartImmediately] = useState<boolean>(true);
   const [tossWinnerChoice, setTossWinnerChoice] = useState<'TEAM_A' | 'TEAM_B'>('TEAM_A');
   const [tossDecision, setTossDecision] = useState<'BAT' | 'BOWL'>('BAT');
@@ -48,6 +54,18 @@ export default function NewMatchForm({ tournaments, teams, entryPath }: Props) {
     tossWinnerChoice === 'TEAM_A'
       ? selectedTeamA?.name || 'Team A'
       : selectedTeamB?.name || 'Team B';
+
+  const PRESETS = [
+    { label: '🏏 Group Stage M1 (Grp A)', stage: 'GROUP', slot: 'Group Stage M1', group: 'GROUP_A', num: '1' },
+    { label: '🏏 Group Stage M2 (Grp B)', stage: 'GROUP', slot: 'Group Stage M2', group: 'GROUP_B', num: '2' },
+    { label: '🌟 Wildcard 1 (WC1)', stage: 'WILDCARD', slot: 'Wildcard 1 (WC1)', group: '', num: '7' },
+    { label: '🌟 Wildcard 2 (WC2)', stage: 'WILDCARD', slot: 'Wildcard 2 (WC2)', group: '', num: '8' },
+    { label: '🌟 Wildcard 3 (WC3)', stage: 'WILDCARD', slot: 'Wildcard 3 (WC3)', group: '', num: '9' },
+    { label: '⚡ Qualifier 1 (Q1)', stage: 'QUALIFIER', slot: 'Qualifier 1 (Q1)', group: '', num: '10' },
+    { label: '🔥 Eliminator (ELIM)', stage: 'PLAYOFF', slot: 'Eliminator (ELIM)', group: '', num: '11' },
+    { label: '⚡ Qualifier 2 (Q2)', stage: 'QUALIFIER', slot: 'Qualifier 2 (Q2)', group: '', num: '12' },
+    { label: '🏆 Grand Final', stage: 'FINAL', slot: 'Grand Final', group: '', num: '13' },
+  ];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -82,6 +100,10 @@ export default function NewMatchForm({ tournaments, teams, entryPath }: Props) {
           teamBId,
           oversPerInnings: Number(oversPerInnings),
           ballsPerOver: Number(ballsPerOver),
+          stage: stage.trim() || undefined,
+          groupName: groupName.trim() || undefined,
+          matchNumber: matchNumber ? Number(matchNumber) : undefined,
+          bracketSlot: matchName.trim() || undefined,
         });
 
         if (!createRes.success || !createRes.matchId) {
@@ -232,7 +254,327 @@ export default function NewMatchForm({ tournaments, teams, entryPath }: Props) {
         )}
       </div>
 
-      {/* SECTION 2: CONTENDING TEAMS & MATCHUP PREVIEW */}
+      {/* SECTION 2: TOURNAMENT STAGE & FIXTURE DESIGNATION */}
+      <div
+        style={{
+          background: '#0D111A',
+          border: '1px solid #1E2638',
+          borderRadius: '14px',
+          padding: '20px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '16px',
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '10px',
+          }}
+        >
+          <div>
+            <span
+              style={{
+                fontSize: '0.82rem',
+                fontWeight: 800,
+                color: '#F59E0B',
+                textTransform: 'uppercase',
+                letterSpacing: '0.06em',
+                fontFamily: 'monospace',
+              }}
+            >
+              STAGE & FIXTURE DESIGNATION
+            </span>
+            <p style={{ fontSize: '0.78rem', color: '#64748B', margin: '4px 0 0' }}>
+              Assign fixture name (e.g. Grand Final, Wildcard 1, Group Stage M1), tournament stage, and bracket slot.
+            </p>
+          </div>
+
+          {/* Live Preview Chip */}
+          <div
+            style={{
+              padding: '6px 14px',
+              borderRadius: '8px',
+              backgroundColor:
+                stage === 'FINAL'
+                  ? 'rgba(239, 68, 68, 0.18)'
+                  : stage === 'QUALIFIER' || stage === 'PLAYOFF'
+                  ? 'rgba(139, 92, 246, 0.18)'
+                  : stage === 'WILDCARD'
+                  ? 'rgba(245, 158, 11, 0.18)'
+                  : 'rgba(16, 185, 129, 0.18)',
+              border: `1px solid ${
+                stage === 'FINAL'
+                  ? 'rgba(239, 68, 68, 0.5)'
+                  : stage === 'QUALIFIER' || stage === 'PLAYOFF'
+                  ? 'rgba(139, 92, 246, 0.5)'
+                  : stage === 'WILDCARD'
+                  ? 'rgba(245, 158, 11, 0.5)'
+                  : 'rgba(16, 185, 129, 0.5)'
+              }`,
+              color:
+                stage === 'FINAL'
+                  ? '#FCA5A5'
+                  : stage === 'QUALIFIER' || stage === 'PLAYOFF'
+                  ? '#C4B5FD'
+                  : stage === 'WILDCARD'
+                  ? '#FDE68A'
+                  : '#6EE7B7',
+              fontSize: '0.82rem',
+              fontWeight: 800,
+              fontFamily: 'monospace',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+            }}
+          >
+            <span>
+              {stage === 'FINAL'
+                ? '🏆'
+                : stage === 'QUALIFIER' || stage === 'PLAYOFF'
+                ? '⚡'
+                : stage === 'WILDCARD'
+                ? '🌟'
+                : '🏏'}
+            </span>
+            <span>
+              {matchName || stage || 'UNASSIGNED'}
+              {matchNumber ? ` · #${matchNumber}` : ''}
+              {groupName ? ` (${groupName === 'GROUP_A' ? 'Grp A' : 'Grp B'})` : ''}
+            </span>
+          </div>
+        </div>
+
+        {/* Quick Presets */}
+        <div>
+          <div
+            style={{
+              fontSize: '0.72rem',
+              fontWeight: 700,
+              color: '#94A3B8',
+              textTransform: 'uppercase',
+              letterSpacing: '0.05em',
+              marginBottom: '8px',
+            }}
+          >
+            ⚡ Quick Presets (Click to autofill)
+          </div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+            {PRESETS.map((p) => {
+              const isActive =
+                matchName === p.slot && stage === p.stage && (p.group ? groupName === p.group : true);
+              return (
+                <button
+                  key={p.label}
+                  type="button"
+                  onClick={() => {
+                    setStage(p.stage);
+                    setMatchName(p.slot);
+                    setGroupName(p.group);
+                    if (p.num) setMatchNumber(p.num);
+                  }}
+                  style={{
+                    padding: '6px 12px',
+                    borderRadius: '8px',
+                    fontSize: '0.78rem',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    backgroundColor: isActive ? 'rgba(245, 158, 11, 0.2)' : '#141A26',
+                    border: isActive ? '1px solid #F59E0B' : '1px solid #2A364E',
+                    color: isActive ? '#FBBF24' : '#CBD5E1',
+                    transition: 'all 0.15s ease',
+                  }}
+                >
+                  {p.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Primary Row: Match Name & Stage Dropdown */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '14px' }}>
+          {/* Match Name / Slot Title */}
+          <div>
+            <label
+              style={{
+                display: 'block',
+                fontSize: '0.82rem',
+                fontWeight: 700,
+                marginBottom: '6px',
+                color: '#CBD5E1',
+              }}
+            >
+              Match Name / Title *
+            </label>
+            <input
+              type="text"
+              value={matchName}
+              onChange={(e) => setMatchName(e.target.value)}
+              placeholder="e.g. Grand Final, Wildcard 1, Group Stage M1"
+              required
+              style={{
+                width: '100%',
+                background: '#141A26',
+                border: '1px solid #2A364E',
+                borderRadius: '10px',
+                padding: '12px 14px',
+                color: '#FFFFFF',
+                fontSize: '0.9rem',
+                outline: 'none',
+                boxSizing: 'border-box',
+              }}
+            />
+          </div>
+
+          {/* Stage Dropdown */}
+          <div>
+            <label
+              style={{
+                display: 'block',
+                fontSize: '0.82rem',
+                fontWeight: 700,
+                marginBottom: '6px',
+                color: '#CBD5E1',
+              }}
+            >
+              Tournament Stage
+            </label>
+            <div style={{ position: 'relative' }}>
+              <select
+                value={stage}
+                onChange={(e) => setStage(e.target.value)}
+                style={{
+                  width: '100%',
+                  background: '#141A26',
+                  border: '1px solid #2A364E',
+                  borderRadius: '10px',
+                  padding: '12px 14px',
+                  color: '#FFFFFF',
+                  fontSize: '0.9rem',
+                  outline: 'none',
+                  appearance: 'none',
+                  cursor: 'pointer',
+                  boxSizing: 'border-box',
+                }}
+              >
+                <option value="GROUP" style={{ background: '#10141E', color: '#FFF' }}>🏏 GROUP (Group Stage)</option>
+                <option value="WILDCARD" style={{ background: '#10141E', color: '#FFF' }}>🌟 WILDCARD (Wildcard Match)</option>
+                <option value="QUALIFIER" style={{ background: '#10141E', color: '#FFF' }}>⚡ QUALIFIER (Qualifiers / Semis)</option>
+                <option value="PLAYOFF" style={{ background: '#10141E', color: '#FFF' }}>🔥 PLAYOFF (Playoffs / Eliminator)</option>
+                <option value="FINAL" style={{ background: '#10141E', color: '#FFF' }}>🏆 FINAL (Grand Final)</option>
+                <option value="OTHER" style={{ background: '#10141E', color: '#FFF' }}>OTHER (Custom Fixture)</option>
+              </select>
+              <div
+                style={{
+                  position: 'absolute',
+                  right: '14px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  pointerEvents: 'none',
+                  color: '#64748B',
+                  fontSize: '0.75rem',
+                }}
+              >
+                ▼
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Secondary Row: Group & Match Number */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '14px' }}>
+          {/* Tournament Group */}
+          <div>
+            <label
+              style={{
+                display: 'block',
+                fontSize: '0.82rem',
+                fontWeight: 700,
+                marginBottom: '6px',
+                color: '#CBD5E1',
+              }}
+            >
+              Tournament Group
+            </label>
+            <div style={{ position: 'relative' }}>
+              <select
+                value={groupName}
+                onChange={(e) => setGroupName(e.target.value)}
+                style={{
+                  width: '100%',
+                  background: '#141A26',
+                  border: '1px solid #2A364E',
+                  borderRadius: '10px',
+                  padding: '12px 14px',
+                  color: '#FFFFFF',
+                  fontSize: '0.9rem',
+                  outline: 'none',
+                  appearance: 'none',
+                  cursor: 'pointer',
+                  boxSizing: 'border-box',
+                }}
+              >
+                <option value="" style={{ background: '#10141E', color: '#FFF' }}>None / Knockout</option>
+                <option value="GROUP_A" style={{ background: '#10141E', color: '#FFF' }}>Group A</option>
+                <option value="GROUP_B" style={{ background: '#10141E', color: '#FFF' }}>Group B</option>
+              </select>
+              <div
+                style={{
+                  position: 'absolute',
+                  right: '14px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  pointerEvents: 'none',
+                  color: '#64748B',
+                  fontSize: '0.75rem',
+                }}
+              >
+                ▼
+              </div>
+            </div>
+          </div>
+
+          {/* Match Number */}
+          <div>
+            <label
+              style={{
+                display: 'block',
+                fontSize: '0.82rem',
+                fontWeight: 700,
+                marginBottom: '6px',
+                color: '#CBD5E1',
+              }}
+            >
+              Match Number (#)
+            </label>
+            <input
+              type="number"
+              min={1}
+              max={200}
+              value={matchNumber}
+              onChange={(e) => setMatchNumber(e.target.value)}
+              placeholder="e.g. 1"
+              style={{
+                width: '100%',
+                background: '#141A26',
+                border: '1px solid #2A364E',
+                borderRadius: '10px',
+                padding: '12px 14px',
+                color: '#FFFFFF',
+                fontSize: '0.9rem',
+                outline: 'none',
+                boxSizing: 'border-box',
+              }}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* SECTION 3: CONTENDING TEAMS & MATCHUP PREVIEW */}
       <div
         style={{
           background: '#0D111A',

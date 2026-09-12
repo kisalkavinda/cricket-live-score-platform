@@ -46,7 +46,7 @@ export default function PlayoffBracketTree({
   crownedChampion,
   tournamentFormat,
 }: PlayoffBracketTreeProps) {
-  const [mobileRoundTab, setMobileRoundTab] = useState<'ALL' | 'R1' | 'R2' | 'R3' | 'PODIUM'>('ALL');
+  const [mobileRoundTab, setMobileRoundTab] = useState<'ALL' | 'R1' | 'R2' | 'R3' | 'PODIUM'>('R1');
 
   const is6Team = tournamentFormat === '6_TEAM';
   const is7Team = tournamentFormat === '7_TEAM';
@@ -773,11 +773,11 @@ export default function PlayoffBracketTree({
       {/* Mobile Stage Selector Tabs (visible below 1024px) */}
       <div className="flex lg:hidden items-center gap-2 overflow-x-auto pb-2 mb-4 scrollbar-none">
         {[
-          { key: 'ALL', label: '🌐 Full Circuit Tree' },
           { key: 'R1', label: `1. Semis (${p1Code}/${p2Code})` },
           { key: 'R2', label: `2. Qual 2 (${p3Code})` },
           { key: 'R3', label: `3. Grand Final (${finalCode})` },
           { key: 'PODIUM', label: '🏆 Honours' },
+          { key: 'ALL', label: '🌐 Full Circuit Tree' },
         ].map((tab) => (
           <button
             key={tab.key}
