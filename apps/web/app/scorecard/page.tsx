@@ -9,6 +9,8 @@ import { createClient } from '@/utils/supabase/client';
 import MatchWormChart from '@/components/analytics/MatchWormChart';
 import LiveEquationTicker, { HeadToHeadBoundaryCounter } from '@/components/analytics/LiveEquationTicker';
 import BallTimelineFilter from '@/components/analytics/BallTimelineFilter';
+import { calculateDeliveryRuns } from '@/lib/scoring/scoring-rules';
+
 
 function ScorecardContent() {
   const searchParams = useSearchParams();
@@ -175,61 +177,81 @@ function ScorecardContent() {
   };
 
   const getBallStyle = (b: any) => {
-    const runs = Number(b.runs || 0);
-    const extraRuns = Number(b.extras || 0);
-    let label = `${runs}`;
+    const bCalc = calculateDeliveryRuns(b);
+    let label = `${bCalc.batterRuns}`;
     let bg = 'rgba(255, 255, 255, 0.1)';
     let color = '#FFFFFF';
+    let border = '1px solid rgba(255, 255, 255, 0.15)';
 
     if (b.isWicket) {
+      const r = bCalc.batterRuns || b.runs || 0;
       if (b.wicketType === 'RETIRED_HURT') {
-        label = runs > 0 ? `${runs}+RH` : 'RH';
+        label = r > 0 ? `${r}+RH` : 'RH';
         bg = '#0284C7';
+        border = '1px solid #0369A1';
         color = '#FFFFFF';
       } else if (b.extraType === 'WIDE') {
-        label = runs > 0 ? `WD+${runs}+W` : (extraRuns > 1 ? `WD+${extraRuns - 1}+W` : 'WD+W');
+        label = r > 0 ? `WD+${r}+W` : (b.extras > 1 ? `WD+${b.extras - 1}+W` : 'WD+W');
         bg = '#EF4444';
+        border = '1px solid #DC2626';
         color = '#FFFFFF';
       } else if (b.extraType === 'NO_BALL') {
-        label = runs > 0 ? `NB+${runs}+W` : 'NB+W';
+        label = r > 0 ? `NB+${r}+W` : 'NB+W';
         bg = '#EF4444';
+        border = '1px solid #DC2626';
         color = '#FFFFFF';
-      } else if (runs > 0) {
-        label = `${runs}+W`;
+      } else if (r > 0) {
+        label = `${r}+W`;
         bg = '#EF4444';
+        border = '1px solid #DC2626';
         color = '#FFFFFF';
       } else {
         label = 'W';
         bg = '#EF4444';
+        border = '1px solid #DC2626';
         color = '#FFFFFF';
       }
-    } else if (runs === 4) {
-      label = '4';
-      bg = '#10B981';
-    } else if (runs === 6) {
-      label = '6';
-      bg = '#8B5CF6';
     } else if (b.extraType === 'WIDE') {
-      label = extraRuns > 1 ? `WD+${extraRuns - 1}` : 'WD';
+      label = b.extras > 1 ? `WD+${b.extras - 1}` : 'WD';
       bg = '#F59E0B';
       color = '#000000';
+      border = '1px solid #D97706';
     } else if (b.extraType === 'NO_BALL') {
-      label = runs > 0 ? `NB+${runs}` : 'NB';
+      if (bCalc.byeRuns > 0) {
+        label = `NB+${bCalc.byeRuns}B`;
+      } else if (bCalc.legByeRuns > 0) {
+        label = `NB+${bCalc.legByeRuns}LB`;
+      } else if (bCalc.batterRuns > 0) {
+        label = `NB+${bCalc.batterRuns}`;
+      } else {
+        label = 'NB';
+      }
       bg = '#F97316';
       color = '#000000';
+      border = '1px solid #EA580C';
     } else if (b.extraType === 'BYE') {
-      label = `${extraRuns || 1}B`;
+      label = `${bCalc.byeRuns || bCalc.totalRuns || 1}B`;
       bg = 'rgba(255, 255, 255, 0.15)';
+      border = '1px solid rgba(255, 255, 255, 0.15)';
     } else if (b.extraType === 'LEG_BYE') {
-      label = `${extraRuns || 1}LB`;
+      label = `${bCalc.legByeRuns || bCalc.totalRuns || 1}LB`;
       bg = 'rgba(255, 255, 255, 0.15)';
-    } else if (runs === 0) {
+      border = '1px solid rgba(255, 255, 255, 0.15)';
+    } else if (b.runs === 4) {
+      label = '4';
+      bg = '#10B981';
+      border = '1px solid #059669';
+    } else if (b.runs === 6) {
+      label = '6';
+      bg = '#8B5CF6';
+      border = '1px solid #7C3AED';
+    } else if (b.runs === 0) {
       label = '•';
       bg = 'rgba(255, 255, 255, 0.05)';
       color = 'rgba(255, 255, 255, 0.4)';
     }
 
-    return { label, bg, color };
+    return { label, bg, color, border };
   };
 
   // Target calculation for 2nd innings or Super Over 2
@@ -1711,8 +1733,13 @@ function ScorecardContent() {
                 overToShow = Math.max(0, (selectedInnings.overs || 1) - 1);
               }
 
-              const currentOverDeliveries = [...allBalls.filter((b: any) => b.overNumber === overToShow)].reverse();
-              const currentOverRuns = currentOverDeliveries.reduce((sum: number, b: any) => sum + (b.runs || 0) + (b.extras || 0), 0);
+              const sortBalls = (list: any[]) => [...list].sort((a: any, b: any) => {
+                const tA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+                const tB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+                return tA - tB;
+              });
+              const currentOverDeliveries = sortBalls(allBalls.filter((b: any) => b.overNumber === overToShow));
+              const currentOverRuns = currentOverDeliveries.reduce((sum: number, b: any) => sum + calculateDeliveryRuns(b).totalRuns, 0);
               const legalBallsInCurrentOver = currentOverDeliveries.filter((b: any) => b.isLegal).length;
               const remainingSlots = isFinishedInnings ? 0 : Math.max(0, ballsPerOver - legalBallsInCurrentOver);
               const overTitle = isFinishedInnings
@@ -1768,6 +1795,7 @@ function ScorecardContent() {
                                 borderRadius: style.label.length > 2 ? '16px' : '50%',
                                 background: style.bg,
                                 color: style.color,
+                                border: style.border,
                                 fontSize: style.label.length > 3 ? '0.68rem' : '0.78rem',
                                 fontWeight: 900,
                                 fontFamily: 'var(--font-data)',
@@ -1780,7 +1808,7 @@ function ScorecardContent() {
                               {style.label}
                             </span>
                             <span style={{ fontSize: '0.62rem', color: 'rgba(255, 255, 255, 0.4)', fontWeight: 700, fontFamily: 'var(--font-data)' }}>
-                              .{b.isLegal ? b.ballNumber || idx + 1 : 'ext'}
+                              {b.isLegal ? `.${b.ballNumber || idx + 1}` : (b.wicketType === 'RETIRED_HURT' ? 'ret' : 'ext')}
                             </span>
                           </div>
                         );

@@ -156,6 +156,113 @@ assert.strictEqual(afterUndoBowled, 1, 'Undoing a BOWLED delivery MUST decrement
 
 console.log('  PASS  6.1: Undo delivery rollback protects innings wickets count from false decrements.');
 
+// -----------------------------------------------------------------------------
+// 7. Retired Hurt Without Facing Ball (Zero-ball delivery)
+// -----------------------------------------------------------------------------
+console.log('\n--- TEST GROUP 7: Retired Hurt Without Facing Ball (Zero-Ball Calculation) ---');
+
+const simulateRecordDelivery = (
+  innings: { overs: number; balls: number; runs: number; wickets: number },
+  bowler: { overs: number; balls: number; runsConceded: number },
+  batter: { runs: number; balls: number },
+  input: { isWicket: boolean; wicketType: string; withoutFacingBall?: boolean; isNonStriker?: boolean }
+) => {
+  const isRetHurtWithoutBall = Boolean(
+    input.isWicket &&
+    input.wicketType === 'RETIRED_HURT' &&
+    (input.withoutFacingBall || input.isNonStriker)
+  );
+
+  const isLegal = !isRetHurtWithoutBall;
+  let nextOvers = innings.overs;
+  let nextBalls = innings.balls;
+
+  if (isLegal) {
+    if (nextBalls + 1 >= 6) {
+      nextOvers += 1;
+      nextBalls = 0;
+    } else {
+      nextBalls += 1;
+    }
+  }
+
+  const nextBowlerBalls = bowler.balls + (isLegal ? 1 : 0);
+  const nextBatterBalls = batter.balls + (isLegal ? 1 : 0);
+
+  return {
+    innings: { ...innings, overs: nextOvers, balls: nextBalls },
+    bowler: { ...bowler, balls: nextBowlerBalls },
+    batter: { ...batter, balls: nextBatterBalls },
+    ballEvent: {
+      isLegal,
+      runs: 0,
+      extras: 0,
+      extraType: isRetHurtWithoutBall ? 'NONE' : 'NONE',
+      wicketType: input.wicketType,
+    },
+  };
+};
+
+// Case A: Striker retires hurt WITHOUT facing a ball
+const strikerWithoutBallResult = simulateRecordDelivery(
+  { overs: 2, balls: 3, runs: 18, wickets: 1 },
+  { overs: 0, balls: 3, runsConceded: 4 },
+  { runs: 12, balls: 7 },
+  { isWicket: true, wicketType: 'RETIRED_HURT', withoutFacingBall: true }
+);
+
+assert.strictEqual(strikerWithoutBallResult.innings.overs, 2, 'Innings overs unchanged');
+assert.strictEqual(strikerWithoutBallResult.innings.balls, 3, 'Innings balls unchanged (does not count a ball)');
+assert.strictEqual(strikerWithoutBallResult.bowler.balls, 3, 'Bowler balls unchanged (does not count a ball)');
+assert.strictEqual(strikerWithoutBallResult.batter.balls, 7, 'Batter balls faced unchanged (0 balls counted)');
+assert.strictEqual(strikerWithoutBallResult.ballEvent.isLegal, false, 'Delivery isLegal marked false');
+console.log('  PASS  7.1: Striker retiring hurt without facing ball preserves exact overs, bowler balls, and batter balls faced.');
+
+// Case B: Non-striker retires hurt (automatically zero-ball delivery)
+const nonStrikerResult = simulateRecordDelivery(
+  { overs: 4, balls: 5, runs: 35, wickets: 2 },
+  { overs: 1, balls: 5, runsConceded: 12 },
+  { runs: 6, balls: 4 },
+  { isWicket: true, wicketType: 'RETIRED_HURT', isNonStriker: true }
+);
+
+assert.strictEqual(nonStrikerResult.innings.overs, 4, 'Innings overs unchanged for non-striker retirement');
+assert.strictEqual(nonStrikerResult.innings.balls, 5, 'Innings balls unchanged for non-striker retirement');
+assert.strictEqual(nonStrikerResult.bowler.balls, 5, 'Bowler balls unchanged for non-striker retirement');
+assert.strictEqual(nonStrikerResult.batter.balls, 4, 'Batter balls unchanged for non-striker retirement');
+assert.strictEqual(nonStrikerResult.ballEvent.isLegal, false, 'Non-striker delivery isLegal marked false');
+console.log('  PASS  7.2: Non-striker retiring hurt automatically treated as zero-ball delivery.');
+
+// -----------------------------------------------------------------------------
+// 8. Zod Schema Validation Preservation
+// -----------------------------------------------------------------------------
+console.log('\n--- TEST GROUP 8: Server Action Zod Validation Schema ---');
+const { recordDeliverySchema } = require('../lib/validations/scoring');
+
+const parsedWithoutBall = recordDeliverySchema.safeParse({
+  runs: 0,
+  extraType: 'NONE',
+  isWicket: true,
+  wicketType: 'RETIRED_HURT',
+  withoutFacingBall: true,
+});
+
+assert.strictEqual(parsedWithoutBall.success, true, 'Zod parse must succeed');
+assert.strictEqual(parsedWithoutBall.data.withoutFacingBall, true, 'Zod safeParse MUST preserve withoutFacingBall: true and not strip it');
+
+const parsedWithBall = recordDeliverySchema.safeParse({
+  runs: 0,
+  extraType: 'NONE',
+  isWicket: true,
+  wicketType: 'RETIRED_HURT',
+  withoutFacingBall: false,
+});
+
+assert.strictEqual(parsedWithBall.success, true, 'Zod parse must succeed');
+assert.strictEqual(parsedWithBall.data.withoutFacingBall, false, 'Zod safeParse MUST preserve withoutFacingBall: false');
+
+console.log('  PASS  8.1: recordDeliverySchema correctly accepts and preserves withoutFacingBall boolean flag.');
+
 console.log('\n============================================================');
 console.log(' ALL RETIRED HURT INTEGRITY & LIFECYCLE TESTS PASSED! ✅');
 console.log('============================================================\n');

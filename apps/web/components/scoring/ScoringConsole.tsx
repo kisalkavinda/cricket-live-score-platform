@@ -474,6 +474,7 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
   const [newBatterId, setNewBatterId] = useState<string>('');
   const [wicketRuns, setWicketRuns] = useState<number>(0);
   const [isWicketOnNoBall, setIsWicketOnNoBall] = useState<boolean>(false);
+  const [retHurtWithoutFacingBall, setRetHurtWithoutFacingBall] = useState<boolean>(true);
   const [wicketModalError, setWicketModalError] = useState<string | null>(null);
 
   // Wide delivery state
@@ -1048,10 +1049,12 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
       }
     }
 
-    const runsScoredOnWicket = wicketRuns || 0;
-    const wicketExtraType = isWicketOnNoBall ? 'NO_BALL' : 'NONE';
-    const wicketExtraRuns = isWicketOnNoBall ? 1 : 0;
-    const isLegalBall = !isWicketOnNoBall;
+    const isRetHurt = wicketType === 'RETIRED_HURT';
+    const isRetHurtWithoutBall = isRetHurt && (retHurtWithoutFacingBall || dismissedPlayerId === currentInnings.currentNonStrikerId);
+    const runsScoredOnWicket = isRetHurtWithoutBall ? 0 : (wicketRuns || 0);
+    const wicketExtraType = (isRetHurtWithoutBall || !isWicketOnNoBall) ? 'NONE' : 'NO_BALL';
+    const wicketExtraRuns = (isRetHurtWithoutBall || !isWicketOnNoBall) ? 0 : 1;
+    const isLegalBall = !isRetHurtWithoutBall && !isWicketOnNoBall;
 
     setWicketModalError(null);
     setError(null);
@@ -1113,8 +1116,6 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
       else if (wicketType === 'STUMPED') dismissalLabel = `st b ${bowlerName}`;
       else if (wicketType === 'HIT_WICKET') dismissalLabel = `hit wicket b ${bowlerName}`;
 
-      const isRetHurt = wicketType === 'RETIRED_HURT';
-
       let updatedBattingScores = (curInn.battingScores || []).map((b: any) => {
         let r = b.runs;
         let balls = b.balls;
@@ -1124,7 +1125,7 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
         // Striker gets the completed runs and ball faced
         if (b.playerId === currentInnings.currentStrikerId) {
           r += runsScoredOnWicket;
-          balls += 1;
+          if (!isRetHurtWithoutBall) balls += 1;
           if (runsScoredOnWicket === 4) fours += 1;
           if (runsScoredOnWicket === 6) sixes += 1;
         }
@@ -1160,7 +1161,7 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
           playerId: dismissedPlayerId,
           player: dismissedPlayerObj,
           runs: dismissedPlayerId === currentInnings.currentStrikerId ? runsScoredOnWicket : 0,
-          balls: dismissedPlayerId === currentInnings.currentStrikerId ? 1 : 0,
+          balls: (dismissedPlayerId === currentInnings.currentStrikerId && !isRetHurtWithoutBall) ? 1 : 0,
           fours: (dismissedPlayerId === currentInnings.currentStrikerId && runsScoredOnWicket === 4) ? 1 : 0,
           sixes: (dismissedPlayerId === currentInnings.currentStrikerId && runsScoredOnWicket === 6) ? 1 : 0,
           isOut: !isRetHurt,
@@ -1205,8 +1206,8 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
             ...bw,
             overs: bOvers,
             balls: bBalls,
-            runsConceded: (bw.runsConceded || 0) + runsScoredOnWicket + wicketExtraRuns,
-            wickets: (bw.wickets || 0) + (isBowlerCreditedDismissal(wicketType) ? 1 : 0),
+            runsConceded: (bw.runsConceded || 0) + (isRetHurtWithoutBall ? 0 : (runsScoredOnWicket + wicketExtraRuns)),
+            wickets: (bw.wickets || 0) + ((!isRetHurtWithoutBall && isBowlerCreditedDismissal(wicketType)) ? 1 : 0),
           };
         }
         return bw;
@@ -1260,6 +1261,7 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
       wicketType: wicketType as any,
       dismissedPlayerId,
       newBatterId: incomingBatterId || undefined,
+      withoutFacingBall: isRetHurtWithoutBall,
       expectedUpdatedAt: currentInnings.updatedAt,
       operationId,
       clientId: effectiveClientId,
@@ -1808,7 +1810,7 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                             {label}
                           </span>
                           <span style={{ fontSize: '0.62rem', color: isLocal ? '#FBBF24' : '#94A3B8', fontWeight: 700, fontFamily: 'monospace' }}>
-                            {b.isLegal ? `.${b.ballNumber || idx + 1}` : 'ext'} {isLocal ? '⚡LOCAL' : '✏️'}
+                            {b.isLegal ? `.${b.ballNumber || idx + 1}` : (b.wicketType === 'RETIRED_HURT' ? 'ret' : 'ext')} {isLocal ? '⚡LOCAL' : '✏️'}
                           </span>
                         </button>
                       );
@@ -3008,6 +3010,29 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                         >
                           ✏️ Rename
                         </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setDismissedId(activeStriker?.id || currentInnings.currentStrikerId || '');
+                            setWicketRuns(0);
+                            setWicketType('RETIRED_HURT');
+                            setRetHurtWithoutFacingBall(true);
+                            setShowWicketModal(true);
+                          }}
+                          title="Striker leaves field retired hurt (not a wicket lost under MCC Law 25.4)"
+                          style={{
+                            background: 'rgba(2, 132, 199, 0.15)',
+                            border: '1px solid #0284C7',
+                            color: '#38BDF8',
+                            borderRadius: '4px',
+                            padding: '2px 7px',
+                            fontSize: '0.72rem',
+                            cursor: 'pointer',
+                            fontWeight: 700,
+                          }}
+                        >
+                          🏥 Ret. Hurt
+                        </button>
                       </div>
                     </div>
                     <div style={{ fontWeight: 800, color: '#FFF', fontSize: '1.05rem' }}>
@@ -3075,6 +3100,29 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                           }}
                         >
                           ✏️ Rename
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setDismissedId(activeNonStriker?.id || currentInnings.currentNonStrikerId || '');
+                            setWicketRuns(0);
+                            setWicketType('RETIRED_HURT');
+                            setRetHurtWithoutFacingBall(true);
+                            setShowWicketModal(true);
+                          }}
+                          title="Non-striker leaves field retired hurt (not a wicket lost under MCC Law 25.4)"
+                          style={{
+                            background: 'rgba(2, 132, 199, 0.15)',
+                            border: '1px solid #0284C7',
+                            color: '#38BDF8',
+                            borderRadius: '4px',
+                            padding: '2px 7px',
+                            fontSize: '0.72rem',
+                            cursor: 'pointer',
+                            fontWeight: 700,
+                          }}
+                        >
+                          🏥 Ret. Hurt
                         </button>
                       </div>
                     </div>
@@ -3365,7 +3413,7 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                             {style.label}
                           </span>
                           <span style={{ fontSize: '0.65rem', color: '#64748B', fontWeight: 700, fontFamily: 'monospace' }}>
-                            {b.isLegal ? `.${b.ballNumber || idx + 1}` : 'ext'}
+                            {b.isLegal ? `.${b.ballNumber || idx + 1}` : (b.wicketType === 'RETIRED_HURT' ? 'ret' : 'ext')}
                           </span>
                         </div>
                       );
@@ -4004,6 +4052,7 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                       setDismissedId(currentInnings.currentStrikerId || '');
                       setWicketRuns(0);
                       setWicketType(isFreeHitActive ? 'RUN_OUT' : 'CAUGHT');
+                      setRetHurtWithoutFacingBall(false);
                       setShowWicketModal(true);
                     }}
                     style={{
@@ -4019,6 +4068,37 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                     }}
                   >
                     🔴 WICKET
+                  </button>
+
+                  <button
+                    type="button"
+                    disabled={isScorePadLocked}
+                    title="Record batter Retired Hurt (leaves field, not a wicket lost under MCC Law 25.4)"
+                    onClick={() => {
+                      setDismissedId(currentInnings.currentStrikerId || '');
+                      setWicketRuns(0);
+                      setWicketType('RETIRED_HURT');
+                      setRetHurtWithoutFacingBall(true);
+                      setShowWicketModal(true);
+                    }}
+                    style={{
+                      background: 'linear-gradient(135deg, #0284C7 0%, #0369A1 100%)',
+                      border: '1px solid #38BDF8',
+                      color: '#FFF',
+                      fontSize: '0.88rem',
+                      fontWeight: 900,
+                      padding: '14px 0',
+                      borderRadius: '8px',
+                      cursor: isScorePadLocked ? 'not-allowed' : 'pointer',
+                      boxShadow: '0 4px 12px rgba(2, 132, 199, 0.35)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '4px',
+                    }}
+                  >
+                    <span>🏥</span>
+                    <span>RETIRED HURT</span>
                   </button>
                 </div>
 
@@ -5476,10 +5556,21 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
         </div>
       )}
 
-      {/* WICKET RECORDING MODAL */}
+      {/* WICKET / RETIRED HURT RECORDING MODAL */}
       {showWicketModal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px', overflowY: 'auto' }}>
-          <div style={{ background: '#10141E', border: '1.5px solid #EF4444', borderRadius: '16px', maxWidth: '450px', width: '100%', maxHeight: 'min(88vh, calc(100dvh - 32px))', display: 'flex', flexDirection: 'column', overflow: 'hidden', margin: 'auto' }}>
+          <div style={{
+            background: '#10141E',
+            border: wicketType === 'RETIRED_HURT' ? '1.5px solid #0284C7' : '1.5px solid #EF4444',
+            borderRadius: '16px',
+            maxWidth: '450px',
+            width: '100%',
+            maxHeight: 'min(88vh, calc(100dvh - 32px))',
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden',
+            margin: 'auto'
+          }}>
             {/* Header (Fixed) */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 20px 12px', borderBottom: `1px solid ${wicketType === 'RETIRED_HURT' ? 'rgba(2, 132, 199, 0.3)' : 'rgba(239, 68, 68, 0.25)'}`, background: wicketType === 'RETIRED_HURT' ? 'rgba(2, 132, 199, 0.08)' : 'rgba(239, 68, 68, 0.05)', flexShrink: 0 }}>
               <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: wicketType === 'RETIRED_HURT' ? '#38BDF8' : '#EF4444', margin: 0 }}>
@@ -5500,13 +5591,66 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
             {/* Scrollable Body */}
             <div className="scoring-modal-card" style={{ flex: '1 1 auto', overflowY: 'auto', minHeight: 0, padding: '16px 20px' }}>
 
+            {/* Mode Switch Tabs: Wicket vs Retired Hurt */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '16px' }}>
+              <button
+                type="button"
+                onClick={() => {
+                  setWicketType(isFreeHitActive ? 'RUN_OUT' : 'CAUGHT');
+                  setRetHurtWithoutFacingBall(false);
+                }}
+                style={{
+                  padding: '9px 12px',
+                  borderRadius: '8px',
+                  fontWeight: 800,
+                  fontSize: '0.82rem',
+                  cursor: 'pointer',
+                  border: wicketType !== 'RETIRED_HURT' ? '1.5px solid #EF4444' : '1px solid #2A364E',
+                  background: wicketType !== 'RETIRED_HURT' ? 'rgba(239, 68, 68, 0.2)' : '#141A26',
+                  color: wicketType !== 'RETIRED_HURT' ? '#FCA5A5' : '#94A3B8',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px',
+                }}
+              >
+                <span>🔴</span>
+                <span>Wicket (Out)</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setWicketType('RETIRED_HURT');
+                  setRetHurtWithoutFacingBall(true);
+                  setIsWicketOnNoBall(false);
+                }}
+                style={{
+                  padding: '9px 12px',
+                  borderRadius: '8px',
+                  fontWeight: 800,
+                  fontSize: '0.82rem',
+                  cursor: 'pointer',
+                  border: wicketType === 'RETIRED_HURT' ? '1.5px solid #0284C7' : '1px solid #2A364E',
+                  background: wicketType === 'RETIRED_HURT' ? 'rgba(2, 132, 199, 0.25)' : '#141A26',
+                  color: wicketType === 'RETIRED_HURT' ? '#38BDF8' : '#94A3B8',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px',
+                }}
+              >
+                <span>🏥</span>
+                <span>Retired Hurt</span>
+              </button>
+            </div>
+
             {wicketModalError && (
               <div style={{ background: 'rgba(239, 68, 68, 0.15)', border: '1px solid #EF4444', color: '#FCA5A5', padding: '10px', borderRadius: '8px', marginBottom: '14px', fontSize: '0.85rem' }}>
                 {wicketModalError}
               </div>
             )}
 
-            {isPreviousDeliveryNoBall && (
+            {isPreviousDeliveryNoBall && wicketType !== 'RETIRED_HURT' && (
               <div
                 style={{
                   background: 'rgba(16, 185, 129, 0.15)',
@@ -5526,7 +5670,7 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '20px' }}>
               <div>
                 <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '6px', color: '#CBD5E1' }}>
-                  Dismissed Batter *
+                  {wicketType === 'RETIRED_HURT' ? 'Retiring Batter *' : 'Dismissed Batter *'}
                 </label>
                 <select
                   value={dismissedId || currentInnings?.currentStrikerId || ''}
@@ -5540,24 +5684,33 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
 
               <div>
                 <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '6px', color: '#CBD5E1' }}>
-                  Wicket Type *
+                  {wicketType === 'RETIRED_HURT' ? 'Status Type *' : 'Wicket Type *'}
                 </label>
                 <select
                   value={wicketType}
                   onChange={(e) => setWicketType(e.target.value)}
                   style={{ width: '100%', background: '#141A26', border: '1px solid #2A364E', borderRadius: '8px', padding: '10px', color: '#FFF' }}
                 >
-                  <option value="CAUGHT">Caught</option>
-                  <option value="BOWLED">Bowled</option>
-                  <option value="LBW">LBW</option>
-                  <option value="RUN_OUT">Run Out</option>
-                  <option value="STUMPED">Stumped</option>
-                  <option value="HIT_WICKET">Hit Wicket</option>
-                  <option value="HIT_BALL_TWICE">Hit Ball Twice</option>
-                  <option value="OBSTRUCTING_FIELD">Obstructing The Field</option>
-                  <option value="RETIRED_HURT">Retired Hurt</option>
-                  <option value="RETIRED_OUT">Retired Out</option>
-                  <option value="OTHER">Other</option>
+                  {wicketType === 'RETIRED_HURT' ? (
+                    <>
+                      <option value="RETIRED_HURT">🏥 Retired Hurt (Eligible to return & resume batting)</option>
+                      <option value="RETIRED_OUT">⛔ Retired Out (Treated as dismissed)</option>
+                    </>
+                  ) : (
+                    <>
+                      <option value="CAUGHT">Caught</option>
+                      <option value="BOWLED">Bowled</option>
+                      <option value="LBW">LBW</option>
+                      <option value="RUN_OUT">Run Out</option>
+                      <option value="STUMPED">Stumped</option>
+                      <option value="HIT_WICKET">Hit Wicket</option>
+                      <option value="HIT_BALL_TWICE">Hit Ball Twice</option>
+                      <option value="OBSTRUCTING_FIELD">Obstructing The Field</option>
+                      <option value="RETIRED_HURT">Retired Hurt</option>
+                      <option value="RETIRED_OUT">Retired Out</option>
+                      <option value="OTHER">Other</option>
+                    </>
+                  )}
                 </select>
               </div>
 
@@ -5577,23 +5730,63 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                 </div>
               )}
 
-              {/* Delivery is a No-Ball Switch */}
-              <div style={{ background: '#141A26', border: '1px solid #2A364E', borderRadius: '8px', padding: '10px 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
-                <div>
-                  <div style={{ fontSize: '0.82rem', fontWeight: 800, color: '#CBD5E1' }}>
-                    Delivery is a No-Ball?
+              {/* Retired Without Facing Ball Switch */}
+              {wicketType === 'RETIRED_HURT' && (
+                <div
+                  style={{
+                    background: 'rgba(2, 132, 199, 0.08)',
+                    border: '1.5px solid #0284C7',
+                    borderRadius: '8px',
+                    padding: '12px 14px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: '12px',
+                  }}
+                >
+                  <div>
+                    <div style={{ fontSize: '0.85rem', fontWeight: 800, color: '#38BDF8', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span>⏱️</span>
+                      <span>Retired Without Facing Ball?</span>
+                    </div>
+                    <div style={{ fontSize: '0.73rem', color: '#94A3B8', marginTop: '2px', lineHeight: 1.35 }}>
+                      {dismissedId === currentInnings?.currentNonStrikerId
+                        ? 'Non-striker retirement does not count as a ball bowled.'
+                        : retHurtWithoutFacingBall
+                          ? 'Does NOT calculate a ball (overs & bowler balls unchanged, 0 balls added to batter).'
+                          : 'Calculates 1 ball faced by striker during this delivery.'}
+                    </div>
                   </div>
-                  <div style={{ fontSize: '0.72rem', color: '#94A3B8' }}>
-                    +1 penalty extra to batting team (+ extra delivery)
-                  </div>
+                  <input
+                    type="checkbox"
+                    id="ret-hurt-without-ball-toggle"
+                    checked={dismissedId === currentInnings?.currentNonStrikerId || retHurtWithoutFacingBall}
+                    disabled={dismissedId === currentInnings?.currentNonStrikerId}
+                    onChange={(e) => setRetHurtWithoutFacingBall(e.target.checked)}
+                    style={{ width: '20px', height: '20px', accentColor: '#0284C7', cursor: dismissedId === currentInnings?.currentNonStrikerId ? 'not-allowed' : 'pointer', flexShrink: 0 }}
+                  />
                 </div>
-                <input
-                  type="checkbox"
-                  checked={isWicketOnNoBall}
-                  onChange={(e) => setIsWicketOnNoBall(e.target.checked)}
-                  style={{ width: '18px', height: '18px', accentColor: '#F97316', cursor: 'pointer' }}
-                />
-              </div>
+              )}
+
+              {/* Delivery is a No-Ball Switch */}
+              {wicketType !== 'RETIRED_HURT' && (
+                <div style={{ background: '#141A26', border: '1px solid #2A364E', borderRadius: '8px', padding: '10px 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
+                  <div>
+                    <div style={{ fontSize: '0.82rem', fontWeight: 800, color: '#CBD5E1' }}>
+                      Delivery is a No-Ball?
+                    </div>
+                    <div style={{ fontSize: '0.72rem', color: '#94A3B8' }}>
+                      +1 penalty extra to batting team (+ extra delivery)
+                    </div>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={isWicketOnNoBall}
+                    onChange={(e) => setIsWicketOnNoBall(e.target.checked)}
+                    style={{ width: '18px', height: '18px', accentColor: '#F97316', cursor: 'pointer' }}
+                  />
+                </div>
+              )}
 
               {/* RUN OUT: Completed Runs Selector */}
               {wicketType === 'RUN_OUT' && (

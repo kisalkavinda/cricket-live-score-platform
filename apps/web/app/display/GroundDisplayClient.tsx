@@ -1092,16 +1092,71 @@ export default function GroundDisplayClient({
                         currentMatch.recentBalls.map((b, idx) => {
                           const runs = Number(b.runs || 0);
                           const extraRuns = Number(b.extras || 0);
-                          const displayLabel = b.display || (b.isWicket
-                            ? (b.wicketType === 'RETIRED_HURT' ? (runs > 0 ? `${runs}+RH` : 'RH')
-                              : b.extraType === 'WIDE' ? (runs > 0 ? `WD+${runs}+W` : (extraRuns > 1 ? `WD+${extraRuns - 1}+W` : 'WD+W'))
-                              : b.extraType === 'NO_BALL' ? (runs > 0 ? `NB+${runs}+W` : 'NB+W')
-                              : (runs > 0 ? `${runs}+W` : 'W'))
-                            : (b.extraType === 'WIDE' ? (extraRuns > 1 ? `WD+${extraRuns - 1}` : 'WD')
-                              : b.extraType === 'NO_BALL' ? (runs > 0 ? `NB+${runs}` : 'NB')
-                              : b.extraType === 'BYE' ? `${extraRuns || 1}B`
-                              : b.extraType === 'LEG_BYE' ? `${extraRuns || 1}LB`
-                              : `${runs}`));
+                          const byeRuns = Number(b.byeRuns || 0);
+                          const legByeRuns = Number(b.legByeRuns || 0);
+
+                          let displayLabel = b.display;
+                          if (!displayLabel) {
+                            if (b.isWicket) {
+                              if (b.wicketType === 'RETIRED_HURT') {
+                                displayLabel = runs > 0 ? `${runs}+RH` : 'RH';
+                              } else if (b.extraType === 'WIDE') {
+                                displayLabel = runs > 0 ? `WD+${runs}+W` : (extraRuns > 1 ? `WD+${extraRuns - 1}+W` : 'WD+W');
+                              } else if (b.extraType === 'NO_BALL') {
+                                displayLabel = runs > 0 ? `NB+${runs}+W` : 'NB+W';
+                              } else if (runs > 0) {
+                                displayLabel = `${runs}+W`;
+                              } else {
+                                displayLabel = 'W';
+                              }
+                            } else if (b.extraType === 'WIDE') {
+                              displayLabel = extraRuns > 1 ? `WD+${extraRuns - 1}` : 'WD';
+                            } else if (b.extraType === 'NO_BALL') {
+                              if (byeRuns > 0) {
+                                displayLabel = `NB+${byeRuns}B`;
+                              } else if (legByeRuns > 0) {
+                                displayLabel = `NB+${legByeRuns}LB`;
+                              } else if (runs > 0) {
+                                displayLabel = `NB+${runs}`;
+                              } else {
+                                displayLabel = 'NB';
+                              }
+                            } else if (b.extraType === 'BYE') {
+                              displayLabel = `${byeRuns || extraRuns || 1}B`;
+                            } else if (b.extraType === 'LEG_BYE') {
+                              displayLabel = `${legByeRuns || extraRuns || 1}LB`;
+                            } else {
+                              displayLabel = `${runs}`;
+                            }
+                          }
+
+                          let bg = 'rgba(255, 255, 255, 0.1)';
+                          let color = '#FFF';
+                          let border = '1px solid rgba(255, 255, 255, 0.15)';
+
+                          if (b.isWicket) {
+                            if (b.wicketType === 'RETIRED_HURT') {
+                              bg = '#0284C7';
+                              border = '1px solid #0369A1';
+                            } else {
+                              bg = '#EF4444';
+                              border = '1px solid #DC2626';
+                            }
+                          } else if (b.extraType === 'WIDE') {
+                            bg = '#F59E0B';
+                            color = '#000';
+                            border = '1px solid #D97706';
+                          } else if (b.extraType === 'NO_BALL') {
+                            bg = '#F97316';
+                            color = '#000';
+                            border = '1px solid #EA580C';
+                          } else if (b.runs === 4) {
+                            bg = '#10B981';
+                            border = '1px solid #059669';
+                          } else if (b.runs === 6) {
+                            bg = '#8B5CF6';
+                            border = '1px solid #7C3AED';
+                          }
 
                           return (
                             <span
@@ -1111,8 +1166,9 @@ export default function GroundDisplayClient({
                                 height: '32px',
                                 padding: displayLabel.length > 2 ? '0 6px' : '0',
                                 borderRadius: displayLabel.length > 2 ? '16px' : '50%',
-                                background: b.isWicket && b.wicketType === 'RETIRED_HURT' ? '#0284C7' : b.isWicket ? '#EF4444' : b.runs === 4 ? '#10B981' : b.runs === 6 ? '#8B5CF6' : b.extraType === 'WIDE' || b.extraType === 'NO_BALL' ? '#F59E0B' : 'rgba(255, 255, 255, 0.1)',
-                                color: b.extraType === 'WIDE' || b.extraType === 'NO_BALL' ? '#000' : '#FFF',
+                                background: bg,
+                                color: color,
+                                border: border,
                                 fontSize: displayLabel.length > 3 ? '0.68rem' : '0.82rem',
                                 fontWeight: 900,
                                 display: 'inline-flex',

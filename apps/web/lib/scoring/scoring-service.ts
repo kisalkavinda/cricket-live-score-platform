@@ -82,6 +82,7 @@ export interface RecordDeliveryInput {
   wicketType?: WicketTypeValue;
   dismissedPlayerId?: string;
   newBatterId?: string;
+  withoutFacingBall?: boolean;
   commentary?: string;
   expectedUpdatedAt?: string | Date;
   operationId?: string;
@@ -412,43 +413,83 @@ export async function buildMatchBroadcastPayload(matchOrId: string | any): Promi
     }
   }
 
-  const recentBalls = (currentInnings?.ballEvents || []).slice(0, matchBallsPerOver).map((b: any) => {
-    const runs = Number(b.runs || 0);
-    const extraRuns = Number(b.extras || 0);
-    let display = `${runs}`;
+  const allBalls = currentInnings?.ballEvents || [];
+  const currentOverNum = currentInnings?.overs ?? 0;
+  const hasBallsInCurrent = allBalls.some((b: any) => b.overNumber === currentOverNum);
+  const overToShow = (!hasBallsInCurrent && currentInnings?.overs > 0 && currentInnings?.balls === 0)
+    ? Math.max(0, (currentInnings.overs || 1) - 1)
+    : currentOverNum;
+
+  const currentOverDeliveries = allBalls
+    .filter((b: any) => b.overNumber === overToShow)
+    .sort((a: any, b: any) => {
+      const tA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const tB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return tA - tB;
+    });
+
+  const ballsForStrip = currentOverDeliveries.length > 0
+    ? currentOverDeliveries
+    : [...allBalls].sort((a: any, b: any) => {
+        const tA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const tB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return tA - tB;
+      }).slice(-matchBallsPerOver);
+
+  const recentBalls = ballsForStrip.map((b: any) => {
+    const bCalc = calculateDeliveryRuns(b);
+    let display = `${bCalc.batterRuns}`;
     if (b.isWicket) {
+      const r = bCalc.batterRuns || b.runs || 0;
       if (b.wicketType === 'RETIRED_HURT') {
-        display = runs > 0 ? `${runs}+RH` : 'RH';
+        display = r > 0 ? `${r}+RH` : 'RH';
       } else if (b.extraType === 'WIDE') {
-        display = runs > 0 ? `WD+${runs}+W` : (extraRuns > 1 ? `WD+${extraRuns - 1}+W` : 'WD+W');
+        display = r > 0 ? `WD+${r}+W` : (b.extras > 1 ? `WD+${b.extras - 1}+W` : 'WD+W');
       } else if (b.extraType === 'NO_BALL') {
-        display = runs > 0 ? `NB+${runs}+W` : 'NB+W';
-      } else if (runs > 0) {
-        display = `${runs}+W`;
+        display = r > 0 ? `NB+${r}+W` : 'NB+W';
+      } else if (r > 0) {
+        display = `${r}+W`;
       } else {
         display = 'W';
       }
     } else if (b.extraType === 'WIDE') {
-      display = extraRuns > 1 ? `WD+${extraRuns - 1}` : 'WD';
+      display = b.extras > 1 ? `WD+${b.extras - 1}` : 'WD';
     } else if (b.extraType === 'NO_BALL') {
-      display = runs > 0 ? `NB+${runs}` : 'NB';
+      if (bCalc.byeRuns > 0) {
+        display = `NB+${bCalc.byeRuns}B`;
+      } else if (bCalc.legByeRuns > 0) {
+        display = `NB+${bCalc.legByeRuns}LB`;
+      } else if (bCalc.batterRuns > 0) {
+        display = `NB+${bCalc.batterRuns}`;
+      } else {
+        display = 'NB';
+      }
     } else if (b.extraType === 'BYE') {
-      display = `${extraRuns || 1}B`;
+      display = `${bCalc.byeRuns || bCalc.totalRuns || 1}B`;
     } else if (b.extraType === 'LEG_BYE') {
-      display = `${extraRuns || 1}LB`;
+      display = `${bCalc.legByeRuns || bCalc.totalRuns || 1}LB`;
+    } else if (b.runs === 4) {
+      display = '4';
+    } else if (b.runs === 6) {
+      display = '6';
+    } else if (b.runs === 0) {
+      display = '0';
     }
 
     return {
       id: b.id || '',
       overNumber: b.overNumber ?? 0,
       ballNumber: b.ballNumber ?? 0,
-      runs,
-      extras: extraRuns,
+      runs: b.runs || 0,
+      extras: b.extras || 0,
       extraType: b.extraType || 'NONE',
+      byeRuns: b.byeRuns || 0,
+      legByeRuns: b.legByeRuns || 0,
       isLegal: b.isLegal ?? true,
       isWicket: b.isWicket ?? false,
       wicketType: b.wicketType || null,
       display,
+      createdAt: b.createdAt,
     };
   });
 
@@ -887,6 +928,21 @@ export async function recordDelivery(inningsId: string, input: RecordDeliveryInp
     const strikerId = innings.currentStrikerId;
     const nonStrikerId = innings.currentNonStrikerId;
     const bowlerId = innings.currentBowlerId;
+    const dismissedPlayerId = input.dismissedPlayerId || strikerId;
+
+    // Retired Hurt without facing ball:
+    // If a batter or non-striker retires hurt without facing a delivery (between balls or before ball is bowled),
+    // this event MUST NOT be calculated as a ball bowled (isLegal: false, 0 balls added to batter/bowler/innings).
+    const isRetHurtWithoutBall = Boolean(
+      isWicket &&
+      input.wicketType === 'RETIRED_HURT' &&
+      (input.withoutFacingBall || dismissedPlayerId === nonStrikerId)
+    );
+
+    const effectiveIsLegal = isRetHurtWithoutBall ? false : isLegal;
+    const effectiveTotalBallRuns = isRetHurtWithoutBall ? 0 : totalBallRuns;
+    const effectiveBowlerRunsCharged = isRetHurtWithoutBall ? 0 : bowlerRunsCharged;
+    const effectiveBatterRunsOffBat = isRetHurtWithoutBall ? 0 : batterRunsOffBat;
 
     // 2. Compute updated over and legal ball count
     const matchBallsPerOver = innings.match?.ballsPerOver || 6;
@@ -894,7 +950,7 @@ export async function recordDelivery(inningsId: string, input: RecordDeliveryInp
     let nextBalls = innings.balls;
     let isOverComplete = false;
 
-    if (isLegal) {
+    if (effectiveIsLegal) {
       if (nextBalls + 1 >= matchBallsPerOver) {
         nextOvers += 1;
         nextBalls = 0;
@@ -904,7 +960,7 @@ export async function recordDelivery(inningsId: string, input: RecordDeliveryInp
       }
     }
 
-    const nextRuns = innings.runs + totalBallRuns;
+    const nextRuns = innings.runs + effectiveTotalBallRuns;
     const teamWicketLost = isWicket && input.wicketType !== 'RETIRED_HURT';
     const nextWickets = innings.wickets + (teamWicketLost ? 1 : 0);
 
@@ -913,23 +969,23 @@ export async function recordDelivery(inningsId: string, input: RecordDeliveryInp
     const isTeamAllOut = nextWickets >= wicketLimit;
 
     // 3. Update Batter statistics
-    if (extraType !== 'WIDE') {
-      const isFour = batterRunsOffBat === 4;
-      const isSix = batterRunsOffBat === 6;
+    if (extraType !== 'WIDE' && !isRetHurtWithoutBall) {
+      const isFour = effectiveBatterRunsOffBat === 4;
+      const isSix = effectiveBatterRunsOffBat === 6;
 
       await tx.inningsBatter.upsert({
         where: { inningsId_playerId: { inningsId, playerId: strikerId } },
         create: {
           inningsId,
           playerId: strikerId,
-          runs: batterRunsOffBat,
+          runs: effectiveBatterRunsOffBat,
           balls: 1,
           fours: isFour ? 1 : 0,
           sixes: isSix ? 1 : 0,
           isStriker: true,
         },
         update: {
-          runs: { increment: batterRunsOffBat },
+          runs: { increment: effectiveBatterRunsOffBat },
           balls: { increment: 1 },
           fours: { increment: isFour ? 1 : 0 },
           sixes: { increment: isSix ? 1 : 0 },
@@ -947,7 +1003,7 @@ export async function recordDelivery(inningsId: string, input: RecordDeliveryInp
     const prevBowlerLegalBalls = currentBowlerRecord
       ? (currentBowlerRecord.overs * matchBallsPerOver + currentBowlerRecord.balls)
       : 0;
-    const nextBowlerLegalBalls = prevBowlerLegalBalls + (isLegal ? 1 : 0);
+    const nextBowlerLegalBalls = prevBowlerLegalBalls + (effectiveIsLegal ? 1 : 0);
     const nextBowlerOvers = Math.floor(nextBowlerLegalBalls / matchBallsPerOver);
     const nextBowlerBalls = nextBowlerLegalBalls % matchBallsPerOver;
 
@@ -958,7 +1014,7 @@ export async function recordDelivery(inningsId: string, input: RecordDeliveryInp
         playerId: bowlerId,
         overs: nextBowlerOvers,
         balls: nextBowlerBalls,
-        runsConceded: bowlerRunsCharged,
+        runsConceded: effectiveBowlerRunsCharged,
         wickets: bowlerWicketCredited ? 1 : 0,
         wides: extraType === 'WIDE' ? delivery.wideRuns : 0,
         noBalls: extraType === 'NO_BALL' ? delivery.noBallPenalty : 0,
@@ -967,7 +1023,7 @@ export async function recordDelivery(inningsId: string, input: RecordDeliveryInp
       update: {
         overs: nextBowlerOvers,
         balls: nextBowlerBalls,
-        runsConceded: { increment: bowlerRunsCharged },
+        runsConceded: { increment: effectiveBowlerRunsCharged },
         wickets: bowlerWicketCredited ? { increment: 1 } : undefined,
         wides: extraType === 'WIDE' ? { increment: delivery.wideRuns } : undefined,
         noBalls: extraType === 'NO_BALL' ? { increment: delivery.noBallPenalty } : undefined,
@@ -978,7 +1034,6 @@ export async function recordDelivery(inningsId: string, input: RecordDeliveryInp
     // 5. Handle Wicket / Dismissal details
     let nextStrikerId = strikerId;
     let nextNonStrikerId = nonStrikerId;
-    const dismissedPlayerId = input.dismissedPlayerId || strikerId;
 
     if (isWicket) {
       let dismissalText = 'out';
@@ -1018,7 +1073,7 @@ export async function recordDelivery(inningsId: string, input: RecordDeliveryInp
           inningsId,
           playerId: dismissedPlayerId,
           runs: 0,
-          balls: (extraType !== 'WIDE' && dismissedPlayerId === strikerId) ? 1 : 0,
+          balls: (extraType !== 'WIDE' && dismissedPlayerId === strikerId && !isRetHurtWithoutBall) ? 1 : 0,
           fours: 0,
           sixes: 0,
           isOut: !isRetHurt,
@@ -1256,14 +1311,14 @@ export async function recordDelivery(inningsId: string, input: RecordDeliveryInp
         inningsId,
         overNumber: innings.overs,
         ballNumber: innings.balls + 1,
-        batsmanId: strikerId,
+        batsmanId: dismissedPlayerId === nonStrikerId ? nonStrikerId : strikerId,
         bowlerId,
-        runs: delivery.batterRuns,
-        extras: extraType === 'NONE' ? 0 : (delivery.totalRuns - delivery.batterRuns),
-        extraType,
-        byeRuns: delivery.byeRuns,
-        legByeRuns: delivery.legByeRuns,
-        isLegal,
+        runs: effectiveBatterRunsOffBat,
+        extras: isRetHurtWithoutBall ? 0 : (extraType === 'NONE' ? 0 : (delivery.totalRuns - delivery.batterRuns)),
+        extraType: isRetHurtWithoutBall ? 'NONE' : extraType,
+        byeRuns: isRetHurtWithoutBall ? 0 : delivery.byeRuns,
+        legByeRuns: isRetHurtWithoutBall ? 0 : delivery.legByeRuns,
+        isLegal: effectiveIsLegal,
         isWicket,
         wicketType: input.wicketType || null,
         dismissedPlayerId: isWicket ? dismissedPlayerId : null,
@@ -1275,7 +1330,7 @@ export async function recordDelivery(inningsId: string, input: RecordDeliveryInp
     });
 
     // 11. Maiden Over Calculation upon over completion
-    if (isLegal && isOverComplete) {
+    if (effectiveIsLegal && isOverComplete) {
       const priorOverBalls = await tx.ballEvent.findMany({
         where: {
           inningsId,
@@ -1453,7 +1508,8 @@ export async function undoLastDelivery(inningsId: string, operationId?: string, 
     const deliveryRuns = lastBallDelivery.totalRuns;
 
     // 2. Rollback Batter statistics
-    if (lastBall.extraType !== 'WIDE') {
+    const isRetHurtWithoutBall = lastBall.isWicket && lastBall.wicketType === 'RETIRED_HURT' && !lastBall.isLegal;
+    if (lastBall.extraType !== 'WIDE' && !isRetHurtWithoutBall) {
       const runsOffBat = (lastBall.extraType === 'BYE' || lastBall.extraType === 'LEG_BYE') ? 0 : lastBall.runs;
       await tx.inningsBatter.updateMany({
         where: { inningsId, playerId: lastBall.batsmanId },
@@ -1464,6 +1520,14 @@ export async function undoLastDelivery(inningsId: string, operationId?: string, 
           sixes: lastBall.runs === 6 && runsOffBat === 6 ? { decrement: 1 } : undefined,
           isOut: lastBall.isWicket && lastBall.dismissedPlayerId === lastBall.batsmanId ? false : undefined,
           dismissal: lastBall.isWicket && lastBall.dismissedPlayerId === lastBall.batsmanId ? null : undefined,
+        },
+      });
+    } else if (isRetHurtWithoutBall) {
+      await tx.inningsBatter.updateMany({
+        where: { inningsId, playerId: lastBall.dismissedPlayerId || lastBall.batsmanId },
+        data: {
+          isOut: false,
+          dismissal: null,
         },
       });
     }
@@ -2505,7 +2569,8 @@ export async function recalculateInningsFromBalls(tx: any, inningsId: string) {
         batterMap[b.batsmanId].dismissal = null;
         batterMap[b.batsmanId].isOut = false;
       }
-      if (b.extraType !== 'WIDE') {
+      const isRetHurtWithoutBall = b.isWicket && b.wicketType === 'RETIRED_HURT' && !b.isLegal;
+      if (b.extraType !== 'WIDE' && !isRetHurtWithoutBall) {
         const offBat = delivery.batterRuns;
         batterMap[b.batsmanId].runs += offBat;
         batterMap[b.batsmanId].balls += 1;
