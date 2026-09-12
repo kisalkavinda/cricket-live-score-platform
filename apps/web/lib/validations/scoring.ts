@@ -26,6 +26,7 @@ export const recordDeliverySchema = z.object({
   wicketType: wicketTypeEnum.optional(),
   dismissedPlayerId: z.string().trim().min(1).max(64).optional(),
   newBatterId: z.string().trim().min(1).max(64).optional(),
+  withoutFacingBall: z.boolean().optional(),
   commentary: z.string().trim().max(500).optional(),
   expectedUpdatedAt: z.any().optional(),
   operationId: z.string().trim().min(1).max(128).optional(),

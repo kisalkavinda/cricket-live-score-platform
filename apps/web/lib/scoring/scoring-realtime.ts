@@ -112,10 +112,13 @@ export interface ScoreBroadcastPayload {
     runs: number;
     extras: number;
     extraType: string;
+    byeRuns?: number;
+    legByeRuns?: number;
     isLegal: boolean;
     isWicket: boolean;
     wicketType?: string | null;
     display: string;
+    createdAt?: any;
   }>;
   timestamp: string;
 }

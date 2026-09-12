@@ -54,6 +54,12 @@ function applyOperationToProjection(match: any, op: OfflineOperation): void {
       const dismissedPlayerId = payload.dismissedPlayerId || innings.currentStrikerId;
       const newBatterId = payload.newBatterId;
 
+      const isRetHurtWithoutBall = Boolean(
+        isWicket &&
+        wicketType === 'RETIRED_HURT' &&
+        (payload.withoutFacingBall || dismissedPlayerId === innings.currentNonStrikerId)
+      );
+
       const delivery = calculateDeliveryRuns({
         runs,
         extraType,
@@ -62,10 +68,10 @@ function applyOperationToProjection(match: any, op: OfflineOperation): void {
         legByeRuns,
       });
 
-      const isLegal = delivery.isLegal;
-      const totalBallRuns = delivery.totalRuns;
-      const bowlerChargedRuns = delivery.bowlerRuns;
-      const batterRuns = delivery.batterRuns;
+      const isLegal = isRetHurtWithoutBall ? false : delivery.isLegal;
+      const totalBallRuns = isRetHurtWithoutBall ? 0 : delivery.totalRuns;
+      const bowlerChargedRuns = isRetHurtWithoutBall ? 0 : delivery.bowlerRuns;
+      const batterRuns = isRetHurtWithoutBall ? 0 : delivery.batterRuns;
 
       let nextOvers = innings.overs;
       let nextBalls = innings.balls;
@@ -92,7 +98,7 @@ function applyOperationToProjection(match: any, op: OfflineOperation): void {
       let nextNonStrikerId = innings.currentNonStrikerId;
 
       // Update Batter stats
-      if (innings.currentStrikerId && extraType !== 'WIDE') {
+      if (innings.currentStrikerId && extraType !== 'WIDE' && !isRetHurtWithoutBall) {
         innings.battingScores = innings.battingScores || [];
         let batter = innings.battingScores.find((b: any) => b.playerId === innings.currentStrikerId);
         if (!batter) {
@@ -217,16 +223,17 @@ function applyOperationToProjection(match: any, op: OfflineOperation): void {
         operationId: op.operationId,
         isLocalPending: op.status !== 'SYNCED',
         overNumber: innings.overs,
-        ballNumber: innings.balls,
+        ballNumber: isLegal ? innings.balls : (innings.balls + 1),
         bowlerId: deliveryBowlerId,
-        runs: delivery.batterRuns,
-        extras: delivery.wideRuns + delivery.noBallPenalty + delivery.byeRuns + delivery.legByeRuns,
-        extraType,
-        byeRuns: delivery.byeRuns,
-        legByeRuns: delivery.legByeRuns,
+        runs: batterRuns,
+        extras: isRetHurtWithoutBall ? 0 : (delivery.wideRuns + delivery.noBallPenalty + delivery.byeRuns + delivery.legByeRuns),
+        extraType: isRetHurtWithoutBall ? 'NONE' : extraType,
+        byeRuns: isRetHurtWithoutBall ? 0 : delivery.byeRuns,
+        legByeRuns: isRetHurtWithoutBall ? 0 : delivery.legByeRuns,
         isLegal,
         isWicket,
         wicketType,
+        dismissedPlayerId: isWicket ? dismissedPlayerId : null,
         createdAt: op.createdAt,
       });
       break;

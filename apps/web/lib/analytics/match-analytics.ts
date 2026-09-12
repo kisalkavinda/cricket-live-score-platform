@@ -9,7 +9,7 @@
  * 5. Ball-by-ball commentary generation and filtering
  */
 
-import { isBowlerCreditedDismissal } from '../scoring/scoring-rules';
+import { isBowlerCreditedDismissal, calculateDeliveryRuns } from '../scoring/scoring-rules';
 
 export interface OverSummary {
   overNumber: number; // 1-indexed (e.g. 1 for Over 1)
@@ -884,6 +884,35 @@ export function getBallBadgeStyle(b: any): FormattedCommentaryBall['outcomeBadge
     };
   }
 
+  if (b.extraType === 'WIDE') {
+    return {
+      label: b.extras > 1 ? `WD+${b.extras - 1}` : 'WD',
+      bg: '#F59E0B',
+      color: '#000000',
+      borderColor: '#D97706',
+      type: 'EXTRA',
+    };
+  }
+
+  if (b.extraType === 'NO_BALL') {
+    const bCalc = calculateDeliveryRuns(b);
+    let label = 'NB';
+    if (bCalc.byeRuns > 0) {
+      label = `NB+${bCalc.byeRuns}B`;
+    } else if (bCalc.legByeRuns > 0) {
+      label = `NB+${bCalc.legByeRuns}LB`;
+    } else if (bCalc.batterRuns > 0) {
+      label = `NB+${bCalc.batterRuns}`;
+    }
+    return {
+      label,
+      bg: '#F97316',
+      color: '#000000',
+      borderColor: '#EA580C',
+      type: 'EXTRA',
+    };
+  }
+
   if (batRuns === 6) {
     return {
       label: '6',
@@ -901,26 +930,6 @@ export function getBallBadgeStyle(b: any): FormattedCommentaryBall['outcomeBadge
       color: '#FFFFFF',
       borderColor: '#059669',
       type: 'FOUR',
-    };
-  }
-
-  if (b.extraType === 'WIDE') {
-    return {
-      label: b.extras > 1 ? `WD+${b.extras - 1}` : 'WD',
-      bg: '#F59E0B',
-      color: '#000000',
-      borderColor: '#D97706',
-      type: 'EXTRA',
-    };
-  }
-
-  if (b.extraType === 'NO_BALL') {
-    return {
-      label: b.runs > 0 ? `NB+${b.runs}` : 'NB',
-      bg: '#F97316',
-      color: '#000000',
-      borderColor: '#EA580C',
-      type: 'EXTRA',
     };
   }
 

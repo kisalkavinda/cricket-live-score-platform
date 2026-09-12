@@ -998,8 +998,15 @@ h1, h2, h3, h4, h5, h6,
 
 .scoring-extras-grid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(6, 1fr);
   gap: 12px;
+}
+
+@media (max-width: 900px) {
+  .scoring-extras-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 8px !important;
+  }
 }
 
 @media (max-width: 640px) {
@@ -1010,9 +1017,6 @@ h1, h2, h3, h4, h5, h6,
   .scoring-extras-grid {
     grid-template-columns: repeat(2, 1fr) !important;
     gap: 8px !important;
-  }
-  .scoring-extras-grid button:last-child {
-    grid-column: 1 / -1;
   }
 }
 
