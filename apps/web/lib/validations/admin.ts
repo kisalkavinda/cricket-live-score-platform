@@ -50,6 +50,7 @@ export const createTournamentSchema = z.object({
   name: z.string().trim().min(2).max(100),
   season: z.string().trim().min(1).max(20),
   format: z.string().trim().min(1).max(50),
+  tournamentFormat: z.enum(["6_TEAM", "7_TEAM", "8_TEAM"]).default("8_TEAM"),
   oversPerInnings: z.number().int().min(1).max(100).default(20),
   ballsPerOver: z.number().int().min(1).max(20).default(6),
 });
@@ -68,6 +69,7 @@ export const updateTournamentSchema = z.object({
   name: z.string().trim().min(2).max(100).optional(),
   season: z.string().trim().min(1).max(20).optional(),
   format: z.string().trim().min(1).max(50).optional(),
+  tournamentFormat: z.enum(["6_TEAM", "7_TEAM", "8_TEAM"]).optional(),
   status: tournamentStatusEnum.optional(),
 });
 

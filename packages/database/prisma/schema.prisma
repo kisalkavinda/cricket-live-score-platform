@@ -150,6 +150,7 @@ model Tournament {
   name                   String
   season                 String
   format                 String
+  tournamentFormat       String                  @default("8_TEAM")
   status                 TournamentStatus        @default(DRAFT)
   startDate              DateTime?
   endDate                DateTime?

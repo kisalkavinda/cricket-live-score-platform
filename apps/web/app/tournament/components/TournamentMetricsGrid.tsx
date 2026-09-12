@@ -10,20 +10,30 @@ interface TournamentMetricsGridProps {
   };
   highestScoreText: string;
   highestNRRTeam: string;
+  tournamentFormat?: string;
+  registeredTeamsCount?: number;
 }
 
 export default function TournamentMetricsGrid({
   progress,
   highestScoreText,
   highestNRRTeam,
+  tournamentFormat,
+  registeredTeamsCount,
 }: TournamentMetricsGridProps) {
   const remaining = Math.max(0, progress.totalMatches - progress.completedMatches);
+  const teamCount = registeredTeamsCount || (tournamentFormat === '6_TEAM' ? 6 : tournamentFormat === '7_TEAM' ? 7 : 8);
+  const teamSub = tournamentFormat === '6_TEAM'
+    ? 'Groups A & B (3 Teams Each)'
+    : tournamentFormat === '7_TEAM'
+    ? 'Group A (4) & Group B (3)'
+    : 'Groups A & B (4 Teams Each)';
 
   const metrics = [
     {
       label: 'MATCHES COMPLETED',
       value: `${progress.completedMatches} / ${progress.totalMatches}`,
-      sub: '15 Scheduled Fixtures',
+      sub: `${progress.totalMatches} Scheduled Fixtures`,
       color: 'var(--color-accent, #C0272D)',
     },
     {
@@ -34,8 +44,8 @@ export default function TournamentMetricsGrid({
     },
     {
       label: 'REGISTERED TEAMS',
-      value: '8 TEAMS',
-      sub: 'Groups A & B (4 Teams Each)',
+      value: `${teamCount} TEAMS`,
+      sub: teamSub,
       color: '#FFFFFF',
     },
     {

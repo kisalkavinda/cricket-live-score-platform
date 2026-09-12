@@ -10,8 +10,15 @@ import {
   advanceTournamentAction,
   recalculateStandingsAction,
   resetTournamentAction,
+  updateTournamentFormatAction,
 } from '@/lib/tournament/tournament-actions';
 import { TournamentOverview } from '@/lib/tournament/tournament-service';
+import {
+  TournamentFormatType,
+  TOURNAMENT_FORMAT_CONFIGS,
+  getFormatConfig,
+  resolveTournamentFormat,
+} from '@/lib/tournament/tournament-formats';
 
 interface Props {
   tournament: any;
@@ -28,6 +35,24 @@ export default function TournamentAdminConsole({
   stages,
   entryPath,
 }: Props) {
+  // Tournament format state
+  const [tournamentFormat, setTournamentFormat] = useState<TournamentFormatType>(() => {
+    return resolveTournamentFormat(overview?.tournamentFormat || tournament.tournamentFormat || tournament.format);
+  });
+  const [updatingFormat, setUpdatingFormat] = useState(false);
+
+  useEffect(() => {
+    if (overview?.tournamentFormat || tournament.tournamentFormat) {
+      setTournamentFormat(resolveTournamentFormat(overview?.tournamentFormat || tournament.tournamentFormat));
+    }
+  }, [overview, tournament]);
+
+  const activeFormatConfig = getFormatConfig(tournamentFormat);
+  const requiredGroupA = activeFormatConfig.groupA;
+  const requiredGroupB = activeFormatConfig.groupB;
+  const totalRequiredTeams = activeFormatConfig.totalTeams;
+  const totalGroupMatches = activeFormatConfig.groupMatches;
+
   // Format settings state
   const groupStage = stages.find((s) => s.name === 'GROUP');
   const qualStage = stages.find((s) => s.name === 'QUALIFICATION' || s.name === 'WILDCARD');
@@ -125,14 +150,15 @@ export default function TournamentAdminConsole({
 
     setAssignments((prev) => ({ ...prev, [teamId]: group }));
 
-    // Auto-allocate next available position in this group (1..4)
+    // Auto-allocate next available position in this group (1..maxPos)
+    const maxPos = group === 'GROUP_A' ? requiredGroupA : requiredGroupB;
     const existingInGroup = Object.entries(assignments)
       .filter(([id, g]) => g === group && id !== teamId)
       .map(([id]) => positions[id])
       .filter(Boolean);
 
     let nextPos = 1;
-    for (let p = 1; p <= 4; p++) {
+    for (let p = 1; p <= maxPos; p++) {
       if (!existingInGroup.includes(p)) {
         nextPos = p;
         break;
@@ -145,27 +171,53 @@ export default function TournamentAdminConsole({
     setPositions((prev) => ({ ...prev, [teamId]: pos }));
   };
 
+  const handleFormatChange = async (newFormat: TournamentFormatType) => {
+    if (isLocked) {
+      showToast('error', 'Format cannot be changed while fixtures are active. Reset fixtures first.');
+      return;
+    }
+    setUpdatingFormat(true);
+    try {
+      const res = await updateTournamentFormatAction(tournament.id, newFormat);
+      if (res.success) {
+        setTournamentFormat(newFormat);
+        showToast('success', `Tournament format updated to ${TOURNAMENT_FORMAT_CONFIGS[newFormat].name}!`);
+      } else {
+        showToast('error', res.error || 'Failed to update tournament format.');
+      }
+    } catch (err: any) {
+      showToast('error', err.message || 'Error updating format.');
+    } finally {
+      setUpdatingFormat(false);
+    }
+  };
+
   const handleAutoAssign = () => {
     const realTeams = allTeams.filter(
       (t) => !t.name.toLowerCase().includes('dummy') && !t.shortName.toLowerCase().includes('dummy')
     );
-    const targetTeams = realTeams.length >= 8 ? realTeams.slice(0, 8) : allTeams.slice(0, 8);
+    const targetTeams = realTeams.length >= totalRequiredTeams 
+      ? realTeams.slice(0, totalRequiredTeams) 
+      : allTeams.slice(0, totalRequiredTeams);
 
     const nextAss: Record<string, 'GROUP_A' | 'GROUP_B'> = {};
     const nextPos: Record<string, number> = {};
 
-    targetTeams.slice(0, 4).forEach((t, idx) => {
+    targetTeams.slice(0, requiredGroupA).forEach((t, idx) => {
       nextAss[t.id] = 'GROUP_A';
       nextPos[t.id] = idx + 1;
     });
-    targetTeams.slice(4, 8).forEach((t, idx) => {
+    targetTeams.slice(requiredGroupA, requiredGroupA + requiredGroupB).forEach((t, idx) => {
       nextAss[t.id] = 'GROUP_B';
       nextPos[t.id] = idx + 1;
     });
 
     setAssignments(nextAss);
     setPositions(nextPos);
-    showToast('success', 'Auto-assigned 8 teams (4 in Group A, 4 in Group B). Click "Save Group Assignments" to persist.');
+    showToast(
+      'success',
+      `Auto-assigned ${totalRequiredTeams} teams (${requiredGroupA} in Group A, ${requiredGroupB} in Group B). Click "Save Group Assignments" to persist.`
+    );
   };
 
   const handleUnassignAll = async () => {
@@ -209,15 +261,15 @@ export default function TournamentAdminConsole({
   };
 
   const handleSaveGroups = async () => {
-    if (groupACount !== 4 || groupBCount !== 4) {
+    if (groupACount !== requiredGroupA || groupBCount !== requiredGroupB) {
       showToast(
         'error',
-        `Each group must have exactly 4 teams. Currently: Group A (${groupACount}/4), Group B (${groupBCount}/4)`
+        `Format requires ${requiredGroupA} teams in Group A and ${requiredGroupB} in Group B. Currently: Group A (${groupACount}/${requiredGroupA}), Group B (${groupBCount}/${requiredGroupB})`
       );
       return;
     }
 
-    // Ensure every assigned team has an explicit position (1..4)
+    // Ensure every assigned team has an explicit position
     const finalizedPositions = { ...positions };
     Object.keys(assignments).forEach((teamId) => {
       if (!finalizedPositions[teamId]) {
@@ -241,8 +293,11 @@ export default function TournamentAdminConsole({
   };
 
   const handleGenerateFixtures = async () => {
-    if (groupACount !== 4 || groupBCount !== 4) {
-      showToast('error', `Each group must have exactly 4 teams. Currently: Group A (${groupACount}/4), Group B (${groupBCount}/4)`);
+    if (groupACount !== requiredGroupA || groupBCount !== requiredGroupB) {
+      showToast(
+        'error',
+        `Each group must be filled before generating fixtures. Currently: Group A (${groupACount}/${requiredGroupA}), Group B (${groupBCount}/${requiredGroupB})`
+      );
       return;
     }
     setGeneratingFixtures(true);
@@ -255,7 +310,7 @@ export default function TournamentAdminConsole({
         finalOvers: Number(finalOvers),
       });
       if (res.success) {
-        showToast('success', '8 Group Stage fixtures successfully generated (Matches 1–8)!');
+        showToast('success', `${totalGroupMatches} Group Stage fixtures successfully generated (Matches 1–${totalGroupMatches})!`);
       } else {
         showToast('error', res.error || 'Failed to generate fixtures.');
       }
@@ -422,7 +477,75 @@ export default function TournamentAdminConsole({
         </div>
       </div>
 
-      {/* Grid: Left = Format Config & Actions, Right = 8-Team Group Selector */}
+      {/* Section 0: Tournament Format Selector Card */}
+      <div style={{ background: '#1E293B', borderRadius: '12px', border: '1px solid #334155', padding: '20px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px', flexWrap: 'wrap', gap: '10px' }}>
+          <div>
+            <h2 style={{ fontSize: '16px', fontWeight: 800, color: '#F8FAFC', margin: '0 0 4px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span>🏆</span> Tournament Format & Team Configuration
+            </h2>
+            <p style={{ fontSize: '12px', color: '#94A3B8', margin: 0 }}>
+              Select the tournament structure. Once fixtures are generated, the format is locked to protect historical data and NRR records.
+            </p>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '12px', color: '#94A3B8' }}>Active Format:</span>
+            <span style={{ padding: '4px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: 800, background: '#C0272D', color: '#FFF' }}>
+              {activeFormatConfig.name} ({activeFormatConfig.totalMatches} Matches)
+            </span>
+          </div>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '12px' }}>
+          {(['6_TEAM', '7_TEAM', '8_TEAM'] as TournamentFormatType[]).map((fmt) => {
+            const config = TOURNAMENT_FORMAT_CONFIGS[fmt];
+            const isSelected = tournamentFormat === fmt;
+            return (
+              <div
+                key={fmt}
+                onClick={() => !isLocked && !updatingFormat && handleFormatChange(fmt)}
+                style={{
+                  padding: '14px',
+                  borderRadius: '10px',
+                  background: isSelected ? 'rgba(192, 39, 45, 0.15)' : '#0F172A',
+                  border: isSelected ? '2px solid #C0272D' : '1px solid #334155',
+                  cursor: isLocked ? 'not-allowed' : 'pointer',
+                  opacity: isLocked && !isSelected ? 0.45 : 1,
+                  transition: 'all 0.2s ease',
+                  position: 'relative',
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                  <span style={{ fontWeight: 800, fontSize: '14px', color: isSelected ? '#FFF' : '#CBD5E1' }}>
+                    {config.name}
+                  </span>
+                  {isSelected && (
+                    <span style={{ fontSize: '11px', background: '#C0272D', color: '#FFF', padding: '2px 8px', borderRadius: '4px', fontWeight: 700 }}>
+                      Selected
+                    </span>
+                  )}
+                </div>
+                <div style={{ fontSize: '11px', color: '#94A3B8', lineHeight: 1.4, marginBottom: '8px' }}>
+                  {config.description}
+                </div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', fontSize: '10px' }}>
+                  <span style={{ background: '#1E293B', padding: '2px 6px', borderRadius: '4px', color: '#38BDF8' }}>
+                    Group A: {config.groupA} Teams
+                  </span>
+                  <span style={{ background: '#1E293B', padding: '2px 6px', borderRadius: '4px', color: '#38BDF8' }}>
+                    Group B: {config.groupB} Teams
+                  </span>
+                  <span style={{ background: '#1E293B', padding: '2px 6px', borderRadius: '4px', color: '#FBBF24' }}>
+                    {config.totalMatches} Matches Total
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Grid: Left = Format Config & Actions, Right = Team Group Selector */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '24px' }}>
         
         {/* Section 1: Tournament Format Settings */}
@@ -493,7 +616,7 @@ export default function TournamentAdminConsole({
 
               <div>
                 <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#CBD5E1', marginBottom: '6px' }}>
-                  Stage 2 (Qualification) Overs:
+                  {tournamentFormat === '6_TEAM' ? 'Stage 2 (Wildcard) Overs:' : tournamentFormat === '7_TEAM' ? 'Stage 2 (Playoffs) Overs:' : 'Stage 2 (Qualification) Overs:'}
                 </label>
                 <input
                   type="number"
@@ -510,7 +633,7 @@ export default function TournamentAdminConsole({
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
               <div>
                 <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#CBD5E1', marginBottom: '6px' }}>
-                  Stage 3 (Playoffs) Overs:
+                  {tournamentFormat === '7_TEAM' ? 'Stage 2 Continuation Overs:' : 'Stage 3 (Playoffs) Overs:'}
                 </label>
                 <input
                   type="number"
@@ -525,7 +648,7 @@ export default function TournamentAdminConsole({
 
               <div>
                 <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#CBD5E1', marginBottom: '6px' }}>
-                  Stage 4 (Final) Overs:
+                  Final Stage Overs:
                 </label>
                 <input
                   type="number"
@@ -565,15 +688,15 @@ export default function TournamentAdminConsole({
           {/* Fixture Generator Action */}
           <div>
             <h3 style={{ fontSize: '14px', fontWeight: 800, color: '#F8FAFC', margin: '0 0 6px 0' }}>
-              Generate Stage 1 Fixtures (Matches 1–8)
+              Generate Stage 1 Fixtures (Matches 1–{totalGroupMatches})
             </h3>
             {isLocked ? (
               <div style={{ padding: '10px 14px', borderRadius: '6px', background: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.25)', color: '#93C5FD', fontSize: '12px', lineHeight: 1.5, marginBottom: '14px' }}>
-                ✅ Fixtures already generated. Stage 1 group matches (1–8) are active in the system.
+                ✅ Fixtures already generated. Stage 1 group matches (1–{totalGroupMatches}) are active in the system.
               </div>
             ) : (
               <p style={{ fontSize: '12px', color: '#94A3B8', marginBottom: '14px' }}>
-                Creates 4 square matches per group (8 matches total) at {ballsPerOver} balls/over and {groupOvers} overs.
+                Creates {totalGroupMatches} group matches ({requiredGroupA === requiredGroupB ? `${requiredGroupA} per group` : `${requiredGroupA} in Group A, ${requiredGroupB} in Group B`}) at {ballsPerOver} balls/over and {groupOvers} overs.
               </p>
             )}
             <button
@@ -592,12 +715,12 @@ export default function TournamentAdminConsole({
                 boxShadow: isLocked ? 'none' : '0 4px 12px rgba(192, 39, 45, 0.3)',
               }}
             >
-              {isLocked ? '🔒 Fixtures Already Generated' : generatingFixtures ? 'Generating Fixtures...' : '🚀 Generate Group Stage Fixtures (1–8)'}
+              {isLocked ? '🔒 Fixtures Already Generated' : generatingFixtures ? 'Generating Fixtures...' : `🚀 Generate Group Stage Fixtures (1–${totalGroupMatches})`}
             </button>
           </div>
         </div>
 
-        {/* Section 2: 8-Team Group Assignment */}
+        {/* Section 2: Team Group Assignment */}
         <div style={{ background: '#1E293B', borderRadius: '12px', border: '1px solid #334155', padding: '20px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -607,21 +730,21 @@ export default function TournamentAdminConsole({
               </h2>
             </div>
             <div style={{ fontSize: '12px', color: '#94A3B8' }}>
-              Total Teams: <strong>{allTeams.length}</strong>
+              Total Teams: <strong>{allTeams.length}</strong> (Target: {totalRequiredTeams})
             </div>
           </div>
           <p style={{ fontSize: '12px', color: '#94A3B8', marginBottom: '16px' }}>
-            Assign each registered team to Group A (A1–A4) or Group B (B1–B4). Exactly 4 teams per group.
+            Assign registered teams to Group A (A1–A{requiredGroupA}) or Group B (B1–B{requiredGroupB}). Exactly {requiredGroupA} in Group A and {requiredGroupB} in Group B.
           </p>
 
           {/* Group Count Badges & Auto-Assign Action */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px', marginBottom: '16px' }}>
             <div style={{ display: 'flex', gap: '8px' }}>
-              <div style={{ padding: '6px 12px', borderRadius: '6px', background: groupACount === 4 ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)', color: groupACount === 4 ? '#34D399' : '#F87171', border: groupACount === 4 ? '1px solid rgba(16, 185, 129, 0.3)' : '1px solid rgba(239, 68, 68, 0.3)', fontSize: '12px', fontWeight: 700 }}>
-                Group A: {groupACount}/4
+              <div style={{ padding: '6px 12px', borderRadius: '6px', background: groupACount === requiredGroupA ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)', color: groupACount === requiredGroupA ? '#34D399' : '#F87171', border: groupACount === requiredGroupA ? '1px solid rgba(16, 185, 129, 0.3)' : '1px solid rgba(239, 68, 68, 0.3)', fontSize: '12px', fontWeight: 700 }}>
+                Group A: {groupACount}/{requiredGroupA}
               </div>
-              <div style={{ padding: '6px 12px', borderRadius: '6px', background: groupBCount === 4 ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)', color: groupBCount === 4 ? '#34D399' : '#F87171', border: groupBCount === 4 ? '1px solid rgba(16, 185, 129, 0.3)' : '1px solid rgba(239, 68, 68, 0.3)', fontSize: '12px', fontWeight: 700 }}>
-                Group B: {groupBCount}/4
+              <div style={{ padding: '6px 12px', borderRadius: '6px', background: groupBCount === requiredGroupB ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)', color: groupBCount === requiredGroupB ? '#34D399' : '#F87171', border: groupBCount === requiredGroupB ? '1px solid rgba(16, 185, 129, 0.3)' : '1px solid rgba(239, 68, 68, 0.3)', fontSize: '12px', fontWeight: 700 }}>
+                Group B: {groupBCount}/{requiredGroupB}
               </div>
             </div>
 
@@ -641,7 +764,7 @@ export default function TournamentAdminConsole({
                     cursor: 'pointer',
                   }}
                 >
-                  ⚡ Auto-Assign 8 Teams
+                  ⚡ Auto-Assign {totalRequiredTeams} Teams
                 </button>
                 <button
                   type="button"
@@ -726,10 +849,11 @@ export default function TournamentAdminConsole({
                           cursor: isLocked ? 'not-allowed' : 'pointer',
                         }}
                       >
-                        <option value={1}>{currentGroup === 'GROUP_A' ? 'A1' : 'B1'}</option>
-                        <option value={2}>{currentGroup === 'GROUP_A' ? 'A2' : 'B2'}</option>
-                        <option value={3}>{currentGroup === 'GROUP_A' ? 'A3' : 'B3'}</option>
-                        <option value={4}>{currentGroup === 'GROUP_A' ? 'A4' : 'B4'}</option>
+                        {Array.from({ length: currentGroup === 'GROUP_A' ? requiredGroupA : requiredGroupB }, (_, i) => i + 1).map((num) => (
+                          <option key={num} value={num}>
+                            {currentGroup === 'GROUP_A' ? `A${num}` : `B${num}`}
+                          </option>
+                        ))}
                       </select>
                     )}
                   </div>
@@ -747,8 +871,8 @@ export default function TournamentAdminConsole({
               padding: '10px',
               borderRadius: '6px',
               border: 'none',
-              background: isLocked ? '#334155' : (groupACount === 4 && groupBCount === 4) ? '#38BDF8' : '#475569',
-              color: isLocked ? '#94A3B8' : (groupACount === 4 && groupBCount === 4) ? '#0F172A' : '#CBD5E1',
+              background: isLocked ? '#334155' : (groupACount === requiredGroupA && groupBCount === requiredGroupB) ? '#38BDF8' : '#475569',
+              color: isLocked ? '#94A3B8' : (groupACount === requiredGroupA && groupBCount === requiredGroupB) ? '#0F172A' : '#CBD5E1',
               fontWeight: 800,
               fontSize: '13px',
               cursor: (savingGroups || isLocked) ? 'not-allowed' : 'pointer',
@@ -758,9 +882,9 @@ export default function TournamentAdminConsole({
               ? '🔒 Group Assignments Locked'
               : savingGroups
               ? 'Saving Assignments...'
-              : (groupACount === 4 && groupBCount === 4)
+              : (groupACount === requiredGroupA && groupBCount === requiredGroupB)
               ? 'Save Group Assignments'
-              : `Assign 4 Teams Per Group (${groupACount}/4 & ${groupBCount}/4)`}
+              : `Assign Teams (${groupACount}/${requiredGroupA} in A & ${groupBCount}/${requiredGroupB} in B)`}
           </button>
         </div>
       </div>

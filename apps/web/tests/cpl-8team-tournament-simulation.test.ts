@@ -125,11 +125,11 @@ async function run8TeamSimulation() {
 
     // 4. Generate Stage 1 Fixtures (Matches 1-8 Square Schedule)
     const fixtureResult = await generateGroupStageFixtures(testTournament.id, {
-      ballsPerOver: 4,
-      groupOvers: 4,
-      qualificationOvers: 5,
-      playoffOvers: 6,
-      finalOvers: 6,
+      ballsPerOver: 1,
+      groupOvers: 1,
+      qualificationOvers: 1,
+      playoffOvers: 1,
+      finalOvers: 1,
     });
     assert.strictEqual(fixtureResult.success, true, 'Group stage fixtures generated');
     assert.strictEqual(fixtureResult.createdCount, 8, 'Exactly 8 group stage matches generated');
@@ -204,33 +204,32 @@ async function run8TeamSimulation() {
         },
       });
 
-      // Score recordings
-      await prisma.innings.create({
-        data: {
-          matchId: m.id,
-          inningsNumber: 1,
-          battingTeamId: winnerId,
-          bowlingTeamId: loserId,
-          runs: winnerId === testTeams[0].id ? 52 : 44,
-          wickets: 2,
-          overs: 4,
-          balls: 0,
-          status: 'COMPLETED',
-        },
-      });
-
-      await prisma.innings.create({
-        data: {
-          matchId: m.id,
-          inningsNumber: 2,
-          battingTeamId: loserId,
-          bowlingTeamId: winnerId,
-          runs: 34,
-          wickets: 10, // All-out rule test
-          overs: 3,
-          balls: 2,
-          status: 'COMPLETED',
-        },
+      // Score recordings fast with minimum overs and balls
+      await prisma.innings.createMany({
+        data: [
+          {
+            matchId: m.id,
+            inningsNumber: 1,
+            battingTeamId: winnerId,
+            bowlingTeamId: loserId,
+            runs: winnerId === testTeams[0].id ? 52 : 44,
+            wickets: 2,
+            overs: 1,
+            balls: 0,
+            status: 'COMPLETED',
+          },
+          {
+            matchId: m.id,
+            inningsNumber: 2,
+            battingTeamId: loserId,
+            bowlingTeamId: winnerId,
+            runs: 34,
+            wickets: 10, // All-out rule test
+            overs: 1,
+            balls: 0,
+            status: 'COMPLETED',
+          },
+        ],
       });
     }
     console.log('5. Simulated completion of all 8 Group Stage matches (M1–M8)');

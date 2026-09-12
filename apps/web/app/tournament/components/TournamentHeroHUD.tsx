@@ -6,13 +6,14 @@ interface TournamentHeroHUDProps {
   progress: {
     totalMatches: number;
     completedMatches: number;
-    currentStage: 'GROUP' | 'QUALIFICATION' | 'PLAYOFFS' | 'FINAL' | 'COMPLETED';
+    currentStage: 'GROUP' | 'QUALIFICATION' | 'WILDCARD' | 'PLAYOFFS' | 'FINAL' | 'COMPLETED' | string;
   };
   liveMatch: any;
   lastRefreshed: string;
   isRefreshing: boolean;
   onRefresh: () => void;
   crownedChampion: any;
+  tournamentFormat?: string;
 }
 
 export default function TournamentHeroHUD({
@@ -22,17 +23,43 @@ export default function TournamentHeroHUD({
   isRefreshing,
   onRefresh,
   crownedChampion,
+  tournamentFormat,
 }: TournamentHeroHUDProps) {
-  const stageOrder = ['GROUP', 'QUALIFICATION', 'PLAYOFFS', 'FINAL', 'COMPLETED'];
-  const currentStageIdx = stageOrder.indexOf(progress.currentStage);
-  const percentComplete = Math.min(100, Math.round((progress.completedMatches / (progress.totalMatches || 15)) * 100));
+  const is6Team = tournamentFormat === '6_TEAM';
+  const is7Team = tournamentFormat === '7_TEAM';
 
-  const stages = [
-    { id: 'GROUP', label: '1. Group Stage', matchCode: 'M01–M08', desc: '8 Teams in 2 Groups' },
-    { id: 'QUALIFICATION', label: '2. Qualifiers', matchCode: 'M09–M11', desc: 'Bridge to Playoff' },
-    { id: 'PLAYOFFS', label: '3. Playoffs', matchCode: 'M12–M14', desc: 'Page-McIntyre 4 Teams' },
-    { id: 'FINAL', label: '4. Grand Final', matchCode: 'M15', desc: 'Championship Decider' },
-  ];
+  const stageOrder = is7Team
+    ? ['GROUP', 'PLAYOFFS', 'FINAL', 'COMPLETED']
+    : is6Team
+    ? ['GROUP', 'WILDCARD', 'PLAYOFFS', 'FINAL', 'COMPLETED']
+    : ['GROUP', 'QUALIFICATION', 'PLAYOFFS', 'FINAL', 'COMPLETED'];
+
+  // Map progress stage to normalized index
+  const normalizedCurrentStage = (progress.currentStage === 'QUALIFICATION' && is6Team)
+    ? 'WILDCARD'
+    : progress.currentStage;
+  const currentStageIdx = stageOrder.indexOf(normalizedCurrentStage);
+  const percentComplete = Math.min(100, Math.round((progress.completedMatches / (progress.totalMatches || (is6Team ? 13 : is7Team ? 11 : 15))) * 100));
+
+  const stages = is6Team
+    ? [
+        { id: 'GROUP', label: '1. Group Stage', matchCode: 'M01–M06', desc: '6 Teams in 2 Groups' },
+        { id: 'WILDCARD', label: '2. Wildcard Stage', matchCode: 'M07–M09', desc: 'WC1, WC2 & WC3' },
+        { id: 'PLAYOFFS', label: '3. Playoffs', matchCode: 'M10–M12', desc: 'Page-McIntyre 4 Teams' },
+        { id: 'FINAL', label: '4. Grand Final', matchCode: 'M13', desc: 'Championship Decider' },
+      ]
+    : is7Team
+    ? [
+        { id: 'GROUP', label: '1. Group Stage', matchCode: 'M01–M07', desc: 'Group A (4) & B (3)' },
+        { id: 'PLAYOFFS', label: '2. 3 Playoff Matches', matchCode: 'M08–M10', desc: 'Page-McIntyre 4 Teams' },
+        { id: 'FINAL', label: '3. Grand Final', matchCode: 'M11', desc: 'Championship Decider' },
+      ]
+    : [
+        { id: 'GROUP', label: '1. Group Stage', matchCode: 'M01–M08', desc: '8 Teams in 2 Groups' },
+        { id: 'QUALIFICATION', label: '2. Qualifiers', matchCode: 'M09–M11', desc: 'Bridge to Playoff' },
+        { id: 'PLAYOFFS', label: '3. Playoffs', matchCode: 'M12–M14', desc: 'Page-McIntyre 4 Teams' },
+        { id: 'FINAL', label: '4. Grand Final', matchCode: 'M15', desc: 'Championship Decider' },
+      ];
 
   return (
     <section style={{ marginBottom: '32px' }}>
