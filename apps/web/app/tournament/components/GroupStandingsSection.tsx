@@ -10,9 +10,10 @@ interface GroupStandingsSectionProps {
     groupA: { teams: any[]; standings: TeamStanding[]; matches: any[] };
     groupB: { teams: any[]; standings: TeamStanding[]; matches: any[] };
   };
+  tournamentFormat?: string;
 }
 
-export default function GroupStandingsSection({ groups }: GroupStandingsSectionProps) {
+export default function GroupStandingsSection({ groups, tournamentFormat }: GroupStandingsSectionProps) {
   const [mobileGroupTab, setMobileGroupTab] = useState<'ALL' | 'A' | 'B'>('ALL');
 
   const renderGroupCard = (gKey: 'groupA' | 'groupB', gTitle: string) => {
@@ -20,7 +21,11 @@ export default function GroupStandingsSection({ groups }: GroupStandingsSectionP
     const standings = groupObj?.standings || [];
     const isGroupActive = groupObj?.matches?.some((m: any) => m.status === 'LIVE');
     const completedCount = groupObj?.matches?.filter((m: any) => m.status === 'COMPLETED').length || 0;
-    const totalMatches = 4;
+    const totalMatches = tournamentFormat === '6_TEAM'
+      ? 3
+      : tournamentFormat === '7_TEAM'
+      ? (gKey === 'groupA' ? 4 : 3)
+      : 4;
     const isGroupDone = completedCount >= totalMatches;
 
     return (
@@ -211,45 +216,81 @@ export default function GroupStandingsSection({ groups }: GroupStandingsSectionP
 
                       {/* Status Badge */}
                       <td style={{ padding: '10px 6px', textAlign: 'right' }}>
-                        {isGroupDone ? (
-                          <span
-                            style={{
-                              display: 'inline-block',
-                              fontSize: '0.64rem',
-                              fontFamily: 'var(--font-data)',
-                              fontWeight: 800,
-                              padding: '2px 6px',
-                              borderRadius: '4px',
-                              background: is1st
-                                ? 'rgba(16, 185, 129, 0.15)'
-                                : is2nd
-                                ? 'rgba(245, 158, 11, 0.15)'
-                                : is3rd
-                                ? 'rgba(251, 146, 60, 0.15)'
-                                : 'rgba(239, 68, 68, 0.15)',
-                              border: `1px solid ${
-                                is1st
-                                  ? 'rgba(16, 185, 129, 0.35)'
-                                  : is2nd
-                                  ? 'rgba(245, 158, 11, 0.35)'
-                                  : is3rd
-                                  ? 'rgba(251, 146, 60, 0.35)'
-                                  : 'rgba(239, 68, 68, 0.35)'
-                              }`,
-                              color: posColor,
-                              textTransform: 'uppercase',
-                              whiteSpace: 'nowrap',
-                            }}
-                          >
-                            {is1st
-                              ? '✓ PLAYOFF'
-                              : is2nd
-                              ? '→ MATCH 9'
-                              : is3rd
-                              ? '→ MATCH 10'
-                              : '✕ ELIMINATED'}
-                          </span>
-                        ) : (
+                        {isGroupDone ? (() => {
+                          let label = '✕ ELIMINATED';
+                          let badgeBg = 'rgba(239, 68, 68, 0.15)';
+                          let badgeBorder = 'rgba(239, 68, 68, 0.35)';
+                          let badgeColor = '#EF4444';
+
+                          if (tournamentFormat === '6_TEAM') {
+                            if (idx === 0) {
+                              label = '✓ PLAYOFF';
+                              badgeBg = 'rgba(16, 185, 129, 0.15)';
+                              badgeBorder = 'rgba(16, 185, 129, 0.35)';
+                              badgeColor = '#10B981';
+                            } else if (idx === 1) {
+                              label = '→ WC1';
+                              badgeBg = 'rgba(245, 158, 11, 0.15)';
+                              badgeBorder = 'rgba(245, 158, 11, 0.35)';
+                              badgeColor = '#F59E0B';
+                            } else if (idx === 2) {
+                              label = '→ WC2';
+                              badgeBg = 'rgba(251, 146, 60, 0.15)';
+                              badgeBorder = 'rgba(251, 146, 60, 0.35)';
+                              badgeColor = '#FB923C';
+                            }
+                          } else if (tournamentFormat === '7_TEAM') {
+                            if (idx === 0) {
+                              label = '✓ PLAYOFF (P1)';
+                              badgeBg = 'rgba(16, 185, 129, 0.15)';
+                              badgeBorder = 'rgba(16, 185, 129, 0.35)';
+                              badgeColor = '#10B981';
+                            } else if (idx === 1) {
+                              label = '✓ PLAYOFF (P2)';
+                              badgeBg = 'rgba(56, 189, 248, 0.15)';
+                              badgeBorder = 'rgba(56, 189, 248, 0.35)';
+                              badgeColor = '#38BDF8';
+                            }
+                          } else {
+                            // 8_TEAM
+                            if (idx === 0) {
+                              label = '✓ PLAYOFF';
+                              badgeBg = 'rgba(16, 185, 129, 0.15)';
+                              badgeBorder = 'rgba(16, 185, 129, 0.35)';
+                              badgeColor = '#10B981';
+                            } else if (idx === 1) {
+                              label = '→ MATCH 9';
+                              badgeBg = 'rgba(245, 158, 11, 0.15)';
+                              badgeBorder = 'rgba(245, 158, 11, 0.35)';
+                              badgeColor = '#F59E0B';
+                            } else if (idx === 2) {
+                              label = '→ MATCH 10';
+                              badgeBg = 'rgba(251, 146, 60, 0.15)';
+                              badgeBorder = 'rgba(251, 146, 60, 0.35)';
+                              badgeColor = '#FB923C';
+                            }
+                          }
+
+                          return (
+                            <span
+                              style={{
+                                display: 'inline-block',
+                                fontSize: '0.64rem',
+                                fontFamily: 'var(--font-data)',
+                                fontWeight: 800,
+                                padding: '2px 6px',
+                                borderRadius: '4px',
+                                background: badgeBg,
+                                border: `1px solid ${badgeBorder}`,
+                                color: badgeColor,
+                                textTransform: 'uppercase',
+                                whiteSpace: 'nowrap',
+                              }}
+                            >
+                              {label}
+                            </span>
+                          );
+                        })() : (
                           <span style={{ color: 'rgba(255, 255, 255, 0.3)', fontSize: '0.78rem', fontWeight: 600 }}>—</span>
                         )}
                       </td>

@@ -10,6 +10,7 @@ export default function NewTournamentPage() {
   const secretPath = (params?.secretPath as string) || 'admin';
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedFormat, setSelectedFormat] = useState<'6_TEAM' | '7_TEAM' | '8_TEAM'>('8_TEAM');
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -163,6 +164,138 @@ export default function NewTournamentPage() {
                 boxSizing: 'border-box',
               }}
             />
+          </div>
+
+          {/* Tournament Format Selector */}
+          <div>
+            <label
+              style={{
+                display: 'block',
+                fontSize: '0.85rem',
+                fontWeight: 700,
+                marginBottom: '8px',
+                color: 'rgba(255, 255, 255, 0.9)',
+              }}
+            >
+              Tournament Structure & Format *
+            </label>
+            <input type="hidden" name="tournamentFormat" value={selectedFormat} />
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '10px' }}>
+              {/* 6-Team Option */}
+              <button
+                type="button"
+                onClick={() => setSelectedFormat('6_TEAM')}
+                style={{
+                  padding: '14px 12px',
+                  borderRadius: '10px',
+                  border: selectedFormat === '6_TEAM' ? '2px solid #38BDF8' : '1px solid rgba(255, 255, 255, 0.15)',
+                  background: selectedFormat === '6_TEAM' ? 'rgba(56, 189, 248, 0.12)' : '#1A1616',
+                  color: '#FFFFFF',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                  <span style={{ fontWeight: 800, fontSize: '0.95rem', color: selectedFormat === '6_TEAM' ? '#38BDF8' : '#FFF' }}>
+                    6 Teams
+                  </span>
+                  {selectedFormat === '6_TEAM' && <span style={{ color: '#38BDF8', fontSize: '0.8rem' }}>✓</span>}
+                </div>
+                <div style={{ fontSize: '0.75rem', color: '#94A3B8', lineHeight: 1.4 }}>
+                  2 Groups of 3 · 13 Matches Total
+                </div>
+              </button>
+
+              {/* 7-Team Option */}
+              <button
+                type="button"
+                onClick={() => setSelectedFormat('7_TEAM')}
+                style={{
+                  padding: '14px 12px',
+                  borderRadius: '10px',
+                  border: selectedFormat === '7_TEAM' ? '2px solid #F59E0B' : '1px solid rgba(255, 255, 255, 0.15)',
+                  background: selectedFormat === '7_TEAM' ? 'rgba(245, 158, 11, 0.12)' : '#1A1616',
+                  color: '#FFFFFF',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                  <span style={{ fontWeight: 800, fontSize: '0.95rem', color: selectedFormat === '7_TEAM' ? '#F59E0B' : '#FFF' }}>
+                    7 Teams
+                  </span>
+                  {selectedFormat === '7_TEAM' && <span style={{ color: '#F59E0B', fontSize: '0.8rem' }}>✓</span>}
+                </div>
+                <div style={{ fontSize: '0.75rem', color: '#94A3B8', lineHeight: 1.4 }}>
+                  Groups: 4 & 3 · 11 Matches Total
+                </div>
+              </button>
+
+              {/* 8-Team Option */}
+              <button
+                type="button"
+                onClick={() => setSelectedFormat('8_TEAM')}
+                style={{
+                  padding: '14px 12px',
+                  borderRadius: '10px',
+                  border: selectedFormat === '8_TEAM' ? '2px solid #10B981' : '1px solid rgba(255, 255, 255, 0.15)',
+                  background: selectedFormat === '8_TEAM' ? 'rgba(16, 185, 129, 0.12)' : '#1A1616',
+                  color: '#FFFFFF',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                  <span style={{ fontWeight: 800, fontSize: '0.95rem', color: selectedFormat === '8_TEAM' ? '#10B981' : '#FFF' }}>
+                    8 Teams
+                  </span>
+                  {selectedFormat === '8_TEAM' && <span style={{ color: '#10B981', fontSize: '0.8rem' }}>✓</span>}
+                </div>
+                <div style={{ fontSize: '0.75rem', color: '#94A3B8', lineHeight: 1.4 }}>
+                  2 Groups of 4 · 15 Matches Total
+                </div>
+              </button>
+            </div>
+
+            {/* Dynamic Format Requirement Breakdown */}
+            <div
+              style={{
+                marginTop: '10px',
+                padding: '10px 14px',
+                borderRadius: '8px',
+                background: 'rgba(255, 255, 255, 0.03)',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
+                fontSize: '0.8rem',
+                color: '#CBD5E1',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: '8px',
+              }}
+            >
+              <div>
+                {selectedFormat === '6_TEAM' && (
+                  <span>
+                    📋 <strong>6-Team Structure:</strong> 6 Teams Required · Group A (3) + Group B (3) · 6 Round-Robin + 3 Wildcard (WC1-3) + 3 Playoffs + Final.
+                  </span>
+                )}
+                {selectedFormat === '7_TEAM' && (
+                  <span>
+                    📋 <strong>7-Team Structure:</strong> 7 Teams Required · Group A (4, Square Graph) + Group B (3, Round-Robin) · 7 Group + 3 Playoffs + Final.
+                  </span>
+                )}
+                {selectedFormat === '8_TEAM' && (
+                  <span>
+                    📋 <strong>8-Team Structure:</strong> 8 Teams Required · Group A (4) + Group B (4) · 8 Group + 3 Qualification + 3 Playoffs + Final.
+                  </span>
+                )}
+              </div>
+            </div>
           </div>
 
           {/* Season & Format Grid */}

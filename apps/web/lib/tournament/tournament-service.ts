@@ -6,6 +6,12 @@ import {
 } from './nrr-engine';
 import { getInningsWicketLimit } from '../scoring/scoring-rules';
 import { normalizeImageUrl } from '../utils/image-utils';
+import {
+  TournamentFormatType,
+  TOURNAMENT_FORMAT_CONFIGS,
+  resolveTournamentFormat,
+  getFormatConfig,
+} from './tournament-formats';
 
 export interface TournamentOverview {
   tournament: {
@@ -13,8 +19,13 @@ export interface TournamentOverview {
     name: string;
     season: string;
     format: string;
+    tournamentFormat: string;
+    normalizedFormat: TournamentFormatType;
     status: string;
   };
+  tournamentFormat?: string;
+  normalizedFormat?: TournamentFormatType;
+  crownedChampion?: any | null;
   teams: Array<{
     id: string;
     name: string;
@@ -31,6 +42,17 @@ export interface TournamentOverview {
   };
   groupA?: TeamStanding[];
   groupB?: TeamStanding[];
+  wildcard?: {
+    matches: any[];
+    wc1: any | null; // M7: A2 vs B2
+    wc2: any | null; // M8: B3 vs A3
+    wc3: any | null; // M9: WC1 Loser vs WC2 Winner
+    wc1Winner: any | null; // Playoff Seed 3
+    wc2Winner: any | null;
+    wc3Winner: any | null; // Playoff Seed 4
+    qualifier1: any | null; // Playoff Seed 3
+    qualifier2: any | null; // Playoff Seed 4
+  };
   qualification: {
     matches: any[];
     match9: any | null; // Group A 2nd vs Group B 2nd
@@ -41,13 +63,16 @@ export interface TournamentOverview {
   };
   playoffs: {
     seeds: Array<{ seedNumber: number; team: any | null; label: string }>;
-    match12: any | null; // Playoff 1st vs Playoff 2nd (Winner -> Final, Loser -> M14)
-    match13: any | null; // Playoff 3rd vs Playoff 4th (Winner -> M14, Loser -> Eliminated)
-    match14: any | null; // M12 Loser vs M13 Winner (Winner -> Final, Loser -> Eliminated)
-    final: any | null;   // M12 Winner vs M14 Winner
+    playoff1: any | null; // P1 (Top Seed Playoff)
+    playoff2: any | null; // P2 (Third vs Fourth Seed)
+    finalSpotPlayoff: any | null; // P3 (Final Spot Playoff)
+    final: any | null;   // Grand Final
     champion: any | null;
     runnerUp: any | null;
     // Backwards-compatibility aliases for UI subcomponents
+    match12?: any | null;
+    match13?: any | null;
+    match14?: any | null;
     qualifier1?: any | null;
     eliminator?: any | null;
     qualifier2?: any | null;
@@ -56,7 +81,7 @@ export interface TournamentOverview {
   progress: {
     totalMatches: number;
     completedMatches: number;
-    currentStage: 'GROUP' | 'QUALIFICATION' | 'PLAYOFFS' | 'FINAL' | 'COMPLETED';
+    currentStage: 'GROUP' | 'WILDCARD' | 'QUALIFICATION' | 'PLAYOFFS' | 'FINAL' | 'COMPLETED';
   };
 }
 
@@ -99,18 +124,17 @@ async function createMatchRecord(data: {
  * Direct Postgres helper for updating qualificationStatus.
  */
 async function updateTeamsQualification(tournamentId: string, teamIds: string[], status: string) {
-  for (const tid of teamIds) {
-    if (!tid) continue;
-    await (prisma as any).tournamentTeam.updateMany({
-      where: {
-        tournamentId,
-        teamId: tid,
-      },
-      data: {
-        qualificationStatus: status,
-      },
-    });
-  }
+  const valid = teamIds.filter(Boolean);
+  if (valid.length === 0) return;
+  await (prisma as any).tournamentTeam.updateMany({
+    where: {
+      tournamentId,
+      teamId: { in: valid },
+    },
+    data: {
+      qualificationStatus: status,
+    },
+  });
 }
 
 function isGroupA(name?: string | null): boolean {
@@ -126,7 +150,7 @@ function isGroupB(name?: string | null): boolean {
 }
 
 /**
- * Retrieves the comprehensive, data-driven tournament overview for 8 teams, 15 matches.
+ * Retrieves the comprehensive, format-aware tournament overview.
  * STANDINGS AND NRR ARE CALCULATED DIRECTLY FROM COMPLETED RAW MATCH RECORDS.
  */
 export async function getTournamentOverview(tournamentId?: string): Promise<TournamentOverview | null> {
@@ -169,6 +193,9 @@ export async function getTournamentOverview(tournamentId?: string): Promise<Tour
   }
 
   if (!tournament) return null;
+
+  const normalizedFormat = resolveTournamentFormat(tournament);
+  const formatConfig = getFormatConfig(tournament);
 
   // 2. Fetch tournament teams and matches
   const [tournamentTeams, rawMatches] = await Promise.all([
@@ -213,15 +240,7 @@ export async function getTournamentOverview(tournamentId?: string): Promise<Tour
   const matches: MatchData[] = rawMatches.map((m: any) => ({
     id: m.id,
     tournamentId: m.tournamentId,
-    stage:
-      m.stage ||
-      (m.matchNumber && m.matchNumber <= 8
-        ? 'GROUP'
-        : m.matchNumber && m.matchNumber <= 11
-        ? 'QUALIFICATION'
-        : m.matchNumber && m.matchNumber <= 14
-        ? 'PLAYOFFS'
-        : 'FINAL'),
+    stage: m.stage || 'GROUP',
     groupName: m.groupName || null,
     matchNumber: m.matchNumber || null,
     bracketSlot: m.bracketSlot || null,
@@ -254,15 +273,19 @@ export async function getTournamentOverview(tournamentId?: string): Promise<Tour
     })),
   }));
 
-  // Group Matches (4 matches per group, 8 total, alternating A and B)
-  const groupAMatches = rawMatches.filter(
-    (m: any) => isGroupA(m.groupName) || (!m.groupName && m.matchNumber && m.matchNumber <= 8 && m.matchNumber % 2 === 1)
-  );
-  const groupBMatches = rawMatches.filter(
-    (m: any) => isGroupB(m.groupName) || (!m.groupName && m.matchNumber && m.matchNumber <= 8 && m.matchNumber % 2 === 0)
+  // Group Matches based on active format
+  const groupStageMatches = rawMatches.filter(
+    (m: any) => m.stage === 'GROUP' || (m.matchNumber && m.matchNumber <= formatConfig.totalGroupMatches)
   );
 
-  // Group Teams with resilient inference (from groupName, match participation, or default registration order)
+  const groupAMatches = groupStageMatches.filter(
+    (m: any) => isGroupA(m.groupName) || (m.bracketSlot && m.bracketSlot.startsWith('G') && formatConfig.groupFixtures.find((gf) => gf.num === m.matchNumber)?.group === 'GROUP_A')
+  );
+  const groupBMatches = groupStageMatches.filter(
+    (m: any) => isGroupB(m.groupName) || (m.bracketSlot && m.bracketSlot.startsWith('G') && formatConfig.groupFixtures.find((gf) => gf.num === m.matchNumber)?.group === 'GROUP_B')
+  );
+
+  // Group Teams with resilient inference
   const groupATeamIds = new Set<string>();
   const groupBTeamIds = new Set<string>();
 
@@ -275,21 +298,22 @@ export async function getTournamentOverview(tournamentId?: string): Promise<Tour
     if (m.teamBId) groupBTeamIds.add(m.teamBId);
   });
 
+  const expectedA = formatConfig.groupSizes.GROUP_A;
   const groupATeams = teams.filter((t: any, idx: number) => {
     if (isGroupA(t.groupName)) return true;
     if (groupATeamIds.has(t.id)) return true;
-    if (!t.groupName && !isGroupB(t.groupName) && !groupBTeamIds.has(t.id) && groupATeamIds.size === 0 && idx < 4) return true;
+    if (!t.groupName && !isGroupB(t.groupName) && !groupBTeamIds.has(t.id) && groupATeamIds.size === 0 && idx < expectedA) return true;
     return false;
   });
 
   const groupBTeams = teams.filter((t: any, idx: number) => {
     if (isGroupB(t.groupName)) return true;
     if (groupBTeamIds.has(t.id)) return true;
-    if (!t.groupName && !isGroupA(t.groupName) && !groupATeamIds.has(t.id) && groupBTeamIds.size === 0 && idx >= 4) return true;
+    if (!t.groupName && !isGroupA(t.groupName) && !groupATeamIds.has(t.id) && groupBTeamIds.size === 0 && idx >= expectedA) return true;
     return false;
   });
 
-  // 3. Compute Group Stage Standings (Strictly ball-based Softball NRR)
+  // 3. Compute Group Stage Standings
   const groupAStandings = computeStageStandings(
     groupATeams.map((t: any) => ({ ...t, groupName: 'GROUP_A' })),
     matches,
@@ -304,111 +328,195 @@ export async function getTournamentOverview(tournamentId?: string): Promise<Tour
     'GROUP_B'
   );
 
-  const groupAComplete = groupAMatches.length === 4 && groupAMatches.every((m: any) => m.status === 'COMPLETED');
-  const groupBComplete = groupBMatches.length === 4 && groupBMatches.every((m: any) => m.status === 'COMPLETED');
+  const expectedAMatchesCount = normalizedFormat === '6_TEAM' ? 3 : 4;
+  const expectedBMatchesCount = normalizedFormat === '8_TEAM' ? 4 : 3;
 
-  const groupStageMatches = rawMatches.filter(
-    (m: any) => m.stage === 'GROUP' || (m.matchNumber && m.matchNumber <= 8)
-  );
+  const groupAComplete = groupAMatches.length === expectedAMatchesCount && groupAMatches.every((m: any) => m.status === 'COMPLETED');
+  const groupBComplete = groupBMatches.length === expectedBMatchesCount && groupBMatches.every((m: any) => m.status === 'COMPLETED');
   const groupStageComplete =
-    groupStageMatches.length === 8 && groupStageMatches.every((m: any) => m.status === 'COMPLETED');
+    groupStageMatches.length === formatConfig.totalGroupMatches &&
+    groupStageMatches.every((m: any) => m.status === 'COMPLETED');
 
-  // Authoritative Group Positions (Available when group matches are completed)
-  const groupAWinner = groupAComplete && groupAStandings[0] ? teams.find((t: any) => t.id === groupAStandings[0].teamId) : null;
-  const groupBWinner = groupBComplete && groupBStandings[0] ? teams.find((t: any) => t.id === groupBStandings[0].teamId) : null;
+  // Format-Specific Stage 2 & Playoff Resolution
+  let wildcardObj: TournamentOverview['wildcard'] = undefined;
+  let qualificationObj: TournamentOverview['qualification'] = {
+    matches: [],
+    match9: null,
+    match10: null,
+    match11: null,
+    qualifier1: null,
+    qualifier2: null,
+  };
 
-  const groupARunnerUp = groupAComplete && groupAStandings[1] ? teams.find((t: any) => t.id === groupAStandings[1].teamId) : null;
-  const groupBRunnerUp = groupBComplete && groupBStandings[1] ? teams.find((t: any) => t.id === groupBStandings[1].teamId) : null;
+  let playoff1Match: any = null;
+  let playoff2Match: any = null;
+  let finalSpotPlayoffMatch: any = null;
+  let grandFinalMatch: any = null;
+  let playoffSeeds: Array<{ seedNumber: number; team: any | null; label: string }> = [];
 
-  // 4. Playoff Qualification Stage (Matches 9, 10, 11)
-  const match9 =
-    rawMatches.find((m: any) => m.matchNumber === 9 || m.bracketSlot === 'M9' || m.bracketSlot === 'PQ1') || null;
-  const match10 =
-    rawMatches.find((m: any) => m.matchNumber === 10 || m.bracketSlot === 'M10' || m.bracketSlot === 'PQ2') || null;
-  const match11 =
-    rawMatches.find((m: any) => m.matchNumber === 11 || m.bracketSlot === 'M11' || m.bracketSlot === 'PQ3') || null;
+  if (normalizedFormat === '6_TEAM') {
+    // 6-Team: WC1 (M7), WC2 (M8), WC3 (M9), P1 (M10), P2 (M11), P3 (M12), Final (M13)
+    const wc1 = rawMatches.find((m: any) => m.matchNumber === 7 || m.bracketSlot === 'WC1') || null;
+    const wc2 = rawMatches.find((m: any) => m.matchNumber === 8 || m.bracketSlot === 'WC2') || null;
+    const wc3 = rawMatches.find((m: any) => m.matchNumber === 9 || m.bracketSlot === 'WC3') || null;
 
-  const qualificationMatches = [match9, match10, match11].filter(Boolean);
+    const wc1Winner = wc1?.status === 'COMPLETED' && wc1.winnerTeamId ? teams.find((t: any) => t.id === wc1.winnerTeamId) || null : null;
+    const wc2Winner = wc2?.status === 'COMPLETED' && wc2.winnerTeamId ? teams.find((t: any) => t.id === wc2.winnerTeamId) || null : null;
+    const wc3Winner = wc3?.status === 'COMPLETED' && wc3.winnerTeamId ? teams.find((t: any) => t.id === wc3.winnerTeamId) || null : null;
 
-  // Qualifier 1 (Playoff Seed 3): Winner of Match 9 (2nd vs 2nd)
-  const qualifier1Team =
-    match9 && match9.status === 'COMPLETED' && match9.winnerTeamId
-      ? teams.find((t: any) => t.id === match9.winnerTeamId) || null
-      : null;
+    wildcardObj = {
+      matches: [wc1, wc2, wc3].filter(Boolean),
+      wc1,
+      wc2,
+      wc3,
+      wc1Winner,
+      wc2Winner,
+      wc3Winner,
+      qualifier1: wc1Winner, // Playoff Seed 3
+      qualifier2: wc3Winner, // Playoff Seed 4
+    };
 
-  // Qualifier 2 (Playoff Seed 4): Winner of Match 11 (M9 Loser vs M10 Winner)
-  const qualifier2Team =
-    match11 && match11.status === 'COMPLETED' && match11.winnerTeamId
-      ? teams.find((t: any) => t.id === match11.winnerTeamId) || null
-      : null;
+    // Alias for qualification backwards compatibility
+    qualificationObj = {
+      matches: [wc1, wc2, wc3].filter(Boolean),
+      match9: wc1,
+      match10: wc2,
+      match11: wc3,
+      qualifier1: wc1Winner,
+      qualifier2: wc3Winner,
+    };
 
-  // 5. Four-Team Playoff Seeding
-  // Deterministic ranking for Seeds 1 & 2 between the two group winners:
-  // 1. Points -> 2. NRR -> 3. Runs For -> 4. Team Name
-  let seed1Team: any = null;
-  let seed2Team: any = null;
+    playoff1Match = rawMatches.find((m: any) => m.matchNumber === 10 || m.bracketSlot === 'P1') || null;
+    playoff2Match = rawMatches.find((m: any) => m.matchNumber === 11 || m.bracketSlot === 'P2') || null;
+    finalSpotPlayoffMatch = rawMatches.find((m: any) => m.matchNumber === 12 || m.bracketSlot === 'P3') || null;
+    grandFinalMatch = rawMatches.find((m: any) => m.matchNumber === 13 || m.bracketSlot === 'FINAL') || null;
 
-  if (groupStageComplete && groupAWinner && groupBWinner) {
-    const groupWinners = [groupAStandings[0], groupBStandings[0]].filter(Boolean);
-    groupWinners.sort((a, b) => {
-      if (b.points !== a.points) return b.points - a.points;
-      if (Math.abs(b.nrr - a.nrr) > 0.000001) return b.nrr - a.nrr;
-      if (b.runsFor !== a.runsFor) return b.runsFor - a.runsFor;
-      return a.teamName.localeCompare(b.teamName);
-    });
+    const a1Team = groupAStandings[0] ? teams.find((t: any) => t.id === groupAStandings[0].teamId) : null;
+    const b1Team = groupBStandings[0] ? teams.find((t: any) => t.id === groupBStandings[0].teamId) : null;
 
-    seed1Team = groupWinners[0] ? teams.find((t: any) => t.id === groupWinners[0].teamId) : null;
-    seed2Team = groupWinners[1] ? teams.find((t: any) => t.id === groupWinners[1].teamId) : null;
+    playoffSeeds = [
+      { seedNumber: 1, team: a1Team, label: 'Group A Winner' },
+      { seedNumber: 2, team: b1Team, label: 'Group B Winner' },
+      { seedNumber: 3, team: wc1Winner, label: 'WC1 Winner (Seed 3)' },
+      { seedNumber: 4, team: wc3Winner, label: 'WC3 Winner (Seed 4)' },
+    ];
+  } else if (normalizedFormat === '7_TEAM') {
+    // 7-Team: P1 (M8), P2 (M9), P3 (M10), Final (M11)
+    playoff1Match = rawMatches.find((m: any) => m.matchNumber === 8 || m.bracketSlot === 'P1') || null;
+    playoff2Match = rawMatches.find((m: any) => m.matchNumber === 9 || m.bracketSlot === 'P2') || null;
+    finalSpotPlayoffMatch = rawMatches.find((m: any) => m.matchNumber === 10 || m.bracketSlot === 'P3') || null;
+    grandFinalMatch = rawMatches.find((m: any) => m.matchNumber === 11 || m.bracketSlot === 'FINAL') || null;
+
+    const a1Team = groupAStandings[0] ? teams.find((t: any) => t.id === groupAStandings[0].teamId) : null;
+    const b1Team = groupBStandings[0] ? teams.find((t: any) => t.id === groupBStandings[0].teamId) : null;
+    const a2Team = groupAStandings[1] ? teams.find((t: any) => t.id === groupAStandings[1].teamId) : null;
+    const b2Team = groupBStandings[1] ? teams.find((t: any) => t.id === groupBStandings[1].teamId) : null;
+
+    playoffSeeds = [
+      { seedNumber: 1, team: a1Team, label: 'Group A 1st' },
+      { seedNumber: 2, team: b1Team, label: 'Group B 1st' },
+      { seedNumber: 3, team: a2Team, label: 'Group A 2nd' },
+      { seedNumber: 4, team: b2Team, label: 'Group B 2nd' },
+    ];
+  } else {
+    // 8-Team (Existing CPL): M9 (2nd vs 2nd), M10 (3rd vs 3rd), M11 (M9L vs M10W), M12 (P1), M13 (P2), M14 (P3), M15 (Final)
+    const match9 = rawMatches.find((m: any) => m.matchNumber === 9 || m.bracketSlot === 'M9' || m.bracketSlot === 'PQ1') || null;
+    const match10 = rawMatches.find((m: any) => m.matchNumber === 10 || m.bracketSlot === 'M10' || m.bracketSlot === 'PQ2') || null;
+    const match11 = rawMatches.find((m: any) => m.matchNumber === 11 || m.bracketSlot === 'M11' || m.bracketSlot === 'PQ3') || null;
+
+    const qual1 = match9 && match9.status === 'COMPLETED' && match9.winnerTeamId ? teams.find((t: any) => t.id === match9.winnerTeamId) || null : null;
+    const qual2 = match11 && match11.status === 'COMPLETED' && match11.winnerTeamId ? teams.find((t: any) => t.id === match11.winnerTeamId) || null : null;
+
+    qualificationObj = {
+      matches: [match9, match10, match11].filter(Boolean),
+      match9,
+      match10,
+      match11,
+      qualifier1: qual1,
+      qualifier2: qual2,
+    };
+
+    playoff1Match = rawMatches.find((m: any) => m.matchNumber === 12 || m.bracketSlot === 'M12' || m.bracketSlot === 'P1' || m.stage === 'QUALIFIER_1') || null;
+    playoff2Match = rawMatches.find((m: any) => m.matchNumber === 13 || m.bracketSlot === 'M13' || m.bracketSlot === 'P2' || m.stage === 'ELIMINATOR') || null;
+    finalSpotPlayoffMatch = rawMatches.find((m: any) => m.matchNumber === 14 || m.bracketSlot === 'M14' || m.bracketSlot === 'P3' || m.stage === 'QUALIFIER_2') || null;
+    grandFinalMatch = rawMatches.find((m: any) => m.matchNumber === 15 || m.bracketSlot === 'M15' || m.bracketSlot === 'FINAL' || m.stage === 'FINAL') || null;
+
+    let seed1Team: any = null;
+    let seed2Team: any = null;
+    if (groupStageComplete && groupAStandings[0] && groupBStandings[0]) {
+      const groupWinners = [groupAStandings[0], groupBStandings[0]].filter(Boolean);
+      groupWinners.sort((a, b) => {
+        if (b.points !== a.points) return b.points - a.points;
+        if (Math.abs(b.nrr - a.nrr) > 0.000001) return b.nrr - a.nrr;
+        if (b.runsFor !== a.runsFor) return b.runsFor - a.runsFor;
+        return a.teamName.localeCompare(b.teamName);
+      });
+      seed1Team = groupWinners[0] ? teams.find((t: any) => t.id === groupWinners[0].teamId) : null;
+      seed2Team = groupWinners[1] ? teams.find((t: any) => t.id === groupWinners[1].teamId) : null;
+    }
+
+    playoffSeeds = [
+      { seedNumber: 1, team: seed1Team, label: 'Best Group Winner' },
+      { seedNumber: 2, team: seed2Team, label: '2nd Best Group Winner' },
+      { seedNumber: 3, team: qual1, label: 'Match 9 Winner' },
+      { seedNumber: 4, team: qual2, label: 'Match 11 Winner' },
+    ];
   }
 
-  // Seed 3: Winner of Match 9
-  const seed3Team = qualifier1Team;
-  // Seed 4: Winner of Match 11
-  const seed4Team = qualifier2Team;
-
-  // 6. Playoff Matches (Matches 12, 13, 14) and Grand Final (Match 15)
-  const match12 =
-    rawMatches.find((m: any) => m.matchNumber === 12 || m.bracketSlot === 'M12' || m.bracketSlot === 'P1' || m.stage === 'QUALIFIER_1') || null;
-  const match13 =
-    rawMatches.find((m: any) => m.matchNumber === 13 || m.bracketSlot === 'M13' || m.bracketSlot === 'P2' || m.stage === 'ELIMINATOR') || null;
-  const match14 =
-    rawMatches.find((m: any) => m.matchNumber === 14 || m.bracketSlot === 'M14' || m.bracketSlot === 'P3' || m.stage === 'QUALIFIER_2') || null;
-  const finalMatch =
-    rawMatches.find((m: any) => m.matchNumber === 15 || m.bracketSlot === 'M15' || m.bracketSlot === 'FINAL' || m.stage === 'FINAL') || null;
-
   const championTeam =
-    finalMatch && finalMatch.status === 'COMPLETED' && finalMatch.winnerTeam
-      ? finalMatch.winnerTeam
+    grandFinalMatch && grandFinalMatch.status === 'COMPLETED' && grandFinalMatch.winnerTeam
+      ? grandFinalMatch.winnerTeam
       : null;
 
   const runnerUpTeam =
-    finalMatch && finalMatch.status === 'COMPLETED' && finalMatch.winnerTeamId
-      ? finalMatch.winnerTeamId === finalMatch.teamAId
-        ? finalMatch.teamB
-        : finalMatch.teamA
+    grandFinalMatch && grandFinalMatch.status === 'COMPLETED' && grandFinalMatch.winnerTeamId
+      ? grandFinalMatch.winnerTeamId === grandFinalMatch.teamAId
+        ? grandFinalMatch.teamB
+        : grandFinalMatch.teamA
       : null;
 
-  // 7. Progression State
+  // Progression stage determination
   const completedCount = rawMatches.filter((m: any) => m.status === 'COMPLETED').length;
-  let currentStage: 'GROUP' | 'QUALIFICATION' | 'PLAYOFFS' | 'FINAL' | 'COMPLETED' = 'GROUP';
+  let currentStage: TournamentOverview['progress']['currentStage'] = 'GROUP';
 
-  if (finalMatch && finalMatch.status === 'COMPLETED') {
+  if (grandFinalMatch && grandFinalMatch.status === 'COMPLETED') {
     currentStage = 'COMPLETED';
   } else if (
-    finalMatch &&
-    (finalMatch.status === 'LIVE' || (match12?.status === 'COMPLETED' && match14?.status === 'COMPLETED'))
+    grandFinalMatch &&
+    (grandFinalMatch.status === 'LIVE' || (playoff1Match?.status === 'COMPLETED' && finalSpotPlayoffMatch?.status === 'COMPLETED'))
   ) {
     currentStage = 'FINAL';
   } else if (
-    (match11 && match11.status === 'COMPLETED') ||
-    (match12 && (match12.status === 'LIVE' || match12.status === 'COMPLETED')) ||
-    (match13 && (match13.status === 'LIVE' || match13.status === 'COMPLETED')) ||
-    (match14 && (match14.status === 'LIVE' || match14.status === 'COMPLETED'))
+    normalizedFormat === '6_TEAM' &&
+    ((wildcardObj?.wc3 && wildcardObj.wc3.status === 'COMPLETED') ||
+      playoff1Match?.status === 'LIVE' ||
+      playoff1Match?.status === 'COMPLETED' ||
+      playoff2Match?.status === 'LIVE' ||
+      playoff2Match?.status === 'COMPLETED')
   ) {
     currentStage = 'PLAYOFFS';
   } else if (
-    groupStageComplete ||
-    qualificationMatches.some((m: any) => m.status === 'LIVE' || m.status === 'COMPLETED')
+    normalizedFormat === '6_TEAM' &&
+    (groupStageComplete || (wildcardObj?.matches || []).some((m) => m?.status === 'LIVE' || m?.status === 'COMPLETED'))
+  ) {
+    currentStage = 'WILDCARD';
+  } else if (
+    normalizedFormat === '7_TEAM' &&
+    (groupStageComplete || playoff1Match?.status === 'LIVE' || playoff1Match?.status === 'COMPLETED' || playoff2Match?.status === 'LIVE' || playoff2Match?.status === 'COMPLETED')
+  ) {
+    currentStage = 'PLAYOFFS';
+  } else if (
+    normalizedFormat === '8_TEAM' &&
+    ((qualificationObj.match11 && qualificationObj.match11.status === 'COMPLETED') ||
+      playoff1Match?.status === 'LIVE' ||
+      playoff1Match?.status === 'COMPLETED' ||
+      playoff2Match?.status === 'LIVE' ||
+      playoff2Match?.status === 'COMPLETED')
+  ) {
+    currentStage = 'PLAYOFFS';
+  } else if (
+    normalizedFormat === '8_TEAM' &&
+    (groupStageComplete || qualificationObj.matches.some((m) => m?.status === 'LIVE' || m?.status === 'COMPLETED'))
   ) {
     currentStage = 'QUALIFICATION';
   } else {
@@ -421,8 +529,13 @@ export async function getTournamentOverview(tournamentId?: string): Promise<Tour
       name: tournament.name,
       season: tournament.season,
       format: tournament.format,
+      tournamentFormat: tournament.tournamentFormat || '8_TEAM',
+      normalizedFormat,
       status: tournament.status,
     },
+    tournamentFormat: tournament.tournamentFormat || '8_TEAM',
+    normalizedFormat,
+    crownedChampion: championTeam,
     teams,
     groups: {
       groupA: {
@@ -448,35 +561,27 @@ export async function getTournamentOverview(tournamentId?: string): Promise<Tour
     } as any,
     groupA: groupAStandings,
     groupB: groupBStandings,
-    qualification: {
-      matches: qualificationMatches,
-      match9,
-      match10,
-      match11,
-      qualifier1: qualifier1Team,
-      qualifier2: qualifier2Team,
-    },
+    wildcard: wildcardObj,
+    qualification: qualificationObj,
     playoffs: {
-      seeds: [
-        { seedNumber: 1, team: seed1Team, label: 'Best Group Winner' },
-        { seedNumber: 2, team: seed2Team, label: '2nd Best Group Winner' },
-        { seedNumber: 3, team: seed3Team, label: 'Match 9 Winner' },
-        { seedNumber: 4, team: seed4Team, label: 'Match 11 Winner' },
-      ],
-      match12,
-      match13,
-      match14,
-      final: finalMatch,
+      seeds: playoffSeeds,
+      playoff1: playoff1Match,
+      playoff2: playoff2Match,
+      finalSpotPlayoff: finalSpotPlayoffMatch,
+      final: grandFinalMatch,
       champion: championTeam,
       runnerUp: runnerUpTeam,
-      // Aliases for legacy component compatibility
-      qualifier1: match12,
-      eliminator: match13,
-      qualifier2: match14,
+      // Backward-compatibility aliases
+      match12: playoff1Match,
+      match13: playoff2Match,
+      match14: finalSpotPlayoffMatch,
+      qualifier1: playoff1Match,
+      eliminator: playoff2Match,
+      qualifier2: finalSpotPlayoffMatch,
     },
     matches: rawMatches,
     progress: {
-      totalMatches: 15,
+      totalMatches: formatConfig.totalMatches,
       completedMatches: completedCount,
       currentStage,
     },
@@ -484,8 +589,10 @@ export async function getTournamentOverview(tournamentId?: string): Promise<Tour
 }
 
 /**
- * Assigns teams into Group A and Group B (4 teams each, positions A1-A4 and B1-B4).
- * Ensures exactly 4 teams per group and clears group assignment for unassigned teams.
+ * Assigns teams into Group A and Group B according to the selected tournament format.
+ * 6-Team: exactly 3 in Group A, 3 in Group B.
+ * 7-Team: exactly 4 in Group A, 3 in Group B.
+ * 8-Team: exactly 4 in Group A, 4 in Group B.
  */
 export async function assignTeamsToGroups(
   tournamentId: string,
@@ -493,6 +600,17 @@ export async function assignTeamsToGroups(
   positions?: Record<string, number>
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    const tournament = await (prisma as any).tournament.findUnique({
+      where: { id: tournamentId },
+    });
+    if (!tournament) {
+      return { success: false, error: 'Tournament not found' };
+    }
+
+    const formatConfig = getFormatConfig(tournament);
+    const expectedA = formatConfig.groupSizes.GROUP_A;
+    const expectedB = formatConfig.groupSizes.GROUP_B;
+
     const teamIds = Object.keys(assignments);
     if (teamIds.length === 0) {
       return { success: false, error: 'No team assignments provided.' };
@@ -508,16 +626,16 @@ export async function assignTeamsToGroups(
       else if (grp === 'GROUP_B') assignedGroupB.push(tId);
     }
 
-    if (assignedGroupA.length !== 4 || assignedGroupB.length !== 4) {
+    if (assignedGroupA.length !== expectedA || assignedGroupB.length !== expectedB) {
       return {
         success: false,
-        error: `Must assign exactly 4 teams to Group A and 4 teams to Group B. Currently: Group A (${assignedGroupA.length}/4), Group B (${assignedGroupB.length}/4).`,
+        error: `${formatConfig.displayName} requires exactly ${expectedA} teams in Group A and ${expectedB} teams in Group B. Currently: Group A (${assignedGroupA.length}/${expectedA}), Group B (${assignedGroupB.length}/${expectedB}).`,
       };
     }
 
     const assignedTeamIds = [...assignedGroupA, ...assignedGroupB];
 
-    // 1. Clear group and seed for any team in this tournament that is not in the assigned 8
+    // 1. Clear group and seed for any unassigned teams in this tournament
     await (prisma as any).tournamentTeam.updateMany({
       where: {
         tournamentId,
@@ -529,7 +647,7 @@ export async function assignTeamsToGroups(
       },
     });
 
-    // 2. Upsert the 8 assigned teams with their group and seed (position 1-4)
+    // 2. Upsert the assigned teams with their group and seed
     for (const teamId of assignedTeamIds) {
       const rawVal = assignments[teamId];
       const groupName = typeof rawVal === 'string' ? rawVal : rawVal?.group;
@@ -564,8 +682,7 @@ export async function assignTeamsToGroups(
 }
 
 /**
- * Unassigns all teams from groups (sets groupName = null, seed = null).
- * Allowed only when no matches/fixtures exist for the tournament.
+ * Unassigns all teams from groups. Allowed only when no matches/fixtures exist.
  */
 export async function unassignAllTeams(
   tournamentId: string
@@ -597,8 +714,40 @@ export async function unassignAllTeams(
 }
 
 /**
- * Configures the stage-specific over limits and balls per over for the 4 stages:
- * GROUP, QUALIFICATION, PLAYOFFS, FINAL.
+ * Updates the tournament format configuration (6_TEAM, 7_TEAM, 8_TEAM).
+ * Permitted only when no fixtures have been generated.
+ */
+export async function updateTournamentFormat(
+  tournamentId: string,
+  newFormat: TournamentFormatType
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const matchCount = await (prisma as any).match.count({
+      where: { tournamentId },
+    });
+    if (matchCount > 0) {
+      return {
+        success: false,
+        error: 'Cannot change tournament format while fixtures exist. Please reset fixtures first.',
+      };
+    }
+
+    await (prisma as any).tournament.update({
+      where: { id: tournamentId },
+      data: {
+        tournamentFormat: newFormat,
+      },
+    });
+
+    return { success: true };
+  } catch (err: any) {
+    console.error('[updateTournamentFormat] error:', err);
+    return { success: false, error: err.message || 'Failed to update tournament format.' };
+  }
+}
+
+/**
+ * Configures the stage-specific over limits and balls per over.
  */
 export async function configureTournamentStages(
   tournamentId: string,
@@ -606,12 +755,11 @@ export async function configureTournamentStages(
     ballsPerOver?: number;
     groupOvers?: number;
     qualificationOvers?: number;
-    wildcardOvers?: number; // legacy alias
+    wildcardOvers?: number;
     playoffOvers?: number;
     finalOvers?: number;
   }
 ): Promise<{ success: boolean; error?: string }> {
-  // Lock Check: Do not allow silent changes to format once fixtures have been generated
   const matchCount = await (prisma as any).match.count({
     where: { tournamentId },
   });
@@ -628,14 +776,18 @@ export async function configureTournamentStages(
   const stages = [
     { name: 'GROUP', stageOrder: 1, overs: settings.groupOvers || 4, ballsPerOver },
     { name: 'QUALIFICATION', stageOrder: 2, overs: qualOvers, ballsPerOver },
+    { name: 'WILDCARD', stageOrder: 2, overs: qualOvers, ballsPerOver },
     { name: 'PLAYOFFS', stageOrder: 3, overs: settings.playoffOvers || 6, ballsPerOver },
     { name: 'FINAL', stageOrder: 4, overs: settings.finalOvers || 6, ballsPerOver },
   ];
 
+  const existingStages = await (prisma as any).tournamentStage.findMany({
+    where: { tournamentId },
+  });
+  const existingMap = new Map(existingStages.map((s: any) => [s.name, s]));
+
   for (const s of stages) {
-    const existing = await (prisma as any).tournamentStage.findFirst({
-      where: { tournamentId, name: s.name },
-    });
+    const existing = existingMap.get(s.name) as any;
     if (existing) {
       await (prisma as any).tournamentStage.update({
         where: { id: existing.id },
@@ -661,9 +813,8 @@ export async function configureTournamentStages(
 }
 
 /**
- * Explicitly resets tournament fixtures, innings, and deliveries, returning the tournament
- * to DRAFT / UPCOMING state so that format rules or group assignments can be reconfigured.
- * CRITICAL: Preserves core Team and Player records. Only deletes matches and resets tournament stage records.
+ * Resets tournament fixtures, innings, and deliveries, returning the tournament
+ * to DRAFT / SCHEDULED state so that format rules or group assignments can be reconfigured.
  */
 export async function resetTournamentFixtures(
   tournamentId: string,
@@ -683,7 +834,6 @@ export async function resetTournamentFixtures(
     return { success: false, error: 'Tournament not found' };
   }
 
-  // 1. Fetch match IDs for this tournament
   const matches = await (prisma as any).match.findMany({
     where: { tournamentId },
     select: { id: true },
@@ -720,7 +870,6 @@ export async function resetTournamentFixtures(
     });
   }
 
-  // 2. Reset tournamentTeam standings and qualification status
   await (prisma as any).tournamentTeam.updateMany({
     where: { tournamentId },
     data: {
@@ -739,7 +888,6 @@ export async function resetTournamentFixtures(
     },
   });
 
-  // 3. Reset tournament status back to SCHEDULED
   await (prisma as any).tournament.update({
     where: { id: tournamentId },
     data: {
@@ -751,22 +899,7 @@ export async function resetTournamentFixtures(
 }
 
 /**
- * Generates the 8 group-stage matches for the 8-team format with alternating groups & rest optimization:
- * Alternating Group Matches (A, B, A, B, A, B, A, B) with zero consecutive matches for any team.
- * All 8 teams play Match 1 in Round 1 (M1-M4) before any team plays Match 2 in Round 2 (M5-M8).
- *
- * Round 1:
- *   Match 1: Group A, A1 vs A2 (G1)
- *   Match 2: Group B, B1 vs B2 (G2)
- *   Match 3: Group A, A3 vs A4 (G3)
- *   Match 4: Group B, B3 vs B4 (G4)
- * Round 2:
- *   Match 5: Group A, A1 vs A4 (G5) [A1 rested 3 matches, A4 rested 1 match]
- *   Match 6: Group B, B1 vs B4 (G6) [B1 rested 3 matches, B4 rested 1 match]
- *   Match 7: Group A, A2 vs A3 (G7) [A2 rested 5 matches, A3 rested 3 matches]
- *   Match 8: Group B, B2 vs B3 (G8) [B2 rested 5 matches, B3 rested 3 matches]
- *
- * Each team plays exactly 2 matches.
+ * Generates group-stage fixtures dynamically based on the tournament format.
  */
 export async function generateGroupStageFixtures(
   tournamentId: string,
@@ -782,7 +915,6 @@ export async function generateGroupStageFixtures(
     startDate?: Date | string;
   } = {}
 ): Promise<{ success: boolean; createdCount?: number; error?: string }> {
-  // Lock Check: Verify no fixtures already exist
   const existingMatchCount = await (prisma as any).match.count({
     where: { tournamentId },
   });
@@ -794,13 +926,23 @@ export async function generateGroupStageFixtures(
     };
   }
 
+  const tournament = await (prisma as any).tournament.findUnique({
+    where: { id: tournamentId },
+  });
+  if (!tournament) {
+    return { success: false, error: 'Tournament not found' };
+  }
+
+  const formatConfig = getFormatConfig(tournament);
+  const expectedA = formatConfig.groupSizes.GROUP_A;
+  const expectedB = formatConfig.groupSizes.GROUP_B;
+
   const ballsPerOver = settings.ballsPerOver || 4;
   const oversPerInnings = settings.groupOvers || settings.oversPerInnings || 4;
   const qualOvers = settings.qualificationOvers || settings.wildcardOvers || 5;
   const venue = settings.venue || 'Ratmalana CGR Ground';
   const baseDate = settings.startDate ? new Date(settings.startDate) : new Date();
 
-  // Save format configuration across stages
   const stageConfigResult = await configureTournamentStages(tournamentId, {
     ballsPerOver,
     groupOvers: oversPerInnings,
@@ -822,53 +964,41 @@ export async function generateGroupStageFixtures(
   const groupA = tournamentTeams.filter((tt: any) => tt.groupName === 'GROUP_A');
   const groupB = tournamentTeams.filter((tt: any) => tt.groupName === 'GROUP_B');
 
-  if (groupA.length !== 4 || groupB.length !== 4) {
+  if (groupA.length !== expectedA || groupB.length !== expectedB) {
     return {
       success: false,
-      error: `Tournament requires exactly 8 teams (4 in Group A, 4 in Group B). Found: Group A (${groupA.length}), Group B (${groupB.length}).`,
+      error: `${formatConfig.displayName} requires exactly ${formatConfig.totalTeams} teams (${expectedA} in Group A, ${expectedB} in Group B). Found: Group A (${groupA.length}), Group B (${groupB.length}).`,
     };
   }
 
-  // Check if matches 1-8 already exist
+  // Check if upcoming group matches already exist
   const allExistingMatches = await (prisma as any).match.findMany({
     where: { tournamentId },
   });
-  const existingMatches = allExistingMatches.filter((m: any) => m.matchNumber && m.matchNumber <= 8);
+  const existingGroupMatches = allExistingMatches.filter((m: any) => m.matchNumber && m.matchNumber <= formatConfig.totalGroupMatches);
 
-  if (existingMatches.length > 0) {
-    const started = existingMatches.some((m: any) => m.status === 'LIVE' || m.status === 'COMPLETED');
+  if (existingGroupMatches.length > 0) {
+    const started = existingGroupMatches.some((m: any) => m.status === 'LIVE' || m.status === 'COMPLETED');
     if (started) {
       return { success: false, error: 'Group stage matches have already started and cannot be regenerated.' };
     }
-    // Delete existing upcoming group matches via raw SQL
     await (prisma as any).$executeRawUnsafe(
-      `DELETE FROM "Match" WHERE "tournamentId" = $1 AND "matchNumber" <= 8 AND "status" = 'UPCOMING'`,
-      tournamentId
+      `DELETE FROM "Match" WHERE "tournamentId" = $1 AND "matchNumber" <= $2 AND "status" = 'UPCOMING'`,
+      tournamentId,
+      formatConfig.totalGroupMatches
     );
   }
 
-  // Alternating & non-consecutive fixture plan:
-  // Round 1: All 8 teams play 1 match, alternating A and B
-  // Round 2: All 8 teams play their 2nd match, alternating A and B, 0 consecutive matches
-  const fixturePlan = [
-    // Round 1
-    { num: 1, group: 'GROUP_A', slot: 'G1', tA: groupA[0].teamId, tB: groupA[1].teamId, offsetHours: 0 },
-    { num: 2, group: 'GROUP_B', slot: 'G2', tA: groupB[0].teamId, tB: groupB[1].teamId, offsetHours: 1 },
-    { num: 3, group: 'GROUP_A', slot: 'G3', tA: groupA[2].teamId, tB: groupA[3].teamId, offsetHours: 2 },
-    { num: 4, group: 'GROUP_B', slot: 'G4', tA: groupB[2].teamId, tB: groupB[3].teamId, offsetHours: 3 },
-    // Round 2
-    { num: 5, group: 'GROUP_A', slot: 'G5', tA: groupA[0].teamId, tB: groupA[3].teamId, offsetHours: 4 },
-    { num: 6, group: 'GROUP_B', slot: 'G6', tA: groupB[0].teamId, tB: groupB[3].teamId, offsetHours: 5 },
-    { num: 7, group: 'GROUP_A', slot: 'G7', tA: groupA[1].teamId, tB: groupA[2].teamId, offsetHours: 6 },
-    { num: 8, group: 'GROUP_B', slot: 'G8', tA: groupB[1].teamId, tB: groupB[2].teamId, offsetHours: 7 },
-  ];
-
-  for (const f of fixturePlan) {
+  // Generate fixtures from format config
+  for (const f of formatConfig.groupFixtures) {
     const scheduled = new Date(baseDate.getTime() + f.offsetHours * 60 * 60 * 1000);
+    const teamAId = f.group === 'GROUP_A' ? groupA[f.teamAIndex].teamId : groupB[f.teamAIndex].teamId;
+    const teamBId = f.group === 'GROUP_A' ? groupA[f.teamBIndex].teamId : groupB[f.teamBIndex].teamId;
+
     await createMatchRecord({
       tournamentId,
-      teamAId: f.tA,
-      teamBId: f.tB,
+      teamAId,
+      teamBId,
       venue,
       scheduledAt: scheduled,
       status: 'UPCOMING',
@@ -881,19 +1011,17 @@ export async function generateGroupStageFixtures(
     });
   }
 
-  // Update tournament status to SCHEDULED if DRAFT
   await (prisma as any).tournament.update({
     where: { id: tournamentId },
     data: { status: 'SCHEDULED' },
   });
 
-  return { success: true, createdCount: 8 };
+  return { success: true, createdCount: formatConfig.totalGroupMatches };
 }
 
 /**
  * Evaluates match outcomes and automatically generates the next stage matches.
- * 8 Teams · 15 Matches Progression:
- * Group Stage (M1-M8) -> Playoff Qualification (M9-M11) -> Four-Team Playoff (M12-M14) -> Grand Final (M15)
+ * Dispatches to format-specific advancement logic (6-Team, 7-Team, or 8-Team).
  */
 export async function checkAndAdvanceTournament(tournamentId: string): Promise<{
   advanced: boolean;
@@ -903,26 +1031,523 @@ export async function checkAndAdvanceTournament(tournamentId: string): Promise<{
   const overview = await getTournamentOverview(tournamentId);
   if (!overview) return { advanced: false, message: 'Tournament not found.' };
 
-  const { matches, groups, playoffs } = overview;
+  const format = overview.tournament.normalizedFormat;
 
-  // Load tournament-level stage format configuration
   const stages = await (prisma as any).tournamentStage.findMany({ where: { tournamentId } });
   const groupConfig = stages.find((s: any) => s.name === 'GROUP');
   const qualConfig = stages.find((s: any) => s.name === 'QUALIFICATION' || s.name === 'WILDCARD');
   const playoffConfig = stages.find((s: any) => s.name === 'PLAYOFFS');
   const finalConfig = stages.find((s: any) => s.name === 'FINAL');
 
-  const ballsPerOver = groupConfig?.ballsPerOver || (matches[0] as any)?.ballsPerOver || 4;
-  const qualificationOvers = qualConfig?.oversPerInnings || 5;
+  const ballsPerOver = groupConfig?.ballsPerOver || (overview.matches[0] as any)?.ballsPerOver || 4;
+  const qualOvers = qualConfig?.oversPerInnings || 5;
   const playoffOvers = playoffConfig?.oversPerInnings || 6;
   const finalOvers = finalConfig?.oversPerInnings || 6;
 
   const baseDate = new Date();
   const venue = 'Ratmalana CGR Ground';
 
-  // -------------------------------------------------------------
+  if (format === '6_TEAM') {
+    return advance6TeamTournament(
+      tournamentId,
+      overview,
+      baseDate,
+      venue,
+      ballsPerOver,
+      qualOvers,
+      playoffOvers,
+      finalOvers
+    );
+  } else if (format === '7_TEAM') {
+    return advance7TeamTournament(
+      tournamentId,
+      overview,
+      baseDate,
+      venue,
+      ballsPerOver,
+      playoffOvers,
+      finalOvers
+    );
+  } else {
+    return advance8TeamTournament(
+      tournamentId,
+      overview,
+      baseDate,
+      venue,
+      ballsPerOver,
+      qualOvers,
+      playoffOvers,
+      finalOvers
+    );
+  }
+}
+
+/**
+ * 6-Team Tournament Progression:
+ * Group Stage (M1–M6) -> Wildcard (M7: WC1, M8: WC2, M9: WC3) -> Playoffs (M10: P1, M11: P2, M12: P3) -> Grand Final (M13).
+ */
+async function advance6TeamTournament(
+  tournamentId: string,
+  overview: TournamentOverview,
+  baseDate: Date,
+  venue: string,
+  ballsPerOver: number,
+  qualOvers: number,
+  playoffOvers: number,
+  finalOvers: number
+): Promise<{ advanced: boolean; message: string; stageTriggered?: string }> {
+  const { matches, groups } = overview;
+  const groupMatches = matches.filter(
+    (m: any) => m.stage === 'GROUP' || (m.matchNumber && m.matchNumber <= 6)
+  );
+  const groupStageComplete = groupMatches.length === 6 && groupMatches.every((m: any) => m.status === 'COMPLETED');
+
+  const m7 = matches.find((m: any) => m.matchNumber === 7 || m.bracketSlot === 'WC1');
+  const m8 = matches.find((m: any) => m.matchNumber === 8 || m.bracketSlot === 'WC2');
+  const m9 = matches.find((m: any) => m.matchNumber === 9 || m.bracketSlot === 'WC3');
+
+  // 1. Group Stage Complete -> Generate WC1 (M7: A2 vs B2) and WC2 (M8: B3 vs A3)
+  if (groupStageComplete && (!m7 || !m8)) {
+    const a1 = groups.groupA.standings[0];
+    const a2 = groups.groupA.standings[1];
+    const a3 = groups.groupA.standings[2];
+
+    const b1 = groups.groupB.standings[0];
+    const b2 = groups.groupB.standings[1];
+    const b3 = groups.groupB.standings[2];
+
+    if (a1 && a2 && a3 && b1 && b2 && b3) {
+      if (!m7) {
+        await createMatchRecord({
+          tournamentId,
+          teamAId: a2.teamId,
+          teamBId: b2.teamId,
+          venue,
+          scheduledAt: new Date(baseDate.getTime() + 1 * 3600000),
+          status: 'UPCOMING',
+          oversPerInnings: qualOvers,
+          ballsPerOver,
+          stage: 'WILDCARD',
+          groupName: null,
+          matchNumber: 7,
+          bracketSlot: 'WC1',
+        });
+      }
+
+      if (!m8) {
+        await createMatchRecord({
+          tournamentId,
+          teamAId: b3.teamId,
+          teamBId: a3.teamId,
+          venue,
+          scheduledAt: new Date(baseDate.getTime() + 2 * 3600000),
+          status: 'UPCOMING',
+          oversPerInnings: qualOvers,
+          ballsPerOver,
+          stage: 'WILDCARD',
+          groupName: null,
+          matchNumber: 8,
+          bracketSlot: 'WC2',
+        });
+      }
+
+      await updateTeamsQualification(tournamentId, [a1.teamId, b1.teamId], 'QUALIFIED');
+      await updateTeamsQualification(tournamentId, [a2.teamId, b2.teamId, a3.teamId, b3.teamId], 'WILDCARD');
+
+      return {
+        advanced: true,
+        message: 'Group Stage completed. Wildcard Match 7 (WC1: A2 vs B2) and Match 8 (WC2: B3 vs A3) generated.',
+        stageTriggered: 'WILDCARD',
+      };
+    }
+  }
+
+  // 2. WC1 (M7) & WC2 (M8) Complete -> Generate WC3 (M9: WC1 Loser vs WC2 Winner)
+  if (m7 && m8 && m7.status === 'COMPLETED' && m8.status === 'COMPLETED' && !m9) {
+    const wc1WinnerId = m7.winnerTeamId;
+    const wc1LoserId = m7.winnerTeamId === m7.teamAId ? m7.teamBId : m7.teamAId;
+    const wc2WinnerId = m8.winnerTeamId;
+    const wc2LoserId = m8.winnerTeamId === m8.teamAId ? m8.teamBId : m8.teamAId;
+
+    if (wc1WinnerId) {
+      await updateTeamsQualification(tournamentId, [wc1WinnerId], 'QUALIFIED');
+    }
+    if (wc2LoserId) {
+      await updateTeamsQualification(tournamentId, [wc2LoserId], 'ELIMINATED');
+    }
+
+    if (wc1LoserId && wc2WinnerId) {
+      await createMatchRecord({
+        tournamentId,
+        teamAId: wc1LoserId,
+        teamBId: wc2WinnerId,
+        venue,
+        scheduledAt: new Date(baseDate.getTime() + 3 * 3600000),
+        status: 'UPCOMING',
+        oversPerInnings: qualOvers,
+        ballsPerOver,
+        stage: 'WILDCARD',
+        groupName: null,
+        matchNumber: 9,
+        bracketSlot: 'WC3',
+      });
+
+      return {
+        advanced: true,
+        message: 'WC1 and WC2 completed. Wildcard Match 9 (WC3: WC1 Loser vs WC2 Winner) generated.',
+        stageTriggered: 'WILDCARD',
+      };
+    }
+  }
+
+  // 3. WC3 (M9) Complete -> Generate P1 (M10: A1 vs B1) and P2 (M11: Seed 3 [WC1 Winner] vs Seed 4 [WC3 Winner])
+  const m10 = matches.find((m: any) => m.matchNumber === 10 || m.bracketSlot === 'P1');
+  const m11 = matches.find((m: any) => m.matchNumber === 11 || m.bracketSlot === 'P2');
+
+  if (m7 && m8 && m9 && m9.status === 'COMPLETED' && (!m10 || !m11)) {
+    const wc3WinnerId = m9.winnerTeamId;
+    const wc3LoserId = m9.winnerTeamId === m9.teamAId ? m9.teamBId : m9.teamAId;
+
+    if (wc3WinnerId) {
+      await updateTeamsQualification(tournamentId, [wc3WinnerId], 'QUALIFIED');
+    }
+    if (wc3LoserId) {
+      await updateTeamsQualification(tournamentId, [wc3LoserId], 'ELIMINATED');
+    }
+
+    const a1 = groups.groupA.standings[0];
+    const b1 = groups.groupB.standings[0];
+    const seed3Id = m7.winnerTeamId; // WC1 Winner
+    const seed4Id = wc3WinnerId;    // WC3 Winner
+
+    if (a1 && b1 && seed3Id && seed4Id) {
+      if (!m10) {
+        await createMatchRecord({
+          tournamentId,
+          teamAId: a1.teamId,
+          teamBId: b1.teamId,
+          venue,
+          scheduledAt: new Date(baseDate.getTime() + 4 * 3600000),
+          status: 'UPCOMING',
+          oversPerInnings: playoffOvers,
+          ballsPerOver,
+          stage: 'PLAYOFFS',
+          groupName: null,
+          matchNumber: 10,
+          bracketSlot: 'P1',
+        });
+      }
+
+      if (!m11) {
+        await createMatchRecord({
+          tournamentId,
+          teamAId: seed3Id,
+          teamBId: seed4Id,
+          venue,
+          scheduledAt: new Date(baseDate.getTime() + 5 * 3600000),
+          status: 'UPCOMING',
+          oversPerInnings: playoffOvers,
+          ballsPerOver,
+          stage: 'PLAYOFFS',
+          groupName: null,
+          matchNumber: 11,
+          bracketSlot: 'P2',
+        });
+      }
+
+      return {
+        advanced: true,
+        message: 'Wildcard stage concluded. Playoff Match 10 (P1: A1 vs B1) and Match 11 (P2: Seed 3 vs Seed 4) generated.',
+        stageTriggered: 'PLAYOFFS',
+      };
+    }
+  }
+
+  // 4. P1 (M10) and P2 (M11) Complete -> Generate P3 (M12: P1 Loser vs P2 Winner)
+  const m12 = matches.find((m: any) => m.matchNumber === 12 || m.bracketSlot === 'P3');
+  if (m10 && m11 && m10.status === 'COMPLETED' && m11.status === 'COMPLETED' && !m12) {
+    const p1LoserId = m10.winnerTeamId === m10.teamAId ? m10.teamBId : m10.teamAId;
+    const p2WinnerId = m11.winnerTeamId;
+    const p2LoserId = m11.winnerTeamId === m11.teamAId ? m11.teamBId : m11.teamAId;
+
+    if (p2LoserId) {
+      await updateTeamsQualification(tournamentId, [p2LoserId], 'ELIMINATED');
+    }
+
+    if (p1LoserId && p2WinnerId) {
+      await createMatchRecord({
+        tournamentId,
+        teamAId: p1LoserId,
+        teamBId: p2WinnerId,
+        venue,
+        scheduledAt: new Date(baseDate.getTime() + 6 * 3600000),
+        status: 'UPCOMING',
+        oversPerInnings: playoffOvers,
+        ballsPerOver,
+        stage: 'PLAYOFFS',
+        groupName: null,
+        matchNumber: 12,
+        bracketSlot: 'P3',
+      });
+
+      return {
+        advanced: true,
+        message: 'Playoff Matches 10 & 11 concluded. Final Spot Playoff Match 12 (P3: P1 Loser vs P2 Winner) generated.',
+        stageTriggered: 'PLAYOFFS',
+      };
+    }
+  }
+
+  // 5. P3 (M12) Complete -> Generate Grand Final (M13: P1 Winner vs P3 Winner)
+  const m13 = matches.find((m: any) => m.matchNumber === 13 || m.bracketSlot === 'FINAL');
+  if (m10 && m12 && m10.status === 'COMPLETED' && m12.status === 'COMPLETED' && !m13) {
+    const p1WinnerId = m10.winnerTeamId;
+    const p3WinnerId = m12.winnerTeamId;
+    const p3LoserId = m12.winnerTeamId === m12.teamAId ? m12.teamBId : m12.teamAId;
+
+    if (p3LoserId) {
+      await updateTeamsQualification(tournamentId, [p3LoserId], 'ELIMINATED');
+    }
+
+    if (p1WinnerId && p3WinnerId) {
+      await createMatchRecord({
+        tournamentId,
+        teamAId: p1WinnerId,
+        teamBId: p3WinnerId,
+        venue,
+        scheduledAt: new Date(baseDate.getTime() + 7 * 3600000),
+        status: 'UPCOMING',
+        oversPerInnings: finalOvers,
+        ballsPerOver,
+        stage: 'FINAL',
+        groupName: null,
+        matchNumber: 13,
+        bracketSlot: 'FINAL',
+      });
+
+      return {
+        advanced: true,
+        message: 'Match 12 concluded. Grand Final Match 13 (P1 Winner vs P3 Winner) generated!',
+        stageTriggered: 'FINAL',
+      };
+    }
+  }
+
+  // 6. Grand Final (M13) Complete -> Crown Champion
+  if (m13 && m13.status === 'COMPLETED' && m13.winnerTeamId) {
+    await (prisma as any).tournament.update({
+      where: { id: tournamentId },
+      data: { status: 'COMPLETED' },
+    });
+    await updateTeamsQualification(tournamentId, [m13.winnerTeamId], 'CHAMPION');
+    const runnerUpId = m13.winnerTeamId === m13.teamAId ? m13.teamBId : m13.teamAId;
+    if (runnerUpId) {
+      await updateTeamsQualification(tournamentId, [runnerUpId], 'RUNNER_UP');
+    }
+
+    return {
+      advanced: true,
+      message: 'CPL 6-Team Grand Final concluded! Champion crowned.',
+      stageTriggered: 'COMPLETED',
+    };
+  }
+
+  return { advanced: false, message: 'No advancement triggers active at this time.' };
+}
+
+/**
+ * 7-Team Tournament Progression:
+ * Group Stage (M1–M7) -> 3-Match Playoffs (M8: P1, M9: P2, M10: P3) -> Grand Final (M11).
+ */
+async function advance7TeamTournament(
+  tournamentId: string,
+  overview: TournamentOverview,
+  baseDate: Date,
+  venue: string,
+  ballsPerOver: number,
+  playoffOvers: number,
+  finalOvers: number
+): Promise<{ advanced: boolean; message: string; stageTriggered?: string }> {
+  const { matches, groups } = overview;
+  const groupMatches = matches.filter(
+    (m: any) => m.stage === 'GROUP' || (m.matchNumber && m.matchNumber <= 7)
+  );
+  const groupStageComplete = groupMatches.length === 7 && groupMatches.every((m: any) => m.status === 'COMPLETED');
+
+  const m8 = matches.find((m: any) => m.matchNumber === 8 || m.bracketSlot === 'P1');
+  const m9 = matches.find((m: any) => m.matchNumber === 9 || m.bracketSlot === 'P2');
+
+  // 1. Group Stage Complete -> Generate P1 (M8: A1 vs B1) and P2 (M9: A2 vs B2)
+  if (groupStageComplete && (!m8 || !m9)) {
+    const a1 = groups.groupA.standings[0];
+    const a2 = groups.groupA.standings[1];
+    const a3 = groups.groupA.standings[2];
+    const a4 = groups.groupA.standings[3];
+
+    const b1 = groups.groupB.standings[0];
+    const b2 = groups.groupB.standings[1];
+    const b3 = groups.groupB.standings[2];
+
+    if (a1 && a2 && b1 && b2) {
+      // Lower ranked teams eliminated
+      const eliminated = [a3?.teamId, a4?.teamId, b3?.teamId].filter(Boolean) as string[];
+      if (eliminated.length > 0) {
+        await updateTeamsQualification(tournamentId, eliminated, 'ELIMINATED');
+      }
+
+      await updateTeamsQualification(tournamentId, [a1.teamId, b1.teamId, a2.teamId, b2.teamId], 'QUALIFIED');
+
+      if (!m8) {
+        await createMatchRecord({
+          tournamentId,
+          teamAId: a1.teamId,
+          teamBId: b1.teamId,
+          venue,
+          scheduledAt: new Date(baseDate.getTime() + 1 * 3600000),
+          status: 'UPCOMING',
+          oversPerInnings: playoffOvers,
+          ballsPerOver,
+          stage: 'PLAYOFFS',
+          groupName: null,
+          matchNumber: 8,
+          bracketSlot: 'P1',
+        });
+      }
+
+      if (!m9) {
+        await createMatchRecord({
+          tournamentId,
+          teamAId: a2.teamId,
+          teamBId: b2.teamId,
+          venue,
+          scheduledAt: new Date(baseDate.getTime() + 2 * 3600000),
+          status: 'UPCOMING',
+          oversPerInnings: playoffOvers,
+          ballsPerOver,
+          stage: 'PLAYOFFS',
+          groupName: null,
+          matchNumber: 9,
+          bracketSlot: 'P2',
+        });
+      }
+
+      return {
+        advanced: true,
+        message: 'Group Stage completed. Playoff Match 8 (P1: A1 vs B1) and Match 9 (P2: A2 vs B2) generated.',
+        stageTriggered: 'PLAYOFFS',
+      };
+    }
+  }
+
+  // 2. P1 (M8) & P2 (M9) Complete -> Generate P3 (M10: P1 Loser vs P2 Winner)
+  const m10 = matches.find((m: any) => m.matchNumber === 10 || m.bracketSlot === 'P3');
+  if (m8 && m9 && m8.status === 'COMPLETED' && m9.status === 'COMPLETED' && !m10) {
+    const p1LoserId = m8.winnerTeamId === m8.teamAId ? m8.teamBId : m8.teamAId;
+    const p2WinnerId = m9.winnerTeamId;
+    const p2LoserId = m9.winnerTeamId === m9.teamAId ? m9.teamBId : m9.teamAId;
+
+    if (p2LoserId) {
+      await updateTeamsQualification(tournamentId, [p2LoserId], 'ELIMINATED');
+    }
+
+    if (p1LoserId && p2WinnerId) {
+      await createMatchRecord({
+        tournamentId,
+        teamAId: p1LoserId,
+        teamBId: p2WinnerId,
+        venue,
+        scheduledAt: new Date(baseDate.getTime() + 3 * 3600000),
+        status: 'UPCOMING',
+        oversPerInnings: playoffOvers,
+        ballsPerOver,
+        stage: 'PLAYOFFS',
+        groupName: null,
+        matchNumber: 10,
+        bracketSlot: 'P3',
+      });
+
+      return {
+        advanced: true,
+        message: 'Matches 8 & 9 concluded. Final Spot Playoff Match 10 (P3: P1 Loser vs P2 Winner) generated.',
+        stageTriggered: 'PLAYOFFS',
+      };
+    }
+  }
+
+  // 3. P3 (M10) Complete -> Generate Grand Final (M11: P1 Winner vs P3 Winner)
+  const m11 = matches.find((m: any) => m.matchNumber === 11 || m.bracketSlot === 'FINAL');
+  if (m8 && m10 && m8.status === 'COMPLETED' && m10.status === 'COMPLETED' && !m11) {
+    const p1WinnerId = m8.winnerTeamId;
+    const p3WinnerId = m10.winnerTeamId;
+    const p3LoserId = m10.winnerTeamId === m10.teamAId ? m10.teamBId : m10.teamAId;
+
+    if (p3LoserId) {
+      await updateTeamsQualification(tournamentId, [p3LoserId], 'ELIMINATED');
+    }
+
+    if (p1WinnerId && p3WinnerId) {
+      await createMatchRecord({
+        tournamentId,
+        teamAId: p1WinnerId,
+        teamBId: p3WinnerId,
+        venue,
+        scheduledAt: new Date(baseDate.getTime() + 4 * 3600000),
+        status: 'UPCOMING',
+        oversPerInnings: finalOvers,
+        ballsPerOver,
+        stage: 'FINAL',
+        groupName: null,
+        matchNumber: 11,
+        bracketSlot: 'FINAL',
+      });
+
+      return {
+        advanced: true,
+        message: 'Match 10 concluded. Grand Final Match 11 (P1 Winner vs P3 Winner) generated!',
+        stageTriggered: 'FINAL',
+      };
+    }
+  }
+
+  // 4. Grand Final (M11) Complete -> Crown Champion
+  if (m11 && m11.status === 'COMPLETED' && m11.winnerTeamId) {
+    await (prisma as any).tournament.update({
+      where: { id: tournamentId },
+      data: { status: 'COMPLETED' },
+    });
+    await updateTeamsQualification(tournamentId, [m11.winnerTeamId], 'CHAMPION');
+    const runnerUpId = m11.winnerTeamId === m11.teamAId ? m11.teamBId : m11.teamAId;
+    if (runnerUpId) {
+      await updateTeamsQualification(tournamentId, [runnerUpId], 'RUNNER_UP');
+    }
+
+    return {
+      advanced: true,
+      message: 'CPL 7-Team Grand Final concluded! Champion crowned.',
+      stageTriggered: 'COMPLETED',
+    };
+  }
+
+  return { advanced: false, message: 'No advancement triggers active at this time.' };
+}
+
+/**
+ * 8-Team Tournament Progression (Exact existing logic):
+ * Group Stage (M1–M8) -> Playoff Qualification (M9–M11) -> Four-Team Playoff (M12–M14) -> Grand Final (M15).
+ */
+async function advance8TeamTournament(
+  tournamentId: string,
+  overview: TournamentOverview,
+  baseDate: Date,
+  venue: string,
+  ballsPerOver: number,
+  qualOvers: number,
+  playoffOvers: number,
+  finalOvers: number
+): Promise<{ advanced: boolean; message: string; stageTriggered?: string }> {
+  const { matches, groups, playoffs } = overview;
+
   // 1. GROUP STAGE (M1–M8) -> QUALIFICATION (M9 & M10)
-  // -------------------------------------------------------------
   const groupMatches = matches.filter(
     (m: any) => m.stage === 'GROUP' || (m.matchNumber && m.matchNumber <= 8)
   );
@@ -943,7 +1568,6 @@ export async function checkAndAdvanceTournament(tournamentId: string): Promise<{
     const b4 = groups.groupB.standings[3];
 
     if (a1 && a2 && a3 && a4 && b1 && b2 && b3 && b4) {
-      // M9: Group A 2nd vs Group B 2nd
       if (!m9) {
         await createMatchRecord({
           tournamentId,
@@ -952,7 +1576,7 @@ export async function checkAndAdvanceTournament(tournamentId: string): Promise<{
           venue,
           scheduledAt: new Date(baseDate.getTime() + 1 * 3600000),
           status: 'UPCOMING',
-          oversPerInnings: qualificationOvers,
+          oversPerInnings: qualOvers,
           ballsPerOver,
           stage: 'QUALIFICATION',
           groupName: null,
@@ -961,7 +1585,6 @@ export async function checkAndAdvanceTournament(tournamentId: string): Promise<{
         });
       }
 
-      // M10: Group A 3rd vs Group B 3rd
       if (!m10) {
         await createMatchRecord({
           tournamentId,
@@ -970,7 +1593,7 @@ export async function checkAndAdvanceTournament(tournamentId: string): Promise<{
           venue,
           scheduledAt: new Date(baseDate.getTime() + 2 * 3600000),
           status: 'UPCOMING',
-          oversPerInnings: qualificationOvers,
+          oversPerInnings: qualOvers,
           ballsPerOver,
           stage: 'QUALIFICATION',
           groupName: null,
@@ -979,12 +1602,8 @@ export async function checkAndAdvanceTournament(tournamentId: string): Promise<{
         });
       }
 
-      // Mark qualification statuses
-      // Group winners qualify directly for 4-team playoff
       await updateTeamsQualification(tournamentId, [a1.teamId, b1.teamId], 'QUALIFIED');
-      // 2nd and 3rd enter qualification matches
       await updateTeamsQualification(tournamentId, [a2.teamId, b2.teamId, a3.teamId, b3.teamId], 'QUALIFICATION');
-      // 4th place teams are eliminated
       await updateTeamsQualification(tournamentId, [a4.teamId, b4.teamId], 'ELIMINATED');
 
       return {
@@ -995,10 +1614,8 @@ export async function checkAndAdvanceTournament(tournamentId: string): Promise<{
     }
   }
 
-  // -------------------------------------------------------------
   // 2. QUALIFICATION PROGRESSION -> MATCH 11 (FINAL QUALIFIER)
   // M11 = Match 9 Loser vs Match 10 Winner
-  // -------------------------------------------------------------
   const m11 = matches.find((m: any) => m.matchNumber === 11 || m.bracketSlot === 'M11' || m.bracketSlot === 'PQ3');
   if (m9 && m10 && m9.status === 'COMPLETED' && m10.status === 'COMPLETED' && !m11) {
     const m9WinnerId = m9.winnerTeamId;
@@ -1007,17 +1624,13 @@ export async function checkAndAdvanceTournament(tournamentId: string): Promise<{
     const m10LoserId = m10.winnerTeamId === m10.teamAId ? m10.teamBId : m10.teamAId;
 
     if (m9LoserId && m10WinnerId) {
-      // Match 9 Winner directly qualifies for the 4-team playoff (Seed 3)
       if (m9WinnerId) {
         await updateTeamsQualification(tournamentId, [m9WinnerId], 'QUALIFIED');
       }
-
-      // Match 10 Loser is eliminated
       if (m10LoserId) {
         await updateTeamsQualification(tournamentId, [m10LoserId], 'ELIMINATED');
       }
 
-      // Create Match 11: Match 9 Loser vs Match 10 Winner
       await createMatchRecord({
         tournamentId,
         teamAId: m9LoserId,
@@ -1025,7 +1638,7 @@ export async function checkAndAdvanceTournament(tournamentId: string): Promise<{
         venue,
         scheduledAt: new Date(baseDate.getTime() + 3 * 3600000),
         status: 'UPCOMING',
-        oversPerInnings: qualificationOvers,
+        oversPerInnings: qualOvers,
         ballsPerOver,
         stage: 'QUALIFICATION',
         groupName: null,
@@ -1041,11 +1654,7 @@ export async function checkAndAdvanceTournament(tournamentId: string): Promise<{
     }
   }
 
-  // -------------------------------------------------------------
   // 3. QUALIFICATION CONCLUDED -> FOUR-TEAM PLAYOFF (MATCHES 12 & 13)
-  // M12 = Playoff 1st vs Playoff 2nd
-  // M13 = Playoff 3rd vs Playoff 4th
-  // -------------------------------------------------------------
   const m12 = matches.find((m: any) => m.matchNumber === 12 || m.bracketSlot === 'M12' || m.bracketSlot === 'P1');
   const m13 = matches.find((m: any) => m.matchNumber === 13 || m.bracketSlot === 'M13' || m.bracketSlot === 'P2');
 
@@ -1066,7 +1675,6 @@ export async function checkAndAdvanceTournament(tournamentId: string): Promise<{
     const seed4 = playoffs.seeds.find((s) => s.seedNumber === 4)?.team || (m11WinnerId ? { id: m11WinnerId } : null);
 
     if (seed1 && seed2 && seed3 && seed4) {
-      // Match 12: Playoff 1st vs Playoff 2nd (Winner -> Final, Loser -> M14)
       if (!m12) {
         await createMatchRecord({
           tournamentId,
@@ -1084,7 +1692,6 @@ export async function checkAndAdvanceTournament(tournamentId: string): Promise<{
         });
       }
 
-      // Match 13: Playoff 3rd vs Playoff 4th (Winner -> M14, Loser -> Eliminated)
       if (!m13) {
         await createMatchRecord({
           tournamentId,
@@ -1110,10 +1717,7 @@ export async function checkAndAdvanceTournament(tournamentId: string): Promise<{
     }
   }
 
-  // -------------------------------------------------------------
   // 4. PLAYOFF PROGRESSION -> MATCH 14 (FINAL QUALIFICATION)
-  // M14 = Match 12 Loser vs Match 13 Winner
-  // -------------------------------------------------------------
   const m14 = matches.find((m: any) => m.matchNumber === 14 || m.bracketSlot === 'M14' || m.bracketSlot === 'P3');
   if (m12 && m13 && m12.status === 'COMPLETED' && m13.status === 'COMPLETED' && !m14) {
     const m12LoserId = m12.winnerTeamId === m12.teamAId ? m12.teamBId : m12.teamAId;
@@ -1148,10 +1752,7 @@ export async function checkAndAdvanceTournament(tournamentId: string): Promise<{
     }
   }
 
-  // -------------------------------------------------------------
   // 5. PLAYOFF -> GRAND FINAL (MATCH 15)
-  // M15 = Match 12 Winner vs Match 14 Winner
-  // -------------------------------------------------------------
   const finalMatch = matches.find((m: any) => m.matchNumber === 15 || m.bracketSlot === 'M15' || m.bracketSlot === 'FINAL');
   if (m12 && m14 && m12.status === 'COMPLETED' && m14.status === 'COMPLETED' && !finalMatch) {
     const m12WinnerId = m12.winnerTeamId;
@@ -1186,9 +1787,7 @@ export async function checkAndAdvanceTournament(tournamentId: string): Promise<{
     }
   }
 
-  // -------------------------------------------------------------
   // 6. GRAND FINAL COMPLETED -> CROWN CHAMPION
-  // -------------------------------------------------------------
   if (finalMatch && finalMatch.status === 'COMPLETED' && finalMatch.winnerTeamId) {
     await (prisma as any).tournament.update({
       where: { id: tournamentId },
@@ -1220,29 +1819,30 @@ export async function recalculateTournamentStandings(tournamentId: string): Prom
   const overview = await getTournamentOverview(tournamentId);
   if (!overview) return { success: false };
 
-  // Write cached values to TournamentTeam for read performance
   const allStandings = [
-    ...overview.groups.groupA.standings,
-    ...overview.groups.groupB.standings,
+    ...(overview.groups.groupA?.standings || []),
+    ...(overview.groups.groupB?.standings || []),
   ];
 
-  for (const s of allStandings) {
-    await (prisma as any).$executeRawUnsafe(
-      `UPDATE "TournamentTeam"
-       SET "matchesPlayed" = $1, "wins" = $2, "losses" = $3, "ties" = $4, "points" = $5, "runsFor" = $6, "runsAgainst" = $7, "nrr" = $8
-       WHERE "tournamentId" = $9 AND "teamId" = $10`,
-      s.played,
-      s.won,
-      s.lost,
-      s.tied,
-      s.points,
-      s.runsFor,
-      s.runsAgainst,
-      s.nrr,
-      tournamentId,
-      s.teamId
-    );
-  }
+  await Promise.all(
+    allStandings.map((s) =>
+      (prisma as any).$executeRawUnsafe(
+        `UPDATE "TournamentTeam"
+         SET "matchesPlayed" = $1, "wins" = $2, "losses" = $3, "ties" = $4, "points" = $5, "runsFor" = $6, "runsAgainst" = $7, "nrr" = $8
+         WHERE "tournamentId" = $9 AND "teamId" = $10`,
+        s.played,
+        s.won,
+        s.lost,
+        s.tied,
+        s.points,
+        s.runsFor,
+        s.runsAgainst,
+        s.nrr,
+        tournamentId,
+        s.teamId
+      )
+    )
+  );
 
   return { success: true };
 }

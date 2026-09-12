@@ -253,6 +253,7 @@ export async function createTournamentServerAction(formData: FormData) {
     name: (formData.get('name') as string) || '',
     season: (formData.get('season') as string) || '',
     format: (formData.get('format') as string) || '',
+    tournamentFormat: (formData.get('tournamentFormat') as string) || '8_TEAM',
     oversPerInnings: parseInt(formData.get('oversPerInnings') as string, 10) || 20,
     ballsPerOver: parseInt(formData.get('ballsPerOver') as string, 10) || 6,
   };
@@ -262,11 +263,12 @@ export async function createTournamentServerAction(formData: FormData) {
     throw new Error(`Invalid tournament input: ${parsed.error.issues[0]?.message}`);
   }
 
-  await prisma.tournament.create({
+  await (prisma as any).tournament.create({
     data: {
       name: parsed.data.name,
       season: parsed.data.season,
       format: parsed.data.format,
+      tournamentFormat: parsed.data.tournamentFormat,
       stages: {
         create: [
           {
@@ -507,6 +509,7 @@ export async function updateTournamentServerAction(tournamentId: string, formDat
     name: (formData.get('name') as string) || undefined,
     season: (formData.get('season') as string) || undefined,
     format: (formData.get('format') as string) || undefined,
+    tournamentFormat: (formData.get('tournamentFormat') as string) || undefined,
     status: (formData.get('status') as any) || undefined,
   };
 
@@ -521,6 +524,7 @@ export async function updateTournamentServerAction(tournamentId: string, formDat
       name: parsed.data.name,
       season: parsed.data.season,
       format: parsed.data.format,
+      ...(parsed.data.tournamentFormat ? { tournamentFormat: parsed.data.tournamentFormat } : {}),
       status: parsed.data.status,
     },
   });

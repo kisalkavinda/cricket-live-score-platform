@@ -9,6 +9,7 @@ import LiveOrNextMatchSpotlight from './components/LiveOrNextMatchSpotlight';
 import PlayoffBracketTree from './components/PlayoffBracketTree';
 import GroupStandingsSection from './components/GroupStandingsSection';
 import PlayoffQualificationFlow from './components/PlayoffQualificationFlow';
+import SixTeamWildcardSection from './components/SixTeamWildcardSection';
 import FixturesAndResultsSection from './components/FixturesAndResultsSection';
 import TournamentMetricsGrid from './components/TournamentMetricsGrid';
 import TournamentRegulationsSection from './components/TournamentRegulationsSection';
@@ -211,6 +212,7 @@ export default function TournamentHubClient({ initialOverview }: Props) {
         isRefreshing={isRefreshing}
         onRefresh={refreshTournamentData}
         crownedChampion={crownedChampion}
+        tournamentFormat={overview.normalizedFormat || overview.tournamentFormat}
       />
 
       {/* 2. Active Match / Upcoming Spotlight */}
@@ -222,6 +224,7 @@ export default function TournamentHubClient({ initialOverview }: Props) {
 
       {/* 3. The Playoff Bracket (Showpiece connected tree) */}
       <PlayoffBracketTree
+        tournamentFormat={overview.normalizedFormat || overview.tournamentFormat}
         playoffs={playoffs}
         progress={progress}
         seed1={seed1}
@@ -242,10 +245,18 @@ export default function TournamentHubClient({ initialOverview }: Props) {
       />
 
       {/* 4. Group Standings Tables */}
-      <GroupStandingsSection groups={groups} />
+      <GroupStandingsSection
+        groups={groups}
+        tournamentFormat={overview.normalizedFormat || overview.tournamentFormat}
+      />
 
-      {/* 5. Stage 2 Playoff Qualification Flow */}
-      <PlayoffQualificationFlow qualification={qualification} />
+      {/* 5. Stage 2 Playoff Pipeline: Wildcard (6-Team) or Qualification (8-Team) */}
+      {overview.normalizedFormat === '6_TEAM' && overview.wildcard && (
+        <SixTeamWildcardSection wildcard={overview.wildcard} />
+      )}
+      {overview.normalizedFormat === '8_TEAM' && (
+        <PlayoffQualificationFlow qualification={qualification} />
+      )}
 
       {/* 6. Schedule & Results */}
       <FixturesAndResultsSection
@@ -258,6 +269,8 @@ export default function TournamentHubClient({ initialOverview }: Props) {
         progress={progress}
         highestScoreText={highestScoreText}
         highestNRRTeam={highestNRRTeam}
+        tournamentFormat={overview.normalizedFormat || overview.tournamentFormat}
+        registeredTeamsCount={overview.teams?.length}
       />
 
       {/* 8. Regulations & NRR Engine */}

@@ -23,6 +23,7 @@ interface PlayoffBracketTreeProps {
   q2Loser: any;
   finalMatch: any;
   crownedChampion: any;
+  tournamentFormat?: string;
 }
 
 export default function PlayoffBracketTree({
@@ -43,8 +44,27 @@ export default function PlayoffBracketTree({
   q2Loser,
   finalMatch,
   crownedChampion,
+  tournamentFormat,
 }: PlayoffBracketTreeProps) {
   const [mobileRoundTab, setMobileRoundTab] = useState<'ALL' | 'R1' | 'R2' | 'R3' | 'PODIUM'>('ALL');
+
+  const is6Team = tournamentFormat === '6_TEAM';
+  const is7Team = tournamentFormat === '7_TEAM';
+
+  const p1Code = is6Team ? 'M10' : is7Team ? 'M08' : 'M12';
+  const p2Code = is6Team ? 'M11' : is7Team ? 'M09' : 'M13';
+  const p3Code = is6Team ? 'M12' : is7Team ? 'M10' : 'M14';
+  const finalCode = is6Team ? 'M13' : is7Team ? 'M11' : 'M15';
+
+  const seed3Fallback = is6Team ? 'TBD (Winner WC1)' : is7Team ? 'TBD (Group A 2nd)' : 'TBD (Seed #3)';
+  const seed4Fallback = is6Team ? 'TBD (Winner WC3)' : is7Team ? 'TBD (Group B 2nd)' : 'TBD (Seed #4)';
+  const seed3Tag = is6Team ? 'WC1-W' : is7Team ? 'A2' : '#3';
+  const seed4Tag = is6Team ? 'WC3-W' : is7Team ? 'B2' : '#4';
+
+  const p3FallbackA = `TBD (Loser ${p1Code})`;
+  const p3FallbackB = `TBD (Winner ${p2Code})`;
+  const p3TagA = `L${p1Code}`;
+  const p3TagB = `W${p2Code}`;
 
   // Helper to extract team innings score
   const getTeamScore = (match: any, teamId: string | undefined) => {
@@ -302,11 +322,11 @@ export default function PlayoffBracketTree({
           <span style={{ color: 'var(--color-accent, #C0272D)' }}>PLAYOFF SEMIS</span>
         </div>
 
-        {/* Match 12: Qualifier 1 */}
+        {/* Qualifier 1 / Playoff 1 */}
         <div style={{ height: '172px', marginBottom: '24px' }}>
           {renderMatchCard(
             q1,
-            'M12',
+            p1Code,
             'QUALIFIER 1',
             q1?.teamA || seed1,
             'TBD (Seed #1)',
@@ -316,26 +336,26 @@ export default function PlayoffBracketTree({
             'TBD (Seed #2)',
             '#2',
             Boolean(q1Winner && q1Winner.id === (q1?.teamBId || seed2?.id)),
-            q1Winner ? `✓ ${q1Winner.shortName || q1Winner.name} → Grand Final` : 'Winner → Final · Loser → M14',
+            q1Winner ? `✓ ${q1Winner.shortName || q1Winner.name} → Grand Final` : `Winner → Final · Loser → ${p3Code}`,
             '#C0272D'
           )}
         </div>
 
-        {/* Match 13: Eliminator */}
+        {/* Eliminator / Playoff 2 */}
         <div style={{ height: '172px' }}>
           {renderMatchCard(
             elim,
-            'M13',
+            p2Code,
             'ELIMINATOR',
             elim?.teamA || seed3,
-            'TBD (Seed #3)',
-            '#3',
+            seed3Fallback,
+            seed3Tag,
             Boolean(elimWinner && elimWinner.id === (elim?.teamAId || seed3?.id)),
             elim?.teamB || seed4,
-            'TBD (Seed #4)',
-            '#4',
+            seed4Fallback,
+            seed4Tag,
             Boolean(elimWinner && elimWinner.id === (elim?.teamBId || seed4?.id)),
-            elimWinner ? `✓ ${elimWinner.shortName || elimWinner.name} → M14` : 'Winner → M14 · Loser Out',
+            elimWinner ? `✓ ${elimWinner.shortName || elimWinner.name} → ${p3Code}` : `Winner → ${p3Code} · Loser Out`,
             '#FFB800'
           )}
         </div>
@@ -447,19 +467,19 @@ export default function PlayoffBracketTree({
           </div>
         </div>
 
-        {/* BOTTOM ROW: Match 14 (Qualifier 2) aligned directly with Match 13 at Y=230px */}
+        {/* BOTTOM ROW: Qualifier 2 / Playoff 3 */}
         <div style={{ height: '172px' }}>
           {renderMatchCard(
             q2,
-            'M14',
+            p3Code,
             'QUALIFIER 2',
             q2?.teamA || q1Loser,
-            'TBD (Loser M12)',
-            'LM12',
+            p3FallbackA,
+            p3TagA,
             Boolean(q2Winner && q2Winner.id === (q2?.teamAId || q1Loser?.id)),
             q2?.teamB || elimWinner,
-            'TBD (Winner M13)',
-            'WM13',
+            p3FallbackB,
+            p3TagB,
             Boolean(q2Winner && q2Winner.id === (q2?.teamBId || elimWinner?.id)),
             q2Winner ? `✓ ${q2Winner.shortName || q2Winner.name} → Grand Final` : 'Winner → Final · Loser Out',
             '#FFB800'
@@ -474,7 +494,7 @@ export default function PlayoffBracketTree({
           <path d="M 0 96 H 38" fill="none" stroke="#07080B" strokeWidth="6" strokeLinecap="square" />
           <path d="M 0 313 H 24 V 138 H 38" fill="none" stroke="#07080B" strokeWidth="6" strokeLinecap="square" strokeLinejoin="miter" />
 
-          {/* Arrow 3: M12 Winner direct line enters M15 Team A at y=96 (Dead-straight, exactly ONE arrow) */}
+          {/* Arrow 3: Q1 Winner direct line enters Final Team A at y=96 */}
           <path
             d="M 0 96 H 38"
             fill="none"
@@ -489,7 +509,7 @@ export default function PlayoffBracketTree({
             filter={q1Winner ? 'drop-shadow(0 0 6px #10B981)' : 'none'}
           />
 
-          {/* Arrow 4: M14 Winner rises up from y=313 to M15 Team B at y=138 (Exactly ONE arrow) */}
+          {/* Arrow 4: Q2 Winner rises up from y=313 to Final Team B at y=138 */}
           <path
             d="M 0 313 H 24 V 138 H 38"
             fill="none"
@@ -514,21 +534,21 @@ export default function PlayoffBracketTree({
           <span>GRAND FINAL</span>
         </div>
 
-        {/* Match 15: Grand Final at Y=34px, Team A at Y=96px */}
+        {/* Grand Final at Y=34px, Team A at Y=96px */}
         <div style={{ height: '172px', marginBottom: '24px' }}>
           {renderMatchCard(
             finalMatch,
-            'M15',
+            finalCode,
             'GRAND FINAL',
             finalMatch?.teamA || q1Winner,
-            'TBD (Winner M12)',
-            'WM12',
+            `TBD (Winner ${p1Code})`,
+            `W${p1Code}`,
             Boolean(crownedChampion && crownedChampion.id === (finalMatch?.teamAId || q1Winner?.id)),
             finalMatch?.teamB || q2Winner,
-            'TBD (Winner M14)',
-            'WM14',
+            `TBD (Winner ${p3Code})`,
+            `W${p3Code}`,
             Boolean(crownedChampion && crownedChampion.id === (finalMatch?.teamBId || q2Winner?.id)),
-            crownedChampion ? `👑 Champion: ${crownedChampion.name}` : 'Decides CPL 2026 Champion',
+            crownedChampion ? `👑 Champion: ${crownedChampion.name}` : 'Decides Tournament Champion',
             '#FFD700',
             true
           )}
@@ -699,10 +719,10 @@ export default function PlayoffBracketTree({
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
           {[
-            { seed: '#1', team: seed1, label: 'Top Group Winner', dest: '→ M12', color: '#10B981' },
-            { seed: '#2', team: seed2, label: '2nd Group Winner', dest: '→ M12', color: '#10B981' },
-            { seed: '#3', team: seed3, label: 'Winner Match 9', dest: '→ M13', color: '#FFB800' },
-            { seed: '#4', team: seed4, label: 'Winner Match 11', dest: '→ M13', color: '#FFB800' },
+            { seed: '#1', team: seed1, label: 'Top Group Winner', dest: `→ ${p1Code}`, color: '#10B981' },
+            { seed: '#2', team: seed2, label: '2nd Group Winner', dest: `→ ${p1Code}`, color: '#10B981' },
+            { seed: '#3', team: seed3, label: is6Team ? 'Winner WC1 (M07)' : is7Team ? 'Group A 2nd' : 'Winner Match 9', dest: `→ ${p2Code}`, color: '#FFB800' },
+            { seed: '#4', team: seed4, label: is6Team ? 'Winner WC3 (M09)' : is7Team ? 'Group B 2nd' : 'Winner Match 11', dest: `→ ${p2Code}`, color: '#FFB800' },
           ].map((s) => (
             <div
               key={s.seed}
@@ -754,9 +774,9 @@ export default function PlayoffBracketTree({
       <div className="flex lg:hidden items-center gap-2 overflow-x-auto pb-2 mb-4 scrollbar-none">
         {[
           { key: 'ALL', label: '🌐 Full Circuit Tree' },
-          { key: 'R1', label: '1. Semis (M12/M13)' },
-          { key: 'R2', label: '2. Qual 2 (M14)' },
-          { key: 'R3', label: '3. Grand Final (M15)' },
+          { key: 'R1', label: `1. Semis (${p1Code}/${p2Code})` },
+          { key: 'R2', label: `2. Qual 2 (${p3Code})` },
+          { key: 'R3', label: `3. Grand Final (${finalCode})` },
           { key: 'PODIUM', label: '🏆 Honours' },
         ].map((tab) => (
           <button
@@ -819,7 +839,7 @@ export default function PlayoffBracketTree({
                 <div>
                   {renderMatchCard(
                     q1,
-                    'M12',
+                    p1Code,
                     'QUALIFIER 1',
                     q1?.teamA || seed1,
                     'TBD (Seed #1)',
@@ -829,38 +849,38 @@ export default function PlayoffBracketTree({
                     'TBD (Seed #2)',
                     '#2',
                     Boolean(q1Winner && q1Winner.id === (q1?.teamBId || seed2?.id)),
-                    q1Winner ? `✓ ${q1Winner.shortName || q1Winner.name} → Final` : 'Winner → Final · Loser → M14',
+                    q1Winner ? `✓ ${q1Winner.shortName || q1Winner.name} → Final` : `Winner → Final · Loser → ${p3Code}`,
                     '#C0272D'
                   )}
                   <div className={`${styles.mobileAdvancementBadge} ${styles.mobileAdvancementBadgeEmerald}`}>
                     <span>➔</span>
-                    <span>WINNER ADVANCES DIRECTLY TO GRAND FINAL (M15)</span>
+                    <span>WINNER ADVANCES DIRECTLY TO GRAND FINAL ({finalCode})</span>
                   </div>
                   <div className={`${styles.mobileAdvancementBadge} ${styles.mobileAdvancementBadgeAmber}`}>
                     <span>➔</span>
-                    <span>LOSER TO QUALIFIER 2 (M14) · DOUBLE CHANCE</span>
+                    <span>LOSER TO QUALIFIER 2 ({p3Code}) · DOUBLE CHANCE</span>
                   </div>
                 </div>
 
                 <div>
                   {renderMatchCard(
                     elim,
-                    'M13',
+                    p2Code,
                     'ELIMINATOR',
                     elim?.teamA || seed3,
-                    'TBD (Seed #3)',
-                    '#3',
+                    seed3Fallback,
+                    seed3Tag,
                     Boolean(elimWinner && elimWinner.id === (elim?.teamAId || seed3?.id)),
                     elim?.teamB || seed4,
-                    'TBD (Seed #4)',
-                    '#4',
+                    seed4Fallback,
+                    seed4Tag,
                     Boolean(elimWinner && elimWinner.id === (elim?.teamBId || seed4?.id)),
-                    elimWinner ? `✓ ${elimWinner.shortName || elimWinner.name} → M14` : 'Winner → M14 · Loser Out',
+                    elimWinner ? `✓ ${elimWinner.shortName || elimWinner.name} → ${p3Code}` : `Winner → ${p3Code} · Loser Out`,
                     '#FFB800'
                   )}
                   <div className={`${styles.mobileAdvancementBadge} ${styles.mobileAdvancementBadgeAmber}`}>
                     <span>➔</span>
-                    <span>WINNER ADVANCES TO QUALIFIER 2 (M14)</span>
+                    <span>WINNER ADVANCES TO QUALIFIER 2 ({p3Code})</span>
                   </div>
                   <div className={`${styles.mobileAdvancementBadge} ${styles.mobileAdvancementBadgeRose}`}>
                     <span>✖</span>
@@ -874,22 +894,22 @@ export default function PlayoffBracketTree({
               <div>
                 {renderMatchCard(
                   q2,
-                  'M14',
+                  p3Code,
                   'QUALIFIER 2',
                   q2?.teamA || q1Loser,
-                  'TBD (Loser M12)',
-                  'LM12',
+                  p3FallbackA,
+                  p3TagA,
                   Boolean(q2Winner && q2Winner.id === (q2?.teamAId || q1Loser?.id)),
                   q2?.teamB || elimWinner,
-                  'TBD (Winner M13)',
-                  'WM13',
+                  p3FallbackB,
+                  p3TagB,
                   Boolean(q2Winner && q2Winner.id === (q2?.teamBId || elimWinner?.id)),
                   q2Winner ? `✓ ${q2Winner.shortName || q2Winner.name} → Final` : 'Winner → Final · Loser Out',
                   '#FFB800'
                 )}
                 <div className={`${styles.mobileAdvancementBadge} ${styles.mobileAdvancementBadgeGold}`}>
                   <span>➔</span>
-                  <span>WINNER ADVANCES TO GRAND FINAL (M15)</span>
+                  <span>WINNER ADVANCES TO GRAND FINAL ({finalCode})</span>
                 </div>
                 <div className={`${styles.mobileAdvancementBadge} ${styles.mobileAdvancementBadgeRose}`}>
                   <span>✖</span>
@@ -902,23 +922,23 @@ export default function PlayoffBracketTree({
               <div>
                 {renderMatchCard(
                   finalMatch,
-                  'M15',
+                  finalCode,
                   'GRAND FINAL',
                   finalMatch?.teamA || q1Winner,
-                  'TBD (Winner M12)',
-                  'WM12',
+                  `TBD (Winner ${p1Code})`,
+                  `W${p1Code}`,
                   Boolean(crownedChampion && crownedChampion.id === (finalMatch?.teamAId || q1Winner?.id)),
                   finalMatch?.teamB || q2Winner,
-                  'TBD (Winner M14)',
-                  'WM14',
+                  `TBD (Winner ${p3Code})`,
+                  `W${p3Code}`,
                   Boolean(crownedChampion && crownedChampion.id === (finalMatch?.teamBId || q2Winner?.id)),
-                  crownedChampion ? `👑 Champion: ${crownedChampion.name}` : 'Decides CPL 2026 Champion',
+                  crownedChampion ? `👑 Champion: ${crownedChampion.name}` : 'Decides Tournament Champion',
                   '#FFD700',
                   true
                 )}
                 <div className={`${styles.mobileAdvancementBadge} ${styles.mobileAdvancementBadgeGold}`}>
                   <span>👑</span>
-                  <span>WINNER: CPL 2026 TOURNAMENT CHAMPION</span>
+                  <span>WINNER: TOURNAMENT CHAMPION</span>
                 </div>
                 <div className={`${styles.mobileAdvancementBadge} ${styles.mobileAdvancementBadgeSilver}`}>
                   <span>🥈</span>

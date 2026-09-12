@@ -51,6 +51,28 @@ export async function unassignAllTeamsAction(tournamentId: string) {
   }
 }
 
+export async function updateTournamentFormatAction(
+  tournamentId: string,
+  format: '6_TEAM' | '7_TEAM' | '8_TEAM'
+) {
+  try {
+    await requireAdminAuth();
+    const entryPath = getAdminEntryPath();
+
+    const { updateTournamentFormat } = await import('./tournament-service');
+    const result = await updateTournamentFormat(tournamentId, format);
+    if (result.success) {
+      revalidatePath(`/${entryPath}/tournament-bracket`);
+      revalidatePath('/tournament');
+      revalidatePath('/');
+    }
+    return result;
+  } catch (err: any) {
+    console.error('[updateTournamentFormatAction] error:', err);
+    return { success: false, error: err.message || 'Failed to update tournament format.' };
+  }
+}
+
 export async function configureTournamentStagesAction(
   tournamentId: string,
   settings: {
