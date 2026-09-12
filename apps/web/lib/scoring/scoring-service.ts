@@ -59,6 +59,10 @@ export interface CreateMatchInput {
   scheduledAt?: string | Date;
   oversPerInnings?: number;
   ballsPerOver?: number;
+  stage?: string;
+  groupName?: string;
+  matchNumber?: number;
+  bracketSlot?: string;
 }
 
 export interface StartMatchInput {
@@ -104,6 +108,10 @@ export async function getMatchesList() {
       status: true,
       currentInnings: true,
       oversPerInnings: true,
+      stage: true,
+      groupName: true,
+      matchNumber: true,
+      bracketSlot: true,
       venue: true,
       scheduledAt: true,
       startedAt: true,
@@ -630,6 +638,10 @@ export async function createMatch(input: CreateMatchInput) {
       ballsPerOver: input.ballsPerOver ? Number(input.ballsPerOver) : 6,
       status: 'UPCOMING',
       currentInnings: 1,
+      stage: input.stage?.trim() || null,
+      groupName: input.groupName?.trim() || null,
+      matchNumber: input.matchNumber ? Number(input.matchNumber) : null,
+      bracketSlot: input.bracketSlot?.trim() || null,
     },
   });
 

@@ -269,34 +269,43 @@ export default function LiveScoreWidget() {
           color: 'var(--color-paper)',
         }}
       >
-        {/* Main Navigation Tabs: Live Match | Points Table | All Matches | Top Batsmen | Top Bowlers */}
+        {/* Main Navigation Tabs: Match Center | Points Table & NRR | All Matches (6) | Top Run Scorers | Top Wicket Takers */}
         <div
+          className="widget-nav-scroll-container"
           style={{
-            background: 'rgba(0, 0, 0, 0.45)',
-            borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-            padding: '10px 16px 0',
+            background: 'linear-gradient(180deg, rgba(20, 20, 28, 0.98) 0%, rgba(12, 12, 18, 0.98) 100%)',
+            borderBottom: '1.5px solid rgba(255, 255, 255, 0.12)',
+            padding: '10px 14px',
             display: 'flex',
             alignItems: 'center',
-            gap: '4px',
+            gap: '8px',
             overflowX: 'auto',
             scrollbarWidth: 'none',
+            WebkitOverflowScrolling: 'touch',
           }}
         >
+          {/* TAB 1: Match Center */}
           <button
             onClick={() => setNavTab('LIVE')}
+            aria-label="Match Center Tab"
             style={{
-              padding: '10px 18px',
-              border: 'none',
-              background: 'none',
-              borderBottom: navTab === 'LIVE' ? '3px solid var(--color-accent, #C0272D)' : '3px solid transparent',
-              color: navTab === 'LIVE' ? '#FFFFFF' : 'rgba(255, 255, 255, 0.6)',
+              padding: '9px 18px',
+              minHeight: '42px',
+              borderRadius: '9999px',
+              border: navTab === 'LIVE' ? '1.5px solid #EF4444' : '1.5px solid rgba(255, 255, 255, 0.14)',
+              background: navTab === 'LIVE'
+                ? 'linear-gradient(135deg, rgba(192, 39, 45, 0.98) 0%, rgba(153, 27, 27, 0.98) 100%)'
+                : 'rgba(255, 255, 255, 0.07)',
+              color: '#FFFFFF',
               fontSize: '0.86rem',
               fontWeight: 800,
               cursor: 'pointer',
               whiteSpace: 'nowrap',
-              display: 'flex',
+              flexShrink: 0,
+              display: 'inline-flex',
               alignItems: 'center',
-              gap: '6px',
+              gap: '8px',
+              boxShadow: navTab === 'LIVE' ? '0 0 16px rgba(192, 39, 45, 0.45)' : 'none',
               transition: 'all 0.15s ease',
             }}
           >
@@ -306,81 +315,109 @@ export default function LiveScoreWidget() {
                 height: '8px',
                 borderRadius: '50%',
                 background: currentMatch?.status === 'LIVE' ? '#EF4444' : '#10B981',
+                boxShadow: currentMatch?.status === 'LIVE' ? '0 0 8px #EF4444' : '0 0 8px #10B981',
                 animation: currentMatch?.status === 'LIVE' ? 'pulse 1.5s infinite' : 'none',
+                flexShrink: 0,
               }}
             />
-            Match Center
+            <span>Match Center</span>
             {currentMatch?.status === 'COMPLETED' && (
               <span
                 style={{
-                  fontSize: '0.66rem',
-                  padding: '1px 6px',
-                  borderRadius: '4px',
-                  background: 'rgba(16, 185, 129, 0.2)',
+                  fontSize: '0.68rem',
+                  padding: '1px 7px',
+                  borderRadius: '9999px',
+                  background: 'rgba(16, 185, 129, 0.28)',
                   color: '#34D399',
-                  fontWeight: 800,
-                  letterSpacing: '0.04em',
+                  fontWeight: 900,
+                  letterSpacing: '0.03em',
+                  whiteSpace: 'nowrap',
+                  flexShrink: 0,
                 }}
               >
-                Recent Result
+                Result
               </span>
             )}
           </button>
 
+          {/* TAB 2: Points Table & NRR */}
           <button
             onClick={() => {
               setNavTab('POINTS_TABLE');
               fetchTournamentStats();
             }}
+            aria-label="Points Table and NRR Tab"
             style={{
-              padding: '10px 18px',
-              border: 'none',
-              background: 'none',
-              borderBottom: navTab === 'POINTS_TABLE' ? '3px solid var(--color-gold, #FFB800)' : '3px solid transparent',
-              color: navTab === 'POINTS_TABLE' ? '#FFB800' : 'rgba(255, 255, 255, 0.6)',
+              padding: '9px 18px',
+              minHeight: '42px',
+              borderRadius: '9999px',
+              border: navTab === 'POINTS_TABLE' ? '1.5px solid #FFB800' : '1.5px solid rgba(255, 255, 255, 0.14)',
+              background: navTab === 'POINTS_TABLE'
+                ? 'linear-gradient(135deg, rgba(255, 184, 0, 0.28) 0%, rgba(255, 184, 0, 0.14) 100%)'
+                : 'rgba(255, 255, 255, 0.07)',
+              color: navTab === 'POINTS_TABLE' ? '#FFD166' : '#FFFFFF',
               fontSize: '0.86rem',
               fontWeight: 800,
               cursor: 'pointer',
               whiteSpace: 'nowrap',
-              display: 'flex',
+              flexShrink: 0,
+              display: 'inline-flex',
               alignItems: 'center',
-              gap: '6px',
+              gap: '8px',
+              boxShadow: navTab === 'POINTS_TABLE' ? '0 0 16px rgba(255, 184, 0, 0.3)' : 'none',
               transition: 'all 0.15s ease',
             }}
           >
-            📊 Points Table & NRR
+            <span>📊</span>
+            <span>Points Table & NRR</span>
           </button>
 
+          {/* TAB 3: All Matches */}
           <button
             onClick={() => {
               setNavTab('ALL_MATCHES');
               fetchTournamentStats();
             }}
+            aria-label="All Matches Tab"
             style={{
-              padding: '10px 18px',
-              border: 'none',
-              background: 'none',
-              borderBottom: navTab === 'ALL_MATCHES' ? '3px solid var(--color-gold, #FFB800)' : '3px solid transparent',
-              color: navTab === 'ALL_MATCHES' ? '#FFB800' : 'rgba(255, 255, 255, 0.6)',
+              padding: '9px 18px',
+              minHeight: '42px',
+              borderRadius: '9999px',
+              border: navTab === 'ALL_MATCHES' ? '1.5px solid #FFB800' : '1.5px solid rgba(255, 255, 255, 0.14)',
+              background: navTab === 'ALL_MATCHES'
+                ? 'linear-gradient(135deg, rgba(255, 184, 0, 0.28) 0%, rgba(255, 184, 0, 0.14) 100%)'
+                : 'rgba(255, 255, 255, 0.07)',
+              color: navTab === 'ALL_MATCHES' ? '#FFD166' : '#FFFFFF',
               fontSize: '0.86rem',
               fontWeight: 800,
               cursor: 'pointer',
               whiteSpace: 'nowrap',
-              display: 'flex',
+              flexShrink: 0,
+              display: 'inline-flex',
               alignItems: 'center',
-              gap: '6px',
+              gap: '8px',
+              boxShadow: navTab === 'ALL_MATCHES' ? '0 0 16px rgba(255, 184, 0, 0.3)' : 'none',
               transition: 'all 0.15s ease',
             }}
           >
-            📋 All Matches
+            <span>📋</span>
+            <span>All Matches</span>
             {statsData.allMatches.length > 0 && (
               <span
                 style={{
-                  background: 'rgba(255, 184, 0, 0.2)',
-                  color: '#FFB800',
-                  padding: '1px 6px',
-                  borderRadius: '10px',
-                  fontSize: '0.72rem',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginLeft: '4px',
+                  background: navTab === 'ALL_MATCHES' ? 'rgba(255, 184, 0, 0.4)' : 'rgba(255, 255, 255, 0.2)',
+                  color: navTab === 'ALL_MATCHES' ? '#FFD166' : '#FFFFFF',
+                  padding: '2px 8px',
+                  borderRadius: '9999px',
+                  fontSize: '0.74rem',
+                  fontWeight: 900,
+                  whiteSpace: 'nowrap',
+                  flexShrink: 0,
+                  lineHeight: 1,
                 }}
               >
                 {statsData.allMatches.length}
@@ -388,52 +425,68 @@ export default function LiveScoreWidget() {
             )}
           </button>
 
+          {/* TAB 4: Top Run Scorers */}
           <button
             onClick={() => {
               setNavTab('TOP_BATTERS');
               fetchTournamentStats();
             }}
+            aria-label="Top Run Scorers Tab"
             style={{
-              padding: '10px 18px',
-              border: 'none',
-              background: 'none',
-              borderBottom: navTab === 'TOP_BATTERS' ? '3px solid var(--color-gold, #FFB800)' : '3px solid transparent',
-              color: navTab === 'TOP_BATTERS' ? '#FFB800' : 'rgba(255, 255, 255, 0.6)',
+              padding: '9px 18px',
+              minHeight: '42px',
+              borderRadius: '9999px',
+              border: navTab === 'TOP_BATTERS' ? '1.5px solid #FFB800' : '1.5px solid rgba(255, 255, 255, 0.14)',
+              background: navTab === 'TOP_BATTERS'
+                ? 'linear-gradient(135deg, rgba(255, 184, 0, 0.28) 0%, rgba(255, 184, 0, 0.14) 100%)'
+                : 'rgba(255, 255, 255, 0.07)',
+              color: navTab === 'TOP_BATTERS' ? '#FFD166' : '#FFFFFF',
               fontSize: '0.86rem',
               fontWeight: 800,
               cursor: 'pointer',
               whiteSpace: 'nowrap',
-              display: 'flex',
+              flexShrink: 0,
+              display: 'inline-flex',
               alignItems: 'center',
-              gap: '6px',
+              gap: '8px',
+              boxShadow: navTab === 'TOP_BATTERS' ? '0 0 16px rgba(255, 184, 0, 0.3)' : 'none',
               transition: 'all 0.15s ease',
             }}
           >
-            🏏 Top Run Scorers
+            <span>🏏</span>
+            <span>Top Run Scorers</span>
           </button>
 
+          {/* TAB 5: Top Wicket Takers */}
           <button
             onClick={() => {
               setNavTab('TOP_BOWLERS');
               fetchTournamentStats();
             }}
+            aria-label="Top Wicket Takers Tab"
             style={{
-              padding: '10px 18px',
-              border: 'none',
-              background: 'none',
-              borderBottom: navTab === 'TOP_BOWLERS' ? '3px solid var(--color-gold, #FFB800)' : '3px solid transparent',
-              color: navTab === 'TOP_BOWLERS' ? '#FFB800' : 'rgba(255, 255, 255, 0.6)',
+              padding: '9px 18px',
+              minHeight: '42px',
+              borderRadius: '9999px',
+              border: navTab === 'TOP_BOWLERS' ? '1.5px solid #FFB800' : '1.5px solid rgba(255, 255, 255, 0.14)',
+              background: navTab === 'TOP_BOWLERS'
+                ? 'linear-gradient(135deg, rgba(255, 184, 0, 0.28) 0%, rgba(255, 184, 0, 0.14) 100%)'
+                : 'rgba(255, 255, 255, 0.07)',
+              color: navTab === 'TOP_BOWLERS' ? '#FFD166' : '#FFFFFF',
               fontSize: '0.86rem',
               fontWeight: 800,
               cursor: 'pointer',
               whiteSpace: 'nowrap',
-              display: 'flex',
+              flexShrink: 0,
+              display: 'inline-flex',
               alignItems: 'center',
-              gap: '6px',
+              gap: '8px',
+              boxShadow: navTab === 'TOP_BOWLERS' ? '0 0 16px rgba(255, 184, 0, 0.3)' : 'none',
               transition: 'all 0.15s ease',
             }}
           >
-            🎯 Top Wicket Takers
+            <span>🎯</span>
+            <span>Top Wicket Takers</span>
           </button>
         </div>
 
@@ -1923,137 +1976,257 @@ export default function LiveScoreWidget() {
                       </p>
                     </div>
                   ) : (
-                    <div style={{ overflowX: 'auto', borderRadius: '10px', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
-                      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem', textAlign: 'left' }}>
-                        <thead>
-                          <tr style={{ background: 'rgba(255, 255, 255, 0.04)', color: 'rgba(255, 255, 255, 0.5)', fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                            <th style={{ padding: '10px 14px', width: '40px' }}>POS</th>
-                            <th style={{ padding: '10px 14px' }}>TEAM</th>
-                            <th style={{ padding: '10px 10px', textAlign: 'center', width: '40px' }}>P</th>
-                            <th style={{ padding: '10px 10px', textAlign: 'center', width: '40px' }}>W</th>
-                            <th style={{ padding: '10px 10px', textAlign: 'center', width: '40px' }}>L</th>
-                            <th style={{ padding: '10px 10px', textAlign: 'center', width: '40px' }}>T</th>
-                            <th style={{ padding: '10px 10px', textAlign: 'center', width: '40px' }}>NR</th>
-                            <th style={{ padding: '10px 12px', textAlign: 'center', width: '55px', fontWeight: 900, color: 'var(--color-gold, #FFB800)' }}>PTS</th>
-                            <th style={{ padding: '10px 12px', textAlign: 'center' }}>RUNS FOR (OV)</th>
-                            <th style={{ padding: '10px 12px', textAlign: 'center' }}>RUNS AGN (OV)</th>
-                            <th style={{ padding: '10px 14px', textAlign: 'center', width: '85px', fontWeight: 900, color: '#10B981' }}>NRR</th>
-                            <th style={{ padding: '10px 14px', textAlign: 'center', width: '110px' }}>STATUS</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {activeStandings.map((s: any, idx: number) => {
-                            const isPlayoff = idx === 0;
-                            const isM9 = idx === 1;
-                            const isM10 = idx === 2;
-                            const isElim = idx === 3;
+                    <>
+                      {/* DESKTOP TABLE VIEW (≥ 640px) */}
+                      <div className="cpl-desktop-table" style={{ overflowX: 'auto', borderRadius: '10px', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem', textAlign: 'left' }}>
+                          <thead>
+                            <tr style={{ background: 'rgba(255, 255, 255, 0.04)', color: 'rgba(255, 255, 255, 0.5)', fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                              <th style={{ padding: '10px 14px', width: '40px' }}>POS</th>
+                              <th style={{ padding: '10px 14px' }}>TEAM</th>
+                              <th style={{ padding: '10px 10px', textAlign: 'center', width: '40px' }}>P</th>
+                              <th style={{ padding: '10px 10px', textAlign: 'center', width: '40px' }}>W</th>
+                              <th style={{ padding: '10px 10px', textAlign: 'center', width: '40px' }}>L</th>
+                              <th style={{ padding: '10px 10px', textAlign: 'center', width: '40px' }}>T</th>
+                              <th style={{ padding: '10px 10px', textAlign: 'center', width: '40px' }}>NR</th>
+                              <th style={{ padding: '10px 12px', textAlign: 'center', width: '55px', fontWeight: 900, color: 'var(--color-gold, #FFB800)' }}>PTS</th>
+                              <th style={{ padding: '10px 12px', textAlign: 'center' }}>RUNS FOR (OV)</th>
+                              <th style={{ padding: '10px 12px', textAlign: 'center' }}>RUNS AGN (OV)</th>
+                              <th style={{ padding: '10px 14px', textAlign: 'center', width: '85px', fontWeight: 900, color: '#10B981' }}>NRR</th>
+                              <th style={{ padding: '10px 14px', textAlign: 'center', width: '110px' }}>STATUS</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {activeStandings.map((s: any, idx: number) => {
+                              const isPlayoff = idx === 0;
+                              const isM9 = idx === 1;
+                              const isM10 = idx === 2;
+                              const isElim = idx === 3;
 
-                            const statusColor = isPlayoff ? '#10B981' : isM9 ? '#3B82F6' : isM10 ? '#F59E0B' : '#EF4444';
-                            const statusBg = isPlayoff ? 'rgba(16, 185, 129, 0.18)' : isM9 ? 'rgba(59, 130, 246, 0.18)' : isM10 ? 'rgba(245, 158, 11, 0.18)' : 'rgba(239, 68, 68, 0.18)';
-                            const statusBorder = isPlayoff ? 'rgba(16, 185, 129, 0.35)' : isM9 ? 'rgba(59, 130, 246, 0.35)' : isM10 ? 'rgba(245, 158, 11, 0.35)' : 'rgba(239, 68, 68, 0.35)';
-                            const statusLabel = isPlayoff ? 'PLAYOFF' : isM9 ? 'MATCH 9' : isM10 ? 'MATCH 10' : 'ELIMINATED';
+                              const statusColor = isPlayoff ? '#10B981' : isM9 ? '#3B82F6' : isM10 ? '#F59E0B' : '#EF4444';
+                              const statusBg = isPlayoff ? 'rgba(16, 185, 129, 0.18)' : isM9 ? 'rgba(59, 130, 246, 0.18)' : isM10 ? 'rgba(245, 158, 11, 0.18)' : 'rgba(239, 68, 68, 0.18)';
+                              const statusBorder = isPlayoff ? 'rgba(16, 185, 129, 0.35)' : isM9 ? 'rgba(59, 130, 246, 0.35)' : isM10 ? 'rgba(245, 158, 11, 0.35)' : 'rgba(239, 68, 68, 0.35)';
+                              const statusLabel = isPlayoff ? 'PLAYOFF' : isM9 ? 'MATCH 9' : isM10 ? 'MATCH 10' : 'ELIMINATED';
 
-                            const logo = normalizeImageUrl(s.logoUrl || s.teamLogoUrl);
-                            const posColor = isGroupFinished ? statusColor : idx === 0 ? 'var(--color-gold, #FFB800)' : 'rgba(255, 255, 255, 0.8)';
-                            const rowBg = isGroupFinished
-                              ? (isPlayoff ? 'rgba(16, 185, 129, 0.05)' : isM9 ? 'rgba(59, 130, 246, 0.04)' : isM10 ? 'rgba(245, 158, 11, 0.04)' : 'transparent')
-                              : 'transparent';
+                              const logo = normalizeImageUrl(s.logoUrl || s.teamLogoUrl);
+                              const posColor = isGroupFinished ? statusColor : idx === 0 ? 'var(--color-gold, #FFB800)' : 'rgba(255, 255, 255, 0.8)';
+                              const rowBg = isGroupFinished
+                                ? (isPlayoff ? 'rgba(16, 185, 129, 0.05)' : isM9 ? 'rgba(59, 130, 246, 0.04)' : isM10 ? 'rgba(245, 158, 11, 0.04)' : 'transparent')
+                                : 'transparent';
 
-                            return (
-                              <tr
-                                key={s.teamId || idx}
+                              return (
+                                <tr
+                                  key={s.teamId || idx}
+                                  style={{
+                                    borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+                                    background: rowBg,
+                                  }}
+                                >
+                                  <td style={{ padding: '12px 14px', fontWeight: 800, color: posColor }}>
+                                    {s.pos || idx + 1}
+                                  </td>
+                                  <td style={{ padding: '12px 14px', fontWeight: 700, color: '#FFF' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                      {logo ? (
+                                        <img
+                                          src={logo}
+                                          alt={s.teamName}
+                                          referrerPolicy="no-referrer"
+                                          style={{ width: '22px', height: '22px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0, border: '1px solid rgba(255, 255, 255, 0.15)' }}
+                                          onError={(e) => {
+                                            (e.currentTarget as HTMLElement).style.display = 'none';
+                                            const fallback = (e.currentTarget.parentElement as HTMLElement)?.querySelector('.team-badge-fallback');
+                                            if (fallback) (fallback as HTMLElement).style.display = 'flex';
+                                          }}
+                                        />
+                                      ) : null}
+                                      <div
+                                        className="team-badge-fallback"
+                                        style={{
+                                          display: logo ? 'none' : 'flex',
+                                          width: '22px',
+                                          height: '22px',
+                                          borderRadius: '50%',
+                                          background: 'linear-gradient(135deg, rgba(255, 184, 0, 0.2) 0%, rgba(255, 184, 0, 0.05) 100%)',
+                                          border: '1px solid rgba(255, 184, 0, 0.3)',
+                                          alignItems: 'center',
+                                          justifyContent: 'center',
+                                          fontSize: '0.62rem',
+                                          fontWeight: 900,
+                                          color: 'var(--color-gold, #FFB800)',
+                                          flexShrink: 0,
+                                          letterSpacing: '-0.02em',
+                                        }}
+                                      >
+                                        {(s.teamShortName || s.teamName || 'T').slice(0, 2).toUpperCase()}
+                                      </div>
+                                      <span>{s.teamName}</span>
+                                      <span style={{ color: 'rgba(255, 255, 255, 0.45)', fontSize: '0.76rem', fontWeight: 600 }}>({s.teamShortName})</span>
+                                    </div>
+                                  </td>
+                                  <td style={{ padding: '12px 10px', textAlign: 'center', fontFamily: 'var(--font-data, monospace)', color: 'rgba(255, 255, 255, 0.8)' }}>{s.played ?? 0}</td>
+                                  <td style={{ padding: '12px 10px', textAlign: 'center', fontFamily: 'var(--font-data, monospace)', color: '#10B981', fontWeight: 700 }}>{s.won ?? 0}</td>
+                                  <td style={{ padding: '12px 10px', textAlign: 'center', fontFamily: 'var(--font-data, monospace)', color: 'rgba(255, 255, 255, 0.6)' }}>{s.lost ?? 0}</td>
+                                  <td style={{ padding: '12px 10px', textAlign: 'center', fontFamily: 'var(--font-data, monospace)', color: 'rgba(255, 255, 255, 0.6)' }}>{s.tied ?? 0}</td>
+                                  <td style={{ padding: '12px 10px', textAlign: 'center', fontFamily: 'var(--font-data, monospace)', color: 'rgba(255, 255, 255, 0.6)' }}>{s.noResult ?? 0}</td>
+                                  <td style={{ padding: '12px 12px', textAlign: 'center', fontFamily: 'var(--font-data, monospace)', fontWeight: 900, fontSize: '1rem', color: 'var(--color-gold, #FFB800)' }}>
+                                    {s.points ?? 0}
+                                  </td>
+                                  <td style={{ padding: '12px 12px', textAlign: 'center', fontFamily: 'var(--font-data, monospace)', fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.75)' }}>
+                                    {s.runsFor ?? 0} / {s.displayOversFor || '0.00'}
+                                  </td>
+                                  <td style={{ padding: '12px 12px', textAlign: 'center', fontFamily: 'var(--font-data, monospace)', fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.75)' }}>
+                                    {s.runsAgainst ?? 0} / {s.displayOversAgainst || '0.00'}
+                                  </td>
+                                  <td style={{ padding: '12px 14px', textAlign: 'center', fontFamily: 'var(--font-data, monospace)', fontWeight: 900, color: (typeof s.nrr === 'number' ? s.nrr : 0) >= 0 ? '#10B981' : '#EF4444' }}>
+                                    {s.displayNRR || (typeof s.nrr === 'number' ? (s.nrr > 0 ? `+${s.nrr.toFixed(2)}` : s.nrr.toFixed(2)) : '0.00')}
+                                  </td>
+                                  <td style={{ padding: '12px 14px', textAlign: 'center' }}>
+                                    {isGroupFinished ? (
+                                      <span
+                                        style={{
+                                          padding: '3px 8px',
+                                          borderRadius: '9999px',
+                                          fontSize: '0.7rem',
+                                          fontWeight: 800,
+                                          letterSpacing: '0.04em',
+                                          background: statusBg,
+                                          color: statusColor,
+                                          border: `1px solid ${statusBorder}`,
+                                          display: 'inline-block',
+                                          whiteSpace: 'nowrap',
+                                        }}
+                                      >
+                                        {statusLabel}
+                                      </span>
+                                    ) : (
+                                      <span style={{ color: 'rgba(255, 255, 255, 0.3)', fontSize: '0.85rem', fontWeight: 600 }}>—</span>
+                                    )}
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+
+                      {/* MOBILE CARDS VIEW (< 640px) */}
+                      <div className="cpl-mobile-cards" style={{ gap: '8px' }}>
+                        {activeStandings.map((s: any, idx: number) => {
+                          const isPlayoff = idx === 0;
+                          const isM9 = idx === 1;
+                          const isM10 = idx === 2;
+                          const statusColor = isPlayoff ? '#10B981' : isM9 ? '#3B82F6' : isM10 ? '#F59E0B' : '#EF4444';
+                          const statusBg = isPlayoff ? 'rgba(16, 185, 129, 0.18)' : isM9 ? 'rgba(59, 130, 246, 0.18)' : isM10 ? 'rgba(245, 158, 11, 0.18)' : 'rgba(239, 68, 68, 0.18)';
+                          const statusBorder = isPlayoff ? 'rgba(16, 185, 129, 0.35)' : isM9 ? 'rgba(59, 130, 246, 0.35)' : isM10 ? 'rgba(245, 158, 11, 0.35)' : 'rgba(239, 68, 68, 0.35)';
+                          const statusLabel = isPlayoff ? 'PLAYOFF' : isM9 ? 'MATCH 9' : isM10 ? 'MATCH 10' : 'ELIMINATED';
+                          const logo = normalizeImageUrl(s.logoUrl || s.teamLogoUrl);
+                          const isPositiveNRR = (typeof s.nrr === 'number' ? s.nrr : 0) >= 0;
+
+                          return (
+                            <div
+                              key={s.teamId || idx}
+                              style={{
+                                background: 'rgba(255, 255, 255, 0.04)',
+                                border: idx === 0 ? '1px solid rgba(255, 184, 0, 0.35)' : '1px solid rgba(255, 255, 255, 0.08)',
+                                borderRadius: '10px',
+                                padding: '10px 12px',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: '8px',
+                              }}
+                            >
+                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+                                  <span
+                                    style={{
+                                      width: '22px',
+                                      height: '22px',
+                                      borderRadius: '50%',
+                                      background: idx === 0 ? '#FFB800' : 'rgba(255, 255, 255, 0.12)',
+                                      color: idx === 0 ? '#000' : '#FFF',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                      fontSize: '0.74rem',
+                                      fontWeight: 900,
+                                      flexShrink: 0,
+                                    }}
+                                  >
+                                    {idx + 1}
+                                  </span>
+                                  {logo && (
+                                    <img
+                                      src={logo}
+                                      alt={s.teamName}
+                                      referrerPolicy="no-referrer"
+                                      style={{ width: '22px', height: '22px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }}
+                                    />
+                                  )}
+                                  <div style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                    <span style={{ fontWeight: 800, fontSize: '0.88rem', color: '#FFF' }}>{s.teamName}</span>
+                                    {s.teamShortName && (
+                                      <span style={{ marginLeft: '4px', fontSize: '0.74rem', color: 'rgba(255, 255, 255, 0.5)' }}>({s.teamShortName})</span>
+                                    )}
+                                  </div>
+                                </div>
+                                {isGroupFinished && (
+                                  <span
+                                    style={{
+                                      padding: '2px 7px',
+                                      borderRadius: '9999px',
+                                      fontSize: '0.66rem',
+                                      fontWeight: 800,
+                                      background: statusBg,
+                                      border: `1px solid ${statusBorder}`,
+                                      color: statusColor,
+                                      whiteSpace: 'nowrap',
+                                      flexShrink: 0,
+                                    }}
+                                  >
+                                    {statusLabel}
+                                  </span>
+                                )}
+                              </div>
+                              <div
                                 style={{
-                                  borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
-                                  background: rowBg,
+                                  display: 'grid',
+                                  gridTemplateColumns: 'repeat(4, 1fr)',
+                                  gap: '4px',
+                                  background: 'rgba(0, 0, 0, 0.25)',
+                                  padding: '6px',
+                                  borderRadius: '6px',
+                                  textAlign: 'center',
                                 }}
                               >
-                                <td style={{ padding: '12px 14px', fontWeight: 800, color: posColor }}>
-                                  {s.pos || idx + 1}
-                                </td>
-                                <td style={{ padding: '12px 14px', fontWeight: 700, color: '#FFF' }}>
-                                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    {logo ? (
-                                      <img
-                                        src={logo}
-                                        alt={s.teamName}
-                                        referrerPolicy="no-referrer"
-                                        style={{ width: '22px', height: '22px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0, border: '1px solid rgba(255, 255, 255, 0.15)' }}
-                                        onError={(e) => {
-                                          (e.currentTarget as HTMLElement).style.display = 'none';
-                                          const fallback = (e.currentTarget.parentElement as HTMLElement)?.querySelector('.team-badge-fallback');
-                                          if (fallback) (fallback as HTMLElement).style.display = 'flex';
-                                        }}
-                                      />
-                                    ) : null}
-                                    <div
-                                      className="team-badge-fallback"
-                                      style={{
-                                        display: logo ? 'none' : 'flex',
-                                        width: '22px',
-                                        height: '22px',
-                                        borderRadius: '50%',
-                                        background: 'linear-gradient(135deg, rgba(255, 184, 0, 0.2) 0%, rgba(255, 184, 0, 0.05) 100%)',
-                                        border: '1px solid rgba(255, 184, 0, 0.3)',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        fontSize: '0.62rem',
-                                        fontWeight: 900,
-                                        color: 'var(--color-gold, #FFB800)',
-                                        flexShrink: 0,
-                                        letterSpacing: '-0.02em',
-                                      }}
-                                    >
-                                      {(s.teamShortName || s.teamName || 'T').slice(0, 2).toUpperCase()}
-                                    </div>
-                                    <span>{s.teamName}</span>
-                                    <span style={{ color: 'rgba(255, 255, 255, 0.45)', fontSize: '0.76rem', fontWeight: 600 }}>({s.teamShortName})</span>
+                                <div>
+                                  <div style={{ fontSize: '0.64rem', color: 'rgba(255, 255, 255, 0.5)', fontWeight: 700 }}>PTS</div>
+                                  <div style={{ fontSize: '0.95rem', fontWeight: 900, color: '#FFB800' }}>{s.points ?? 0}</div>
+                                </div>
+                                <div>
+                                  <div style={{ fontSize: '0.64rem', color: 'rgba(255, 255, 255, 0.5)', fontWeight: 700 }}>NRR</div>
+                                  <div style={{ fontSize: '0.82rem', fontWeight: 900, color: isPositiveNRR ? '#10B981' : '#EF4444' }}>
+                                    {isPositiveNRR && Number(s.nrr || 0) > 0 ? `+${s.displayNRR || '0.00'}` : s.displayNRR || '0.00'}
                                   </div>
-                                </td>
-                                <td style={{ padding: '12px 10px', textAlign: 'center', fontFamily: 'var(--font-data, monospace)', color: 'rgba(255, 255, 255, 0.8)' }}>{s.played ?? 0}</td>
-                                <td style={{ padding: '12px 10px', textAlign: 'center', fontFamily: 'var(--font-data, monospace)', color: '#10B981', fontWeight: 700 }}>{s.won ?? 0}</td>
-                                <td style={{ padding: '12px 10px', textAlign: 'center', fontFamily: 'var(--font-data, monospace)', color: 'rgba(255, 255, 255, 0.6)' }}>{s.lost ?? 0}</td>
-                                <td style={{ padding: '12px 10px', textAlign: 'center', fontFamily: 'var(--font-data, monospace)', color: 'rgba(255, 255, 255, 0.6)' }}>{s.tied ?? 0}</td>
-                                <td style={{ padding: '12px 10px', textAlign: 'center', fontFamily: 'var(--font-data, monospace)', color: 'rgba(255, 255, 255, 0.6)' }}>{s.noResult ?? 0}</td>
-                                <td style={{ padding: '12px 12px', textAlign: 'center', fontFamily: 'var(--font-data, monospace)', fontWeight: 900, fontSize: '1rem', color: 'var(--color-gold, #FFB800)' }}>
-                                  {s.points ?? 0}
-                                </td>
-                                <td style={{ padding: '12px 12px', textAlign: 'center', fontFamily: 'var(--font-data, monospace)', fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.75)' }}>
-                                  {s.runsFor ?? 0} / {s.displayOversFor || '0.00'}
-                                </td>
-                                <td style={{ padding: '12px 12px', textAlign: 'center', fontFamily: 'var(--font-data, monospace)', fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.75)' }}>
-                                  {s.runsAgainst ?? 0} / {s.displayOversAgainst || '0.00'}
-                                </td>
-                                <td style={{ padding: '12px 14px', textAlign: 'center', fontFamily: 'var(--font-data, monospace)', fontWeight: 900, color: (typeof s.nrr === 'number' ? s.nrr : 0) >= 0 ? '#10B981' : '#EF4444' }}>
-                                  {s.displayNRR || (typeof s.nrr === 'number' ? (s.nrr > 0 ? `+${s.nrr.toFixed(2)}` : s.nrr.toFixed(2)) : '0.00')}
-                                </td>
-                                <td style={{ padding: '12px 14px', textAlign: 'center' }}>
-                                  {isGroupFinished ? (
-                                    <span
-                                      style={{
-                                        padding: '3px 8px',
-                                        borderRadius: '9999px',
-                                        fontSize: '0.7rem',
-                                        fontWeight: 800,
-                                        letterSpacing: '0.04em',
-                                        background: statusBg,
-                                        color: statusColor,
-                                        border: `1px solid ${statusBorder}`,
-                                        display: 'inline-block',
-                                        whiteSpace: 'nowrap',
-                                      }}
-                                    >
-                                      {statusLabel}
-                                    </span>
-                                  ) : (
-                                    <span style={{ color: 'rgba(255, 255, 255, 0.3)', fontSize: '0.85rem', fontWeight: 600 }}>—</span>
-                                  )}
-                                </td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
-                    </div>
+                                </div>
+                                <div>
+                                  <div style={{ fontSize: '0.64rem', color: 'rgba(255, 255, 255, 0.5)', fontWeight: 700 }}>P / W / L</div>
+                                  <div style={{ fontSize: '0.8rem', fontWeight: 800, color: '#FFF' }}>
+                                    {s.played ?? 0} / <span style={{ color: '#34D399' }}>{s.won ?? 0}</span> / <span style={{ color: '#F87171' }}>{s.lost ?? 0}</span>
+                                  </div>
+                                </div>
+                                <div>
+                                  <div style={{ fontSize: '0.64rem', color: 'rgba(255, 255, 255, 0.5)', fontWeight: 700 }}>RUNS (OV)</div>
+                                  <div style={{ fontSize: '0.72rem', color: 'rgba(255, 255, 255, 0.8)' }}>
+                                    {s.runsFor ?? 0} ({s.displayOversFor || '0'})
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </>
                   )}
 
                   {/* NRR Formula & Rules Note */}
@@ -2349,8 +2522,8 @@ export default function LiveScoreWidget() {
                   })}
                 </div>
 
-                {/* Batting Leaderboard Table */}
-                <div style={{ overflowX: 'auto' }}>
+                {/* Batting Leaderboard Table (Desktop ≥ 640px) */}
+                <div className="cpl-desktop-table" style={{ overflowX: 'auto', borderRadius: '10px', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
                   <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem', textAlign: 'left' }}>
                     <thead>
                       <tr style={{ background: 'rgba(255, 255, 255, 0.04)', color: 'rgba(255, 255, 255, 0.5)', fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
@@ -2413,6 +2586,84 @@ export default function LiveScoreWidget() {
                       ))}
                     </tbody>
                   </table>
+                </div>
+
+                {/* Batting Leaderboard Mobile Cards (< 640px) */}
+                <div className="cpl-mobile-cards" style={{ gap: '8px' }}>
+                  {statsData.topBatters.map((b, index) => (
+                    <div
+                      key={b.playerId}
+                      style={{
+                        background: 'rgba(255, 255, 255, 0.035)',
+                        border: index === 0 ? '1px solid rgba(255, 184, 0, 0.4)' : '1px solid rgba(255, 255, 255, 0.08)',
+                        borderRadius: '10px',
+                        padding: '10px 12px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '8px',
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+                          <span
+                            style={{
+                              width: '24px',
+                              height: '24px',
+                              borderRadius: '50%',
+                              background: index === 0 ? '#FFB800' : index < 3 ? 'rgba(255, 184, 0, 0.2)' : 'rgba(255, 255, 255, 0.1)',
+                              color: index === 0 ? '#000' : index < 3 ? '#FFB800' : '#FFF',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontSize: '0.75rem',
+                              fontWeight: 900,
+                              flexShrink: 0,
+                            }}
+                          >
+                            {index + 1}
+                          </span>
+                          <div style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            <span style={{ fontWeight: 800, fontSize: '0.88rem', color: '#FFF' }}>{b.playerName}</span>
+                            <span style={{ marginLeft: '6px', fontSize: '0.74rem', color: 'rgba(255, 255, 255, 0.5)' }}>({b.teamShortName})</span>
+                          </div>
+                        </div>
+                        <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.45)', flexShrink: 0 }}>
+                          {b.inningsCount} {b.inningsCount === 1 ? 'inn' : 'inns'}
+                        </span>
+                      </div>
+
+                      <div
+                        style={{
+                          display: 'grid',
+                          gridTemplateColumns: 'repeat(4, 1fr)',
+                          gap: '4px',
+                          background: 'rgba(0, 0, 0, 0.25)',
+                          padding: '6px',
+                          borderRadius: '6px',
+                          textAlign: 'center',
+                        }}
+                      >
+                        <div>
+                          <div style={{ fontSize: '0.62rem', color: 'rgba(255, 255, 255, 0.5)', fontWeight: 700 }}>RUNS</div>
+                          <div style={{ fontSize: '1rem', fontWeight: 900, color: '#FFB800' }}>{b.totalRuns}</div>
+                        </div>
+                        <div>
+                          <div style={{ fontSize: '0.62rem', color: 'rgba(255, 255, 255, 0.5)', fontWeight: 700 }}>BALLS</div>
+                          <div style={{ fontSize: '0.85rem', fontWeight: 800, color: '#FFF' }}>{b.ballsFaced}</div>
+                        </div>
+                        <div>
+                          <div style={{ fontSize: '0.62rem', color: 'rgba(255, 255, 255, 0.5)', fontWeight: 700 }}>SR</div>
+                          <div style={{ fontSize: '0.85rem', fontWeight: 800, color: '#10B981' }}>{b.strikeRate}</div>
+                        </div>
+                        <div>
+                          <div style={{ fontSize: '0.62rem', color: 'rgba(255, 255, 255, 0.5)', fontWeight: 700 }}>HS / 4s / 6s</div>
+                          <div style={{ fontSize: '0.74rem', fontWeight: 700, color: 'rgba(255, 255, 255, 0.85)' }}>
+                            {b.highestScore} ({b.fours}/{b.sixes})
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </>
             )}
@@ -2483,8 +2734,8 @@ export default function LiveScoreWidget() {
                   })}
                 </div>
 
-                {/* Bowling Leaderboard Table */}
-                <div style={{ overflowX: 'auto' }}>
+                {/* Bowling Leaderboard Table (Desktop ≥ 640px) */}
+                <div className="cpl-desktop-table" style={{ overflowX: 'auto', borderRadius: '10px', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
                   <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem', textAlign: 'left' }}>
                     <thead>
                       <tr style={{ background: 'rgba(255, 255, 255, 0.04)', color: 'rgba(255, 255, 255, 0.5)', fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
@@ -2543,6 +2794,84 @@ export default function LiveScoreWidget() {
                       ))}
                     </tbody>
                   </table>
+                </div>
+
+                {/* Bowling Leaderboard Mobile Cards (< 640px) */}
+                <div className="cpl-mobile-cards" style={{ gap: '8px' }}>
+                  {statsData.topBowlers.map((bw, index) => (
+                    <div
+                      key={bw.playerId}
+                      style={{
+                        background: 'rgba(255, 255, 255, 0.035)',
+                        border: index === 0 ? '1px solid rgba(168, 85, 247, 0.4)' : '1px solid rgba(255, 255, 255, 0.08)',
+                        borderRadius: '10px',
+                        padding: '10px 12px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '8px',
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+                          <span
+                            style={{
+                              width: '24px',
+                              height: '24px',
+                              borderRadius: '50%',
+                              background: index === 0 ? '#A855F7' : index < 3 ? 'rgba(168, 85, 247, 0.2)' : 'rgba(255, 255, 255, 0.1)',
+                              color: index === 0 ? '#FFF' : index < 3 ? '#C084FC' : '#FFF',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontSize: '0.75rem',
+                              fontWeight: 900,
+                              flexShrink: 0,
+                            }}
+                          >
+                            {index + 1}
+                          </span>
+                          <div style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            <span style={{ fontWeight: 800, fontSize: '0.88rem', color: '#FFF' }}>{bw.playerName}</span>
+                            <span style={{ marginLeft: '6px', fontSize: '0.74rem', color: 'rgba(255, 255, 255, 0.5)' }}>({bw.teamShortName})</span>
+                          </div>
+                        </div>
+                        <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.45)', flexShrink: 0 }}>
+                          {bw.inningsCount} {bw.inningsCount === 1 ? 'inn' : 'inns'}
+                        </span>
+                      </div>
+
+                      <div
+                        style={{
+                          display: 'grid',
+                          gridTemplateColumns: 'repeat(4, 1fr)',
+                          gap: '4px',
+                          background: 'rgba(0, 0, 0, 0.25)',
+                          padding: '6px',
+                          borderRadius: '6px',
+                          textAlign: 'center',
+                        }}
+                      >
+                        <div>
+                          <div style={{ fontSize: '0.62rem', color: 'rgba(255, 255, 255, 0.5)', fontWeight: 700 }}>WKTS</div>
+                          <div style={{ fontSize: '1rem', fontWeight: 900, color: '#A855F7' }}>{bw.wickets}</div>
+                        </div>
+                        <div>
+                          <div style={{ fontSize: '0.62rem', color: 'rgba(255, 255, 255, 0.5)', fontWeight: 700 }}>OVERS</div>
+                          <div style={{ fontSize: '0.85rem', fontWeight: 800, color: '#FFF' }}>{bw.oversFormatted}</div>
+                        </div>
+                        <div>
+                          <div style={{ fontSize: '0.62rem', color: 'rgba(255, 255, 255, 0.5)', fontWeight: 700 }}>ECON</div>
+                          <div style={{ fontSize: '0.85rem', fontWeight: 800, color: '#38BDF8' }}>{bw.economyRate}</div>
+                        </div>
+                        <div>
+                          <div style={{ fontSize: '0.62rem', color: 'rgba(255, 255, 255, 0.5)', fontWeight: 700 }}>RUNS / BEST</div>
+                          <div style={{ fontSize: '0.74rem', fontWeight: 700, color: 'rgba(255, 255, 255, 0.85)' }}>
+                            {bw.runsConceded} ({bw.bestFigures})
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </>
             )}

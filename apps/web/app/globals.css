@@ -1335,5 +1335,34 @@ h1, h2, h3, h4, h5, h6,
   background: rgba(255, 255, 255, 0.45);
 }
 
+/* Responsive Viewport Controls for Points Tables */
+@media (min-width: 640px) {
+  .cpl-mobile-cards {
+    display: none !important;
+  }
+  .cpl-desktop-table {
+    display: block !important;
+  }
+}
 
+@media (max-width: 639.98px) {
+  .cpl-desktop-table {
+    display: none !important;
+  }
+  .cpl-mobile-cards {
+    display: flex !important;
+    flex-direction: column !important;
+  }
+}
 
+@media (min-width: 768px) {
+  .bracket-mobile-tabs {
+    display: none !important;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .bracket-mobile-tabs {
+    display: flex !important;
+  }
+}

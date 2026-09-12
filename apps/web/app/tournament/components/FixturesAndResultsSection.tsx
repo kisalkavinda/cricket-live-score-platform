@@ -118,7 +118,7 @@ export default function FixturesAndResultsSection({
                       }}
                     >
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', color: 'rgba(255, 255, 255, 0.4)', fontFamily: 'var(--font-data)', marginBottom: '8px' }}>
-                        <span>MATCH #{m.matchNumber} · {m.stage}</span>
+                        <span>{m.bracketSlot || `MATCH #${m.matchNumber || ''}`}{m.stage && m.stage !== m.bracketSlot ? ` · ${m.stage}` : ''}{m.bracketSlot && m.matchNumber ? ` (#${m.matchNumber})` : ''}</span>
                         <span>{m.venue || 'Ratmalana Ground'}</span>
                       </div>
 
@@ -206,7 +206,7 @@ export default function FixturesAndResultsSection({
                     }}
                   >
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', color: 'rgba(255, 255, 255, 0.4)', fontFamily: 'var(--font-data)', marginBottom: '8px' }}>
-                      <span>MATCH #{m.matchNumber} · {m.stage}</span>
+                      <span>{m.bracketSlot || `MATCH #${m.matchNumber || ''}`}{m.stage && m.stage !== m.bracketSlot ? ` · ${m.stage}` : ''}{m.bracketSlot && m.matchNumber ? ` (#${m.matchNumber})` : ''}</span>
                       <span>{m.venue || 'Ratmalana Ground'}</span>
                     </div>
 

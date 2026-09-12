@@ -2,8 +2,9 @@ import { Suspense } from 'react';
 import Navbar from '@/components/Navbar';
 import Hero from '@/components/Hero';
 import LiveScoreWidget from '@/components/LiveScoreWidget';
-import EventDetails from '@/components/EventDetails';
+import HomePointsTable from '@/components/HomePointsTable';
 import TournamentBracket from '@/components/TournamentBracket';
+import EventDetails from '@/components/EventDetails';
 import Registration from '@/components/Registration';
 import RegistrationSkeleton from '@/components/RegistrationSkeleton';
 import Footer from '@/components/Footer';
@@ -14,6 +15,7 @@ export default function Home() {
       <Navbar />
       <Hero />
       <LiveScoreWidget />
+      <HomePointsTable />
       <TournamentBracket />
       <EventDetails />
       {/*

@@ -191,25 +191,34 @@
 
 /* Mobile Stage Switcher Tabs */
 .mobileTabPill {
-  padding: 8px 14px;
-  border-radius: 8px;
-  font-size: 0.76rem;
+  min-height: 40px;
+  padding: 8px 16px;
+  border-radius: 9999px;
+  font-size: 0.78rem;
   font-weight: 800;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.03);
-  color: rgba(255, 255, 255, 0.6);
+  border: 1.5px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.88);
   cursor: pointer;
   transition: all 0.15s ease;
   white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mobileTabPill:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #FFFFFF;
 }
 
 .mobileTabPillActive {
-  background: var(--color-accent, #C0272D);
-  color: #FFFFFF;
-  border-color: var(--color-accent, #C0272D);
-  box-shadow: 0 0 14px rgba(192, 39, 45, 0.4);
+  background: var(--color-accent, #C0272D) !important;
+  color: #FFFFFF !important;
+  border-color: var(--color-accent, #C0272D) !important;
+  box-shadow: 0 0 16px rgba(192, 39, 45, 0.45) !important;
 }
 
 /* Match Node Card */

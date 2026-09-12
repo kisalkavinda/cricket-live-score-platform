@@ -571,8 +571,26 @@ export default async function TournamentDetailPage({
                     }}
                   >
                     <div>
-                      <div style={{ fontWeight: 700, color: '#FFFFFF', fontSize: '13px' }}>
-                        {m.teamA.name} vs {m.teamB.name}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                        <span style={{ fontWeight: 700, color: '#FFFFFF', fontSize: '13px' }}>
+                          {m.teamA.name} vs {m.teamB.name}
+                        </span>
+                        {(m.bracketSlot || m.stage) && (
+                          <span
+                            style={{
+                              padding: '1px 6px',
+                              borderRadius: '4px',
+                              fontSize: '10px',
+                              fontWeight: 800,
+                              fontFamily: 'monospace',
+                              backgroundColor: 'rgba(245, 158, 11, 0.15)',
+                              color: '#FBBF24',
+                              border: '1px solid rgba(245, 158, 11, 0.3)',
+                            }}
+                          >
+                            {m.bracketSlot || m.stage}{m.matchNumber ? ` · #${m.matchNumber}` : ''}
+                          </span>
+                        )}
                       </div>
                       <div style={{ fontSize: '11px', color: '#8B9BB4', fontFamily: 'monospace', marginTop: '2px' }}>
                         Status: <span style={{ color: m.status === 'LIVE' ? '#34D399' : '#FBBF24' }}>{m.status}</span>
