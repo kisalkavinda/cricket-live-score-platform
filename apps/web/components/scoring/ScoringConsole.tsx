@@ -474,6 +474,7 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
   const [newBatterId, setNewBatterId] = useState<string>('');
   const [wicketRuns, setWicketRuns] = useState<number>(0);
   const [isWicketOnNoBall, setIsWicketOnNoBall] = useState<boolean>(false);
+  const [isWicketOnWide, setIsWicketOnWide] = useState<boolean>(false);
   const [retHurtWithoutFacingBall, setRetHurtWithoutFacingBall] = useState<boolean>(true);
   const [wicketModalError, setWicketModalError] = useState<string | null>(null);
 
@@ -1057,9 +1058,20 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
     const isRetHurt = wicketType === 'RETIRED_HURT';
     const isRetHurtWithoutBall = isRetHurt && (retHurtWithoutFacingBall || dismissedPlayerId === currentInnings.currentNonStrikerId);
     const runsScoredOnWicket = isRetHurtWithoutBall ? 0 : (wicketRuns || 0);
-    const wicketExtraType = (isRetHurtWithoutBall || !isWicketOnNoBall) ? 'NONE' : 'NO_BALL';
-    const wicketExtraRuns = (isRetHurtWithoutBall || !isWicketOnNoBall) ? 0 : 1;
-    const isLegalBall = !isRetHurtWithoutBall && !isWicketOnNoBall;
+
+    let wicketExtraType: 'NONE' | 'WIDE' | 'NO_BALL' = 'NONE';
+    let wicketExtraRuns = 0;
+    if (!isRetHurtWithoutBall) {
+      if (isWicketOnWide) {
+        wicketExtraType = 'WIDE';
+        wicketExtraRuns = 1 + runsScoredOnWicket;
+      } else if (isWicketOnNoBall) {
+        wicketExtraType = 'NO_BALL';
+        wicketExtraRuns = 1;
+      }
+    }
+
+    const isLegalBall = !isRetHurtWithoutBall && !isWicketOnNoBall && !isWicketOnWide;
 
     setWicketModalError(null);
     setError(null);
@@ -1130,7 +1142,7 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
         // Striker gets the completed runs and ball faced
         if (b.playerId === currentInnings.currentStrikerId) {
           r += runsScoredOnWicket;
-          if (!isRetHurtWithoutBall) balls += 1;
+          if (!isRetHurtWithoutBall && !isWicketOnWide) balls += 1;
           if (runsScoredOnWicket === 4) fours += 1;
           if (runsScoredOnWicket === 6) sixes += 1;
         }
@@ -1166,7 +1178,7 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
           playerId: dismissedPlayerId,
           player: dismissedPlayerObj,
           runs: dismissedPlayerId === currentInnings.currentStrikerId ? runsScoredOnWicket : 0,
-          balls: (dismissedPlayerId === currentInnings.currentStrikerId && !isRetHurtWithoutBall) ? 1 : 0,
+          balls: (dismissedPlayerId === currentInnings.currentStrikerId && !isRetHurtWithoutBall && !isWicketOnWide) ? 1 : 0,
           fours: (dismissedPlayerId === currentInnings.currentStrikerId && runsScoredOnWicket === 4) ? 1 : 0,
           sixes: (dismissedPlayerId === currentInnings.currentStrikerId && runsScoredOnWicket === 6) ? 1 : 0,
           isOut: !isRetHurt,
@@ -1207,12 +1219,19 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
             bOvers += 1;
             bBalls = 0;
           }
+          const runsCharged = isRetHurtWithoutBall
+            ? 0
+            : isWicketOnWide
+            ? (1 + runsScoredOnWicket)
+            : (runsScoredOnWicket + wicketExtraRuns);
           return {
             ...bw,
             overs: bOvers,
             balls: bBalls,
-            runsConceded: (bw.runsConceded || 0) + (isRetHurtWithoutBall ? 0 : (runsScoredOnWicket + wicketExtraRuns)),
+            runsConceded: (bw.runsConceded || 0) + runsCharged,
             wickets: (bw.wickets || 0) + ((!isRetHurtWithoutBall && isBowlerCreditedDismissal(wicketType)) ? 1 : 0),
+            wides: (bw.wides || 0) + (isWicketOnWide ? 1 : 0),
+            noBalls: (bw.noBalls || 0) + (isWicketOnNoBall ? 1 : 0),
           };
         }
         return bw;
@@ -1222,13 +1241,18 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
         id: `temp-${Date.now()}`,
         overNumber: currentInnings.overs,
         ballNumber: isLegalBall ? currentInnings.balls + 1 : currentInnings.balls,
-        runs: runsScoredOnWicket,
-        extras: wicketExtraRuns,
+        runs: isWicketOnWide ? 0 : runsScoredOnWicket,
+        extras: isWicketOnWide ? (1 + runsScoredOnWicket) : wicketExtraRuns,
         extraType: wicketExtraType,
         isLegal: isLegalBall,
         isWicket: true,
         wicketType,
         dismissedPlayerId,
+        commentary: isWicketOnWide
+          ? (wicketType === 'STUMPED'
+              ? `WICKET ON WIDE! Wide ball from ${bowlerName}. Striker leaves crease, keeper whips off the bails! STUMPED! (+1 Wide extra to team & bowler, delivery re-bowled)`
+              : `WICKET ON WIDE! ${wicketType.replace('_', ' ')} on a wide delivery from ${bowlerName}! (+1 Wide extra, delivery re-bowled)`)
+          : undefined,
         createdAt: new Date().toISOString(),
       };
 
@@ -1236,7 +1260,7 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
         if (inn.id === currentInnings.id) {
           return {
             ...inn,
-            runs: inn.runs + runsScoredOnWicket + wicketExtraRuns,
+            runs: inn.runs + (isWicketOnWide ? (1 + runsScoredOnWicket) : (runsScoredOnWicket + wicketExtraRuns)),
             wickets: inn.wickets + (isRetHurt ? 0 : 1),
             overs: nextOvers,
             balls: nextBalls,
@@ -1259,14 +1283,17 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
     const effectiveClientId = clientId || getPersistentClientId();
 
     const wicketPayload = {
-      runs: runsScoredOnWicket,
+      runs: isWicketOnWide ? 0 : runsScoredOnWicket,
       extraType: wicketExtraType as any,
-      extraRuns: wicketExtraRuns,
+      extraRuns: isWicketOnWide ? (1 + runsScoredOnWicket) : wicketExtraRuns,
       isWicket: true,
       wicketType: wicketType as any,
       dismissedPlayerId,
       newBatterId: incomingBatterId || undefined,
       withoutFacingBall: isRetHurtWithoutBall,
+      commentary: isWicketOnWide
+        ? `WICKET ON WIDE! Wide delivery from ${activeBowler?.name || 'Bowler'}, ${wicketType}! (+1 Wide extra, delivery re-bowled)`
+        : undefined,
       expectedUpdatedAt: currentInnings.updatedAt,
       operationId,
       clientId: effectiveClientId,
@@ -1280,6 +1307,7 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
       setNewBatterId('');
       setWicketRuns(0);
       setIsWicketOnNoBall(false);
+      setIsWicketOnWide(false);
       return;
     }
 
@@ -1291,6 +1319,7 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
           setNewBatterId('');
           setWicketRuns(0);
           setIsWicketOnNoBall(false);
+          setIsWicketOnWide(false);
           if ((res as any).updatedMatch) {
             setMatch((res as any).updatedMatch);
           }
@@ -1309,6 +1338,7 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
         setNewBatterId('');
         setWicketRuns(0);
         setIsWicketOnNoBall(false);
+        setIsWicketOnWide(false);
       }
     });
   };
@@ -4078,6 +4108,8 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                     onClick={() => {
                       setDismissedId(currentInnings.currentStrikerId || '');
                       setWicketRuns(0);
+                      setIsWicketOnWide(false);
+                      setIsWicketOnNoBall(false);
                       setWicketType(isFreeHitActive ? 'RUN_OUT' : 'CAUGHT');
                       setRetHurtWithoutFacingBall(false);
                       setShowWicketModal(true);
@@ -4104,6 +4136,8 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                     onClick={() => {
                       setDismissedId(currentInnings.currentStrikerId || '');
                       setWicketRuns(0);
+                      setIsWicketOnWide(false);
+                      setIsWicketOnNoBall(false);
                       setWicketType('RETIRED_HURT');
                       setRetHurtWithoutFacingBall(true);
                       setShowWicketModal(true);
@@ -4241,6 +4275,38 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                   >
                     <span>🏃</span>
                     <span>2 WD (1 Run)</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    disabled={isScorePadLocked}
+                    title="MCC Law 22.17 & 39: Wicket on Wide (Stumped or Run Out) - 1 wide extra penalty + batter out + ball re-bowled"
+                    onClick={() => {
+                      setDismissedId(currentInnings.currentStrikerId || '');
+                      setWicketRuns(0);
+                      setIsWicketOnWide(true);
+                      setIsWicketOnNoBall(false);
+                      setWicketType('STUMPED');
+                      setRetHurtWithoutFacingBall(false);
+                      setShowWicketModal(true);
+                    }}
+                    style={{
+                      background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.22), rgba(245, 158, 11, 0.22))',
+                      border: '1.5px solid rgba(245, 158, 11, 0.6)',
+                      color: '#FCA5A5',
+                      padding: '10px 10px',
+                      borderRadius: '8px',
+                      fontWeight: 900,
+                      fontSize: '0.82rem',
+                      cursor: isScorePadLocked ? 'not-allowed' : 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '5px',
+                    }}
+                  >
+                    <span>🔴🟡</span>
+                    <span>WD + WICKET</span>
                   </button>
                 </div>
               </div>
@@ -5278,6 +5344,8 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                   setDismissedId(currentInnings.currentStrikerId || '');
                   setWicketType('STUMPED');
                   setWicketRuns(wideRuns);
+                  setIsWicketOnWide(true);
+                  setIsWicketOnNoBall(false);
                   setShowWicketModal(true);
                 }}
                 style={{
@@ -5980,6 +6048,19 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                       <option value="RETIRED_HURT">🏥 Retired Hurt (Eligible to return & resume batting)</option>
                       <option value="RETIRED_OUT">⛔ Retired Out (Treated as dismissed)</option>
                     </>
+                  ) : isWicketOnWide ? (
+                    <>
+                      <option value="STUMPED">Stumped (MCC Law 39 - Wicket-keeper whips off bails)</option>
+                      <option value="RUN_OUT">Run Out (MCC Law 38 - Batter out of crease)</option>
+                      <option value="HIT_WICKET">Hit Wicket (MCC Law 35 - Batter breaks stumps)</option>
+                      <option value="OBSTRUCTING_FIELD">Obstructing The Field (MCC Law 37)</option>
+                    </>
+                  ) : isWicketOnNoBall ? (
+                    <>
+                      <option value="RUN_OUT">Run Out (MCC Law 38 - Allowed on No-Ball)</option>
+                      <option value="HIT_BALL_TWICE">Hit Ball Twice (MCC Law 34)</option>
+                      <option value="OBSTRUCTING_FIELD">Obstructing The Field (MCC Law 37)</option>
+                    </>
                   ) : (
                     <>
                       <option value="CAUGHT">Caught</option>
@@ -6052,23 +6133,89 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                 </div>
               )}
 
-              {/* Delivery is a No-Ball Switch */}
+              {/* Delivery Classification: Legal Ball vs Wide vs No-Ball */}
               {wicketType !== 'RETIRED_HURT' && (
-                <div style={{ background: '#141A26', border: '1px solid #2A364E', borderRadius: '8px', padding: '10px 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
-                  <div>
-                    <div style={{ fontSize: '0.82rem', fontWeight: 800, color: '#CBD5E1' }}>
-                      Delivery is a No-Ball?
-                    </div>
-                    <div style={{ fontSize: '0.72rem', color: '#94A3B8' }}>
-                      +1 penalty extra to batting team (+ extra delivery)
-                    </div>
+                <div style={{ background: '#141A26', border: '1px solid #2A364E', borderRadius: '8px', padding: '12px' }}>
+                  <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 800, color: '#CBD5E1', marginBottom: '8px' }}>
+                    Delivery Classification
+                  </label>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsWicketOnNoBall(false);
+                        setIsWicketOnWide(false);
+                      }}
+                      style={{
+                        padding: '8px 4px',
+                        borderRadius: '6px',
+                        fontSize: '0.78rem',
+                        fontWeight: 800,
+                        cursor: 'pointer',
+                        background: (!isWicketOnNoBall && !isWicketOnWide) ? '#2563EB' : '#1E2638',
+                        color: (!isWicketOnNoBall && !isWicketOnWide) ? '#FFF' : '#94A3B8',
+                        border: (!isWicketOnNoBall && !isWicketOnWide) ? '1.5px solid #60A5FA' : '1px solid #2A364E',
+                      }}
+                    >
+                      Legal Ball
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsWicketOnWide(true);
+                        setIsWicketOnNoBall(false);
+                        if (!['STUMPED', 'RUN_OUT', 'HIT_WICKET', 'OBSTRUCTING_FIELD'].includes(wicketType)) {
+                          setWicketType('STUMPED');
+                        }
+                      }}
+                      style={{
+                        padding: '8px 4px',
+                        borderRadius: '6px',
+                        fontSize: '0.78rem',
+                        fontWeight: 800,
+                        cursor: 'pointer',
+                        background: isWicketOnWide ? '#D97706' : '#1E2638',
+                        color: isWicketOnWide ? '#FFF' : '#FBBF24',
+                        border: isWicketOnWide ? '1.5px solid #F59E0B' : '1px solid #2A364E',
+                      }}
+                    >
+                      🟡 Wide Ball
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsWicketOnNoBall(true);
+                        setIsWicketOnWide(false);
+                        if (!['RUN_OUT', 'HIT_BALL_TWICE', 'OBSTRUCTING_FIELD'].includes(wicketType)) {
+                          setWicketType('RUN_OUT');
+                        }
+                      }}
+                      style={{
+                        padding: '8px 4px',
+                        borderRadius: '6px',
+                        fontSize: '0.78rem',
+                        fontWeight: 800,
+                        cursor: 'pointer',
+                        background: isWicketOnNoBall ? '#EA580C' : '#1E2638',
+                        color: isWicketOnNoBall ? '#FFF' : '#FB923C',
+                        border: isWicketOnNoBall ? '1.5px solid #F97316' : '1px solid #2A364E',
+                      }}
+                    >
+                      ⚠️ No-Ball
+                    </button>
                   </div>
-                  <input
-                    type="checkbox"
-                    checked={isWicketOnNoBall}
-                    onChange={(e) => setIsWicketOnNoBall(e.target.checked)}
-                    style={{ width: '18px', height: '18px', accentColor: '#F97316', cursor: 'pointer' }}
-                  />
+
+                  {isWicketOnWide && (
+                    <div style={{ marginTop: '10px', fontSize: '0.74rem', color: '#FDE68A', background: 'rgba(245, 158, 11, 0.12)', border: '1px solid rgba(245, 158, 11, 0.35)', borderRadius: '6px', padding: '8px 10px', lineHeight: 1.4 }}>
+                      ⚡ <strong>MCC Law 22.17 & 39 (Wide + Wicket):</strong> +1 Wide extra penalty added to team & bowler. Delivery is illegal & must be re-bowled. Striker faces 0 balls. Permitted dismissals: <strong>Stumped, Run Out, Hit Wicket, Obstructing Field</strong>.
+                    </div>
+                  )}
+
+                  {isWicketOnNoBall && (
+                    <div style={{ marginTop: '10px', fontSize: '0.74rem', color: '#FED7AA', background: 'rgba(234, 88, 12, 0.12)', border: '1px solid rgba(234, 88, 12, 0.35)', borderRadius: '6px', padding: '8px 10px', lineHeight: 1.4 }}>
+                      ⚠️ <strong>MCC Law 21.18 (No-Ball + Dismissal):</strong> +1 No-Ball extra penalty added to team & bowler. Delivery is illegal & must be re-bowled. Permitted dismissals: <strong>Run Out, Hit Ball Twice, Obstructing Field</strong>.
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -6672,15 +6819,32 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                     onChange={(e) => setEditWicketType(e.target.value)}
                     style={{ width: '100%', background: '#141A26', border: '1px solid #2A364E', borderRadius: '8px', padding: '10px', color: '#FFF' }}
                   >
-                    <option value="BOWLED">Bowled</option>
-                    <option value="CAUGHT">Caught</option>
-                    <option value="LBW">LBW</option>
-                    <option value="RUN_OUT">Run Out</option>
-                    <option value="STUMPED">Stumped</option>
-                    <option value="HIT_WICKET">Hit Wicket</option>
-                    <option value="HIT_BALL_TWICE">Hit Ball Twice</option>
-                    <option value="OBSTRUCTING_FIELD">Obstructing The Field</option>
-                    <option value="RETIRED_OUT">Retired Out</option>
+                    {editExtraType === 'WIDE' ? (
+                      <>
+                        <option value="STUMPED">Stumped (MCC Law 39)</option>
+                        <option value="RUN_OUT">Run Out (MCC Law 38)</option>
+                        <option value="HIT_WICKET">Hit Wicket (MCC Law 35)</option>
+                        <option value="OBSTRUCTING_FIELD">Obstructing The Field (MCC Law 37)</option>
+                      </>
+                    ) : editExtraType === 'NO_BALL' ? (
+                      <>
+                        <option value="RUN_OUT">Run Out (MCC Law 38)</option>
+                        <option value="HIT_BALL_TWICE">Hit Ball Twice (MCC Law 34)</option>
+                        <option value="OBSTRUCTING_FIELD">Obstructing The Field (MCC Law 37)</option>
+                      </>
+                    ) : (
+                      <>
+                        <option value="BOWLED">Bowled</option>
+                        <option value="CAUGHT">Caught</option>
+                        <option value="LBW">LBW</option>
+                        <option value="RUN_OUT">Run Out</option>
+                        <option value="STUMPED">Stumped</option>
+                        <option value="HIT_WICKET">Hit Wicket</option>
+                        <option value="HIT_BALL_TWICE">Hit Ball Twice</option>
+                        <option value="OBSTRUCTING_FIELD">Obstructing The Field</option>
+                        <option value="RETIRED_OUT">Retired Out</option>
+                      </>
+                    )}
                   </select>
                 </div>
               )}
