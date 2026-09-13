@@ -296,10 +296,10 @@ export default async function TeamDetailPage({
                 Team Logo Image URL
               </label>
               <input
-                type="url"
+                type="text"
                 name="logoUrl"
                 defaultValue={team.logoUrl || ''}
-                placeholder="https://..."
+                placeholder="https://... or /api/image-proxy..."
                 style={{
                   width: '100%',
                   height: '36px',
