@@ -16,6 +16,7 @@ export default async function NewMatchPage() {
         id: true,
         name: true,
         season: true,
+        tournamentFormat: true,
         stages: { select: { oversPerInnings: true, ballsPerOver: true } },
       },
     }),

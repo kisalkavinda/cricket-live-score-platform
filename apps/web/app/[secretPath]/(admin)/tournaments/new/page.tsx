@@ -256,7 +256,7 @@ export default function NewTournamentPage() {
                   {selectedFormat === '8_TEAM' && <span style={{ color: '#10B981', fontSize: '0.8rem' }}>✓</span>}
                 </div>
                 <div style={{ fontSize: '0.75rem', color: '#94A3B8', lineHeight: 1.4 }}>
-                  2 Groups of 4 · 15 Matches Total
+                  2 Groups of 4 · 16 Matches
                 </div>
               </button>
             </div>
@@ -291,7 +291,7 @@ export default function NewTournamentPage() {
                 )}
                 {selectedFormat === '8_TEAM' && (
                   <span>
-                    📋 <strong>8-Team Structure:</strong> 8 Teams Required · Group A (4) + Group B (4) · 8 Group + 3 Qualification + 3 Playoffs + Final.
+                    📋 <strong>8-Team Structure:</strong> 8 Teams Required · Group A (4) + Group B (4) · 12 Round-Robin + 3 Playoffs + Final (16 Matches Total).
                   </span>
                 )}
               </div>

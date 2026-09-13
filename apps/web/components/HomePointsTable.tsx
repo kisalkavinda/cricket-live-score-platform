@@ -80,9 +80,9 @@ export default function HomePointsTable() {
     }
     // 8_TEAM default
     return {
-      first: '1st Place → Direct to Playoffs (Seed #1/#2)',
-      second: '2nd Place → Playoff Qualifier M9 (2nd vs 2nd)',
-      third: '3rd Place → Playoff Qualifier M10 (3rd vs 3rd)',
+      first: '1st Place → Qualify for Playoffs (Global Seeding)',
+      second: '2nd Place → Qualify for Playoffs (Global Seeding)',
+      third: '3rd Place → Eliminated',
       fourth: '4th Place → Eliminated',
     };
   };
@@ -101,10 +101,8 @@ export default function HomePointsTable() {
       if (idx === 1) return { label: 'PLAYOFF (P2)', bg: 'rgba(59, 130, 246, 0.2)', border: '#3B82F6', color: '#60A5FA' };
       return { label: 'ELIMINATED', bg: 'rgba(239, 68, 68, 0.2)', border: '#EF4444', color: '#F87171' };
     }
-    // 8_TEAM
-    if (idx === 0) return { label: 'PLAYOFF SEED', bg: 'rgba(16, 185, 129, 0.2)', border: '#10B981', color: '#34D399' };
-    if (idx === 1) return { label: 'MATCH 9 (2nd)', bg: 'rgba(59, 130, 246, 0.2)', border: '#3B82F6', color: '#60A5FA' };
-    if (idx === 2) return { label: 'MATCH 10 (3rd)', bg: 'rgba(245, 158, 11, 0.2)', border: '#F59E0B', color: '#FBBF24' };
+    // 8_TEAM: Top 2 qualify for global seeding, bottom 2 eliminated
+    if (idx === 0 || idx === 1) return { label: 'QUALIFIED', bg: 'rgba(16, 185, 129, 0.2)', border: '#10B981', color: '#34D399' };
     return { label: 'ELIMINATED', bg: 'rgba(239, 68, 68, 0.2)', border: '#EF4444', color: '#F87171' };
   };
 

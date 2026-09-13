@@ -1,28 +1,35 @@
 /**
- * CPL 8-TEAM OFFICIAL TOURNAMENT FULL 15-MATCH LIFECYCLE SIMULATION TEST
- * 
- * Rules verified:
- * 1. 8 teams divided into Group A and Group B (4 teams each: A1-A4, B1-B4).
- * 2. Stage 1: Group Stage (M1-M8 square format). Each team plays exactly 2 matches.
- *    No Group C matches. Group winners -> Playoff Seed 1 & 2.
- * 3. Group 4th place teams eliminated.
- * 4. Stage 2: Playoff Qualification (Matches 9, 10, 11).
- *    M9: A 2nd vs B 2nd (Winner -> Seed 3, Loser -> M11).
- *    M10: A 3rd vs B 3rd (Winner -> M11, Loser -> Eliminated).
- *    M11: M9 Loser vs M10 Winner (Winner -> Seed 4, Loser -> Eliminated).
- * 5. Stage 3: Four-Team Playoff (Matches 12, 13, 14).
- *    M12: Seed 1 vs Seed 2 (Winner -> Grand Final M15, Loser -> M14).
- *    M13: Seed 3 vs Seed 4 (Winner -> M14, Loser -> Eliminated).
- *    M14: M12 Loser vs M13 Winner (Winner -> Grand Final M15, Loser -> Eliminated).
- * 6. Stage 4: Grand Final (Match 15: M12 Winner vs M14 Winner) -> Champion and Runner-up declared.
- * 7. Exact total matches: TOTAL MATCHES === 15.
- * 
- * CLEANUP RULE:
- * Temporary test teams and records are prefixed with "TEST_CPL8_" and completely deleted in finally block.
+ * CPL 8-TEAM OFFICIAL TOURNAMENT FULL 16-MATCH LIFECYCLE SIMULATION TEST
+ *
+ * Requirements & Rules verified (All 22 criteria):
+ * 1. Accept exactly 8 teams
+ * 2. Assign 4 in Group A, 4 in Group B
+ * 3. Group A generates exactly 6 matches (M1–M6)
+ * 4. Group B generates exactly 6 matches (M7–M12)
+ * 5. Every team plays exactly 3 group matches
+ * 6. Every pairing within each group occurs exactly once (full round-robin)
+ * 7. Zero cross-group group matches
+ * 8. Group standings calculated accurately (Points -> NRR)
+ * 9. Top 2 from Group A and Group B qualify
+ * 10. Bottom 2 from Group A and Group B are eliminated
+ * 11. All 4 qualified teams ranked globally by Points -> NRR into Seeds 1–4
+ * 12. Seed 1 vs Seed 2 created for P1 (Match 13)
+ * 13. Seed 3 vs Seed 4 created for P2 (Match 14)
+ * 14. P1 winner advances directly to Grand Final (Match 16)
+ * 15. P1 loser advances to P3 (Match 15)
+ * 16. P2 winner advances to P3 (Match 15)
+ * 17. P2 loser is eliminated
+ * 18. P3 winner advances to Grand Final (Match 16)
+ * 19. P3 loser is eliminated
+ * 20. Grand Final is P1 Winner vs P3 Winner
+ * 21. Champion and Runner-up are declared and assigned
+ * 22. Exactly 16 matches exist at tournament completion.
+ *
+ * MANDATORY CLEANUP:
+ * Test teams/tournament are prefixed with "TEST_CPL8_" and cleaned up completely in finally block.
+ * Real teams and players count is verified before and after.
  */
 
-import fs from 'fs';
-import path from 'path';
 import assert from 'assert';
 import { prisma } from 'database';
 import {
@@ -37,10 +44,10 @@ const TEST_PREFIX = 'TEST_CPL8_';
 
 async function run8TeamSimulation() {
   console.log('\n============================================================');
-  console.log(' CPL 8-TEAM TOURNAMENT FULL 15-MATCH LIFECYCLE SIMULATION');
+  console.log(' CPL 8-TEAM TOURNAMENT FULL 16-MATCH LIFECYCLE SIMULATION');
   console.log('============================================================\n');
 
-  // Baseline check: Record initial real teams and players count with retry for pooler handshakes
+  // Baseline check: Record initial real teams and players count
   let initialTeamsCount = 0;
   let initialPlayersCount = 0;
   for (let attempt = 1; attempt <= 4; attempt++) {
@@ -60,16 +67,17 @@ async function run8TeamSimulation() {
   const createdTeamIds: string[] = [];
 
   try {
-    // 1. Create a dedicated Test Tournament
+    // 1. Create a dedicated Test Tournament with 8_TEAM format
     testTournament = await prisma.tournament.create({
       data: {
         name: `${TEST_PREFIX}CHAMPIONSHIP_2026`,
         season: '2026',
         format: 'SOFTBALL_4_OVER',
+        tournamentFormat: '8_TEAM',
         status: 'REGISTRATION',
       },
     });
-    console.log(`\n1. Created test tournament: ${testTournament.name} (${testTournament.id})`);
+    console.log(`1. Created test tournament: ${testTournament.name} (${testTournament.id})`);
 
     // 2. Create 8 dedicated Test Teams (4 for Group A, 4 for Group B)
     const teamConfigs = [
@@ -94,8 +102,9 @@ async function run8TeamSimulation() {
       testTeams.push(team);
       createdTeamIds.push(team.id);
     }
-    assert.strictEqual(testTeams.length, 8, 'Exactly 8 test teams created');
-    console.log(`2. Created 8 test teams: ${testTeams.map((t) => t.shortName).join(', ')}`);
+    // Assertion 1: Accept exactly 8 teams
+    assert.strictEqual(testTeams.length, 8, 'Criterion 1: Exactly 8 test teams created');
+    console.log(`   ✓ Criterion 1 Passed: Exactly 8 teams accepted: ${testTeams.map((t) => t.shortName).join(', ')}`);
 
     // 3. Assign 8 teams into Group A (A1..A4) and Group B (B1..B4)
     const assignments: Record<string, 'GROUP_A' | 'GROUP_B'> = {
@@ -121,90 +130,179 @@ async function run8TeamSimulation() {
 
     const assignResult = await assignTeamsToGroups(testTournament.id, assignments, positions);
     assert.strictEqual(assignResult.success, true, '8 teams assigned successfully');
-    console.log('3. Teams assigned: 4 to Group A (A1-A4), 4 to Group B (B1-B4)');
 
-    // 4. Generate Stage 1 Fixtures (Matches 1-8 Square Schedule)
+    // Assertion 2: Assign 4 in Group A, 4 in Group B
+    const ttRecords = await prisma.tournamentTeam.findMany({
+      where: { tournamentId: testTournament.id },
+    });
+    const ttGroupA = ttRecords.filter((t: any) => t.groupName === 'GROUP_A');
+    const ttGroupB = ttRecords.filter((t: any) => t.groupName === 'GROUP_B');
+    assert.strictEqual(ttGroupA.length, 4, 'Criterion 2: Group A has exactly 4 teams');
+    assert.strictEqual(ttGroupB.length, 4, 'Criterion 2: Group B has exactly 4 teams');
+    console.log('   ✓ Criterion 2 Passed: Assigned exactly 4 teams in Group A and 4 in Group B');
+
+    // 4. Generate Group Stage Fixtures (M1–M12)
     const fixtureResult = await generateGroupStageFixtures(testTournament.id, {
       ballsPerOver: 1,
       groupOvers: 1,
-      qualificationOvers: 1,
       playoffOvers: 1,
       finalOvers: 1,
     });
     assert.strictEqual(fixtureResult.success, true, 'Group stage fixtures generated');
-    assert.strictEqual(fixtureResult.createdCount, 8, 'Exactly 8 group stage matches generated');
-    console.log('4. Stage 1 Fixtures generated: exactly 8 matches (M1–M8: M1-M4 Group A, M5-M8 Group B)');
+    assert.strictEqual(fixtureResult.createdCount, 12, 'Fixture generator created 12 matches');
 
-    // Verify each team plays exactly 2 matches
     const groupMatches = await prisma.match.findMany({
       where: { tournamentId: testTournament.id, stage: 'GROUP' },
       orderBy: { matchNumber: 'asc' },
     });
-    assert.strictEqual(groupMatches.length, 8, 'Total group matches is 8');
 
+    // Assertion 3: Group A generates exactly 6 matches
+    const groupAMatches = groupMatches.filter((m: any) => m.groupName === 'GROUP_A');
+    assert.strictEqual(groupAMatches.length, 6, 'Criterion 3: Group A generates exactly 6 matches');
+    assert.deepStrictEqual(
+      groupAMatches.map((m: any) => m.matchNumber),
+      [1, 2, 3, 4, 5, 6],
+      'Group A matches numbered M1–M6'
+    );
+    console.log('   ✓ Criterion 3 Passed: Group A generates exactly 6 matches (M1–M6)');
+
+    // Assertion 4: Group B generates exactly 6 matches
+    const groupBMatches = groupMatches.filter((m: any) => m.groupName === 'GROUP_B');
+    assert.strictEqual(groupBMatches.length, 6, 'Criterion 4: Group B generates exactly 6 matches');
+    assert.deepStrictEqual(
+      groupBMatches.map((m: any) => m.matchNumber),
+      [7, 8, 9, 10, 11, 12],
+      'Group B matches numbered M7–M12'
+    );
+    console.log('   ✓ Criterion 4 Passed: Group B generates exactly 6 matches (M7–M12)');
+
+    // Assertion 5: Every team plays exactly 3 group matches
     for (const team of testTeams) {
       const teamMatchCount = groupMatches.filter(
         (m: any) => m.teamAId === team.id || m.teamBId === team.id
       ).length;
       assert.strictEqual(
         teamMatchCount,
-        2,
-        `Team ${team.shortName} must play exactly 2 matches (played ${teamMatchCount})`
+        3,
+        `Criterion 5: Team ${team.shortName} must play exactly 3 group matches (played ${teamMatchCount})`
       );
     }
-    console.log('   ✓ Verified: All 8 teams play exactly 2 group-stage matches');
+    console.log('   ✓ Criterion 5 Passed: Every team plays exactly 3 group matches');
 
-    // Verify zero Group C matches
-    const groupCMatches = groupMatches.filter((m: any) => m.groupName === 'GROUP_C');
-    assert.strictEqual(groupCMatches.length, 0, 'Zero Group C matches exist');
-    console.log('   ✓ Verified: Zero Group C matches exist');
+    // Assertion 6: Every pairing within each group occurs exactly once (Full round-robin)
+    const checkGroupPairings = (groupTeamIds: string[], matches: any[]) => {
+      const pairings = new Set<string>();
+      for (let i = 0; i < groupTeamIds.length; i++) {
+        for (let j = i + 1; j < groupTeamIds.length; j++) {
+          const key = [groupTeamIds[i], groupTeamIds[j]].sort().join('_vs_');
+          pairings.add(key);
+        }
+      }
+      assert.strictEqual(pairings.size, 6, 'Expected 6 unique pairings');
 
-    // 5. Complete Group Stage Matches (M1-M8)
-    // Desired standings:
+      const foundPairings = new Set<string>();
+      for (const m of matches) {
+        const key = [m.teamAId, m.teamBId].sort().join('_vs_');
+        assert.ok(pairings.has(key), `Pairing ${key} is a valid intra-group pairing`);
+        assert.ok(!foundPairings.has(key), `Pairing ${key} must not be duplicated`);
+        foundPairings.add(key);
+      }
+      assert.strictEqual(foundPairings.size, 6, 'All 6 unique pairings occur exactly once');
+    };
+
+    checkGroupPairings(
+      testTeams.slice(0, 4).map((t) => t.id),
+      groupAMatches
+    );
+    checkGroupPairings(
+      testTeams.slice(4, 8).map((t) => t.id),
+      groupBMatches
+    );
+    console.log('   ✓ Criterion 6 Passed: Every pairing within each group occurs exactly once (full round-robin)');
+
+    // Assertion 7: Zero cross-group group matches
+    const groupATeamIdSet = new Set(testTeams.slice(0, 4).map((t) => t.id));
+    const groupBTeamIdSet = new Set(testTeams.slice(4, 8).map((t) => t.id));
+    for (const m of groupMatches) {
+      const aInA = groupATeamIdSet.has(m.teamAId);
+      const bInA = groupATeamIdSet.has(m.teamBId);
+      const aInB = groupBTeamIdSet.has(m.teamAId);
+      const bInB = groupBTeamIdSet.has(m.teamBId);
+
+      if (m.groupName === 'GROUP_A') {
+        assert.ok(aInA && bInA, `Match ${m.matchNumber} has only Group A teams`);
+      } else if (m.groupName === 'GROUP_B') {
+        assert.ok(aInB && bInB, `Match ${m.matchNumber} has only Group B teams`);
+      }
+    }
+    console.log('   ✓ Criterion 7 Passed: Zero cross-group group matches exist');
+
+    // 5. Simulate completion of all 12 Group Stage matches (M1–M12)
+    // Results designed for clear standings and NRR:
     // Group A:
-    // A1 (Titans): 2 wins (1st -> Seed 1 or 2)
-    // A2 (Warriors): 1 win, high NRR (2nd -> M9)
-    // A3 (Knights): 1 win, lower NRR (3rd -> M10)
-    // A4 (Strikers): 0 wins (4th -> Eliminated)
+    // M1: A1 vs A2 -> A1 wins (A1: 60/1, A2: 30/1)
+    // M2: A1 vs A3 -> A1 wins (A1: 60/1, A3: 30/1)
+    // M3: A1 vs A4 -> A1 wins (A1: 60/1, A4: 30/1)
+    // M4: A2 vs A3 -> A2 wins (A2: 50/1, A3: 35/1)
+    // M5: A2 vs A4 -> A2 wins (A2: 50/1, A4: 35/1)
+    // M6: A3 vs A4 -> A3 wins (A3: 40/1, A4: 35/1)
+    // Standings Group A:
+    // A1: 3W-0L, 6 pts (1st)
+    // A2: 2W-1L, 4 pts (2nd)
+    // A3: 1W-2L, 2 pts (3rd)
+    // A4: 0W-3L, 0 pts (4th)
     //
     // Group B:
-    // B1 (Royals): 2 wins (1st -> Seed 1 or 2)
-    // B2 (Kings): 1 win, high NRR (2nd -> M9)
-    // B3 (Hawks): 1 win, lower NRR (3rd -> M10)
-    // B4 (Lions): 0 wins (4th -> Eliminated)
-    for (const m of groupMatches) {
-      // Determine winner based on match
-      let winnerId = m.teamAId;
-      let loserId = m.teamBId;
+    // M7: B1 vs B2 -> B1 wins (B1: 55/1, B2: 32/1)
+    // M8: B1 vs B3 -> B1 wins (B1: 55/1, B3: 32/1)
+    // M9: B1 vs B4 -> B1 wins (B1: 55/1, B4: 32/1)
+    // M10: B2 vs B3 -> B2 wins (B2: 45/1, B3: 36/1)
+    // M11: B2 vs B4 -> B2 wins (B2: 45/1, B4: 36/1)
+    // M12: B3 vs B4 -> B3 wins (B3: 40/1, B4: 36/1)
+    // Standings Group B:
+    // B1: 3W-0L, 6 pts (1st) (NRR lower than A1 because 55 vs 60 runs)
+    // B2: 2W-1L, 4 pts (2nd) (NRR lower than A2 because 45 vs 50 runs)
+    // B3: 1W-2L, 2 pts (3rd)
+    // B4: 0W-3L, 0 pts (4th)
 
-      // Alternating & rest-optimized Group matches:
-      // M1 (Group A): A1 vs A2 -> A1 wins (A1: 1W, A2: 1L)
-      // M2 (Group B): B1 vs B2 -> B1 wins (B1: 1W, B2: 1L)
-      // M3 (Group A): A3 vs A4 -> A3 wins (A3: 1W, A4: 1L)
-      // M4 (Group B): B3 vs B4 -> B3 wins (B3: 1W, B4: 1L)
-      // M5 (Group A): A1 vs A4 -> A1 wins (A1: 2W, A4: 2L)
-      // M6 (Group B): B1 vs B4 -> B1 wins (B1: 2W, B4: 2L)
-      // M7 (Group A): A2 vs A3 -> A2 wins (A2: 1W-1L, A3: 1W-1L)
-      // M8 (Group B): B2 vs B3 -> B2 wins (B2: 1W-1L, B3: 1W-1L)
-      if (m.matchNumber === 1) { winnerId = testTeams[0].id; loserId = testTeams[1].id; }
-      else if (m.matchNumber === 2) { winnerId = testTeams[4].id; loserId = testTeams[5].id; }
-      else if (m.matchNumber === 3) { winnerId = testTeams[2].id; loserId = testTeams[3].id; }
-      else if (m.matchNumber === 4) { winnerId = testTeams[6].id; loserId = testTeams[7].id; }
-      else if (m.matchNumber === 5) { winnerId = testTeams[0].id; loserId = testTeams[3].id; }
-      else if (m.matchNumber === 6) { winnerId = testTeams[4].id; loserId = testTeams[7].id; }
-      else if (m.matchNumber === 7) { winnerId = testTeams[1].id; loserId = testTeams[2].id; }
-      else if (m.matchNumber === 8) { winnerId = testTeams[5].id; loserId = testTeams[6].id; }
+    // Priority rankings:
+    // Group A: testTeams[0] (A1) > testTeams[1] (A2) > testTeams[2] (A3) > testTeams[3] (A4)
+    // Group B: testTeams[4] (B1) > testTeams[5] (B2) > testTeams[6] (B3) > testTeams[7] (B4)
+    const teamRank = new Map<string, number>([
+      [testTeams[0].id, 1],
+      [testTeams[1].id, 2],
+      [testTeams[2].id, 3],
+      [testTeams[3].id, 4],
+      [testTeams[4].id, 1],
+      [testTeams[5].id, 2],
+      [testTeams[6].id, 3],
+      [testTeams[7].id, 4],
+    ]);
+
+    for (const m of groupMatches) {
+      const rankA = teamRank.get(m.teamAId) || 99;
+      const rankB = teamRank.get(m.teamBId) || 99;
+      const winnerId = rankA < rankB ? m.teamAId : m.teamBId;
+      const loserId = rankA < rankB ? m.teamBId : m.teamAId;
+
+      let winnerRuns = 50;
+      let loserRuns = 35;
+      if (winnerId === testTeams[0].id) { winnerRuns = 60; loserRuns = 30; }
+      else if (winnerId === testTeams[4].id) { winnerRuns = 55; loserRuns = 32; }
+      else if (winnerId === testTeams[1].id) { winnerRuns = 50; loserRuns = 35; }
+      else if (winnerId === testTeams[5].id) { winnerRuns = 45; loserRuns = 36; }
+      else if (winnerId === testTeams[2].id) { winnerRuns = 40; loserRuns = 35; }
+      else if (winnerId === testTeams[6].id) { winnerRuns = 40; loserRuns = 36; }
 
       await prisma.match.update({
         where: { id: m.id },
         data: {
           status: 'COMPLETED',
           winnerTeamId: winnerId,
-          resultNote: 'Won by 14 runs',
+          resultNote: `Won by ${winnerRuns - loserRuns} runs`,
         },
       });
 
-      // Score recordings fast with minimum overs and balls
       await prisma.innings.createMany({
         data: [
           {
@@ -212,7 +310,7 @@ async function run8TeamSimulation() {
             inningsNumber: 1,
             battingTeamId: winnerId,
             bowlingTeamId: loserId,
-            runs: winnerId === testTeams[0].id ? 52 : 44,
+            runs: winnerRuns,
             wickets: 2,
             overs: 1,
             balls: 0,
@@ -223,8 +321,8 @@ async function run8TeamSimulation() {
             inningsNumber: 2,
             battingTeamId: loserId,
             bowlingTeamId: winnerId,
-            runs: 34,
-            wickets: 10, // All-out rule test
+            runs: loserRuns,
+            wickets: 10,
             overs: 1,
             balls: 0,
             status: 'COMPLETED',
@@ -232,244 +330,232 @@ async function run8TeamSimulation() {
         ],
       });
     }
-    console.log('5. Simulated completion of all 8 Group Stage matches (M1–M8)');
+    console.log('5. Simulated completion of all 12 Group Stage matches (M1–M12)');
 
-    // 6. Recalculate Standings & Trigger Advancement to QUALIFICATION
+    // 6. Recalculate Standings & Validate Group Standings
     await recalculateTournamentStandings(testTournament.id);
-    const advanceStage2 = await checkAndAdvanceTournament(testTournament.id);
-    assert.strictEqual(advanceStage2.advanced, true, 'Stage 2 Qualification generated');
-    console.log(`6. Advancement Trigger: ${advanceStage2.message}`);
+    const overviewAfterGroup = await getTournamentOverview(testTournament.id);
+    assert.ok(overviewAfterGroup, 'Tournament overview retrieved');
 
-    // Verify M9 and M10
-    const m9 = await prisma.match.findFirst({
-      where: { tournamentId: testTournament.id, bracketSlot: 'M9' },
+    // Assertion 8: Group standings calculated accurately (Points -> NRR)
+    const gA = overviewAfterGroup.groups.groupA.standings;
+    const gB = overviewAfterGroup.groups.groupB.standings;
+    assert.strictEqual(gA[0].teamId, testTeams[0].id, 'Group A 1st is A1 (6 pts)');
+    assert.strictEqual(gA[1].teamId, testTeams[1].id, 'Group A 2nd is A2 (4 pts)');
+    assert.strictEqual(gA[2].teamId, testTeams[2].id, 'Group A 3rd is A3 (2 pts)');
+    assert.strictEqual(gA[3].teamId, testTeams[3].id, 'Group A 4th is A4 (0 pts)');
+
+    assert.strictEqual(gB[0].teamId, testTeams[4].id, 'Group B 1st is B1 (6 pts)');
+    assert.strictEqual(gB[1].teamId, testTeams[5].id, 'Group B 2nd is B2 (4 pts)');
+    assert.strictEqual(gB[2].teamId, testTeams[6].id, 'Group B 3rd is B3 (2 pts)');
+    assert.strictEqual(gB[3].teamId, testTeams[7].id, 'Group B 4th is B4 (0 pts)');
+    console.log('   ✓ Criterion 8 Passed: Group standings calculated accurately (Points -> NRR)');
+
+    // 7. Advance Tournament -> Generates P1 (M13) & P2 (M14)
+    const advanceResult1 = await checkAndAdvanceTournament(testTournament.id);
+    assert.strictEqual(advanceResult1.advanced, true, 'Playoffs stage generated');
+    console.log(`6. Advancement Trigger: ${advanceResult1.message}`);
+
+    // Assertion 9: Top 2 from Group A and Group B qualify
+    const teamsAfterGroupAdv = await prisma.tournamentTeam.findMany({
+      where: { tournamentId: testTournament.id },
     });
-    const m10 = await prisma.match.findFirst({
-      where: { tournamentId: testTournament.id, bracketSlot: 'M10' },
-    });
+    const qualifiedTeams = teamsAfterGroupAdv.filter((t: any) => t.qualificationStatus === 'QUALIFIED');
+    const qualifiedIds = qualifiedTeams.map((t: any) => t.teamId);
+    assert.strictEqual(qualifiedTeams.length, 4, 'Criterion 9: Exactly 4 teams qualify');
+    assert.ok(qualifiedIds.includes(testTeams[0].id), 'A1 qualified');
+    assert.ok(qualifiedIds.includes(testTeams[1].id), 'A2 qualified');
+    assert.ok(qualifiedIds.includes(testTeams[4].id), 'B1 qualified');
+    assert.ok(qualifiedIds.includes(testTeams[5].id), 'B2 qualified');
+    console.log('   ✓ Criterion 9 Passed: Top 2 from Group A and Top 2 from Group B qualify');
 
-    assert.ok(m9, 'Match 9 (2nd vs 2nd) exists');
-    assert.ok(m10, 'Match 10 (3rd vs 3rd) exists');
-    assert.strictEqual(m9.matchNumber, 9, 'Match 9 has matchNumber 9');
-    assert.strictEqual(m10.matchNumber, 10, 'Match 10 has matchNumber 10');
-    assert.strictEqual(m9.stage, 'QUALIFICATION', 'M9 is in QUALIFICATION stage');
-    assert.strictEqual(m10.stage, 'QUALIFICATION', 'M10 is in QUALIFICATION stage');
+    // Assertion 10: Bottom 2 from Group A and Group B are eliminated
+    const eliminatedTeams = teamsAfterGroupAdv.filter((t: any) => t.qualificationStatus === 'ELIMINATED');
+    const eliminatedIds = eliminatedTeams.map((t: any) => t.teamId);
+    assert.strictEqual(eliminatedTeams.length, 4, 'Criterion 10: Exactly 4 teams eliminated');
+    assert.ok(eliminatedIds.includes(testTeams[2].id), 'A3 eliminated');
+    assert.ok(eliminatedIds.includes(testTeams[3].id), 'A4 eliminated');
+    assert.ok(eliminatedIds.includes(testTeams[6].id), 'B3 eliminated');
+    assert.ok(eliminatedIds.includes(testTeams[7].id), 'B4 eliminated');
+    console.log('   ✓ Criterion 10 Passed: Bottom 2 from Group A and Group B are eliminated');
 
-    // Authoritative group positions from standings engine
-    const overviewAfterGroups = await getTournamentOverview(testTournament.id);
-    const grpA2nd = overviewAfterGroups?.groups.groupA.standings[1].teamId;
-    const grpB2nd = overviewAfterGroups?.groups.groupB.standings[1].teamId;
-    const grpA3rd = overviewAfterGroups?.groups.groupA.standings[2].teamId;
-    const grpB3rd = overviewAfterGroups?.groups.groupB.standings[2].teamId;
-    const grpA4th = overviewAfterGroups?.groups.groupA.standings[3].teamId;
-    const grpB4th = overviewAfterGroups?.groups.groupB.standings[3].teamId;
+    // Assertion 11: All 4 qualified teams ranked globally by Points -> NRR into Seeds 1–4
+    const overviewPlayoffs = await getTournamentOverview(testTournament.id);
+    assert(overviewPlayoffs, 'Playoffs overview retrieved');
+    const seeds = overviewPlayoffs.playoffs.seeds;
+    assert.strictEqual(seeds.length, 4, '4 playoff seeds exist');
+    assert.strictEqual(seeds[0].team.id, testTeams[0].id, 'Criterion 11: Seed 1 is A1 (6 pts, higher NRR)');
+    assert.strictEqual(seeds[1].team.id, testTeams[4].id, 'Criterion 11: Seed 2 is B1 (6 pts, lower NRR)');
+    assert.strictEqual(seeds[2].team.id, testTeams[1].id, 'Criterion 11: Seed 3 is A2 (4 pts, higher NRR)');
+    assert.strictEqual(seeds[3].team.id, testTeams[5].id, 'Criterion 11: Seed 4 is B2 (4 pts, lower NRR)');
+    console.log('   ✓ Criterion 11 Passed: All 4 qualified teams ranked globally by Points -> NRR into Seeds 1–4');
 
-    // M9 must be Group A 2nd vs Group B 2nd
-    const m9Teams = [m9.teamAId, m9.teamBId];
-    assert.ok(m9Teams.includes(grpA2nd!), 'M9 includes Group A 2nd');
-    assert.ok(m9Teams.includes(grpB2nd!), 'M9 includes Group B 2nd');
-
-    // M10 must be Group A 3rd vs Group B 3rd
-    const m10Teams = [m10.teamAId, m10.teamBId];
-    assert.ok(m10Teams.includes(grpA3rd!), 'M10 includes Group A 3rd');
-    assert.ok(m10Teams.includes(grpB3rd!), 'M10 includes Group B 3rd');
-
-    // Verify 4th place teams are ELIMINATED
-    const a4TT = await prisma.tournamentTeam.findFirst({
-      where: { tournamentId: testTournament.id, teamId: grpA4th },
-    });
-    const b4TT = await prisma.tournamentTeam.findFirst({
-      where: { tournamentId: testTournament.id, teamId: grpB4th },
-    });
-    assert.strictEqual(a4TT?.qualificationStatus, 'ELIMINATED', 'Group A 4th is ELIMINATED');
-    assert.strictEqual(b4TT?.qualificationStatus, 'ELIMINATED', 'Group B 4th is ELIMINATED');
-    console.log('   ✓ Verified M9 (2nd vs 2nd), M10 (3rd vs 3rd), and 4th place eliminations');
-
-    // 7. Simulate M9 and M10
-    // M9: Team A (TA2) wins -> advances to Seed 3. Team B (TB2) loses -> goes to M11 (second chance)
-    await prisma.match.update({
-      where: { id: m9.id },
-      data: { status: 'COMPLETED', winnerTeamId: m9.teamAId, resultNote: 'Won by 8 runs' },
-    });
-
-    // M10: Team B (TB3) wins -> goes to M11. Team A (TA3) loses -> ELIMINATED
-    await prisma.match.update({
-      where: { id: m10.id },
-      data: { status: 'COMPLETED', winnerTeamId: m10.teamBId, resultNote: 'Won by 3 wickets' },
-    });
-
-    // 8. Advance to Match 11 (Final Qualifier)
-    const advanceM11 = await checkAndAdvanceTournament(testTournament.id);
-    assert.strictEqual(advanceM11.advanced, true, 'Match 11 generated');
-    console.log(`7. Advancement Trigger: ${advanceM11.message}`);
-
-    const m11 = await prisma.match.findFirst({
-      where: { tournamentId: testTournament.id, bracketSlot: 'M11' },
-    });
-    assert.ok(m11, 'Match 11 exists');
-    assert.strictEqual(m11.matchNumber, 11, 'Match 11 has matchNumber 11');
-    assert.strictEqual(m11.teamAId, m9.teamBId, 'M11 Team A is Match 9 Loser');
-    assert.strictEqual(m11.teamBId, m10.teamBId, 'M11 Team B is Match 10 Winner');
-
-    // Verify M10 loser is ELIMINATED
-    const m10LoserTT = await prisma.tournamentTeam.findFirst({
-      where: { tournamentId: testTournament.id, teamId: m10.teamAId },
-    });
-    assert.strictEqual(m10LoserTT?.qualificationStatus, 'ELIMINATED', 'M10 Loser is ELIMINATED');
-    console.log('   ✓ Verified M11 (M9 Loser vs M10 Winner) & M10 Loser elimination');
-
-    // 9. Simulate M11 completion
-    // M11: Team A (M9 Loser TB2) wins -> becomes Seed 4. Team B (M10 Winner TB3) loses -> ELIMINATED
-    await prisma.match.update({
-      where: { id: m11.id },
-      data: { status: 'COMPLETED', winnerTeamId: m11.teamAId, resultNote: 'Won by 10 runs' },
-    });
-
-    // 10. Advance to Four-Team Playoff (Matches 12 & 13)
-    const advancePlayoffs = await checkAndAdvanceTournament(testTournament.id);
-    assert.strictEqual(advancePlayoffs.advanced, true, 'Playoffs generated');
-    console.log(`8. Advancement Trigger: ${advancePlayoffs.message}`);
-
-    const m12 = await prisma.match.findFirst({
-      where: { tournamentId: testTournament.id, bracketSlot: 'M12' },
-    });
+    // Assertion 12: Seed 1 vs Seed 2 created for P1 (Match 13)
     const m13 = await prisma.match.findFirst({
-      where: { tournamentId: testTournament.id, bracketSlot: 'M13' },
+      where: { tournamentId: testTournament.id, matchNumber: 13 },
     });
-    assert.ok(m12, 'Match 12 (1st vs 2nd) exists');
-    assert.ok(m13, 'Match 13 (3rd vs 4th) exists');
-    assert.strictEqual(m12.matchNumber, 12, 'Match 12 has matchNumber 12');
-    assert.strictEqual(m13.matchNumber, 13, 'Match 13 has matchNumber 13');
-    assert.strictEqual(m12.stage, 'PLAYOFFS', 'M12 is PLAYOFFS stage');
-    assert.strictEqual(m13.stage, 'PLAYOFFS', 'M13 is PLAYOFFS stage');
+    assert.ok(m13, 'Match 13 exists');
+    assert.strictEqual(m13.bracketSlot, 'P1', 'Match 13 bracketSlot is P1');
+    assert.strictEqual(m13.teamAId, testTeams[0].id, 'P1 teamA is Seed 1 (A1)');
+    assert.strictEqual(m13.teamBId, testTeams[4].id, 'P1 teamB is Seed 2 (B1)');
+    console.log('   ✓ Criterion 12 Passed: Seed 1 vs Seed 2 created for P1 (Match 13)');
 
-    // M12 is Seed 1 vs Seed 2 (TA1 and TB1)
-    const m12Teams = [m12.teamAId, m12.teamBId];
-    assert.ok(m12Teams.includes(testTeams[0].id), 'M12 contains Group A winner');
-    assert.ok(m12Teams.includes(testTeams[4].id), 'M12 contains Group B winner');
-
-    // M13 is Seed 3 (M9 winner) vs Seed 4 (M11 winner)
-    assert.strictEqual(m13.teamAId, m9.teamAId, 'M13 Team A is Seed 3 (M9 Winner)');
-    assert.strictEqual(m13.teamBId, m11.teamAId, 'M13 Team B is Seed 4 (M11 Winner)');
-
-    // Verify M11 loser is ELIMINATED
-    const m11LoserTT = await prisma.tournamentTeam.findFirst({
-      where: { tournamentId: testTournament.id, teamId: m11.teamBId },
-    });
-    assert.strictEqual(m11LoserTT?.qualificationStatus, 'ELIMINATED', 'M11 Loser is ELIMINATED');
-    console.log('   ✓ Verified M12 (Seed 1 vs 2), M13 (Seed 3 vs 4), and M11 Loser elimination');
-
-    // 11. Simulate M12 and M13 completion
-    // M12: Team A wins -> directly to Grand Final (M15). Team B loses -> Match 14.
-    await prisma.match.update({
-      where: { id: m12.id },
-      data: { status: 'COMPLETED', winnerTeamId: m12.teamAId, resultNote: 'Won by 18 runs' },
-    });
-
-    // M13: Team B wins -> Match 14. Team A loses -> ELIMINATED.
-    await prisma.match.update({
-      where: { id: m13.id },
-      data: { status: 'COMPLETED', winnerTeamId: m13.teamBId, resultNote: 'Won by 2 wickets' },
-    });
-
-    // 12. Advance to Match 14 (Final Qualifier)
-    const advanceM14 = await checkAndAdvanceTournament(testTournament.id);
-    assert.strictEqual(advanceM14.advanced, true, 'Match 14 generated');
-    console.log(`9. Advancement Trigger: ${advanceM14.message}`);
-
+    // Assertion 13: Seed 3 vs Seed 4 created for P2 (Match 14)
     const m14 = await prisma.match.findFirst({
-      where: { tournamentId: testTournament.id, bracketSlot: 'M14' },
+      where: { tournamentId: testTournament.id, matchNumber: 14 },
     });
     assert.ok(m14, 'Match 14 exists');
-    assert.strictEqual(m14.matchNumber, 14, 'Match 14 has matchNumber 14');
-    assert.strictEqual(m14.teamAId, m12.teamBId, 'M14 Team A is M12 Loser');
-    assert.strictEqual(m14.teamBId, m13.teamBId, 'M14 Team B is M13 Winner');
+    assert.strictEqual(m14.bracketSlot, 'P2', 'Match 14 bracketSlot is P2');
+    assert.strictEqual(m14.teamAId, testTeams[1].id, 'P2 teamA is Seed 3 (A2)');
+    assert.strictEqual(m14.teamBId, testTeams[5].id, 'P2 teamB is Seed 4 (B2)');
+    console.log('   ✓ Criterion 13 Passed: Seed 3 vs Seed 4 created for P2 (Match 14)');
 
-    // Verify M13 loser is ELIMINATED
-    const m13LoserTT = await prisma.tournamentTeam.findFirst({
-      where: { tournamentId: testTournament.id, teamId: m13.teamAId },
+    // 8. Simulate completion of P1 (M13) and P2 (M14)
+    // P1 (M13): A1 (Seed 1) vs B1 (Seed 2) -> A1 wins (P1 Winner -> Grand Final, P1 Loser -> P3)
+    await prisma.match.update({
+      where: { id: m13.id },
+      data: {
+        status: 'COMPLETED',
+        winnerTeamId: testTeams[0].id,
+        resultNote: 'Seed 1 won by 15 runs',
+      },
     });
-    assert.strictEqual(m13LoserTT?.qualificationStatus, 'ELIMINATED', 'M13 Loser is ELIMINATED');
-    console.log('   ✓ Verified M14 (M12 Loser vs M13 Winner) and M13 Loser elimination');
 
-    // 13. Simulate M14 completion
-    // M14: Team A (M12 Loser) wins -> advances to Grand Final. Team B loses -> ELIMINATED.
+    // P2 (M14): A2 (Seed 3) vs B2 (Seed 4) -> A2 wins (P2 Winner -> P3, P2 Loser -> Eliminated)
     await prisma.match.update({
       where: { id: m14.id },
-      data: { status: 'COMPLETED', winnerTeamId: m14.teamAId, resultNote: 'Won by 5 runs' },
+      data: {
+        status: 'COMPLETED',
+        winnerTeamId: testTeams[1].id,
+        resultNote: 'Seed 3 won by 8 runs',
+      },
     });
+    console.log('8. Completed P1 (M13: A1 won) and P2 (M14: A2 won)');
 
-    // 14. Advance to Grand Final (Match 15)
-    const advanceFinal = await checkAndAdvanceTournament(testTournament.id);
-    assert.strictEqual(advanceFinal.advanced, true, 'Grand Final generated');
-    console.log(`10. Advancement Trigger: ${advanceFinal.message}`);
+    // 9. Advance Tournament -> Generates P3 (M15: P1 Loser vs P2 Winner)
+    const advanceResult2 = await checkAndAdvanceTournament(testTournament.id);
+    assert.strictEqual(advanceResult2.advanced, true, 'P3 match generated');
+    console.log(`9. Advancement Trigger: ${advanceResult2.message}`);
 
+    // Assertion 17: P2 loser is eliminated
+    const p2LoserTt = await prisma.tournamentTeam.findFirst({
+      where: { tournamentId: testTournament.id, teamId: testTeams[5].id },
+    });
+    assert.strictEqual(p2LoserTt?.qualificationStatus, 'ELIMINATED', 'Criterion 17: P2 loser is eliminated');
+    console.log('   ✓ Criterion 17 Passed: P2 loser (B2) is eliminated');
+
+    // Assertion 15 & 16: P1 loser and P2 winner advance to P3 (Match 15)
     const m15 = await prisma.match.findFirst({
-      where: { tournamentId: testTournament.id, bracketSlot: 'M15' },
+      where: { tournamentId: testTournament.id, matchNumber: 15 },
     });
     assert.ok(m15, 'Match 15 exists');
-    assert.strictEqual(m15.matchNumber, 15, 'Match 15 has matchNumber 15');
-    assert.strictEqual(m15.stage, 'FINAL', 'M15 is FINAL stage');
-    assert.strictEqual(m15.teamAId, m12.teamAId, 'M15 Team A is M12 Winner');
-    assert.strictEqual(m15.teamBId, m14.teamAId, 'M15 Team B is M14 Winner');
+    assert.strictEqual(m15.bracketSlot, 'P3', 'Match 15 bracketSlot is P3');
+    assert.strictEqual(m15.teamAId, testTeams[4].id, 'Criterion 15: P1 loser (B1) advances to P3');
+    assert.strictEqual(m15.teamBId, testTeams[1].id, 'Criterion 16: P2 winner (A2) advances to P3');
+    console.log('   ✓ Criterion 15 Passed: P1 loser (B1) advances to P3 (Match 15)');
+    console.log('   ✓ Criterion 16 Passed: P2 winner (A2) advances to P3 (Match 15)');
 
-    // Verify M14 loser is ELIMINATED
-    const m14LoserTT = await prisma.tournamentTeam.findFirst({
-      where: { tournamentId: testTournament.id, teamId: m14.teamBId },
-    });
-    assert.strictEqual(m14LoserTT?.qualificationStatus, 'ELIMINATED', 'M14 Loser is ELIMINATED');
-    console.log('   ✓ Verified Grand Final M15 (M12 Winner vs M14 Winner) and M14 Loser elimination');
-
-    // 15. Simulate M15 Grand Final completion
-    // M15: Team A wins -> Champion! Team B loses -> Runner-up.
+    // 10. Simulate completion of P3 (M15)
+    // M15: B1 (P1 Loser) vs A2 (P2 Winner) -> B1 wins
     await prisma.match.update({
       where: { id: m15.id },
-      data: { status: 'COMPLETED', winnerTeamId: m15.teamAId, resultNote: 'Won by 25 runs' },
+      data: {
+        status: 'COMPLETED',
+        winnerTeamId: testTeams[4].id, // B1 wins
+        resultNote: 'B1 won by 12 runs',
+      },
     });
+    console.log('10. Completed P3 (M15: B1 won, A2 lost)');
 
-    const crownChampion = await checkAndAdvanceTournament(testTournament.id);
-    assert.strictEqual(crownChampion.advanced, true, 'Champion crowned');
-    console.log(`11. Champion Trigger: ${crownChampion.message}`);
+    // 11. Advance Tournament -> Generates Grand Final (M16)
+    const advanceResult3 = await checkAndAdvanceTournament(testTournament.id);
+    assert.strictEqual(advanceResult3.advanced, true, 'Grand Final generated');
+    console.log(`11. Advancement Trigger: ${advanceResult3.message}`);
 
-    // Verify Champion and Runner-up statuses
-    const champTT = await prisma.tournamentTeam.findFirst({
-      where: { tournamentId: testTournament.id, teamId: m15.teamAId },
+    // Assertion 19: P3 loser is eliminated
+    const p3LoserTt = await prisma.tournamentTeam.findFirst({
+      where: { tournamentId: testTournament.id, teamId: testTeams[1].id },
     });
-    const runnerUpTT = await prisma.tournamentTeam.findFirst({
-      where: { tournamentId: testTournament.id, teamId: m15.teamBId },
-    });
-    assert.strictEqual(champTT?.qualificationStatus, 'CHAMPION', 'Winner is crowned CHAMPION');
-    assert.strictEqual(runnerUpTT?.qualificationStatus, 'RUNNER_UP', 'Loser is marked RUNNER_UP');
+    assert.strictEqual(p3LoserTt?.qualificationStatus, 'ELIMINATED', 'Criterion 19: P3 loser is eliminated');
+    console.log('   ✓ Criterion 19 Passed: P3 loser (A2) is eliminated');
 
-    // Verify tournament status is COMPLETED
-    const finalTournamentState = await prisma.tournament.findUnique({
+    // Assertion 14, 18 & 20: Grand Final (Match 16) is P1 Winner (A1) vs P3 Winner (B1)
+    const m16 = await prisma.match.findFirst({
+      where: { tournamentId: testTournament.id, matchNumber: 16 },
+    });
+    assert.ok(m16, 'Match 16 exists');
+    assert.strictEqual(m16.bracketSlot, 'FINAL', 'Match 16 bracketSlot is FINAL');
+    assert.strictEqual(m16.teamAId, testTeams[0].id, 'Criterion 14 & 20: P1 winner (A1) in Grand Final');
+    assert.strictEqual(m16.teamBId, testTeams[4].id, 'Criterion 18 & 20: P3 winner (B1) in Grand Final');
+    console.log('   ✓ Criterion 14 Passed: P1 winner (A1) advances directly to Grand Final');
+    console.log('   ✓ Criterion 18 Passed: P3 winner (B1) advances to Grand Final');
+    console.log('   ✓ Criterion 20 Passed: Grand Final is P1 Winner (A1) vs P3 Winner (B1)');
+
+    // 12. Simulate completion of Grand Final (M16)
+    // M16: A1 vs B1 -> A1 wins Championship!
+    await prisma.match.update({
+      where: { id: m16.id },
+      data: {
+        status: 'COMPLETED',
+        winnerTeamId: testTeams[0].id, // A1 wins
+        resultNote: 'A1 crowned Champion by 20 runs',
+      },
+    });
+    console.log('12. Completed Grand Final (M16: A1 won)');
+
+    // 13. Advance Tournament -> Crowns Champion & Concludes Tournament
+    const advanceResultFinal = await checkAndAdvanceTournament(testTournament.id);
+    assert.strictEqual(advanceResultFinal.advanced, true, 'Tournament concluded');
+    console.log(`13. Advancement Trigger: ${advanceResultFinal.message}`);
+
+    // Assertion 21: Champion and Runner-up are declared and assigned
+    const championTt = await prisma.tournamentTeam.findFirst({
+      where: { tournamentId: testTournament.id, teamId: testTeams[0].id },
+    });
+    const runnerUpTt = await prisma.tournamentTeam.findFirst({
+      where: { tournamentId: testTournament.id, teamId: testTeams[4].id },
+    });
+    assert.strictEqual(championTt?.qualificationStatus, 'CHAMPION', 'Criterion 21: A1 is CHAMPION');
+    assert.strictEqual(runnerUpTt?.qualificationStatus, 'RUNNER_UP', 'Criterion 21: B1 is RUNNER_UP');
+
+    const tournamentFinalState = await prisma.tournament.findUnique({
       where: { id: testTournament.id },
     });
-    assert.strictEqual(finalTournamentState?.status, 'COMPLETED', 'Tournament status is COMPLETED');
-    console.log('12. Verified Champion, Runner-up, and COMPLETED tournament status');
+    assert.strictEqual(tournamentFinalState?.status, 'COMPLETED', 'Tournament status is COMPLETED');
+    console.log('   ✓ Criterion 21 Passed: Champion (A1) and Runner-up (B1) declared and assigned');
 
-    // 16. Assert TOTAL MATCH COUNT === 15
+    // Assertion 22: Exactly 16 matches exist at tournament completion
     const allMatches = await prisma.match.findMany({
       where: { tournamentId: testTournament.id },
       orderBy: { matchNumber: 'asc' },
     });
-    console.log(`13. Total Tournament Matches Created: ${allMatches.length}`);
-    assert.strictEqual(allMatches.length, 15, 'CRITICAL ACCEPTANCE CRITERIA: TOTAL MATCHES === 15');
-    console.log('   ✓ ASSERTION PASSED: TOTAL MATCHES === 15 EXACTLY! 🎯');
+    assert.strictEqual(allMatches.length, 16, 'Criterion 22: Exactly 16 matches created');
+    assert.deepStrictEqual(
+      allMatches.map((m: any) => m.matchNumber),
+      [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16],
+      'Matches numbered M1 through M16 consecutively'
+    );
+    assert.ok(
+      allMatches.every((m: any) => m.status === 'COMPLETED'),
+      'All 16 matches are COMPLETED'
+    );
+    console.log('   ✓ Criterion 22 Passed: Exactly 16 matches exist at tournament completion (M1–M16)');
 
-    // Verify full overview payload
-    const overview = await getTournamentOverview(testTournament.id);
-    assert.ok(overview, 'Tournament overview loads');
-    assert.strictEqual(overview.progress.totalMatches, 15, 'Overview reports 15 total matches');
-    assert.strictEqual(overview.progress.completedMatches, 15, 'Overview reports 15 completed matches');
-    assert.strictEqual(overview.progress.currentStage, 'COMPLETED', 'Overview current stage is COMPLETED');
-    console.log('14. Verified getTournamentOverview consistency');
+    // Overview verification
+    const finalOverview = await getTournamentOverview(testTournament.id);
+    assert.ok(finalOverview, 'Overview loads');
+    assert.strictEqual(finalOverview.progress.totalMatches, 16, 'Overview reports 16 total matches');
+    assert.strictEqual(finalOverview.progress.completedMatches, 16, 'Overview reports 16 completed matches');
+    assert.strictEqual(finalOverview.progress.currentStage, 'COMPLETED', 'Overview current stage is COMPLETED');
+    assert.strictEqual(finalOverview.crownedChampion?.id, testTeams[0].id, 'Champion matches A1');
+    assert.strictEqual(finalOverview.playoffs.runnerUp?.id, testTeams[4].id, 'Runner up matches B1');
+    console.log('14. Verified final getTournamentOverview payload consistency');
 
   } finally {
     // =========================================================================
     // MANDATORY CLEANUP IN STRICT ACCORDANCE WITH USER RULE:
-    // "after test adding palyer and team make sure to remvoe them form the system
-    //  butdont rtemve the real temas and players"
+    // "after test adding player and team make sure to remove them form the system
+    //  but dont remove the real teams and players"
     // =========================================================================
     console.log('\n[Cleanup] Cleaning up temporary test data...');
 
@@ -512,7 +598,7 @@ async function run8TeamSimulation() {
   }
 
   console.log('============================================================');
-  console.log(' ALL 8-TEAM CPL TOURNAMENT LIFECYCLE CHECKS PASSED! ✅');
+  console.log(' ALL 22 CRITERIA FOR 8-TEAM CPL TOURNAMENT PASSED! ✅');
   console.log('============================================================\n');
 }
 

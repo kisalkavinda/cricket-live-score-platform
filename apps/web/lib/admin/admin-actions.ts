@@ -336,10 +336,10 @@ export async function updateTeamServerAction(teamId: string, formData: FormData)
   const entryPath = getAdminEntryPath();
 
   const rawInput = {
-    name: (formData.get('name') as string) || undefined,
-    shortName: (formData.get('shortName') as string) || undefined,
-    city: (formData.get('city') as string) || null,
-    logoUrl: (formData.get('logoUrl') as string) || null,
+    name: (formData.get('name') as string)?.trim() || undefined,
+    shortName: (formData.get('shortName') as string)?.trim() || undefined,
+    city: (formData.get('city') as string)?.trim() || null,
+    logoUrl: (formData.get('logoUrl') as string)?.trim() || null,
   };
 
   const parsed = updateTeamSchema.safeParse(rawInput);

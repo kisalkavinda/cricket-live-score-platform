@@ -8,6 +8,7 @@ interface Tournament {
   id: string;
   name: string;
   season?: string;
+  tournamentFormat?: string;
   stages?: Array<{ oversPerInnings?: number; ballsPerOver?: number }>;
 }
 
@@ -55,17 +56,41 @@ export default function NewMatchForm({ tournaments, teams, entryPath }: Props) {
       ? selectedTeamA?.name || 'Team A'
       : selectedTeamB?.name || 'Team B';
 
-  const PRESETS = [
-    { label: '🏏 Group Stage M1 (Grp A)', stage: 'GROUP', slot: 'Group Stage M1', group: 'GROUP_A', num: '1' },
-    { label: '🏏 Group Stage M2 (Grp B)', stage: 'GROUP', slot: 'Group Stage M2', group: 'GROUP_B', num: '2' },
-    { label: '🌟 Wildcard 1 (WC1)', stage: 'WILDCARD', slot: 'Wildcard 1 (WC1)', group: '', num: '7' },
-    { label: '🌟 Wildcard 2 (WC2)', stage: 'WILDCARD', slot: 'Wildcard 2 (WC2)', group: '', num: '8' },
-    { label: '🌟 Wildcard 3 (WC3)', stage: 'WILDCARD', slot: 'Wildcard 3 (WC3)', group: '', num: '9' },
-    { label: '⚡ Qualifier 1 (Q1)', stage: 'QUALIFIER', slot: 'Qualifier 1 (Q1)', group: '', num: '10' },
-    { label: '🔥 Eliminator (ELIM)', stage: 'PLAYOFF', slot: 'Eliminator (ELIM)', group: '', num: '11' },
-    { label: '⚡ Qualifier 2 (Q2)', stage: 'QUALIFIER', slot: 'Qualifier 2 (Q2)', group: '', num: '12' },
-    { label: '🏆 Grand Final', stage: 'FINAL', slot: 'Grand Final', group: '', num: '13' },
-  ];
+  const selectedTourn = tournaments.find((t) => t.id === tournamentId);
+  const tf = selectedTourn?.tournamentFormat || '';
+  const is6Team = tf === '6_TEAM';
+  const is7Team = tf === '7_TEAM';
+  const is8Team = tf === '8_TEAM' || (!is6Team && !is7Team);
+
+  const PRESETS = is8Team
+    ? [
+        { label: '🏏 Group Stage M1 (Grp A)', stage: 'GROUP', slot: 'Group Stage M1', group: 'GROUP_A', num: '1' },
+        { label: '🏏 Group Stage M7 (Grp B)', stage: 'GROUP', slot: 'Group Stage M7', group: 'GROUP_B', num: '7' },
+        { label: '⚡ Playoff 1 (P1: Seed 1 vs 2)', stage: 'PLAYOFF', slot: 'Playoff 1 (P1)', group: '', num: '13' },
+        { label: '🔥 Playoff 2 (P2: Seed 3 vs 4)', stage: 'PLAYOFF', slot: 'Playoff 2 (P2)', group: '', num: '14' },
+        { label: '⚡ Playoff 3 (P3: Final Spot)', stage: 'PLAYOFF', slot: 'Playoff 3 (P3)', group: '', num: '15' },
+        { label: '🏆 Grand Final (M16)', stage: 'FINAL', slot: 'Grand Final', group: '', num: '16' },
+      ]
+    : is7Team
+    ? [
+        { label: '🏏 Group Stage M1 (Grp A)', stage: 'GROUP', slot: 'Group Stage M1', group: 'GROUP_A', num: '1' },
+        { label: '🏏 Group Stage M2 (Grp B)', stage: 'GROUP', slot: 'Group Stage M2', group: 'GROUP_B', num: '2' },
+        { label: '⚡ Playoff 1 (P1: A1 vs B1)', stage: 'PLAYOFF', slot: 'Playoff 1 (P1)', group: '', num: '8' },
+        { label: '🔥 Playoff 2 (P2: A2 vs B2)', stage: 'PLAYOFF', slot: 'Playoff 2 (P2)', group: '', num: '9' },
+        { label: '⚡ Playoff 3 (P3: Final Spot)', stage: 'PLAYOFF', slot: 'Playoff 3 (P3)', group: '', num: '10' },
+        { label: '🏆 Grand Final (M11)', stage: 'FINAL', slot: 'Grand Final', group: '', num: '11' },
+      ]
+    : [
+        { label: '🏏 Group Stage M1 (Grp A)', stage: 'GROUP', slot: 'Group Stage M1', group: 'GROUP_A', num: '1' },
+        { label: '🏏 Group Stage M2 (Grp B)', stage: 'GROUP', slot: 'Group Stage M2', group: 'GROUP_B', num: '2' },
+        { label: '🌟 Wildcard 1 (WC1)', stage: 'WILDCARD', slot: 'Wildcard 1 (WC1)', group: '', num: '7' },
+        { label: '🌟 Wildcard 2 (WC2)', stage: 'WILDCARD', slot: 'Wildcard 2 (WC2)', group: '', num: '8' },
+        { label: '🌟 Wildcard 3 (WC3)', stage: 'WILDCARD', slot: 'Wildcard 3 (WC3)', group: '', num: '9' },
+        { label: '⚡ Qualifier 1 (Q1)', stage: 'QUALIFIER', slot: 'Qualifier 1 (Q1)', group: '', num: '10' },
+        { label: '🔥 Eliminator (ELIM)', stage: 'PLAYOFF', slot: 'Eliminator (ELIM)', group: '', num: '11' },
+        { label: '⚡ Qualifier 2 (Q2)', stage: 'QUALIFIER', slot: 'Qualifier 2 (Q2)', group: '', num: '12' },
+        { label: '🏆 Grand Final', stage: 'FINAL', slot: 'Grand Final', group: '', num: '13' },
+      ];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -462,9 +487,10 @@ export default function NewMatchForm({ tournaments, teams, entryPath }: Props) {
                 }}
               >
                 <option value="GROUP" style={{ background: '#10141E', color: '#FFF' }}>🏏 GROUP (Group Stage)</option>
-                <option value="WILDCARD" style={{ background: '#10141E', color: '#FFF' }}>🌟 WILDCARD (Wildcard Match)</option>
-                <option value="QUALIFIER" style={{ background: '#10141E', color: '#FFF' }}>⚡ QUALIFIER (Qualifiers / Semis)</option>
-                <option value="PLAYOFF" style={{ background: '#10141E', color: '#FFF' }}>🔥 PLAYOFF (Playoffs / Eliminator)</option>
+                {is6Team && (
+                  <option value="WILDCARD" style={{ background: '#10141E', color: '#FFF' }}>🌟 WILDCARD (Wildcard Match)</option>
+                )}
+                <option value="PLAYOFF" style={{ background: '#10141E', color: '#FFF' }}>⚡ PLAYOFF (Playoffs / Semis)</option>
                 <option value="FINAL" style={{ background: '#10141E', color: '#FFF' }}>🏆 FINAL (Grand Final)</option>
                 <option value="OTHER" style={{ background: '#10141E', color: '#FFF' }}>OTHER (Custom Fixture)</option>
               </select>

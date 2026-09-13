@@ -25,7 +25,7 @@ export default function GroupStandingsSection({ groups, tournamentFormat }: Grou
       ? 3
       : tournamentFormat === '7_TEAM'
       ? (gKey === 'groupA' ? 4 : 3)
-      : 4;
+      : 6;
     const isGroupDone = completedCount >= totalMatches;
 
     return (
@@ -140,7 +140,7 @@ export default function GroupStandingsSection({ groups, tournamentFormat }: Grou
                             lineHeight: '18px',
                             textAlign: 'center',
                             borderRadius: '4px',
-                            background: isGroupDone && is1st ? 'rgba(16, 185, 129, 0.15)' : 'rgba(255, 255, 255, 0.05)',
+                            background: isGroupDone && (is1st || (tournamentFormat === '8_TEAM' && is2nd)) ? 'rgba(16, 185, 129, 0.15)' : 'rgba(255, 255, 255, 0.05)',
                             color: posColor,
                             fontSize: '0.68rem',
                           }}
@@ -252,22 +252,17 @@ export default function GroupStandingsSection({ groups, tournamentFormat }: Grou
                               badgeColor = '#38BDF8';
                             }
                           } else {
-                            // 8_TEAM
-                            if (idx === 0) {
-                              label = '✓ PLAYOFF';
+                            // 8_TEAM: Top 2 from each group qualify for global playoff seeding
+                            if (idx === 0 || idx === 1) {
+                              label = '✓ QUALIFIED (Top 2)';
                               badgeBg = 'rgba(16, 185, 129, 0.15)';
                               badgeBorder = 'rgba(16, 185, 129, 0.35)';
                               badgeColor = '#10B981';
-                            } else if (idx === 1) {
-                              label = '→ MATCH 9';
-                              badgeBg = 'rgba(245, 158, 11, 0.15)';
-                              badgeBorder = 'rgba(245, 158, 11, 0.35)';
-                              badgeColor = '#F59E0B';
-                            } else if (idx === 2) {
-                              label = '→ MATCH 10';
-                              badgeBg = 'rgba(251, 146, 60, 0.15)';
-                              badgeBorder = 'rgba(251, 146, 60, 0.35)';
-                              badgeColor = '#FB923C';
+                            } else {
+                              label = '✕ ELIMINATED';
+                              badgeBg = 'rgba(239, 68, 68, 0.15)';
+                              badgeBorder = 'rgba(239, 68, 68, 0.35)';
+                              badgeColor = '#EF4444';
                             }
                           }
 
@@ -313,7 +308,7 @@ export default function GroupStandingsSection({ groups, tournamentFormat }: Grou
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
             <span style={{ width: '8px', height: '2px', background: 'var(--color-accent, #C0272D)' }} />
             <span style={{ fontFamily: 'var(--font-data)', fontSize: '0.74rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.14em', color: 'var(--color-accent, #C0272D)' }}>
-              Stage 1 · 8 Teams · 2 Groups
+              {tournamentFormat === '6_TEAM' ? 'Stage 1 · 6 Teams · 2 Groups' : tournamentFormat === '7_TEAM' ? 'Stage 1 · 7 Teams · 2 Groups' : 'Stage 1 · 8 Teams · 2 Groups of 4 (12 Matches)'}
             </span>
           </div>
           <h2
@@ -330,7 +325,11 @@ export default function GroupStandingsSection({ groups, tournamentFormat }: Grou
             Group Stage <span style={{ color: 'var(--color-accent, #C0272D)' }}>Standings</span>
           </h2>
           <p style={{ fontSize: '0.88rem', color: 'rgba(255, 255, 255, 0.6)', margin: '4px 0 0', maxWidth: '680px' }}>
-            1st place advances directly to Four-Team Playoff. 2nd enters Match 9. 3rd enters Match 10. 4th eliminated.
+            {tournamentFormat === '6_TEAM'
+              ? '1st place advances directly to Playoffs. 2nd enters WC1. 3rd enters WC2.'
+              : tournamentFormat === '7_TEAM'
+              ? 'Group winners advance to Playoff P1. 2nd place teams advance to Playoff P2. Others eliminated.'
+              : 'Top 2 teams from each group qualify for overall Playoff Seeding (Seeds 1–4 ranked by Points → NRR). 3rd & 4th are eliminated.'}
           </p>
         </div>
 
@@ -338,12 +337,18 @@ export default function GroupStandingsSection({ groups, tournamentFormat }: Grou
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', fontSize: '0.72rem', fontFamily: 'var(--font-data)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10B981' }} />
-            <span style={{ color: 'rgba(255,255,255,0.7)' }}>Playoff Direct</span>
+            <span style={{ color: 'rgba(255,255,255,0.7)' }}>
+              {tournamentFormat === '8_TEAM' ? 'Top 2 Qualify (Seeds 1–4)' : 'Playoff Direct'}
+            </span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#F59E0B' }} />
-            <span style={{ color: 'rgba(255,255,255,0.7)' }}>Stage 2 (M9/M10)</span>
-          </div>
+          {tournamentFormat !== '8_TEAM' && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#F59E0B' }} />
+              <span style={{ color: 'rgba(255,255,255,0.7)' }}>
+                {tournamentFormat === '6_TEAM' ? 'Wildcard Stage' : 'Playoff (P2)'}
+              </span>
+            </div>
+          )}
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#EF4444' }} />
             <span style={{ color: 'rgba(255,255,255,0.7)' }}>Eliminated</span>

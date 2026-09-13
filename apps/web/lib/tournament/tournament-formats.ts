@@ -32,6 +32,7 @@ export interface TournamentFormatConfig {
   playoffMatchCount: number;
   finalMatchCount: number;
   stages: Array<'GROUP' | 'WILDCARD' | 'QUALIFICATION' | 'PLAYOFFS' | 'FINAL'>;
+  groupTopology?: 'FULL_ROUND_ROBIN' | 'SQUARE_CYCLE' | string;
   groupFixtures: GroupFixtureDefinition[];
 }
 
@@ -62,6 +63,7 @@ export const TOURNAMENT_FORMAT_CONFIGS: Record<TournamentFormatType, TournamentF
     playoffMatchCount: 3,
     finalMatchCount: 1,
     stages: ['GROUP', 'WILDCARD', 'PLAYOFFS', 'FINAL'],
+    groupTopology: 'FULL_ROUND_ROBIN',
     // Full round-robin in each 3-team group, alternating A and B for maximum rest:
     // Group A: A1 vs A2, A2 vs A3, A1 vs A3
     // Group B: B1 vs B2, B2 vs B3, B1 vs B3
@@ -97,6 +99,7 @@ export const TOURNAMENT_FORMAT_CONFIGS: Record<TournamentFormatType, TournamentF
     playoffMatchCount: 3,
     finalMatchCount: 1,
     stages: ['GROUP', 'PLAYOFFS', 'FINAL'],
+    groupTopology: 'SQUARE_CYCLE',
     // Group A: strictly 4 edges of the square graph (A1-A2, A2-A4, A4-A3, A3-A1). Zero diagonals.
     // Group B: full 3-match round-robin (B1-B2, B2-B3, B1-B3).
     // Alternating schedule with zero back-to-back matches:
@@ -114,8 +117,8 @@ export const TOURNAMENT_FORMAT_CONFIGS: Record<TournamentFormatType, TournamentF
     format: '8_TEAM',
     displayName: '8-Team Championship',
     name: '8-Team Championship',
-    badgeLabel: '8 TEAMS · 15 MATCHES',
-    description: 'Official CPL 8-team format: 2 Groups of 4, 8 Group Matches, 3 Playoff Qualifiers (M9–M11), 3 Playoffs (M12–M14), and Grand Final (M15).',
+    badgeLabel: '8 TEAMS · 16 MATCHES',
+    description: '2 Groups of 4 (Full Round-Robin, 3 matches/team, 12 matches total), 3-match Playoffs (P1–P3), and Grand Final.',
     totalTeams: 8,
     groupSizes: {
       GROUP_A: 4,
@@ -123,26 +126,33 @@ export const TOURNAMENT_FORMAT_CONFIGS: Record<TournamentFormatType, TournamentF
     },
     groupA: 4,
     groupB: 4,
-    totalGroupMatches: 8,
-    groupMatches: 8,
-    totalMatches: 15,
+    totalGroupMatches: 12,
+    groupMatches: 12,
+    totalMatches: 16,
     hasWildcardStage: false,
     wildcardMatchCount: 0,
-    hasQualificationStage: true,
-    qualificationMatchCount: 3,
+    hasQualificationStage: false,
+    qualificationMatchCount: 0,
     playoffMatchCount: 3,
     finalMatchCount: 1,
-    stages: ['GROUP', 'QUALIFICATION', 'PLAYOFFS', 'FINAL'],
-    // Existing alternating square schedule with zero back-to-back matches:
+    stages: ['GROUP', 'PLAYOFFS', 'FINAL'],
+    groupTopology: 'FULL_ROUND_ROBIN',
+    // Complete round-robin: 6 matches in Group A (1-6) and 6 matches in Group B (7-12)
     groupFixtures: [
+      // Group A (M1–M6)
       { num: 1, group: 'GROUP_A', slot: 'G1', teamAIndex: 0, teamBIndex: 1, offsetHours: 0 }, // A1 vs A2
-      { num: 2, group: 'GROUP_B', slot: 'G2', teamAIndex: 0, teamBIndex: 1, offsetHours: 1 }, // B1 vs B2
-      { num: 3, group: 'GROUP_A', slot: 'G3', teamAIndex: 2, teamBIndex: 3, offsetHours: 2 }, // A3 vs A4
-      { num: 4, group: 'GROUP_B', slot: 'G4', teamAIndex: 2, teamBIndex: 3, offsetHours: 3 }, // B3 vs B4
-      { num: 5, group: 'GROUP_A', slot: 'G5', teamAIndex: 0, teamBIndex: 3, offsetHours: 4 }, // A1 vs A4
-      { num: 6, group: 'GROUP_B', slot: 'G6', teamAIndex: 0, teamBIndex: 3, offsetHours: 5 }, // B1 vs B4
-      { num: 7, group: 'GROUP_A', slot: 'G7', teamAIndex: 1, teamBIndex: 2, offsetHours: 6 }, // A2 vs A3
-      { num: 8, group: 'GROUP_B', slot: 'G8', teamAIndex: 1, teamBIndex: 2, offsetHours: 7 }, // B2 vs B3
+      { num: 2, group: 'GROUP_A', slot: 'G2', teamAIndex: 0, teamBIndex: 2, offsetHours: 1 }, // A1 vs A3
+      { num: 3, group: 'GROUP_A', slot: 'G3', teamAIndex: 0, teamBIndex: 3, offsetHours: 2 }, // A1 vs A4
+      { num: 4, group: 'GROUP_A', slot: 'G4', teamAIndex: 1, teamBIndex: 2, offsetHours: 3 }, // A2 vs A3
+      { num: 5, group: 'GROUP_A', slot: 'G5', teamAIndex: 1, teamBIndex: 3, offsetHours: 4 }, // A2 vs A4
+      { num: 6, group: 'GROUP_A', slot: 'G6', teamAIndex: 2, teamBIndex: 3, offsetHours: 5 }, // A3 vs A4
+      // Group B (M7–M12)
+      { num: 7, group: 'GROUP_B', slot: 'G7', teamAIndex: 0, teamBIndex: 1, offsetHours: 6 }, // B1 vs B2
+      { num: 8, group: 'GROUP_B', slot: 'G8', teamAIndex: 0, teamBIndex: 2, offsetHours: 7 }, // B1 vs B3
+      { num: 9, group: 'GROUP_B', slot: 'G9', teamAIndex: 0, teamBIndex: 3, offsetHours: 8 }, // B1 vs B4
+      { num: 10, group: 'GROUP_B', slot: 'G10', teamAIndex: 1, teamBIndex: 2, offsetHours: 9 }, // B2 vs B3
+      { num: 11, group: 'GROUP_B', slot: 'G11', teamAIndex: 1, teamBIndex: 3, offsetHours: 10 }, // B2 vs B4
+      { num: 12, group: 'GROUP_B', slot: 'G12', teamAIndex: 2, teamBIndex: 3, offsetHours: 11 }, // B3 vs B4
     ],
   },
 };
