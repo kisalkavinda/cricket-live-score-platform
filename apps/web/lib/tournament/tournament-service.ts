@@ -769,15 +769,43 @@ export async function configureTournamentStages(
     };
   }
 
+  const tournament = await (prisma as any).tournament.findUnique({
+    where: { id: tournamentId },
+  });
+  if (!tournament) {
+    return { success: false, error: 'Tournament not found' };
+  }
+
+  const formatConfig = getFormatConfig(tournament);
   const ballsPerOver = settings.ballsPerOver || 4;
-  const qualOvers = settings.qualificationOvers || settings.wildcardOvers || 5;
-  const stages = [
-    { name: 'GROUP', stageOrder: 1, overs: settings.groupOvers || 4, ballsPerOver },
-    { name: 'QUALIFICATION', stageOrder: 2, overs: qualOvers, ballsPerOver },
-    { name: 'WILDCARD', stageOrder: 2, overs: qualOvers, ballsPerOver },
-    { name: 'PLAYOFFS', stageOrder: 3, overs: settings.playoffOvers || 6, ballsPerOver },
-    { name: 'FINAL', stageOrder: 4, overs: settings.finalOvers || 6, ballsPerOver },
-  ];
+
+  let stages: Array<{ name: string; stageOrder: number; overs: number; ballsPerOver: number }> = [];
+
+  if (formatConfig.format === '6_TEAM') {
+    const wcOvers = settings.wildcardOvers || settings.qualificationOvers || 5;
+    stages = [
+      { name: 'GROUP', stageOrder: 1, overs: settings.groupOvers || 4, ballsPerOver },
+      { name: 'WILDCARD', stageOrder: 2, overs: wcOvers, ballsPerOver },
+      { name: 'PLAYOFFS', stageOrder: 3, overs: settings.playoffOvers || 6, ballsPerOver },
+      { name: 'FINAL', stageOrder: 4, overs: settings.finalOvers || 6, ballsPerOver },
+    ];
+  } else {
+    // 7_TEAM and 8_TEAM have strictly 3 stages: GROUP, PLAYOFFS, FINAL
+    stages = [
+      { name: 'GROUP', stageOrder: 1, overs: settings.groupOvers || 4, ballsPerOver },
+      { name: 'PLAYOFFS', stageOrder: 2, overs: settings.playoffOvers || 6, ballsPerOver },
+      { name: 'FINAL', stageOrder: 3, overs: settings.finalOvers || 6, ballsPerOver },
+    ];
+  }
+
+  // Delete any stages that do not belong to this format
+  const allowedNames = stages.map((s) => s.name);
+  await (prisma as any).tournamentStage.deleteMany({
+    where: {
+      tournamentId,
+      name: { notIn: allowedNames },
+    },
+  });
 
   const existingStages = await (prisma as any).tournamentStage.findMany({
     where: { tournamentId },
@@ -790,6 +818,7 @@ export async function configureTournamentStages(
       await (prisma as any).tournamentStage.update({
         where: { id: existing.id },
         data: {
+          stageOrder: s.stageOrder,
           oversPerInnings: s.overs,
           ballsPerOver: s.ballsPerOver,
         },
