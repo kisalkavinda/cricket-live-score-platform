@@ -84,9 +84,9 @@
     "semantic_hash": "020e32affec97fca9fcb770272c72c55"
   },
   "apps/web/app/[secretPath]/(admin)/teams/[id]/page.tsx": {
-    "mtime": 1789022195.0009081,
-    "seen": 1789023426.421921,
-    "ast_hash": "7b27c5cc21002507d5c08086cbbe240c",
+    "mtime": 1789275586.9157252,
+    "seen": 1789275818.7318685,
+    "ast_hash": "87e8d7fa86f6ec65d199832f0ffdec92",
     "semantic_hash": ""
   },
   "apps/web/app/[secretPath]/(admin)/teams/new/page.tsx": {
@@ -390,9 +390,9 @@
     "semantic_hash": "dfa1f5f6a7037bf39dc510f30b180002"
   },
   "apps/web/lib/admin/admin-actions.ts": {
-    "mtime": 1789243620.074109,
-    "seen": 1789245193.0770648,
-    "ast_hash": "28785572660f0aa357b9131935d1a9d3",
+    "mtime": 1789275393.8100705,
+    "seen": 1789275818.7831502,
+    "ast_hash": "186319e2f8ea43c532e8c71068dc61a3",
     "semantic_hash": ""
   },
   "apps/web/lib/admin/admin-service.ts": {
@@ -648,9 +648,9 @@
     "semantic_hash": ""
   },
   "apps/web/lib/validations/admin.ts": {
-    "mtime": 1789243620.0792353,
-    "seen": 1789245193.0808706,
-    "ast_hash": "59ae21aca7953d559f850ef7c6f90362",
+    "mtime": 1789275582.8925214,
+    "seen": 1789275818.8007889,
+    "ast_hash": "25d1c424fd0aa4e4bb2f13b9a269e5d9",
     "semantic_hash": ""
   },
   "apps/web/lib/validations/scoring.ts": {
@@ -1209,6 +1209,12 @@
     "mtime": 1789274057.821129,
     "seen": 1789274927.2777855,
     "ast_hash": "f215efc69a0925813dbe2266effae8f7",
+    "semantic_hash": ""
+  },
+  "apps/web/scripts/update-team-logos.ts": {
+    "mtime": 1789275491.2955463,
+    "seen": 1789275818.8077445,
+    "ast_hash": "8094376eb116e9efb18a9ebc18082757",
     "semantic_hash": ""
   }
 }

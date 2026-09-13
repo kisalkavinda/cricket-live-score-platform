@@ -244,7 +244,7 @@ export default function TournamentAdminConsole({
       const res = await configureTournamentStagesAction(tournament.id, {
         ballsPerOver: Number(ballsPerOver),
         groupOvers: Number(groupOvers),
-        qualificationOvers: Number(qualificationOvers),
+        ...(tournamentFormat === '6_TEAM' ? { wildcardOvers: Number(qualificationOvers) } : {}),
         playoffOvers: Number(playoffOvers),
         finalOvers: Number(finalOvers),
       });
@@ -305,7 +305,7 @@ export default function TournamentAdminConsole({
       const res = await generateGroupFixturesAction(tournament.id, {
         ballsPerOver: Number(ballsPerOver),
         groupOvers: Number(groupOvers),
-        qualificationOvers: Number(qualificationOvers),
+        ...(tournamentFormat === '6_TEAM' ? { wildcardOvers: Number(qualificationOvers) } : {}),
         playoffOvers: Number(playoffOvers),
         finalOvers: Number(finalOvers),
       });
@@ -598,69 +598,120 @@ export default function TournamentAdminConsole({
               </select>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-              <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#CBD5E1', marginBottom: '6px' }}>
-                  Stage 1 (Groups) Overs:
-                </label>
-                <input
-                  type="number"
-                  min={1}
-                  max={50}
-                  disabled={isLocked}
-                  value={groupOvers}
-                  onChange={(e) => setGroupOvers(Number(e.target.value))}
-                  style={{ width: '100%', padding: '10px', borderRadius: '6px', background: isLocked ? '#1E293B' : '#0F172A', border: '1px solid #475569', color: '#FFF', fontSize: '14px', cursor: isLocked ? 'not-allowed' : 'default' }}
-                />
-              </div>
+            {tournamentFormat === '6_TEAM' ? (
+              <>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#CBD5E1', marginBottom: '6px' }}>
+                      Stage 1 (Groups) Overs:
+                    </label>
+                    <input
+                      type="number"
+                      min={1}
+                      max={50}
+                      disabled={isLocked}
+                      value={groupOvers}
+                      onChange={(e) => setGroupOvers(Number(e.target.value))}
+                      style={{ width: '100%', padding: '10px', borderRadius: '6px', background: isLocked ? '#1E293B' : '#0F172A', border: '1px solid #475569', color: '#FFF', fontSize: '14px', cursor: isLocked ? 'not-allowed' : 'default' }}
+                    />
+                  </div>
 
-              <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#CBD5E1', marginBottom: '6px' }}>
-                  {tournamentFormat === '6_TEAM' ? 'Stage 2 (Wildcard) Overs:' : tournamentFormat === '7_TEAM' ? 'Stage 2 (Playoffs) Overs:' : 'Stage 2 (Qualification) Overs:'}
-                </label>
-                <input
-                  type="number"
-                  min={1}
-                  max={50}
-                  disabled={isLocked}
-                  value={qualificationOvers}
-                  onChange={(e) => setQualificationOvers(Number(e.target.value))}
-                  style={{ width: '100%', padding: '10px', borderRadius: '6px', background: isLocked ? '#1E293B' : '#0F172A', border: '1px solid #475569', color: '#FFF', fontSize: '14px', cursor: isLocked ? 'not-allowed' : 'default' }}
-                />
-              </div>
-            </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#CBD5E1', marginBottom: '6px' }}>
+                      Stage 2 (Wildcard) Overs:
+                    </label>
+                    <input
+                      type="number"
+                      min={1}
+                      max={50}
+                      disabled={isLocked}
+                      value={qualificationOvers}
+                      onChange={(e) => setQualificationOvers(Number(e.target.value))}
+                      style={{ width: '100%', padding: '10px', borderRadius: '6px', background: isLocked ? '#1E293B' : '#0F172A', border: '1px solid #475569', color: '#FFF', fontSize: '14px', cursor: isLocked ? 'not-allowed' : 'default' }}
+                    />
+                  </div>
+                </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-              <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#CBD5E1', marginBottom: '6px' }}>
-                  {tournamentFormat === '7_TEAM' ? 'Stage 2 Continuation Overs:' : 'Stage 3 (Playoffs) Overs:'}
-                </label>
-                <input
-                  type="number"
-                  min={1}
-                  max={50}
-                  disabled={isLocked}
-                  value={playoffOvers}
-                  onChange={(e) => setPlayoffOvers(Number(e.target.value))}
-                  style={{ width: '100%', padding: '10px', borderRadius: '6px', background: isLocked ? '#1E293B' : '#0F172A', border: '1px solid #475569', color: '#FFF', fontSize: '14px', cursor: isLocked ? 'not-allowed' : 'default' }}
-                />
-              </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#CBD5E1', marginBottom: '6px' }}>
+                      Stage 3 (Playoffs) Overs:
+                    </label>
+                    <input
+                      type="number"
+                      min={1}
+                      max={50}
+                      disabled={isLocked}
+                      value={playoffOvers}
+                      onChange={(e) => setPlayoffOvers(Number(e.target.value))}
+                      style={{ width: '100%', padding: '10px', borderRadius: '6px', background: isLocked ? '#1E293B' : '#0F172A', border: '1px solid #475569', color: '#FFF', fontSize: '14px', cursor: isLocked ? 'not-allowed' : 'default' }}
+                    />
+                  </div>
 
-              <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#CBD5E1', marginBottom: '6px' }}>
-                  Final Stage Overs:
-                </label>
-                <input
-                  type="number"
-                  min={1}
-                  max={50}
-                  disabled={isLocked}
-                  value={finalOvers}
-                  onChange={(e) => setFinalOvers(Number(e.target.value))}
-                  style={{ width: '100%', padding: '10px', borderRadius: '6px', background: isLocked ? '#1E293B' : '#0F172A', border: '1px solid #475569', color: '#FFF', fontSize: '14px', cursor: isLocked ? 'not-allowed' : 'default' }}
-                />
+                  <div>
+                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#CBD5E1', marginBottom: '6px' }}>
+                      Final Stage Overs:
+                    </label>
+                    <input
+                      type="number"
+                      min={1}
+                      max={50}
+                      disabled={isLocked}
+                      value={finalOvers}
+                      onChange={(e) => setFinalOvers(Number(e.target.value))}
+                      style={{ width: '100%', padding: '10px', borderRadius: '6px', background: isLocked ? '#1E293B' : '#0F172A', border: '1px solid #475569', color: '#FFF', fontSize: '14px', cursor: isLocked ? 'not-allowed' : 'default' }}
+                    />
+                  </div>
+                </div>
+              </>
+            ) : (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '12px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#CBD5E1', marginBottom: '6px' }}>
+                    Stage 1 (Groups) Overs:
+                  </label>
+                  <input
+                    type="number"
+                    min={1}
+                    max={50}
+                    disabled={isLocked}
+                    value={groupOvers}
+                    onChange={(e) => setGroupOvers(Number(e.target.value))}
+                    style={{ width: '100%', padding: '10px', borderRadius: '6px', background: isLocked ? '#1E293B' : '#0F172A', border: '1px solid #475569', color: '#FFF', fontSize: '14px', cursor: isLocked ? 'not-allowed' : 'default' }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#CBD5E1', marginBottom: '6px' }}>
+                    Stage 2 (Playoffs) Overs:
+                  </label>
+                  <input
+                    type="number"
+                    min={1}
+                    max={50}
+                    disabled={isLocked}
+                    value={playoffOvers}
+                    onChange={(e) => setPlayoffOvers(Number(e.target.value))}
+                    style={{ width: '100%', padding: '10px', borderRadius: '6px', background: isLocked ? '#1E293B' : '#0F172A', border: '1px solid #475569', color: '#FFF', fontSize: '14px', cursor: isLocked ? 'not-allowed' : 'default' }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#CBD5E1', marginBottom: '6px' }}>
+                    Final Stage Overs:
+                  </label>
+                  <input
+                    type="number"
+                    min={1}
+                    max={50}
+                    disabled={isLocked}
+                    value={finalOvers}
+                    onChange={(e) => setFinalOvers(Number(e.target.value))}
+                    style={{ width: '100%', padding: '10px', borderRadius: '6px', background: isLocked ? '#1E293B' : '#0F172A', border: '1px solid #475569', color: '#FFF', fontSize: '14px', cursor: isLocked ? 'not-allowed' : 'default' }}
+                  />
+                </div>
               </div>
-            </div>
+            )}
 
             {!isLocked && (
               <button
@@ -696,7 +747,7 @@ export default function TournamentAdminConsole({
               </div>
             ) : (
               <p style={{ fontSize: '12px', color: '#94A3B8', marginBottom: '14px' }}>
-                Creates {totalGroupMatches} group matches ({requiredGroupA === requiredGroupB ? `${requiredGroupA} per group` : `${requiredGroupA} in Group A, ${requiredGroupB} in Group B`}) at {ballsPerOver} balls/over and {groupOvers} overs.
+                Creates {totalGroupMatches} group matches ({tournamentFormat === '8_TEAM' ? '6 in Group A, 6 in Group B' : requiredGroupA === requiredGroupB ? `${totalGroupMatches / 2} per group` : `${requiredGroupA} in Group A, ${requiredGroupB} in Group B`}) at {ballsPerOver} balls/over and {groupOvers} overs.
               </p>
             )}
             <button
