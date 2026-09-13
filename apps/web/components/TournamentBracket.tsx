@@ -33,7 +33,7 @@ export default function TournamentBracket() {
 
   const tournamentFormat = overview?.normalizedFormat || overview?.tournamentFormat || '8_TEAM';
   const playoffs = overview?.playoffs || {};
-  const progress = overview?.progress || { totalMatches: 15, completedMatches: 0, currentStage: 'GROUP' };
+  const progress = overview?.progress || { totalMatches: 16, completedMatches: 0, currentStage: 'GROUP' };
   const qualification = overview?.qualification || { matches: [] };
   const wildcard = overview?.wildcard;
 
@@ -44,9 +44,9 @@ export default function TournamentBracket() {
   const seed4 = playoffs.seeds?.[3]?.team;
 
   // Authoritative Match Cards
-  const q1 = playoffs.qualifier1 || playoffs.match12;
-  const elim = playoffs.eliminator || playoffs.match13;
-  const q2 = playoffs.qualifier2 || playoffs.match14;
+  const q1 = playoffs.qualifier1 || playoffs.match12 || playoffs.playoff1;
+  const elim = playoffs.eliminator || playoffs.match13 || playoffs.playoff2;
+  const q2 = playoffs.qualifier2 || playoffs.match14 || playoffs.finalSpotPlayoff;
   const finalMatch = playoffs.final;
   const champion = playoffs.champion;
 
@@ -72,7 +72,7 @@ export default function TournamentBracket() {
     ? '6 Teams · 13 Matches · 4 Stages'
     : tournamentFormat === '7_TEAM'
     ? '7 Teams · 11 Matches · 3 Stages'
-    : '8 Teams · 15 Matches · 4 Stages';
+    : '8 Teams · 16 Matches · 3 Stages';
 
   return (
     <section
@@ -231,13 +231,7 @@ export default function TournamentBracket() {
               crownedChampion={crownedChampion}
             />
 
-            {/* 2. Stage 2 Playoff Pipeline: Qualification Matrix (8-Team) or Wildcards (6-Team) */}
-            {tournamentFormat === '8_TEAM' && qualification && (
-              <div style={{ marginTop: '16px' }}>
-                <PlayoffQualificationFlow qualification={qualification} />
-              </div>
-            )}
-
+            {/* 2. Stage 2 Playoff Pipeline: Wildcards (6-Team only, no qualification stage for 7-team or 8-team) */}
             {tournamentFormat === '6_TEAM' && wildcard && (
               <div style={{ marginTop: '16px' }}>
                 <SixTeamWildcardSection wildcard={wildcard} />

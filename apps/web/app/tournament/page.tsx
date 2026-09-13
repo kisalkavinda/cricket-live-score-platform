@@ -8,7 +8,7 @@ export const revalidate = 0; // Always fresh tournament data
 
 export const metadata: Metadata = {
   title: 'Tournament Hub · Computing Premier League',
-  description: 'Official Computing Premier League tournament dashboard. Live match status, championship bracket, 8-team group standings, playoff qualification, and softball Net Run Rate.',
+  description: 'Official Computing Premier League tournament dashboard. Live match status, championship bracket, 8-team group standings, playoffs, and softball Net Run Rate.',
 };
 
 export default async function TournamentPage() {

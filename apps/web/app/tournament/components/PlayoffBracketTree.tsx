@@ -51,13 +51,13 @@ export default function PlayoffBracketTree({
   const is6Team = tournamentFormat === '6_TEAM';
   const is7Team = tournamentFormat === '7_TEAM';
 
-  const p1Code = is6Team ? 'M10' : is7Team ? 'M08' : 'M12';
-  const p2Code = is6Team ? 'M11' : is7Team ? 'M09' : 'M13';
-  const p3Code = is6Team ? 'M12' : is7Team ? 'M10' : 'M14';
-  const finalCode = is6Team ? 'M13' : is7Team ? 'M11' : 'M15';
+  const p1Code = is6Team ? 'M10' : is7Team ? 'M08' : 'M13';
+  const p2Code = is6Team ? 'M11' : is7Team ? 'M09' : 'M14';
+  const p3Code = is6Team ? 'M12' : is7Team ? 'M10' : 'M15';
+  const finalCode = is6Team ? 'M13' : is7Team ? 'M11' : 'M16';
 
-  const seed3Fallback = is6Team ? 'TBD (Winner WC1)' : is7Team ? 'TBD (Group A 2nd)' : 'TBD (Seed #3)';
-  const seed4Fallback = is6Team ? 'TBD (Winner WC3)' : is7Team ? 'TBD (Group B 2nd)' : 'TBD (Seed #4)';
+  const seed3Fallback = is6Team ? 'TBD (Winner WC1)' : is7Team ? 'TBD (Group A 2nd)' : 'TBD (Playoff Seed #3)';
+  const seed4Fallback = is6Team ? 'TBD (Winner WC3)' : is7Team ? 'TBD (Group B 2nd)' : 'TBD (Playoff Seed #4)';
   const seed3Tag = is6Team ? 'WC1-W' : is7Team ? 'A2' : '#3';
   const seed4Tag = is6Team ? 'WC3-W' : is7Team ? 'B2' : '#4';
 
@@ -719,10 +719,10 @@ export default function PlayoffBracketTree({
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
           {[
-            { seed: '#1', team: seed1, label: 'Top Group Winner', dest: `→ ${p1Code}`, color: '#10B981' },
-            { seed: '#2', team: seed2, label: '2nd Group Winner', dest: `→ ${p1Code}`, color: '#10B981' },
-            { seed: '#3', team: seed3, label: is6Team ? 'Winner WC1 (M07)' : is7Team ? 'Group A 2nd' : 'Winner Match 9', dest: `→ ${p2Code}`, color: '#FFB800' },
-            { seed: '#4', team: seed4, label: is6Team ? 'Winner WC3 (M09)' : is7Team ? 'Group B 2nd' : 'Winner Match 11', dest: `→ ${p2Code}`, color: '#FFB800' },
+            { seed: '#1', team: seed1, label: is6Team ? 'Group A Winner' : is7Team ? 'Group A 1st' : 'Playoff Seed 1', dest: `→ ${p1Code}`, color: '#10B981' },
+            { seed: '#2', team: seed2, label: is6Team ? 'Group B Winner' : is7Team ? 'Group B 1st' : 'Playoff Seed 2', dest: `→ ${p1Code}`, color: '#10B981' },
+            { seed: '#3', team: seed3, label: is6Team ? 'Winner WC1 (M07)' : is7Team ? 'Group A 2nd' : 'Playoff Seed 3', dest: `→ ${p2Code}`, color: '#FFB800' },
+            { seed: '#4', team: seed4, label: is6Team ? 'Winner WC3 (M09)' : is7Team ? 'Group B 2nd' : 'Playoff Seed 4', dest: `→ ${p2Code}`, color: '#FFB800' },
           ].map((s) => (
             <div
               key={s.seed}

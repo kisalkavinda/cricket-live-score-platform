@@ -42,7 +42,7 @@ export default function FixturesAndResultsSection({
             Schedule & <span style={{ color: 'var(--color-accent, #C0272D)' }}>Results</span>
           </h2>
           <p style={{ fontSize: '0.88rem', color: 'rgba(255, 255, 255, 0.6)', margin: '4px 0 0' }}>
-            15 total competition fixtures across group stages, playoff qualification, and finals.
+            Official competition fixtures across group stages, playoffs, and championship finals.
           </p>
         </div>
 

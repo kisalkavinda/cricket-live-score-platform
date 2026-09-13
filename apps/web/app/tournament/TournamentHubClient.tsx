@@ -8,7 +8,6 @@ import TournamentHeroHUD from './components/TournamentHeroHUD';
 import LiveOrNextMatchSpotlight from './components/LiveOrNextMatchSpotlight';
 import PlayoffBracketTree from './components/PlayoffBracketTree';
 import GroupStandingsSection from './components/GroupStandingsSection';
-import PlayoffQualificationFlow from './components/PlayoffQualificationFlow';
 import SixTeamWildcardSection from './components/SixTeamWildcardSection';
 import FixturesAndResultsSection from './components/FixturesAndResultsSection';
 import TournamentMetricsGrid from './components/TournamentMetricsGrid';
@@ -250,12 +249,9 @@ export default function TournamentHubClient({ initialOverview }: Props) {
         tournamentFormat={overview.normalizedFormat || overview.tournamentFormat}
       />
 
-      {/* 5. Stage 2 Playoff Pipeline: Wildcard (6-Team) or Qualification (8-Team) */}
+      {/* 5. Stage 2 Playoff Pipeline: Wildcard (6-Team only) */}
       {overview.normalizedFormat === '6_TEAM' && overview.wildcard && (
         <SixTeamWildcardSection wildcard={overview.wildcard} />
-      )}
-      {overview.normalizedFormat === '8_TEAM' && (
-        <PlayoffQualificationFlow qualification={qualification} />
       )}
 
       {/* 6. Schedule & Results */}
