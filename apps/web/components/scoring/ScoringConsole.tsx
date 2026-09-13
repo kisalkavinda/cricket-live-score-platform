@@ -482,6 +482,11 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
   const [wideRuns, setWideRuns] = useState<number>(0); // 0 additional = 1 wide; 4 additional = 5 wides (boundary)
   const [wideIsBoundary, setWideIsBoundary] = useState<boolean>(false);
 
+  // Bye / Leg Bye delivery state
+  const [showByeModal, setShowByeModal] = useState<boolean>(false);
+  const [byeRunsCount, setByeRunsCount] = useState<number>(1);
+  const [byeType, setByeType] = useState<'BYE' | 'LEG_BYE'>('BYE');
+
   const [showBatterModal, setShowBatterModal] = useState(false);
   const [targetRole, setTargetRole] = useState<'striker' | 'nonStriker'>('striker');
   const [selectedBatterId, setSelectedBatterId] = useState<string>('');
@@ -4013,37 +4018,59 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                   </button>
 
                   <button
+                    type="button"
                     disabled={isScorePadLocked}
-                    onClick={() => handleRecordBall(0, 'BYE', 1, 1, 0)}
+                    title="MCC Law 23: Byes (1 Bye, Boundary 4 Byes, running byes) - Opens Bye Options"
+                    onClick={() => {
+                      setByeType('BYE');
+                      setByeRunsCount(1);
+                      setShowByeModal(true);
+                    }}
                     style={{
-                      background: '#141A26',
-                      border: '1px solid #2A364E',
-                      color: '#FFF',
+                      background: 'rgba(59, 130, 246, 0.12)',
+                      border: '1px solid rgba(59, 130, 246, 0.4)',
+                      color: '#60A5FA',
                       fontSize: '0.95rem',
                       fontWeight: 800,
                       padding: '14px 0',
                       borderRadius: '8px',
                       cursor: isScorePadLocked ? 'not-allowed' : 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '4px',
                     }}
                   >
-                    BYE (+1)
+                    <span>BYE</span>
+                    <span style={{ fontSize: '0.72rem', background: 'rgba(59, 130, 246, 0.3)', padding: '1px 5px', borderRadius: '4px' }}>+Options</span>
                   </button>
 
                   <button
+                    type="button"
                     disabled={isScorePadLocked}
-                    onClick={() => handleRecordBall(0, 'LEG_BYE', 1, 0, 1)}
+                    title="MCC Law 23: Leg Byes (1 Leg Bye, Boundary 4 Leg Byes, running leg byes) - Opens Leg Bye Options"
+                    onClick={() => {
+                      setByeType('LEG_BYE');
+                      setByeRunsCount(1);
+                      setShowByeModal(true);
+                    }}
                     style={{
                       background: '#141A26',
                       border: '1px solid #2A364E',
-                      color: '#FFF',
+                      color: '#CBD5E1',
                       fontSize: '0.95rem',
                       fontWeight: 800,
                       padding: '14px 0',
                       borderRadius: '8px',
                       cursor: isScorePadLocked ? 'not-allowed' : 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '4px',
                     }}
                   >
-                    LEG BYE (+1)
+                    <span>LEG BYE</span>
+                    <span style={{ fontSize: '0.72rem', background: 'rgba(255, 255, 255, 0.12)', padding: '1px 5px', borderRadius: '4px' }}>+Options</span>
                   </button>
 
                   <button
@@ -4102,8 +4129,8 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                   </button>
                 </div>
 
-                {/* Direct 1-Tap Extras Shortcut Bar (Boundary 4+1 Wides & Running Wides) */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginTop: '10px' }}>
+                {/* Direct 1-Tap Extras Shortcut Bar (Boundary Wides, 4 Byes & Running Extras) */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '8px', marginTop: '10px' }}>
                   <button
                     type="button"
                     disabled={isScorePadLocked}
@@ -4117,19 +4144,75 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                       background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.22), rgba(217, 119, 6, 0.12))',
                       border: '1.5px solid rgba(245, 158, 11, 0.55)',
                       color: '#FBBF24',
-                      padding: '10px 12px',
+                      padding: '10px 10px',
                       borderRadius: '8px',
                       fontWeight: 900,
-                      fontSize: '0.84rem',
+                      fontSize: '0.82rem',
                       cursor: isScorePadLocked ? 'not-allowed' : 'pointer',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      gap: '6px',
+                      gap: '5px',
                     }}
                   >
                     <span>🏏</span>
-                    <span>5 WD (Boundary 4+1)</span>
+                    <span>5 WD (Boundary)</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    disabled={isScorePadLocked}
+                    title="MCC Law 23: Ball misses bat/batter and races to boundary for 4 Byes (extras to batting team, legal delivery, 0 to bowler)"
+                    onClick={() => {
+                      const bName = activeBowler?.name || 'Bowler';
+                      const sName = activeStriker?.name || 'Striker';
+                      handleRecordBall(0, 'BYE', 4, 4, 0, `4 BYES! Delivery from ${bName} evades ${sName} and keeper, racing across the boundary rope for 4 Byes!`);
+                    }}
+                    style={{
+                      background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.25), rgba(37, 99, 235, 0.15))',
+                      border: '1.5px solid rgba(59, 130, 246, 0.65)',
+                      color: '#60A5FA',
+                      padding: '10px 10px',
+                      borderRadius: '8px',
+                      fontWeight: 900,
+                      fontSize: '0.82rem',
+                      cursor: isScorePadLocked ? 'not-allowed' : 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '5px',
+                    }}
+                  >
+                    <span>⚡</span>
+                    <span>4 BYES (Boundary)</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    disabled={isScorePadLocked}
+                    title="MCC Law 23: Ball deflects off pads and races to boundary for 4 Leg Byes (extras to batting team, legal delivery, 0 to bowler)"
+                    onClick={() => {
+                      const bName = activeBowler?.name || 'Bowler';
+                      const sName = activeStriker?.name || 'Striker';
+                      handleRecordBall(0, 'LEG_BYE', 4, 0, 4, `4 LEG BYES! Delivery from ${bName} deflects off ${sName}'s pads, speeding past the boundary rope for 4 Leg Byes!`);
+                    }}
+                    style={{
+                      background: 'rgba(59, 130, 246, 0.10)',
+                      border: '1px solid rgba(59, 130, 246, 0.4)',
+                      color: '#93C5FD',
+                      padding: '10px 10px',
+                      borderRadius: '8px',
+                      fontWeight: 800,
+                      fontSize: '0.82rem',
+                      cursor: isScorePadLocked ? 'not-allowed' : 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '5px',
+                    }}
+                  >
+                    <span>🛡️</span>
+                    <span>4 LEG BYES</span>
                   </button>
 
                   <button
@@ -4145,19 +4228,19 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                       background: 'rgba(245, 158, 11, 0.12)',
                       border: '1px solid rgba(245, 158, 11, 0.35)',
                       color: '#FBBF24',
-                      padding: '10px 12px',
+                      padding: '10px 10px',
                       borderRadius: '8px',
                       fontWeight: 800,
-                      fontSize: '0.84rem',
+                      fontSize: '0.82rem',
                       cursor: isScorePadLocked ? 'not-allowed' : 'pointer',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      gap: '6px',
+                      gap: '5px',
                     }}
                   >
                     <span>🏃</span>
-                    <span>2 WD (1 Run + Swap)</span>
+                    <span>2 WD (1 Run)</span>
                   </button>
                 </div>
               </div>
@@ -5253,6 +5336,207 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
         </div>
       )}
 
+      {/* BYE / LEG BYE RECORDING MODAL */}
+      {showByeModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px', overflowY: 'auto' }}>
+          <div style={{ background: '#10141E', border: '1.5px solid #3B82F6', borderRadius: '16px', maxWidth: '480px', width: '100%', maxHeight: 'min(90vh, calc(100dvh - 32px))', display: 'flex', flexDirection: 'column', overflow: 'hidden', margin: 'auto', boxShadow: '0 8px 32px rgba(59, 130, 246, 0.25)' }}>
+            {/* Header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 20px 12px', borderBottom: '1px solid rgba(59, 130, 246, 0.25)', background: 'rgba(59, 130, 246, 0.08)', flexShrink: 0 }}>
+              <div>
+                <h3 style={{ fontSize: '1.15rem', fontWeight: 900, color: '#60A5FA', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span>⚡ Record {byeType === 'BYE' ? 'Byes' : 'Leg Byes'}</span>
+                </h3>
+                <div style={{ fontSize: '0.78rem', color: '#94A3B8', marginTop: '2px' }}>
+                  MCC Law 23 • Legal delivery • Extras to team • 0 charged to bowler
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowByeModal(false)}
+                style={{ background: 'transparent', border: 'none', color: '#94A3B8', fontSize: '1.2rem', cursor: 'pointer', padding: '4px' }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="scoring-modal-card" style={{ flex: '1 1 auto', overflowY: 'auto', minHeight: 0, padding: '16px 20px' }}>
+              {/* Type Switcher (BYE vs LEG_BYE) */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '16px' }}>
+                <button
+                  type="button"
+                  onClick={() => setByeType('BYE')}
+                  style={{
+                    padding: '10px',
+                    borderRadius: '8px',
+                    fontWeight: 900,
+                    fontSize: '0.88rem',
+                    cursor: 'pointer',
+                    background: byeType === 'BYE' ? '#3B82F6' : '#141A26',
+                    color: byeType === 'BYE' ? '#FFF' : '#94A3B8',
+                    border: byeType === 'BYE' ? '2px solid #60A5FA' : '1px solid #2A364E',
+                  }}
+                >
+                  BYES (Misses bat)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setByeType('LEG_BYE')}
+                  style={{
+                    padding: '10px',
+                    borderRadius: '8px',
+                    fontWeight: 900,
+                    fontSize: '0.88rem',
+                    cursor: 'pointer',
+                    background: byeType === 'LEG_BYE' ? '#3B82F6' : '#141A26',
+                    color: byeType === 'LEG_BYE' ? '#FFF' : '#94A3B8',
+                    border: byeType === 'LEG_BYE' ? '2px solid #60A5FA' : '1px solid #2A364E',
+                  }}
+                >
+                  LEG BYES (Off pads/body)
+                </button>
+              </div>
+
+              {/* Presets Grid */}
+              <div style={{ marginBottom: '18px' }}>
+                <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 800, marginBottom: '8px', color: '#60A5FA', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                  Select {byeType === 'BYE' ? 'Bye' : 'Leg Bye'} Outcome
+                </label>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
+                  {/* 4 Byes (Boundary) */}
+                  <button
+                    type="button"
+                    onClick={() => setByeRunsCount(4)}
+                    style={{
+                      background: byeRunsCount === 4 ? '#3B82F6' : 'rgba(59, 130, 246, 0.15)',
+                      color: '#FFF',
+                      border: byeRunsCount === 4 ? '2px solid #93C5FD' : '1.5px solid rgba(59, 130, 246, 0.4)',
+                      borderRadius: '8px',
+                      padding: '12px 10px',
+                      textAlign: 'left',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <div style={{ fontWeight: 900, fontSize: '0.95rem' }}>🏏 4 {byeType === 'BYE' ? 'Byes' : 'Leg Byes'} (Boundary)</div>
+                    <div style={{ fontSize: '0.72rem', opacity: 0.85 }}>Ball beats keeper to fence • Strike stays</div>
+                  </button>
+
+                  {/* 1 Bye (+1) */}
+                  <button
+                    type="button"
+                    onClick={() => setByeRunsCount(1)}
+                    style={{
+                      background: byeRunsCount === 1 ? '#3B82F6' : '#141A26',
+                      color: '#FFF',
+                      border: byeRunsCount === 1 ? '2px solid #93C5FD' : '1px solid #2A364E',
+                      borderRadius: '8px',
+                      padding: '12px 10px',
+                      textAlign: 'left',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <div style={{ fontWeight: 900, fontSize: '0.95rem' }}>1 {byeType === 'BYE' ? 'Bye' : 'Leg Bye'} (+1)</div>
+                    <div style={{ fontSize: '0.72rem', opacity: 0.85 }}>1 single completed • Strike swaps</div>
+                  </button>
+
+                  {/* 2 Byes (+2 Runs) */}
+                  <button
+                    type="button"
+                    onClick={() => setByeRunsCount(2)}
+                    style={{
+                      background: byeRunsCount === 2 ? '#3B82F6' : '#141A26',
+                      color: '#FFF',
+                      border: byeRunsCount === 2 ? '2px solid #93C5FD' : '1px solid #2A364E',
+                      borderRadius: '8px',
+                      padding: '12px 10px',
+                      textAlign: 'left',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <div style={{ fontWeight: 900, fontSize: '0.95rem' }}>2 {byeType === 'BYE' ? 'Byes' : 'Leg Byes'} (+2 Runs)</div>
+                    <div style={{ fontSize: '0.72rem', opacity: 0.85 }}>2 runs ran • Strike stays</div>
+                  </button>
+
+                  {/* 3 Byes (+3 Runs) */}
+                  <button
+                    type="button"
+                    onClick={() => setByeRunsCount(3)}
+                    style={{
+                      background: byeRunsCount === 3 ? '#3B82F6' : '#141A26',
+                      color: '#FFF',
+                      border: byeRunsCount === 3 ? '2px solid #93C5FD' : '1px solid #2A364E',
+                      borderRadius: '8px',
+                      padding: '12px 10px',
+                      textAlign: 'left',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <div style={{ fontWeight: 900, fontSize: '0.95rem' }}>3 {byeType === 'BYE' ? 'Byes' : 'Leg Byes'} (+3 Runs)</div>
+                    <div style={{ fontSize: '0.72rem', opacity: 0.85 }}>3 runs ran • Strike swaps</div>
+                  </button>
+                </div>
+              </div>
+
+              {/* Summary Card */}
+              <div style={{ background: '#141A26', border: '1px solid #2A364E', borderRadius: '10px', padding: '14px', marginBottom: '16px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                  <span style={{ fontSize: '0.82rem', color: '#94A3B8' }}>Total Team Runs:</span>
+                  <span style={{ fontSize: '1.25rem', fontWeight: 900, color: '#60A5FA', fontFamily: 'monospace' }}>
+                    +{byeRunsCount} {byeRunsCount === 1 ? 'Run' : 'Runs'}
+                  </span>
+                </div>
+                <div style={{ fontSize: '0.75rem', color: '#CBD5E1', display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                  <div>• <strong>+{byeRunsCount} {byeType === 'BYE' ? 'Byes' : 'Leg Byes'}</strong> added to team total and extras</div>
+                  <div>• <strong>0 runs</strong> debited to bowler ({activeBowler?.name || 'Bowler'}) under MCC Law 23</div>
+                  <div>• Legal delivery: <strong>Yes</strong> (counts towards the balls in the over)</div>
+                  <div>• Batter on Strike after this: <strong>{
+                    (byeRunsCount % 2 === 1)
+                      ? `${activeNonStriker?.name || 'Non-Striker'} (Strike swapped)`
+                      : `${activeStriker?.name || 'Striker'} (Strike retained)`
+                  }</strong></div>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div style={{ display: 'flex', gap: '10px', padding: '12px 20px 16px', borderTop: '1px solid rgba(255, 255, 255, 0.08)', background: '#0D111A', flexShrink: 0 }}>
+              <button
+                type="button"
+                onClick={() => setShowByeModal(false)}
+                style={{ flex: 1, background: '#141A26', border: '1px solid #2A364E', color: '#94A3B8', padding: '11px', borderRadius: '8px', fontWeight: 700, cursor: 'pointer' }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const bName = activeBowler?.name || 'Bowler';
+                  const sName = activeStriker?.name || 'Striker';
+
+                  let commentary = `${byeRunsCount} ${byeType === 'BYE' ? 'BYE' : 'LEG BYE'}${byeRunsCount > 1 ? 'S' : ''}. Delivery from ${bName} misses bat, batters complete ${byeRunsCount} extra run${byeRunsCount > 1 ? 's' : ''}.`;
+                  if (byeRunsCount === 4) {
+                    commentary = `4 ${byeType === 'BYE' ? 'BYES' : 'LEG BYES'}! Ball beats ${sName} and wicketkeeper, racing across the boundary rope for 4 extras!`;
+                  }
+
+                  setShowByeModal(false);
+                  handleRecordBall(
+                    0,
+                    byeType,
+                    byeRunsCount,
+                    byeType === 'BYE' ? byeRunsCount : 0,
+                    byeType === 'LEG_BYE' ? byeRunsCount : 0,
+                    commentary
+                  );
+                }}
+                style={{ flex: 2, background: 'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)', border: 'none', color: '#FFF', padding: '11px', borderRadius: '8px', fontWeight: 900, cursor: 'pointer', fontSize: '0.92rem', boxShadow: '0 4px 12px rgba(37, 99, 235, 0.4)' }}
+              >
+                Confirm {byeRunsCount} {byeType === 'BYE' ? (byeRunsCount === 1 ? 'Bye' : 'Byes') : (byeRunsCount === 1 ? 'Leg Bye' : 'Leg Byes')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* NO-BALL RECORDING MODAL */}
       {showNoBallModal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px', overflowY: 'auto' }}>
@@ -6293,6 +6577,33 @@ export default function ScoringConsole({ initialMatch, entryPath }: Props) {
                           }}
                         >
                           {w === 1 ? '1 Wide' : w === 5 ? '5 WD (Boundary)' : `${w} Wides`}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {(editExtraType === 'BYE' || editExtraType === 'LEG_BYE') && (
+                    <div style={{ display: 'flex', gap: '6px', marginTop: '8px', flexWrap: 'wrap' }}>
+                      {[1, 2, 3, 4].map((r) => (
+                        <button
+                          key={r}
+                          type="button"
+                          onClick={() => {
+                            setEditExtras(r);
+                            if (editExtraType === 'BYE') setEditByeRuns(r);
+                            if (editExtraType === 'LEG_BYE') setEditLegByeRuns(r);
+                          }}
+                          style={{
+                            padding: '5px 10px',
+                            background: editExtras === r ? '#3B82F6' : '#141A26',
+                            color: editExtras === r ? '#FFF' : '#94A3B8',
+                            border: editExtras === r ? '1.5px solid #60A5FA' : '1px solid #2A364E',
+                            borderRadius: '6px',
+                            fontSize: '0.75rem',
+                            fontWeight: 800,
+                            cursor: 'pointer',
+                          }}
+                        >
+                          {r === 4 ? `4 ${editExtraType === 'BYE' ? 'Byes' : 'Leg Byes'} (Boundary)` : `${r} ${editExtraType === 'BYE' ? (r === 1 ? 'Bye' : 'Byes') : (r === 1 ? 'Leg Bye' : 'Leg Byes')}`}
                         </button>
                       ))}
                     </div>

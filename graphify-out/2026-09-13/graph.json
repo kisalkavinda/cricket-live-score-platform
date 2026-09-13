@@ -160,30 +160,17 @@
       "source_location": "L3"
     },
     {
-      "id": "apps_web_app_secretpath_admin_registrations_id_registrationdetailclient_registrationdetailclientprops",
-      "label": "RegistrationDetailClientProps",
+      "id": "apps_web_components_admin_exceptioncard_exceptioncardprops",
+      "label": "ExceptionCardProps",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
       "community": 37,
       "community_name": "admin-actions.ts",
       "file_type": "code",
-      "norm_label": "registrationdetailclientprops",
-      "source_file": "apps/web/app/[secretPath]/(admin)/registrations/[id]/RegistrationDetailClient.tsx",
-      "source_location": "L12"
-    },
-    {
-      "id": "apps_web_components_admin_deleteregistrationbutton_deleteregistrationbuttonprops",
-      "label": "DeleteRegistrationButtonProps",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 37,
-      "community_name": "admin-actions.ts",
-      "file_type": "code",
-      "norm_label": "deleteregistrationbuttonprops",
-      "source_file": "apps/web/components/admin/DeleteRegistrationButton.tsx",
-      "source_location": "L6"
+      "norm_label": "exceptioncardprops",
+      "source_file": "apps/web/components/admin/ExceptionCard.tsx",
+      "source_location": "L10"
     },
     {
       "id": "apps_web_app_tournament_components_fixturesandresultssection_fixturesandresultssectionprops",
@@ -192,62 +179,10 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 38,
-      "community_name": "normalizeImageUrl",
+      "community_name": "TournamentHubClient.tsx",
       "file_type": "code",
       "norm_label": "fixturesandresultssectionprops",
       "source_file": "apps/web/app/tournament/components/FixturesAndResultsSection.tsx",
-      "source_location": "L7"
-    },
-    {
-      "id": "apps_web_app_tournament_components_liveornextmatchspotlight_liveornextmatchspotlightprops",
-      "label": "LiveOrNextMatchSpotlightProps",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 38,
-      "community_name": "normalizeImageUrl",
-      "file_type": "code",
-      "norm_label": "liveornextmatchspotlightprops",
-      "source_file": "apps/web/app/tournament/components/LiveOrNextMatchSpotlight.tsx",
-      "source_location": "L7"
-    },
-    {
-      "id": "apps_web_app_tournament_components_playoffbrackettree_playoffbrackettreeprops",
-      "label": "PlayoffBracketTreeProps",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 38,
-      "community_name": "normalizeImageUrl",
-      "file_type": "code",
-      "norm_label": "playoffbrackettreeprops",
-      "source_file": "apps/web/app/tournament/components/PlayoffBracketTree.tsx",
-      "source_location": "L8"
-    },
-    {
-      "id": "apps_web_app_tournament_components_playoffqualificationflow_playoffqualificationflowprops",
-      "label": "PlayoffQualificationFlowProps",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 38,
-      "community_name": "normalizeImageUrl",
-      "file_type": "code",
-      "norm_label": "playoffqualificationflowprops",
-      "source_file": "apps/web/app/tournament/components/PlayoffQualificationFlow.tsx",
-      "source_location": "L6"
-    },
-    {
-      "id": "apps_web_app_tournament_components_sixteamwildcardsection_sixteamwildcardsectionprops",
-      "label": "SixTeamWildcardSectionProps",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 38,
-      "community_name": "normalizeImageUrl",
-      "file_type": "code",
-      "norm_label": "sixteamwildcardsectionprops",
-      "source_file": "apps/web/app/tournament/components/SixTeamWildcardSection.tsx",
       "source_location": "L7"
     },
     {
@@ -257,7 +192,7 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 38,
-      "community_name": "normalizeImageUrl",
+      "community_name": "TournamentHubClient.tsx",
       "file_type": "code",
       "norm_label": "tournamentherohudprops",
       "source_file": "apps/web/app/tournament/components/TournamentHeroHUD.tsx",
@@ -270,7 +205,7 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 38,
-      "community_name": "normalizeImageUrl",
+      "community_name": "TournamentHubClient.tsx",
       "file_type": "code",
       "norm_label": "tournamentmetricsgridprops",
       "source_file": "apps/web/app/tournament/components/TournamentMetricsGrid.tsx",
@@ -283,63 +218,11 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 38,
-      "community_name": "normalizeImageUrl",
+      "community_name": "TournamentHubClient.tsx",
       "file_type": "code",
       "norm_label": "props",
       "source_file": "apps/web/app/tournament/TournamentHubClient.tsx",
       "source_location": "L16"
-    },
-    {
-      "id": "apps_web_app_secretpath_admin_matches_new_newmatchform_props",
-      "label": "Props",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 39,
-      "community_name": "requireAdminAuth",
-      "file_type": "code",
-      "norm_label": "props",
-      "source_file": "apps/web/app/[secretPath]/(admin)/matches/new/NewMatchForm.tsx",
-      "source_location": "L23"
-    },
-    {
-      "id": "apps_web_app_secretpath_admin_matches_new_newmatchform_team",
-      "label": "Team",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 39,
-      "community_name": "requireAdminAuth",
-      "file_type": "code",
-      "norm_label": "team",
-      "source_file": "apps/web/app/[secretPath]/(admin)/matches/new/NewMatchForm.tsx",
-      "source_location": "L15"
-    },
-    {
-      "id": "apps_web_app_secretpath_admin_matches_new_newmatchform_tournament",
-      "label": "Tournament",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 39,
-      "community_name": "requireAdminAuth",
-      "file_type": "code",
-      "norm_label": "tournament",
-      "source_file": "apps/web/app/[secretPath]/(admin)/matches/new/NewMatchForm.tsx",
-      "source_location": "L7"
-    },
-    {
-      "id": "apps_web_components_admin_deletematchbutton_deletematchbuttonprops",
-      "label": "DeleteMatchButtonProps",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 39,
-      "community_name": "requireAdminAuth",
-      "file_type": "code",
-      "norm_label": "deletematchbuttonprops",
-      "source_file": "apps/web/components/admin/DeleteMatchButton.tsx",
-      "source_location": "L6"
     },
     {
       "id": "apps_web_components_scoring_scoringconsole_props",
@@ -353,45 +236,6 @@
       "norm_label": "props",
       "source_file": "apps/web/components/scoring/ScoringConsole.tsx",
       "source_location": "L33"
-    },
-    {
-      "id": "apps_web_lib_scoring_scoring_service_creatematchinput",
-      "label": "CreateMatchInput",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 39,
-      "community_name": "requireAdminAuth",
-      "file_type": "code",
-      "norm_label": "creatematchinput",
-      "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L54"
-    },
-    {
-      "id": "apps_web_lib_scoring_scoring_service_openinglineupinput",
-      "label": "OpeningLineupInput",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 39,
-      "community_name": "requireAdminAuth",
-      "file_type": "code",
-      "norm_label": "openinglineupinput",
-      "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L73"
-    },
-    {
-      "id": "apps_web_lib_scoring_scoring_service_startmatchinput",
-      "label": "StartMatchInput",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 39,
-      "community_name": "requireAdminAuth",
-      "file_type": "code",
-      "norm_label": "startmatchinput",
-      "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L68"
     },
     {
       "id": "apps_web_app_display_grounddisplayclient_props",
@@ -784,32 +628,6 @@
       "source_location": "L32"
     },
     {
-      "id": "apps_web_app_tournament_components_groupstandingssection_groupstandingssectionprops",
-      "label": "GroupStandingsSectionProps",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "group-stage-points-table.test.ts",
-      "file_type": "code",
-      "norm_label": "groupstandingssectionprops",
-      "source_file": "apps/web/app/tournament/components/GroupStandingsSection.tsx",
-      "source_location": "L8"
-    },
-    {
-      "id": "apps_web_lib_tournament_nrr_engine_teamstanding",
-      "label": "TeamStanding",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "group-stage-points-table.test.ts",
-      "file_type": "code",
-      "norm_label": "teamstanding",
-      "source_file": "apps/web/lib/tournament/nrr-engine.ts",
-      "source_location": "L82"
-    },
-    {
       "id": "apps_web_app_secretpath_admin_tournament_bracket_tournamentadminconsole_props",
       "label": "Props",
       "_callable": true,
@@ -927,17 +745,17 @@
       "source_location": "L10"
     },
     {
-      "id": "apps_web_components_admin_exceptioncard_exceptioncardprops",
-      "label": "ExceptionCardProps",
+      "id": "apps_web_components_admin_deletematchbutton_deletematchbuttonprops",
+      "label": "DeleteMatchButtonProps",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
       "community": 64,
-      "community_name": "ExceptionCard.tsx",
+      "community_name": "scoring-actions.ts",
       "file_type": "code",
-      "norm_label": "exceptioncardprops",
-      "source_file": "apps/web/components/admin/ExceptionCard.tsx",
-      "source_location": "L10"
+      "norm_label": "deletematchbuttonprops",
+      "source_file": "apps/web/components/admin/DeleteMatchButton.tsx",
+      "source_location": "L6"
     },
     {
       "id": "apps_web_components_admin_adminnavlinks_adminnavlinksprops",
@@ -1122,6 +940,58 @@
       "source_location": "L106"
     },
     {
+      "id": "apps_web_app_tournament_components_groupstandingssection_groupstandingssectionprops",
+      "label": "GroupStandingsSectionProps",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 81,
+      "community_name": "normalizeImageUrl",
+      "file_type": "code",
+      "norm_label": "groupstandingssectionprops",
+      "source_file": "apps/web/app/tournament/components/GroupStandingsSection.tsx",
+      "source_location": "L8"
+    },
+    {
+      "id": "apps_web_app_tournament_components_liveornextmatchspotlight_liveornextmatchspotlightprops",
+      "label": "LiveOrNextMatchSpotlightProps",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 81,
+      "community_name": "normalizeImageUrl",
+      "file_type": "code",
+      "norm_label": "liveornextmatchspotlightprops",
+      "source_file": "apps/web/app/tournament/components/LiveOrNextMatchSpotlight.tsx",
+      "source_location": "L7"
+    },
+    {
+      "id": "apps_web_app_tournament_components_playoffbrackettree_playoffbrackettreeprops",
+      "label": "PlayoffBracketTreeProps",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 81,
+      "community_name": "normalizeImageUrl",
+      "file_type": "code",
+      "norm_label": "playoffbrackettreeprops",
+      "source_file": "apps/web/app/tournament/components/PlayoffBracketTree.tsx",
+      "source_location": "L8"
+    },
+    {
+      "id": "apps_web_lib_tournament_nrr_engine_teamstanding",
+      "label": "TeamStanding",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 81,
+      "community_name": "normalizeImageUrl",
+      "file_type": "code",
+      "norm_label": "teamstanding",
+      "source_file": "apps/web/lib/tournament/nrr-engine.ts",
+      "source_location": "L82"
+    },
+    {
       "id": "apps_web_components_admin_deletetournamentbutton_deletetournamentbuttonprops",
       "label": "DeleteTournamentButtonProps",
       "_callable": true,
@@ -1133,6 +1003,45 @@
       "norm_label": "deletetournamentbuttonprops",
       "source_file": "apps/web/components/admin/DeleteTournamentButton.tsx",
       "source_location": "L6"
+    },
+    {
+      "id": "apps_web_app_secretpath_admin_matches_new_newmatchform_props",
+      "label": "Props",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 84,
+      "community_name": "matches/new/page.tsx",
+      "file_type": "code",
+      "norm_label": "props",
+      "source_file": "apps/web/app/[secretPath]/(admin)/matches/new/NewMatchForm.tsx",
+      "source_location": "L23"
+    },
+    {
+      "id": "apps_web_app_secretpath_admin_matches_new_newmatchform_team",
+      "label": "Team",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 84,
+      "community_name": "matches/new/page.tsx",
+      "file_type": "code",
+      "norm_label": "team",
+      "source_file": "apps/web/app/[secretPath]/(admin)/matches/new/NewMatchForm.tsx",
+      "source_location": "L15"
+    },
+    {
+      "id": "apps_web_app_secretpath_admin_matches_new_newmatchform_tournament",
+      "label": "Tournament",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 84,
+      "community_name": "matches/new/page.tsx",
+      "file_type": "code",
+      "norm_label": "tournament",
+      "source_file": "apps/web/app/[secretPath]/(admin)/matches/new/NewMatchForm.tsx",
+      "source_location": "L7"
     },
     {
       "id": "apps_web_lib_scoring_scoring_rules_deliveryrunsresult",
@@ -1174,6 +1083,19 @@
       "source_location": "L14"
     },
     {
+      "id": "apps_web_lib_scoring_scoring_service_creatematchinput",
+      "label": "CreateMatchInput",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 85,
+      "community_name": "scoring-service.ts",
+      "file_type": "code",
+      "norm_label": "creatematchinput",
+      "source_file": "apps/web/lib/scoring/scoring-service.ts",
+      "source_location": "L54"
+    },
+    {
       "id": "apps_web_lib_scoring_scoring_service_inningsstatustype",
       "label": "InningsStatusType",
       "_callable": true,
@@ -1200,6 +1122,19 @@
       "source_location": "L51"
     },
     {
+      "id": "apps_web_lib_scoring_scoring_service_openinglineupinput",
+      "label": "OpeningLineupInput",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 85,
+      "community_name": "scoring-service.ts",
+      "file_type": "code",
+      "norm_label": "openinglineupinput",
+      "source_file": "apps/web/lib/scoring/scoring-service.ts",
+      "source_location": "L73"
+    },
+    {
       "id": "apps_web_lib_scoring_scoring_service_recorddeliveryinput",
       "label": "RecordDeliveryInput",
       "_callable": true,
@@ -1213,6 +1148,19 @@
       "source_location": "L79"
     },
     {
+      "id": "apps_web_lib_scoring_scoring_service_startmatchinput",
+      "label": "StartMatchInput",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 85,
+      "community_name": "scoring-service.ts",
+      "file_type": "code",
+      "norm_label": "startmatchinput",
+      "source_file": "apps/web/lib/scoring/scoring-service.ts",
+      "source_location": "L68"
+    },
+    {
       "id": "apps_web_lib_scoring_scoring_service_tournamentstatsresult",
       "label": "TournamentStatsResult",
       "_callable": true,
@@ -1224,6 +1172,58 @@
       "norm_label": "tournamentstatsresult",
       "source_file": "apps/web/lib/scoring/scoring-service.ts",
       "source_location": "L2912"
+    },
+    {
+      "id": "apps_web_app_secretpath_admin_registrations_id_registrationdetailclient_registrationdetailclientprops",
+      "label": "RegistrationDetailClientProps",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 87,
+      "community_name": "RegistrationDetailClient.tsx",
+      "file_type": "code",
+      "norm_label": "registrationdetailclientprops",
+      "source_file": "apps/web/app/[secretPath]/(admin)/registrations/[id]/RegistrationDetailClient.tsx",
+      "source_location": "L12"
+    },
+    {
+      "id": "apps_web_components_admin_deleteregistrationbutton_deleteregistrationbuttonprops",
+      "label": "DeleteRegistrationButtonProps",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 87,
+      "community_name": "RegistrationDetailClient.tsx",
+      "file_type": "code",
+      "norm_label": "deleteregistrationbuttonprops",
+      "source_file": "apps/web/components/admin/DeleteRegistrationButton.tsx",
+      "source_location": "L6"
+    },
+    {
+      "id": "apps_web_app_tournament_components_playoffqualificationflow_playoffqualificationflowprops",
+      "label": "PlayoffQualificationFlowProps",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 88,
+      "community_name": "TournamentBracket.tsx",
+      "file_type": "code",
+      "norm_label": "playoffqualificationflowprops",
+      "source_file": "apps/web/app/tournament/components/PlayoffQualificationFlow.tsx",
+      "source_location": "L6"
+    },
+    {
+      "id": "apps_web_app_tournament_components_sixteamwildcardsection_sixteamwildcardsectionprops",
+      "label": "SixTeamWildcardSectionProps",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 88,
+      "community_name": "TournamentBracket.tsx",
+      "file_type": "code",
+      "norm_label": "sixteamwildcardsectionprops",
+      "source_file": "apps/web/app/tournament/components/SixTeamWildcardSection.tsx",
+      "source_location": "L7"
     },
     {
       "id": "apps_web_scripts_generate_favicons_imageentry",
@@ -2775,19 +2775,19 @@
       "source_location": "L14"
     },
     {
-      "id": "apps_web_app_secretpath_admin_players_new_page_newplayerpage",
-      "label": "NewPlayerPage()",
+      "id": "apps_web_app_secretpath_admin_tournaments_new_page_newtournamentpage",
+      "label": "NewTournamentPage()",
       "_callable": true,
       "_origin": "ast",
       "community": 37,
       "community_name": "admin-actions.ts",
       "file_type": "code",
-      "norm_label": "newplayerpage()",
-      "source_file": "apps/web/app/[secretPath]/(admin)/players/new/page.tsx",
-      "source_location": "L9"
+      "norm_label": "newtournamentpage()",
+      "source_file": "apps/web/app/[secretPath]/(admin)/tournaments/new/page.tsx",
+      "source_location": "L8"
     },
     {
-      "id": "apps_web_app_secretpath_admin_players_new_page_newplayerpage_handlesubmit",
+      "id": "apps_web_app_secretpath_admin_tournaments_new_page_newtournamentpage_handlesubmit",
       "label": "handleSubmit()",
       "_callable": true,
       "_origin": "ast",
@@ -2795,35 +2795,23 @@
       "community_name": "admin-actions.ts",
       "file_type": "code",
       "norm_label": "handlesubmit()",
-      "source_file": "apps/web/app/[secretPath]/(admin)/players/new/page.tsx",
-      "source_location": "L28"
+      "source_file": "apps/web/app/[secretPath]/(admin)/tournaments/new/page.tsx",
+      "source_location": "L15"
     },
     {
-      "id": "apps_web_app_secretpath_admin_registrations_id_registrationdetailclient_registrationdetailclient",
-      "label": "RegistrationDetailClient()",
+      "id": "apps_web_components_admin_exceptioncard_exceptioncard",
+      "label": "ExceptionCard()",
       "_callable": true,
       "_origin": "ast",
       "community": 37,
       "community_name": "admin-actions.ts",
       "file_type": "code",
-      "norm_label": "registrationdetailclient()",
-      "source_file": "apps/web/app/[secretPath]/(admin)/registrations/[id]/RegistrationDetailClient.tsx",
-      "source_location": "L17"
+      "norm_label": "exceptioncard()",
+      "source_file": "apps/web/components/admin/ExceptionCard.tsx",
+      "source_location": "L24"
     },
     {
-      "id": "apps_web_components_admin_deleteregistrationbutton_deleteregistrationbutton",
-      "label": "DeleteRegistrationButton()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 37,
-      "community_name": "admin-actions.ts",
-      "file_type": "code",
-      "norm_label": "deleteregistrationbutton()",
-      "source_file": "apps/web/components/admin/DeleteRegistrationButton.tsx",
-      "source_location": "L13"
-    },
-    {
-      "id": "apps_web_components_admin_deleteregistrationbutton_deleteregistrationbutton_handledelete",
+      "id": "apps_web_components_admin_exceptioncard_exceptioncard_handledelete",
       "label": "handleDelete()",
       "_callable": true,
       "_origin": "ast",
@@ -2831,80 +2819,92 @@
       "community_name": "admin-actions.ts",
       "file_type": "code",
       "norm_label": "handledelete()",
-      "source_file": "apps/web/components/admin/DeleteRegistrationButton.tsx",
-      "source_location": "L21"
+      "source_file": "apps/web/components/admin/ExceptionCard.tsx",
+      "source_location": "L37"
     },
     {
-      "id": "apps_web_lib_admin_admin_actions_approveregistrationserveraction",
-      "label": "approveRegistrationServerAction()",
+      "id": "apps_web_components_admin_exceptioncard_exceptioncard_handletoggle",
+      "label": "handleToggle()",
       "_callable": true,
       "_origin": "ast",
       "community": 37,
       "community_name": "admin-actions.ts",
       "file_type": "code",
-      "norm_label": "approveregistrationserveraction()",
+      "norm_label": "handletoggle()",
+      "source_file": "apps/web/components/admin/ExceptionCard.tsx",
+      "source_location": "L29"
+    },
+    {
+      "id": "apps_web_components_admin_exceptioncard_exceptioncard_handleupdate",
+      "label": "handleUpdate()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 37,
+      "community_name": "admin-actions.ts",
+      "file_type": "code",
+      "norm_label": "handleupdate()",
+      "source_file": "apps/web/components/admin/ExceptionCard.tsx",
+      "source_location": "L52"
+    },
+    {
+      "id": "apps_web_lib_admin_admin_actions_createtournamentserveraction",
+      "label": "createTournamentServerAction()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 37,
+      "community_name": "admin-actions.ts",
+      "file_type": "code",
+      "norm_label": "createtournamentserveraction()",
       "source_file": "apps/web/lib/admin/admin-actions.ts",
-      "source_location": "L35"
+      "source_location": "L248"
     },
     {
-      "id": "apps_web_lib_admin_admin_actions_createplayerserveraction",
-      "label": "createPlayerServerAction()",
+      "id": "apps_web_lib_admin_admin_actions_deleteexceptionserveraction",
+      "label": "deleteExceptionServerAction()",
       "_callable": true,
       "_origin": "ast",
       "community": 37,
       "community_name": "admin-actions.ts",
       "file_type": "code",
-      "norm_label": "createplayerserveraction()",
+      "norm_label": "deleteexceptionserveraction()",
       "source_file": "apps/web/lib/admin/admin-actions.ts",
-      "source_location": "L215"
+      "source_location": "L171"
     },
     {
-      "id": "apps_web_lib_admin_admin_actions_deleteregistrationserveraction",
-      "label": "deleteRegistrationServerAction()",
+      "id": "apps_web_lib_admin_admin_actions_toggleexceptionserveraction",
+      "label": "toggleExceptionServerAction()",
       "_callable": true,
       "_origin": "ast",
       "community": 37,
       "community_name": "admin-actions.ts",
       "file_type": "code",
-      "norm_label": "deleteregistrationserveraction()",
+      "norm_label": "toggleexceptionserveraction()",
       "source_file": "apps/web/lib/admin/admin-actions.ts",
-      "source_location": "L71"
+      "source_location": "L129"
     },
     {
-      "id": "apps_web_lib_admin_admin_actions_rejectregistrationserveraction",
-      "label": "rejectRegistrationServerAction()",
+      "id": "apps_web_lib_admin_admin_actions_updateexceptionserveraction",
+      "label": "updateExceptionServerAction()",
       "_callable": true,
       "_origin": "ast",
       "community": 37,
       "community_name": "admin-actions.ts",
       "file_type": "code",
-      "norm_label": "rejectregistrationserveraction()",
+      "norm_label": "updateexceptionserveraction()",
       "source_file": "apps/web/lib/admin/admin-actions.ts",
-      "source_location": "L54"
+      "source_location": "L139"
     },
     {
-      "id": "apps_web_lib_admin_admin_actions_retrybackupserveraction",
-      "label": "retryBackupServerAction()",
+      "id": "apps_web_lib_admin_admin_service_toggleexceptionstatus",
+      "label": "toggleExceptionStatus()",
       "_callable": true,
       "_origin": "ast",
       "community": 37,
       "community_name": "admin-actions.ts",
       "file_type": "code",
-      "norm_label": "retrybackupserveraction()",
-      "source_file": "apps/web/lib/admin/admin-actions.ts",
-      "source_location": "L94"
-    },
-    {
-      "id": "apps_web_lib_admin_admin_service_rejectregistrationaction",
-      "label": "rejectRegistrationAction()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 37,
-      "community_name": "admin-actions.ts",
-      "file_type": "code",
-      "norm_label": "rejectregistrationaction()",
+      "norm_label": "toggleexceptionstatus()",
       "source_file": "apps/web/lib/admin/admin-service.ts",
-      "source_location": "L617"
+      "source_location": "L739"
     },
     {
       "id": "apps_web_app_tournament_components_fixturesandresultssection_fixturesandresultssection",
@@ -2912,71 +2912,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 38,
-      "community_name": "normalizeImageUrl",
+      "community_name": "TournamentHubClient.tsx",
       "file_type": "code",
       "norm_label": "fixturesandresultssection()",
       "source_file": "apps/web/app/tournament/components/FixturesAndResultsSection.tsx",
       "source_location": "L12"
-    },
-    {
-      "id": "apps_web_app_tournament_components_groupstandingssection_groupstandingssection",
-      "label": "GroupStandingsSection()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 38,
-      "community_name": "normalizeImageUrl",
-      "file_type": "code",
-      "norm_label": "groupstandingssection()",
-      "source_file": "apps/web/app/tournament/components/GroupStandingsSection.tsx",
-      "source_location": "L16"
-    },
-    {
-      "id": "apps_web_app_tournament_components_liveornextmatchspotlight_liveornextmatchspotlight",
-      "label": "LiveOrNextMatchSpotlight()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 38,
-      "community_name": "normalizeImageUrl",
-      "file_type": "code",
-      "norm_label": "liveornextmatchspotlight()",
-      "source_file": "apps/web/app/tournament/components/LiveOrNextMatchSpotlight.tsx",
-      "source_location": "L13"
-    },
-    {
-      "id": "apps_web_app_tournament_components_playoffbrackettree_playoffbrackettree",
-      "label": "PlayoffBracketTree()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 38,
-      "community_name": "normalizeImageUrl",
-      "file_type": "code",
-      "norm_label": "playoffbrackettree()",
-      "source_file": "apps/web/app/tournament/components/PlayoffBracketTree.tsx",
-      "source_location": "L29"
-    },
-    {
-      "id": "apps_web_app_tournament_components_playoffqualificationflow_playoffqualificationflow",
-      "label": "PlayoffQualificationFlow()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 38,
-      "community_name": "normalizeImageUrl",
-      "file_type": "code",
-      "norm_label": "playoffqualificationflow()",
-      "source_file": "apps/web/app/tournament/components/PlayoffQualificationFlow.tsx",
-      "source_location": "L17"
-    },
-    {
-      "id": "apps_web_app_tournament_components_sixteamwildcardsection_sixteamwildcardsection",
-      "label": "SixTeamWildcardSection()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 38,
-      "community_name": "normalizeImageUrl",
-      "file_type": "code",
-      "norm_label": "sixteamwildcardsection()",
-      "source_file": "apps/web/app/tournament/components/SixTeamWildcardSection.tsx",
-      "source_location": "L23"
     },
     {
       "id": "apps_web_app_tournament_components_tournamentherohud_tournamentherohud",
@@ -2984,7 +2924,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 38,
-      "community_name": "normalizeImageUrl",
+      "community_name": "TournamentHubClient.tsx",
       "file_type": "code",
       "norm_label": "tournamentherohud()",
       "source_file": "apps/web/app/tournament/components/TournamentHeroHUD.tsx",
@@ -2996,7 +2936,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 38,
-      "community_name": "normalizeImageUrl",
+      "community_name": "TournamentHubClient.tsx",
       "file_type": "code",
       "norm_label": "tournamentmetricsgrid()",
       "source_file": "apps/web/app/tournament/components/TournamentMetricsGrid.tsx",
@@ -3008,83 +2948,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 38,
-      "community_name": "normalizeImageUrl",
+      "community_name": "TournamentHubClient.tsx",
       "file_type": "code",
       "norm_label": "tournamentregulationssection()",
       "source_file": "apps/web/app/tournament/components/TournamentRegulationsSection.tsx",
       "source_location": "L7"
-    },
-    {
-      "id": "apps_web_components_tournamentbracket_tournamentbracket",
-      "label": "TournamentBracket()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 38,
-      "community_name": "normalizeImageUrl",
-      "file_type": "code",
-      "norm_label": "tournamentbracket()",
-      "source_file": "apps/web/components/TournamentBracket.tsx",
-      "source_location": "L9"
-    },
-    {
-      "id": "apps_web_lib_utils_image_utils_normalizeimageurl",
-      "label": "normalizeImageUrl()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 38,
-      "community_name": "normalizeImageUrl",
-      "file_type": "code",
-      "norm_label": "normalizeimageurl()",
-      "source_file": "apps/web/lib/utils/image-utils.ts",
-      "source_location": "L11"
-    },
-    {
-      "id": "apps_web_app_secretpath_admin_matches_new_newmatchform_newmatchform",
-      "label": "NewMatchForm()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 39,
-      "community_name": "requireAdminAuth",
-      "file_type": "code",
-      "norm_label": "newmatchform()",
-      "source_file": "apps/web/app/[secretPath]/(admin)/matches/new/NewMatchForm.tsx",
-      "source_location": "L29"
-    },
-    {
-      "id": "apps_web_app_secretpath_admin_matches_new_page_newmatchpage",
-      "label": "NewMatchPage()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 39,
-      "community_name": "requireAdminAuth",
-      "file_type": "code",
-      "norm_label": "newmatchpage()",
-      "source_file": "apps/web/app/[secretPath]/(admin)/matches/new/page.tsx",
-      "source_location": "L8"
-    },
-    {
-      "id": "apps_web_components_admin_deletematchbutton_deletematchbutton",
-      "label": "DeleteMatchButton()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 39,
-      "community_name": "requireAdminAuth",
-      "file_type": "code",
-      "norm_label": "deletematchbutton()",
-      "source_file": "apps/web/components/admin/DeleteMatchButton.tsx",
-      "source_location": "L12"
-    },
-    {
-      "id": "apps_web_components_admin_deletematchbutton_deletematchbutton_handledelete",
-      "label": "handleDelete()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 39,
-      "community_name": "requireAdminAuth",
-      "file_type": "code",
-      "norm_label": "handledelete()",
-      "source_file": "apps/web/components/admin/DeleteMatchButton.tsx",
-      "source_location": "L19"
     },
     {
       "id": "apps_web_components_scoring_scoringconsole_scoringconsole",
@@ -3255,18 +3123,6 @@
       "source_location": "L127"
     },
     {
-      "id": "apps_web_lib_scoring_scoring_actions_creatematchaction",
-      "label": "createMatchAction()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 39,
-      "community_name": "requireAdminAuth",
-      "file_type": "code",
-      "norm_label": "creatematchaction()",
-      "source_file": "apps/web/lib/scoring/scoring-actions.ts",
-      "source_location": "L34"
-    },
-    {
       "id": "apps_web_lib_scoring_scoring_actions_deleteballdeliveryaction",
       "label": "deleteBallDeliveryAction()",
       "_callable": true,
@@ -3277,18 +3133,6 @@
       "norm_label": "deleteballdeliveryaction()",
       "source_file": "apps/web/lib/scoring/scoring-actions.ts",
       "source_location": "L163"
-    },
-    {
-      "id": "apps_web_lib_scoring_scoring_actions_deletematchaction",
-      "label": "deleteMatchAction()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 39,
-      "community_name": "requireAdminAuth",
-      "file_type": "code",
-      "norm_label": "deletematchaction()",
-      "source_file": "apps/web/lib/scoring/scoring-actions.ts",
-      "source_location": "L222"
     },
     {
       "id": "apps_web_lib_scoring_scoring_actions_editballdeliveryaction",
@@ -3349,18 +3193,6 @@
       "norm_label": "setopeninglineupaction()",
       "source_file": "apps/web/lib/scoring/scoring-actions.ts",
       "source_location": "L55"
-    },
-    {
-      "id": "apps_web_lib_scoring_scoring_actions_startmatchaction",
-      "label": "startMatchAction()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 39,
-      "community_name": "requireAdminAuth",
-      "file_type": "code",
-      "norm_label": "startmatchaction()",
-      "source_file": "apps/web/lib/scoring/scoring-actions.ts",
-      "source_location": "L43"
     },
     {
       "id": "apps_web_lib_scoring_scoring_actions_startsuperoveraction",
@@ -3435,18 +3267,6 @@
       "source_location": "L194"
     },
     {
-      "id": "apps_web_lib_scoring_scoring_service_creatematch",
-      "label": "createMatch()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 39,
-      "community_name": "requireAdminAuth",
-      "file_type": "code",
-      "norm_label": "creatematch()",
-      "source_file": "apps/web/lib/scoring/scoring-service.ts",
-      "source_location": "L605"
-    },
-    {
       "id": "apps_web_tests_live_security_recheck_test_assert",
       "label": "assert()",
       "_callable": true,
@@ -3507,42 +3327,6 @@
       "source_location": "L18"
     },
     {
-      "id": "apps_web_app_scorecard_page_scorecardcontent",
-      "label": "ScorecardContent()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 42,
-      "community_name": "GroundDisplayClient.tsx",
-      "file_type": "code",
-      "norm_label": "scorecardcontent()",
-      "source_file": "apps/web/app/scorecard/page.tsx",
-      "source_location": "L15"
-    },
-    {
-      "id": "apps_web_app_secretpath_admin_teams_new_page_newteampage",
-      "label": "NewTeamPage()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 42,
-      "community_name": "GroundDisplayClient.tsx",
-      "file_type": "code",
-      "norm_label": "newteampage()",
-      "source_file": "apps/web/app/[secretPath]/(admin)/teams/new/page.tsx",
-      "source_location": "L9"
-    },
-    {
-      "id": "apps_web_app_secretpath_admin_teams_new_page_newteampage_handlesubmit",
-      "label": "handleSubmit()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 42,
-      "community_name": "GroundDisplayClient.tsx",
-      "file_type": "code",
-      "norm_label": "handlesubmit()",
-      "source_file": "apps/web/app/[secretPath]/(admin)/teams/new/page.tsx",
-      "source_location": "L28"
-    },
-    {
       "id": "apps_web_components_livescorewidget_livescorewidget",
       "label": "LiveScoreWidget()",
       "_callable": true,
@@ -3553,18 +3337,6 @@
       "norm_label": "livescorewidget()",
       "source_file": "apps/web/components/LiveScoreWidget.tsx",
       "source_location": "L14"
-    },
-    {
-      "id": "apps_web_lib_admin_admin_actions_createteamserveraction",
-      "label": "createTeamServerAction()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 42,
-      "community_name": "GroundDisplayClient.tsx",
-      "file_type": "code",
-      "norm_label": "createteamserveraction()",
-      "source_file": "apps/web/lib/admin/admin-actions.ts",
-      "source_location": "L186"
     },
     {
       "id": "apps_web_lib_scoring_scoring_rules_sortmatchesbypriority",
@@ -3579,16 +3351,16 @@
       "source_location": "L479"
     },
     {
-      "id": "apps_web_utils_supabase_client_createclient",
-      "label": "createClient()",
+      "id": "apps_web_lib_tournament_nrr_engine_computestagestandings",
+      "label": "computeStageStandings()",
       "_callable": true,
       "_origin": "ast",
       "community": 42,
       "community_name": "GroundDisplayClient.tsx",
       "file_type": "code",
-      "norm_label": "createclient()",
-      "source_file": "apps/web/utils/supabase/client.ts",
-      "source_location": "L8"
+      "norm_label": "computestagestandings()",
+      "source_file": "apps/web/lib/tournament/nrr-engine.ts",
+      "source_location": "L323"
     },
     {
       "id": "apps_web_tests_e2e_system_verification_test_assert",
@@ -4599,18 +4371,6 @@
       "source_location": "L173"
     },
     {
-      "id": "apps_web_lib_tournament_nrr_engine_computestagestandings",
-      "label": "computeStageStandings()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 51,
-      "community_name": "nrr-engine.ts",
-      "file_type": "code",
-      "norm_label": "computestagestandings()",
-      "source_file": "apps/web/lib/tournament/nrr-engine.ts",
-      "source_location": "L323"
-    },
-    {
       "id": "apps_web_lib_tournament_nrr_engine_countinningslegalballs",
       "label": "countInningsLegalBalls()",
       "_callable": true,
@@ -4647,18 +4407,6 @@
       "source_location": "L155"
     },
     {
-      "id": "apps_web_lib_tournament_nrr_engine_issamegroupname",
-      "label": "isSameGroupName()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 51,
-      "community_name": "nrr-engine.ts",
-      "file_type": "code",
-      "norm_label": "issamegroupname()",
-      "source_file": "apps/web/lib/tournament/nrr-engine.ts",
-      "source_location": "L76"
-    },
-    {
       "id": "apps_web_lib_tournament_nrr_engine_legalballstoeffectiveovers",
       "label": "legalBallsToEffectiveOvers()",
       "_callable": true,
@@ -4669,18 +4417,6 @@
       "norm_label": "legalballstoeffectiveovers()",
       "source_file": "apps/web/lib/tournament/nrr-engine.ts",
       "source_location": "L121"
-    },
-    {
-      "id": "apps_web_lib_tournament_nrr_engine_normalizegroupkey",
-      "label": "normalizeGroupKey()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 51,
-      "community_name": "nrr-engine.ts",
-      "file_type": "code",
-      "norm_label": "normalizegroupkey()",
-      "source_file": "apps/web/lib/tournament/nrr-engine.ts",
-      "source_location": "L67"
     },
     {
       "id": "apps_web_lib_tournament_nrr_engine_sortstandingswithtiebreakers",
@@ -4887,6 +4623,30 @@
       "source_location": "L37"
     },
     {
+      "id": "apps_web_lib_tournament_nrr_engine_issamegroupname",
+      "label": "isSameGroupName()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "group-stage-points-table.test.ts",
+      "file_type": "code",
+      "norm_label": "issamegroupname()",
+      "source_file": "apps/web/lib/tournament/nrr-engine.ts",
+      "source_location": "L76"
+    },
+    {
+      "id": "apps_web_lib_tournament_nrr_engine_normalizegroupkey",
+      "label": "normalizeGroupKey()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "group-stage-points-table.test.ts",
+      "file_type": "code",
+      "norm_label": "normalizegroupkey()",
+      "source_file": "apps/web/lib/tournament/nrr-engine.ts",
+      "source_location": "L67"
+    },
+    {
       "id": "apps_web_app_secretpath_admin_tournament_bracket_page_admintournamentbracketpage",
       "label": "AdminTournamentBracketPage()",
       "_callable": true,
@@ -5064,7 +4824,7 @@
       "file_type": "code",
       "norm_label": "advance6teamtournament()",
       "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L1087"
+      "source_location": "L1116"
     },
     {
       "id": "apps_web_lib_tournament_tournament_service_advance7teamtournament",
@@ -5076,7 +4836,7 @@
       "file_type": "code",
       "norm_label": "advance7teamtournament()",
       "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L1360"
+      "source_location": "L1389"
     },
     {
       "id": "apps_web_lib_tournament_tournament_service_advance8teamtournament",
@@ -5088,7 +4848,7 @@
       "file_type": "code",
       "norm_label": "advance8teamtournament()",
       "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L1536"
+      "source_location": "L1565"
     },
     {
       "id": "apps_web_lib_tournament_tournament_service_assignteamstogroups",
@@ -5112,7 +4872,7 @@
       "file_type": "code",
       "norm_label": "checkandadvancetournament()",
       "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L1024"
+      "source_location": "L1053"
     },
     {
       "id": "apps_web_lib_tournament_tournament_service_configuretournamentstages",
@@ -5148,7 +4908,7 @@
       "file_type": "code",
       "norm_label": "generategroupstagefixtures()",
       "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L902"
+      "source_location": "L931"
     },
     {
       "id": "apps_web_lib_tournament_tournament_service_gettournamentoverview",
@@ -5196,7 +4956,7 @@
       "file_type": "code",
       "norm_label": "recalculatetournamentstandings()",
       "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L1740"
+      "source_location": "L1769"
     },
     {
       "id": "apps_web_lib_tournament_tournament_service_resettournamentfixtures",
@@ -5208,7 +4968,7 @@
       "file_type": "code",
       "norm_label": "resettournamentfixtures()",
       "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L817"
+      "source_location": "L846"
     },
     {
       "id": "apps_web_lib_tournament_tournament_service_unassignallteams",
@@ -5583,6 +5343,18 @@
       "source_location": "L254"
     },
     {
+      "id": "apps_web_lib_admin_admin_service_rejectregistrationaction",
+      "label": "rejectRegistrationAction()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 62,
+      "community_name": "admin-service.ts",
+      "file_type": "code",
+      "norm_label": "rejectregistrationaction()",
+      "source_file": "apps/web/lib/admin/admin-service.ts",
+      "source_location": "L617"
+    },
+    {
       "id": "apps_web_lib_admin_admin_service_verifyapprovalpreflight",
       "label": "verifyApprovalPreflight()",
       "_callable": true,
@@ -5667,100 +5439,40 @@
       "source_location": "L25"
     },
     {
-      "id": "apps_web_components_admin_exceptioncard_exceptioncard",
-      "label": "ExceptionCard()",
+      "id": "apps_web_components_admin_deletematchbutton_deletematchbutton",
+      "label": "DeleteMatchButton()",
       "_callable": true,
       "_origin": "ast",
       "community": 64,
-      "community_name": "ExceptionCard.tsx",
+      "community_name": "scoring-actions.ts",
       "file_type": "code",
-      "norm_label": "exceptioncard()",
-      "source_file": "apps/web/components/admin/ExceptionCard.tsx",
-      "source_location": "L24"
+      "norm_label": "deletematchbutton()",
+      "source_file": "apps/web/components/admin/DeleteMatchButton.tsx",
+      "source_location": "L12"
     },
     {
-      "id": "apps_web_components_admin_exceptioncard_exceptioncard_handledelete",
+      "id": "apps_web_components_admin_deletematchbutton_deletematchbutton_handledelete",
       "label": "handleDelete()",
       "_callable": true,
       "_origin": "ast",
       "community": 64,
-      "community_name": "ExceptionCard.tsx",
+      "community_name": "scoring-actions.ts",
       "file_type": "code",
       "norm_label": "handledelete()",
-      "source_file": "apps/web/components/admin/ExceptionCard.tsx",
-      "source_location": "L37"
+      "source_file": "apps/web/components/admin/DeleteMatchButton.tsx",
+      "source_location": "L19"
     },
     {
-      "id": "apps_web_components_admin_exceptioncard_exceptioncard_handletoggle",
-      "label": "handleToggle()",
+      "id": "apps_web_lib_scoring_scoring_actions_deletematchaction",
+      "label": "deleteMatchAction()",
       "_callable": true,
       "_origin": "ast",
       "community": 64,
-      "community_name": "ExceptionCard.tsx",
+      "community_name": "scoring-actions.ts",
       "file_type": "code",
-      "norm_label": "handletoggle()",
-      "source_file": "apps/web/components/admin/ExceptionCard.tsx",
-      "source_location": "L29"
-    },
-    {
-      "id": "apps_web_components_admin_exceptioncard_exceptioncard_handleupdate",
-      "label": "handleUpdate()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 64,
-      "community_name": "ExceptionCard.tsx",
-      "file_type": "code",
-      "norm_label": "handleupdate()",
-      "source_file": "apps/web/components/admin/ExceptionCard.tsx",
-      "source_location": "L52"
-    },
-    {
-      "id": "apps_web_lib_admin_admin_actions_deleteexceptionserveraction",
-      "label": "deleteExceptionServerAction()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 64,
-      "community_name": "ExceptionCard.tsx",
-      "file_type": "code",
-      "norm_label": "deleteexceptionserveraction()",
-      "source_file": "apps/web/lib/admin/admin-actions.ts",
-      "source_location": "L171"
-    },
-    {
-      "id": "apps_web_lib_admin_admin_actions_toggleexceptionserveraction",
-      "label": "toggleExceptionServerAction()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 64,
-      "community_name": "ExceptionCard.tsx",
-      "file_type": "code",
-      "norm_label": "toggleexceptionserveraction()",
-      "source_file": "apps/web/lib/admin/admin-actions.ts",
-      "source_location": "L129"
-    },
-    {
-      "id": "apps_web_lib_admin_admin_actions_updateexceptionserveraction",
-      "label": "updateExceptionServerAction()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 64,
-      "community_name": "ExceptionCard.tsx",
-      "file_type": "code",
-      "norm_label": "updateexceptionserveraction()",
-      "source_file": "apps/web/lib/admin/admin-actions.ts",
-      "source_location": "L139"
-    },
-    {
-      "id": "apps_web_lib_admin_admin_service_toggleexceptionstatus",
-      "label": "toggleExceptionStatus()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 64,
-      "community_name": "ExceptionCard.tsx",
-      "file_type": "code",
-      "norm_label": "toggleexceptionstatus()",
-      "source_file": "apps/web/lib/admin/admin-service.ts",
-      "source_location": "L739"
+      "norm_label": "deletematchaction()",
+      "source_file": "apps/web/lib/scoring/scoring-actions.ts",
+      "source_location": "L222"
     },
     {
       "id": "apps_web_app_secretpath_admin_layout_managementlayout",
@@ -6255,40 +5967,52 @@
       "source_location": "L3"
     },
     {
-      "id": "apps_web_app_secretpath_admin_tournaments_new_page_newtournamentpage",
-      "label": "NewTournamentPage()",
+      "id": "apps_web_app_tournament_components_groupstandingssection_groupstandingssection",
+      "label": "GroupStandingsSection()",
       "_callable": true,
       "_origin": "ast",
       "community": 81,
-      "community_name": "createTournamentServerAction",
+      "community_name": "normalizeImageUrl",
       "file_type": "code",
-      "norm_label": "newtournamentpage()",
-      "source_file": "apps/web/app/[secretPath]/(admin)/tournaments/new/page.tsx",
-      "source_location": "L8"
+      "norm_label": "groupstandingssection()",
+      "source_file": "apps/web/app/tournament/components/GroupStandingsSection.tsx",
+      "source_location": "L16"
     },
     {
-      "id": "apps_web_app_secretpath_admin_tournaments_new_page_newtournamentpage_handlesubmit",
-      "label": "handleSubmit()",
+      "id": "apps_web_app_tournament_components_liveornextmatchspotlight_liveornextmatchspotlight",
+      "label": "LiveOrNextMatchSpotlight()",
       "_callable": true,
       "_origin": "ast",
       "community": 81,
-      "community_name": "createTournamentServerAction",
+      "community_name": "normalizeImageUrl",
       "file_type": "code",
-      "norm_label": "handlesubmit()",
-      "source_file": "apps/web/app/[secretPath]/(admin)/tournaments/new/page.tsx",
-      "source_location": "L15"
+      "norm_label": "liveornextmatchspotlight()",
+      "source_file": "apps/web/app/tournament/components/LiveOrNextMatchSpotlight.tsx",
+      "source_location": "L13"
     },
     {
-      "id": "apps_web_lib_admin_admin_actions_createtournamentserveraction",
-      "label": "createTournamentServerAction()",
+      "id": "apps_web_app_tournament_components_playoffbrackettree_playoffbrackettree",
+      "label": "PlayoffBracketTree()",
       "_callable": true,
       "_origin": "ast",
       "community": 81,
-      "community_name": "createTournamentServerAction",
+      "community_name": "normalizeImageUrl",
       "file_type": "code",
-      "norm_label": "createtournamentserveraction()",
-      "source_file": "apps/web/lib/admin/admin-actions.ts",
-      "source_location": "L248"
+      "norm_label": "playoffbrackettree()",
+      "source_file": "apps/web/app/tournament/components/PlayoffBracketTree.tsx",
+      "source_location": "L29"
+    },
+    {
+      "id": "apps_web_lib_utils_image_utils_normalizeimageurl",
+      "label": "normalizeImageUrl()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 81,
+      "community_name": "normalizeImageUrl",
+      "file_type": "code",
+      "norm_label": "normalizeimageurl()",
+      "source_file": "apps/web/lib/utils/image-utils.ts",
+      "source_location": "L11"
     },
     {
       "id": "apps_web_app_secretpath_admin_tournaments_page_admintournamentspage",
@@ -6349,6 +6073,162 @@
       "norm_label": "deletetournamentserveraction()",
       "source_file": "apps/web/lib/admin/admin-actions.ts",
       "source_location": "L537"
+    },
+    {
+      "id": "apps_web_app_scorecard_page_scorecardcontent",
+      "label": "ScorecardContent()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 83,
+      "community_name": "createClient",
+      "file_type": "code",
+      "norm_label": "scorecardcontent()",
+      "source_file": "apps/web/app/scorecard/page.tsx",
+      "source_location": "L15"
+    },
+    {
+      "id": "apps_web_app_secretpath_admin_players_new_page_newplayerpage",
+      "label": "NewPlayerPage()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 83,
+      "community_name": "createClient",
+      "file_type": "code",
+      "norm_label": "newplayerpage()",
+      "source_file": "apps/web/app/[secretPath]/(admin)/players/new/page.tsx",
+      "source_location": "L9"
+    },
+    {
+      "id": "apps_web_app_secretpath_admin_players_new_page_newplayerpage_handlesubmit",
+      "label": "handleSubmit()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 83,
+      "community_name": "createClient",
+      "file_type": "code",
+      "norm_label": "handlesubmit()",
+      "source_file": "apps/web/app/[secretPath]/(admin)/players/new/page.tsx",
+      "source_location": "L28"
+    },
+    {
+      "id": "apps_web_app_secretpath_admin_teams_new_page_newteampage",
+      "label": "NewTeamPage()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 83,
+      "community_name": "createClient",
+      "file_type": "code",
+      "norm_label": "newteampage()",
+      "source_file": "apps/web/app/[secretPath]/(admin)/teams/new/page.tsx",
+      "source_location": "L9"
+    },
+    {
+      "id": "apps_web_app_secretpath_admin_teams_new_page_newteampage_handlesubmit",
+      "label": "handleSubmit()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 83,
+      "community_name": "createClient",
+      "file_type": "code",
+      "norm_label": "handlesubmit()",
+      "source_file": "apps/web/app/[secretPath]/(admin)/teams/new/page.tsx",
+      "source_location": "L28"
+    },
+    {
+      "id": "apps_web_lib_admin_admin_actions_createplayerserveraction",
+      "label": "createPlayerServerAction()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 83,
+      "community_name": "createClient",
+      "file_type": "code",
+      "norm_label": "createplayerserveraction()",
+      "source_file": "apps/web/lib/admin/admin-actions.ts",
+      "source_location": "L215"
+    },
+    {
+      "id": "apps_web_lib_admin_admin_actions_createteamserveraction",
+      "label": "createTeamServerAction()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 83,
+      "community_name": "createClient",
+      "file_type": "code",
+      "norm_label": "createteamserveraction()",
+      "source_file": "apps/web/lib/admin/admin-actions.ts",
+      "source_location": "L186"
+    },
+    {
+      "id": "apps_web_utils_supabase_client_createclient",
+      "label": "createClient()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 83,
+      "community_name": "createClient",
+      "file_type": "code",
+      "norm_label": "createclient()",
+      "source_file": "apps/web/utils/supabase/client.ts",
+      "source_location": "L8"
+    },
+    {
+      "id": "apps_web_app_secretpath_admin_matches_new_newmatchform_newmatchform",
+      "label": "NewMatchForm()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 84,
+      "community_name": "matches/new/page.tsx",
+      "file_type": "code",
+      "norm_label": "newmatchform()",
+      "source_file": "apps/web/app/[secretPath]/(admin)/matches/new/NewMatchForm.tsx",
+      "source_location": "L29"
+    },
+    {
+      "id": "apps_web_app_secretpath_admin_matches_new_page_newmatchpage",
+      "label": "NewMatchPage()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 84,
+      "community_name": "matches/new/page.tsx",
+      "file_type": "code",
+      "norm_label": "newmatchpage()",
+      "source_file": "apps/web/app/[secretPath]/(admin)/matches/new/page.tsx",
+      "source_location": "L8"
+    },
+    {
+      "id": "apps_web_lib_scoring_scoring_actions_creatematchaction",
+      "label": "createMatchAction()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 84,
+      "community_name": "matches/new/page.tsx",
+      "file_type": "code",
+      "norm_label": "creatematchaction()",
+      "source_file": "apps/web/lib/scoring/scoring-actions.ts",
+      "source_location": "L34"
+    },
+    {
+      "id": "apps_web_lib_scoring_scoring_actions_startmatchaction",
+      "label": "startMatchAction()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 84,
+      "community_name": "matches/new/page.tsx",
+      "file_type": "code",
+      "norm_label": "startmatchaction()",
+      "source_file": "apps/web/lib/scoring/scoring-actions.ts",
+      "source_location": "L43"
+    },
+    {
+      "id": "apps_web_lib_scoring_scoring_service_creatematch",
+      "label": "createMatch()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 84,
+      "community_name": "matches/new/page.tsx",
+      "file_type": "code",
+      "norm_label": "creatematch()",
+      "source_file": "apps/web/lib/scoring/scoring-service.ts",
+      "source_location": "L605"
     },
     {
       "id": "apps_web_lib_offline_projection_applyoperationtoprojection",
@@ -6541,6 +6421,126 @@
       "norm_label": "createico()",
       "source_file": "apps/web/scripts/generate-favicons.js",
       "source_location": "L99"
+    },
+    {
+      "id": "apps_web_app_secretpath_admin_registrations_id_registrationdetailclient_registrationdetailclient",
+      "label": "RegistrationDetailClient()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 87,
+      "community_name": "RegistrationDetailClient.tsx",
+      "file_type": "code",
+      "norm_label": "registrationdetailclient()",
+      "source_file": "apps/web/app/[secretPath]/(admin)/registrations/[id]/RegistrationDetailClient.tsx",
+      "source_location": "L17"
+    },
+    {
+      "id": "apps_web_components_admin_deleteregistrationbutton_deleteregistrationbutton",
+      "label": "DeleteRegistrationButton()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 87,
+      "community_name": "RegistrationDetailClient.tsx",
+      "file_type": "code",
+      "norm_label": "deleteregistrationbutton()",
+      "source_file": "apps/web/components/admin/DeleteRegistrationButton.tsx",
+      "source_location": "L13"
+    },
+    {
+      "id": "apps_web_components_admin_deleteregistrationbutton_deleteregistrationbutton_handledelete",
+      "label": "handleDelete()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 87,
+      "community_name": "RegistrationDetailClient.tsx",
+      "file_type": "code",
+      "norm_label": "handledelete()",
+      "source_file": "apps/web/components/admin/DeleteRegistrationButton.tsx",
+      "source_location": "L21"
+    },
+    {
+      "id": "apps_web_lib_admin_admin_actions_approveregistrationserveraction",
+      "label": "approveRegistrationServerAction()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 87,
+      "community_name": "RegistrationDetailClient.tsx",
+      "file_type": "code",
+      "norm_label": "approveregistrationserveraction()",
+      "source_file": "apps/web/lib/admin/admin-actions.ts",
+      "source_location": "L35"
+    },
+    {
+      "id": "apps_web_lib_admin_admin_actions_deleteregistrationserveraction",
+      "label": "deleteRegistrationServerAction()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 87,
+      "community_name": "RegistrationDetailClient.tsx",
+      "file_type": "code",
+      "norm_label": "deleteregistrationserveraction()",
+      "source_file": "apps/web/lib/admin/admin-actions.ts",
+      "source_location": "L71"
+    },
+    {
+      "id": "apps_web_lib_admin_admin_actions_rejectregistrationserveraction",
+      "label": "rejectRegistrationServerAction()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 87,
+      "community_name": "RegistrationDetailClient.tsx",
+      "file_type": "code",
+      "norm_label": "rejectregistrationserveraction()",
+      "source_file": "apps/web/lib/admin/admin-actions.ts",
+      "source_location": "L54"
+    },
+    {
+      "id": "apps_web_lib_admin_admin_actions_retrybackupserveraction",
+      "label": "retryBackupServerAction()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 87,
+      "community_name": "RegistrationDetailClient.tsx",
+      "file_type": "code",
+      "norm_label": "retrybackupserveraction()",
+      "source_file": "apps/web/lib/admin/admin-actions.ts",
+      "source_location": "L94"
+    },
+    {
+      "id": "apps_web_app_tournament_components_playoffqualificationflow_playoffqualificationflow",
+      "label": "PlayoffQualificationFlow()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 88,
+      "community_name": "TournamentBracket.tsx",
+      "file_type": "code",
+      "norm_label": "playoffqualificationflow()",
+      "source_file": "apps/web/app/tournament/components/PlayoffQualificationFlow.tsx",
+      "source_location": "L17"
+    },
+    {
+      "id": "apps_web_app_tournament_components_sixteamwildcardsection_sixteamwildcardsection",
+      "label": "SixTeamWildcardSection()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 88,
+      "community_name": "TournamentBracket.tsx",
+      "file_type": "code",
+      "norm_label": "sixteamwildcardsection()",
+      "source_file": "apps/web/app/tournament/components/SixTeamWildcardSection.tsx",
+      "source_location": "L23"
+    },
+    {
+      "id": "apps_web_components_tournamentbracket_tournamentbracket",
+      "label": "TournamentBracket()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 88,
+      "community_name": "TournamentBracket.tsx",
+      "file_type": "code",
+      "norm_label": "tournamentbracket()",
+      "source_file": "apps/web/components/TournamentBracket.tsx",
+      "source_location": "L9"
     },
     {
       "id": "apps_web_tests_security_audit_test_assert",
@@ -10176,36 +10176,25 @@
       "source_location": "L8"
     },
     {
-      "id": "apps_web_app_secretpath_admin_players_new_page",
-      "label": "players/new/page.tsx",
+      "id": "apps_web_app_secretpath_admin_tournaments_new_page",
+      "label": "tournaments/new/page.tsx",
       "_origin": "ast",
       "community": 37,
       "community_name": "admin-actions.ts",
       "file_type": "code",
-      "norm_label": "players/new/page.tsx",
-      "source_file": "apps/web/app/[secretPath]/(admin)/players/new/page.tsx",
+      "norm_label": "tournaments/new/page.tsx",
+      "source_file": "apps/web/app/[secretPath]/(admin)/tournaments/new/page.tsx",
       "source_location": "L1"
     },
     {
-      "id": "apps_web_app_secretpath_admin_registrations_id_registrationdetailclient",
-      "label": "RegistrationDetailClient.tsx",
+      "id": "apps_web_components_admin_exceptioncard",
+      "label": "ExceptionCard.tsx",
       "_origin": "ast",
       "community": 37,
       "community_name": "admin-actions.ts",
       "file_type": "code",
-      "norm_label": "registrationdetailclient.tsx",
-      "source_file": "apps/web/app/[secretPath]/(admin)/registrations/[id]/RegistrationDetailClient.tsx",
-      "source_location": "L1"
-    },
-    {
-      "id": "apps_web_components_admin_deleteregistrationbutton",
-      "label": "DeleteRegistrationButton.tsx",
-      "_origin": "ast",
-      "community": 37,
-      "community_name": "admin-actions.ts",
-      "file_type": "code",
-      "norm_label": "deleteregistrationbutton.tsx",
-      "source_file": "apps/web/components/admin/DeleteRegistrationButton.tsx",
+      "norm_label": "exceptioncard.tsx",
+      "source_file": "apps/web/components/admin/ExceptionCard.tsx",
       "source_location": "L1"
     },
     {
@@ -10345,65 +10334,10 @@
       "label": "FixturesAndResultsSection.tsx",
       "_origin": "ast",
       "community": 38,
-      "community_name": "normalizeImageUrl",
+      "community_name": "TournamentHubClient.tsx",
       "file_type": "code",
       "norm_label": "fixturesandresultssection.tsx",
       "source_file": "apps/web/app/tournament/components/FixturesAndResultsSection.tsx",
-      "source_location": "L1"
-    },
-    {
-      "id": "apps_web_app_tournament_components_groupstandingssection",
-      "label": "GroupStandingsSection.tsx",
-      "_origin": "ast",
-      "community": 38,
-      "community_name": "normalizeImageUrl",
-      "file_type": "code",
-      "norm_label": "groupstandingssection.tsx",
-      "source_file": "apps/web/app/tournament/components/GroupStandingsSection.tsx",
-      "source_location": "L1"
-    },
-    {
-      "id": "apps_web_app_tournament_components_liveornextmatchspotlight",
-      "label": "LiveOrNextMatchSpotlight.tsx",
-      "_origin": "ast",
-      "community": 38,
-      "community_name": "normalizeImageUrl",
-      "file_type": "code",
-      "norm_label": "liveornextmatchspotlight.tsx",
-      "source_file": "apps/web/app/tournament/components/LiveOrNextMatchSpotlight.tsx",
-      "source_location": "L1"
-    },
-    {
-      "id": "apps_web_app_tournament_components_playoffbrackettree",
-      "label": "PlayoffBracketTree.tsx",
-      "_origin": "ast",
-      "community": 38,
-      "community_name": "normalizeImageUrl",
-      "file_type": "code",
-      "norm_label": "playoffbrackettree.tsx",
-      "source_file": "apps/web/app/tournament/components/PlayoffBracketTree.tsx",
-      "source_location": "L1"
-    },
-    {
-      "id": "apps_web_app_tournament_components_playoffqualificationflow",
-      "label": "PlayoffQualificationFlow.tsx",
-      "_origin": "ast",
-      "community": 38,
-      "community_name": "normalizeImageUrl",
-      "file_type": "code",
-      "norm_label": "playoffqualificationflow.tsx",
-      "source_file": "apps/web/app/tournament/components/PlayoffQualificationFlow.tsx",
-      "source_location": "L1"
-    },
-    {
-      "id": "apps_web_app_tournament_components_sixteamwildcardsection",
-      "label": "SixTeamWildcardSection.tsx",
-      "_origin": "ast",
-      "community": 38,
-      "community_name": "normalizeImageUrl",
-      "file_type": "code",
-      "norm_label": "sixteamwildcardsection.tsx",
-      "source_file": "apps/web/app/tournament/components/SixTeamWildcardSection.tsx",
       "source_location": "L1"
     },
     {
@@ -10411,7 +10345,7 @@
       "label": "TournamentHeroHUD.tsx",
       "_origin": "ast",
       "community": 38,
-      "community_name": "normalizeImageUrl",
+      "community_name": "TournamentHubClient.tsx",
       "file_type": "code",
       "norm_label": "tournamentherohud.tsx",
       "source_file": "apps/web/app/tournament/components/TournamentHeroHUD.tsx",
@@ -10422,7 +10356,7 @@
       "label": "TournamentMetricsGrid.tsx",
       "_origin": "ast",
       "community": 38,
-      "community_name": "normalizeImageUrl",
+      "community_name": "TournamentHubClient.tsx",
       "file_type": "code",
       "norm_label": "tournamentmetricsgrid.tsx",
       "source_file": "apps/web/app/tournament/components/TournamentMetricsGrid.tsx",
@@ -10433,7 +10367,7 @@
       "label": "TournamentRegulationsSection.tsx",
       "_origin": "ast",
       "community": 38,
-      "community_name": "normalizeImageUrl",
+      "community_name": "TournamentHubClient.tsx",
       "file_type": "code",
       "norm_label": "tournamentregulationssection.tsx",
       "source_file": "apps/web/app/tournament/components/TournamentRegulationsSection.tsx",
@@ -10444,44 +10378,11 @@
       "label": "TournamentHubClient.tsx",
       "_origin": "ast",
       "community": 38,
-      "community_name": "normalizeImageUrl",
+      "community_name": "TournamentHubClient.tsx",
       "file_type": "code",
       "norm_label": "tournamenthubclient.tsx",
       "source_file": "apps/web/app/tournament/TournamentHubClient.tsx",
       "source_location": "L1"
-    },
-    {
-      "id": "apps_web_components_tournamentbracket",
-      "label": "TournamentBracket.tsx",
-      "_origin": "ast",
-      "community": 38,
-      "community_name": "normalizeImageUrl",
-      "file_type": "code",
-      "norm_label": "tournamentbracket.tsx",
-      "source_file": "apps/web/components/TournamentBracket.tsx",
-      "source_location": "L1"
-    },
-    {
-      "id": "apps_web_lib_utils_image_utils",
-      "label": "image-utils.ts",
-      "_origin": "ast",
-      "community": 38,
-      "community_name": "normalizeImageUrl",
-      "file_type": "code",
-      "norm_label": "image-utils.ts",
-      "source_file": "apps/web/lib/utils/image-utils.ts",
-      "source_location": "L1"
-    },
-    {
-      "id": "cache",
-      "label": "next/cache",
-      "_origin": "ast",
-      "community": 39,
-      "community_name": "requireAdminAuth",
-      "confidence": "EXTRACTED",
-      "file_type": "code",
-      "norm_label": "next/cache",
-      "source_file": "next/cache"
     },
     {
       "id": "apps_web_app_secretpath_admin_matches_id_score_scoringconsole",
@@ -10495,50 +10396,6 @@
       "source_location": "L1"
     },
     {
-      "id": "apps_web_app_secretpath_admin_matches_new_newmatchform",
-      "label": "NewMatchForm.tsx",
-      "_origin": "ast",
-      "community": 39,
-      "community_name": "requireAdminAuth",
-      "file_type": "code",
-      "norm_label": "newmatchform.tsx",
-      "source_file": "apps/web/app/[secretPath]/(admin)/matches/new/NewMatchForm.tsx",
-      "source_location": "L1"
-    },
-    {
-      "id": "apps_web_app_secretpath_admin_matches_new_page",
-      "label": "matches/new/page.tsx",
-      "_origin": "ast",
-      "community": 39,
-      "community_name": "requireAdminAuth",
-      "file_type": "code",
-      "norm_label": "matches/new/page.tsx",
-      "source_file": "apps/web/app/[secretPath]/(admin)/matches/new/page.tsx",
-      "source_location": "L1"
-    },
-    {
-      "id": "apps_web_app_secretpath_admin_matches_new_page_dynamic",
-      "label": "dynamic",
-      "_origin": "ast",
-      "community": 39,
-      "community_name": "requireAdminAuth",
-      "file_type": "code",
-      "norm_label": "dynamic",
-      "source_file": "apps/web/app/[secretPath]/(admin)/matches/new/page.tsx",
-      "source_location": "L6"
-    },
-    {
-      "id": "apps_web_components_admin_deletematchbutton",
-      "label": "DeleteMatchButton.tsx",
-      "_origin": "ast",
-      "community": 39,
-      "community_name": "requireAdminAuth",
-      "file_type": "code",
-      "norm_label": "deletematchbutton.tsx",
-      "source_file": "apps/web/components/admin/DeleteMatchButton.tsx",
-      "source_location": "L1"
-    },
-    {
       "id": "apps_web_components_scoring_scoringconsole",
       "label": "scoring/ScoringConsole.tsx",
       "_origin": "ast",
@@ -10548,171 +10405,6 @@
       "norm_label": "scoring/scoringconsole.tsx",
       "source_file": "apps/web/components/scoring/ScoringConsole.tsx",
       "source_location": "L1"
-    },
-    {
-      "id": "apps_web_lib_scoring_scoring_actions",
-      "label": "scoring-actions.ts",
-      "_origin": "ast",
-      "community": 39,
-      "community_name": "requireAdminAuth",
-      "file_type": "code",
-      "norm_label": "scoring-actions.ts",
-      "source_file": "apps/web/lib/scoring/scoring-actions.ts",
-      "source_location": "L1"
-    },
-    {
-      "id": "apps_web_lib_validations_scoring",
-      "label": "scoring.ts",
-      "_origin": "ast",
-      "community": 39,
-      "community_name": "requireAdminAuth",
-      "file_type": "code",
-      "norm_label": "scoring.ts",
-      "source_file": "apps/web/lib/validations/scoring.ts",
-      "source_location": "L1"
-    },
-    {
-      "id": "apps_web_lib_validations_scoring_changebowlerschema",
-      "label": "changeBowlerSchema",
-      "_origin": "ast",
-      "community": 39,
-      "community_name": "requireAdminAuth",
-      "file_type": "code",
-      "norm_label": "changebowlerschema",
-      "source_file": "apps/web/lib/validations/scoring.ts",
-      "source_location": "L67"
-    },
-    {
-      "id": "apps_web_lib_validations_scoring_completematchschema",
-      "label": "completeMatchSchema",
-      "_origin": "ast",
-      "community": 39,
-      "community_name": "requireAdminAuth",
-      "file_type": "code",
-      "norm_label": "completematchschema",
-      "source_file": "apps/web/lib/validations/scoring.ts",
-      "source_location": "L80"
-    },
-    {
-      "id": "apps_web_lib_validations_scoring_creatematchschema",
-      "label": "createMatchSchema",
-      "_origin": "ast",
-      "community": 39,
-      "community_name": "requireAdminAuth",
-      "file_type": "code",
-      "norm_label": "creatematchschema",
-      "source_file": "apps/web/lib/validations/scoring.ts",
-      "source_location": "L36"
-    },
-    {
-      "id": "apps_web_lib_validations_scoring_editballdeliveryschema",
-      "label": "editBallDeliverySchema",
-      "_origin": "ast",
-      "community": 39,
-      "community_name": "requireAdminAuth",
-      "file_type": "code",
-      "norm_label": "editballdeliveryschema",
-      "source_file": "apps/web/lib/validations/scoring.ts",
-      "source_location": "L85"
-    },
-    {
-      "id": "apps_web_lib_validations_scoring_extratypeenum",
-      "label": "extraTypeEnum",
-      "_origin": "ast",
-      "community": 39,
-      "community_name": "requireAdminAuth",
-      "file_type": "code",
-      "norm_label": "extratypeenum",
-      "source_file": "apps/web/lib/validations/scoring.ts",
-      "source_location": "L3"
-    },
-    {
-      "id": "apps_web_lib_validations_scoring_openinglineupschema",
-      "label": "openingLineupSchema",
-      "_origin": "ast",
-      "community": 39,
-      "community_name": "requireAdminAuth",
-      "file_type": "code",
-      "norm_label": "openinglineupschema",
-      "source_file": "apps/web/lib/validations/scoring.ts",
-      "source_location": "L58"
-    },
-    {
-      "id": "apps_web_lib_validations_scoring_recorddeliveryschema",
-      "label": "recordDeliverySchema",
-      "_origin": "ast",
-      "community": 39,
-      "community_name": "requireAdminAuth",
-      "file_type": "code",
-      "norm_label": "recorddeliveryschema",
-      "source_file": "apps/web/lib/validations/scoring.ts",
-      "source_location": "L19"
-    },
-    {
-      "id": "apps_web_lib_validations_scoring_renameplayerschema",
-      "label": "renamePlayerSchema",
-      "_origin": "ast",
-      "community": 39,
-      "community_name": "requireAdminAuth",
-      "file_type": "code",
-      "norm_label": "renameplayerschema",
-      "source_file": "apps/web/lib/validations/scoring.ts",
-      "source_location": "L105"
-    },
-    {
-      "id": "apps_web_lib_validations_scoring_startmatchschema",
-      "label": "startMatchSchema",
-      "_origin": "ast",
-      "community": 39,
-      "community_name": "requireAdminAuth",
-      "file_type": "code",
-      "norm_label": "startmatchschema",
-      "source_file": "apps/web/lib/validations/scoring.ts",
-      "source_location": "L53"
-    },
-    {
-      "id": "apps_web_lib_validations_scoring_startsuperoverschema",
-      "label": "startSuperOverSchema",
-      "_origin": "ast",
-      "community": 39,
-      "community_name": "requireAdminAuth",
-      "file_type": "code",
-      "norm_label": "startsuperoverschema",
-      "source_file": "apps/web/lib/validations/scoring.ts",
-      "source_location": "L95"
-    },
-    {
-      "id": "apps_web_lib_validations_scoring_switchbatterschema",
-      "label": "switchBatterSchema",
-      "_origin": "ast",
-      "community": 39,
-      "community_name": "requireAdminAuth",
-      "file_type": "code",
-      "norm_label": "switchbatterschema",
-      "source_file": "apps/web/lib/validations/scoring.ts",
-      "source_location": "L73"
-    },
-    {
-      "id": "apps_web_lib_validations_scoring_updatematchrulesschema",
-      "label": "updateMatchRulesSchema",
-      "_origin": "ast",
-      "community": 39,
-      "community_name": "requireAdminAuth",
-      "file_type": "code",
-      "norm_label": "updatematchrulesschema",
-      "source_file": "apps/web/lib/validations/scoring.ts",
-      "source_location": "L100"
-    },
-    {
-      "id": "apps_web_lib_validations_scoring_wickettypeenum",
-      "label": "wicketTypeEnum",
-      "_origin": "ast",
-      "community": 39,
-      "community_name": "requireAdminAuth",
-      "file_type": "code",
-      "norm_label": "wickettypeenum",
-      "source_file": "apps/web/lib/validations/scoring.ts",
-      "source_location": "L4"
     },
     {
       "id": "packages_database_package",
@@ -11496,17 +11188,6 @@
       "source_location": "L1"
     },
     {
-      "id": "apps_web_app_secretpath_admin_teams_new_page",
-      "label": "teams/new/page.tsx",
-      "_origin": "ast",
-      "community": 42,
-      "community_name": "GroundDisplayClient.tsx",
-      "file_type": "code",
-      "norm_label": "teams/new/page.tsx",
-      "source_file": "apps/web/app/[secretPath]/(admin)/teams/new/page.tsx",
-      "source_location": "L1"
-    },
-    {
       "id": "apps_web_components_livescorewidget",
       "label": "LiveScoreWidget.tsx",
       "_origin": "ast",
@@ -11526,17 +11207,6 @@
       "file_type": "code",
       "norm_label": "scoring-realtime.ts",
       "source_file": "apps/web/lib/scoring/scoring-realtime.ts",
-      "source_location": "L1"
-    },
-    {
-      "id": "apps_web_utils_supabase_client",
-      "label": "client.ts",
-      "_origin": "ast",
-      "community": 42,
-      "community_name": "GroundDisplayClient.tsx",
-      "file_type": "code",
-      "norm_label": "client.ts",
-      "source_file": "apps/web/utils/supabase/client.ts",
       "source_location": "L1"
     },
     {
@@ -13311,15 +12981,191 @@
       "source_location": "L1"
     },
     {
-      "id": "apps_web_components_admin_exceptioncard",
-      "label": "ExceptionCard.tsx",
+      "id": "cache",
+      "label": "next/cache",
       "_origin": "ast",
       "community": 64,
-      "community_name": "ExceptionCard.tsx",
+      "community_name": "scoring-actions.ts",
+      "confidence": "EXTRACTED",
       "file_type": "code",
-      "norm_label": "exceptioncard.tsx",
-      "source_file": "apps/web/components/admin/ExceptionCard.tsx",
+      "norm_label": "next/cache",
+      "source_file": "next/cache"
+    },
+    {
+      "id": "apps_web_components_admin_deletematchbutton",
+      "label": "DeleteMatchButton.tsx",
+      "_origin": "ast",
+      "community": 64,
+      "community_name": "scoring-actions.ts",
+      "file_type": "code",
+      "norm_label": "deletematchbutton.tsx",
+      "source_file": "apps/web/components/admin/DeleteMatchButton.tsx",
       "source_location": "L1"
+    },
+    {
+      "id": "apps_web_lib_scoring_scoring_actions",
+      "label": "scoring-actions.ts",
+      "_origin": "ast",
+      "community": 64,
+      "community_name": "scoring-actions.ts",
+      "file_type": "code",
+      "norm_label": "scoring-actions.ts",
+      "source_file": "apps/web/lib/scoring/scoring-actions.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "apps_web_lib_validations_scoring",
+      "label": "scoring.ts",
+      "_origin": "ast",
+      "community": 64,
+      "community_name": "scoring-actions.ts",
+      "file_type": "code",
+      "norm_label": "scoring.ts",
+      "source_file": "apps/web/lib/validations/scoring.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "apps_web_lib_validations_scoring_changebowlerschema",
+      "label": "changeBowlerSchema",
+      "_origin": "ast",
+      "community": 64,
+      "community_name": "scoring-actions.ts",
+      "file_type": "code",
+      "norm_label": "changebowlerschema",
+      "source_file": "apps/web/lib/validations/scoring.ts",
+      "source_location": "L67"
+    },
+    {
+      "id": "apps_web_lib_validations_scoring_completematchschema",
+      "label": "completeMatchSchema",
+      "_origin": "ast",
+      "community": 64,
+      "community_name": "scoring-actions.ts",
+      "file_type": "code",
+      "norm_label": "completematchschema",
+      "source_file": "apps/web/lib/validations/scoring.ts",
+      "source_location": "L80"
+    },
+    {
+      "id": "apps_web_lib_validations_scoring_creatematchschema",
+      "label": "createMatchSchema",
+      "_origin": "ast",
+      "community": 64,
+      "community_name": "scoring-actions.ts",
+      "file_type": "code",
+      "norm_label": "creatematchschema",
+      "source_file": "apps/web/lib/validations/scoring.ts",
+      "source_location": "L36"
+    },
+    {
+      "id": "apps_web_lib_validations_scoring_editballdeliveryschema",
+      "label": "editBallDeliverySchema",
+      "_origin": "ast",
+      "community": 64,
+      "community_name": "scoring-actions.ts",
+      "file_type": "code",
+      "norm_label": "editballdeliveryschema",
+      "source_file": "apps/web/lib/validations/scoring.ts",
+      "source_location": "L85"
+    },
+    {
+      "id": "apps_web_lib_validations_scoring_extratypeenum",
+      "label": "extraTypeEnum",
+      "_origin": "ast",
+      "community": 64,
+      "community_name": "scoring-actions.ts",
+      "file_type": "code",
+      "norm_label": "extratypeenum",
+      "source_file": "apps/web/lib/validations/scoring.ts",
+      "source_location": "L3"
+    },
+    {
+      "id": "apps_web_lib_validations_scoring_openinglineupschema",
+      "label": "openingLineupSchema",
+      "_origin": "ast",
+      "community": 64,
+      "community_name": "scoring-actions.ts",
+      "file_type": "code",
+      "norm_label": "openinglineupschema",
+      "source_file": "apps/web/lib/validations/scoring.ts",
+      "source_location": "L58"
+    },
+    {
+      "id": "apps_web_lib_validations_scoring_recorddeliveryschema",
+      "label": "recordDeliverySchema",
+      "_origin": "ast",
+      "community": 64,
+      "community_name": "scoring-actions.ts",
+      "file_type": "code",
+      "norm_label": "recorddeliveryschema",
+      "source_file": "apps/web/lib/validations/scoring.ts",
+      "source_location": "L19"
+    },
+    {
+      "id": "apps_web_lib_validations_scoring_renameplayerschema",
+      "label": "renamePlayerSchema",
+      "_origin": "ast",
+      "community": 64,
+      "community_name": "scoring-actions.ts",
+      "file_type": "code",
+      "norm_label": "renameplayerschema",
+      "source_file": "apps/web/lib/validations/scoring.ts",
+      "source_location": "L105"
+    },
+    {
+      "id": "apps_web_lib_validations_scoring_startmatchschema",
+      "label": "startMatchSchema",
+      "_origin": "ast",
+      "community": 64,
+      "community_name": "scoring-actions.ts",
+      "file_type": "code",
+      "norm_label": "startmatchschema",
+      "source_file": "apps/web/lib/validations/scoring.ts",
+      "source_location": "L53"
+    },
+    {
+      "id": "apps_web_lib_validations_scoring_startsuperoverschema",
+      "label": "startSuperOverSchema",
+      "_origin": "ast",
+      "community": 64,
+      "community_name": "scoring-actions.ts",
+      "file_type": "code",
+      "norm_label": "startsuperoverschema",
+      "source_file": "apps/web/lib/validations/scoring.ts",
+      "source_location": "L95"
+    },
+    {
+      "id": "apps_web_lib_validations_scoring_switchbatterschema",
+      "label": "switchBatterSchema",
+      "_origin": "ast",
+      "community": 64,
+      "community_name": "scoring-actions.ts",
+      "file_type": "code",
+      "norm_label": "switchbatterschema",
+      "source_file": "apps/web/lib/validations/scoring.ts",
+      "source_location": "L73"
+    },
+    {
+      "id": "apps_web_lib_validations_scoring_updatematchrulesschema",
+      "label": "updateMatchRulesSchema",
+      "_origin": "ast",
+      "community": 64,
+      "community_name": "scoring-actions.ts",
+      "file_type": "code",
+      "norm_label": "updatematchrulesschema",
+      "source_file": "apps/web/lib/validations/scoring.ts",
+      "source_location": "L100"
+    },
+    {
+      "id": "apps_web_lib_validations_scoring_wickettypeenum",
+      "label": "wicketTypeEnum",
+      "_origin": "ast",
+      "community": 64,
+      "community_name": "scoring-actions.ts",
+      "file_type": "code",
+      "norm_label": "wickettypeenum",
+      "source_file": "apps/web/lib/validations/scoring.ts",
+      "source_location": "L4"
     },
     {
       "id": "apps_web_app_secretpath_admin_layout",
@@ -14763,14 +14609,47 @@
       "source_location": "L1"
     },
     {
-      "id": "apps_web_app_secretpath_admin_tournaments_new_page",
-      "label": "tournaments/new/page.tsx",
+      "id": "apps_web_app_tournament_components_groupstandingssection",
+      "label": "GroupStandingsSection.tsx",
       "_origin": "ast",
       "community": 81,
-      "community_name": "createTournamentServerAction",
+      "community_name": "normalizeImageUrl",
       "file_type": "code",
-      "norm_label": "tournaments/new/page.tsx",
-      "source_file": "apps/web/app/[secretPath]/(admin)/tournaments/new/page.tsx",
+      "norm_label": "groupstandingssection.tsx",
+      "source_file": "apps/web/app/tournament/components/GroupStandingsSection.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "apps_web_app_tournament_components_liveornextmatchspotlight",
+      "label": "LiveOrNextMatchSpotlight.tsx",
+      "_origin": "ast",
+      "community": 81,
+      "community_name": "normalizeImageUrl",
+      "file_type": "code",
+      "norm_label": "liveornextmatchspotlight.tsx",
+      "source_file": "apps/web/app/tournament/components/LiveOrNextMatchSpotlight.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "apps_web_app_tournament_components_playoffbrackettree",
+      "label": "PlayoffBracketTree.tsx",
+      "_origin": "ast",
+      "community": 81,
+      "community_name": "normalizeImageUrl",
+      "file_type": "code",
+      "norm_label": "playoffbrackettree.tsx",
+      "source_file": "apps/web/app/tournament/components/PlayoffBracketTree.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "apps_web_lib_utils_image_utils",
+      "label": "image-utils.ts",
+      "_origin": "ast",
+      "community": 81,
+      "community_name": "normalizeImageUrl",
+      "file_type": "code",
+      "norm_label": "image-utils.ts",
+      "source_file": "apps/web/lib/utils/image-utils.ts",
       "source_location": "L1"
     },
     {
@@ -14805,6 +14684,72 @@
       "norm_label": "deletetournamentbutton.tsx",
       "source_file": "apps/web/components/admin/DeleteTournamentButton.tsx",
       "source_location": "L1"
+    },
+    {
+      "id": "apps_web_app_secretpath_admin_players_new_page",
+      "label": "players/new/page.tsx",
+      "_origin": "ast",
+      "community": 83,
+      "community_name": "createClient",
+      "file_type": "code",
+      "norm_label": "players/new/page.tsx",
+      "source_file": "apps/web/app/[secretPath]/(admin)/players/new/page.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "apps_web_app_secretpath_admin_teams_new_page",
+      "label": "teams/new/page.tsx",
+      "_origin": "ast",
+      "community": 83,
+      "community_name": "createClient",
+      "file_type": "code",
+      "norm_label": "teams/new/page.tsx",
+      "source_file": "apps/web/app/[secretPath]/(admin)/teams/new/page.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "apps_web_utils_supabase_client",
+      "label": "client.ts",
+      "_origin": "ast",
+      "community": 83,
+      "community_name": "createClient",
+      "file_type": "code",
+      "norm_label": "client.ts",
+      "source_file": "apps/web/utils/supabase/client.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "apps_web_app_secretpath_admin_matches_new_newmatchform",
+      "label": "NewMatchForm.tsx",
+      "_origin": "ast",
+      "community": 84,
+      "community_name": "matches/new/page.tsx",
+      "file_type": "code",
+      "norm_label": "newmatchform.tsx",
+      "source_file": "apps/web/app/[secretPath]/(admin)/matches/new/NewMatchForm.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "apps_web_app_secretpath_admin_matches_new_page",
+      "label": "matches/new/page.tsx",
+      "_origin": "ast",
+      "community": 84,
+      "community_name": "matches/new/page.tsx",
+      "file_type": "code",
+      "norm_label": "matches/new/page.tsx",
+      "source_file": "apps/web/app/[secretPath]/(admin)/matches/new/page.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "apps_web_app_secretpath_admin_matches_new_page_dynamic",
+      "label": "dynamic",
+      "_origin": "ast",
+      "community": 84,
+      "community_name": "matches/new/page.tsx",
+      "file_type": "code",
+      "norm_label": "dynamic",
+      "source_file": "apps/web/app/[secretPath]/(admin)/matches/new/page.tsx",
+      "source_location": "L6"
     },
     {
       "id": "apps_web_lib_offline_projection",
@@ -14915,6 +14860,61 @@
       "norm_label": "sharp",
       "source_file": "apps/web/scripts/generate-favicons.js",
       "source_location": "L3"
+    },
+    {
+      "id": "apps_web_app_secretpath_admin_registrations_id_registrationdetailclient",
+      "label": "RegistrationDetailClient.tsx",
+      "_origin": "ast",
+      "community": 87,
+      "community_name": "RegistrationDetailClient.tsx",
+      "file_type": "code",
+      "norm_label": "registrationdetailclient.tsx",
+      "source_file": "apps/web/app/[secretPath]/(admin)/registrations/[id]/RegistrationDetailClient.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "apps_web_components_admin_deleteregistrationbutton",
+      "label": "DeleteRegistrationButton.tsx",
+      "_origin": "ast",
+      "community": 87,
+      "community_name": "RegistrationDetailClient.tsx",
+      "file_type": "code",
+      "norm_label": "deleteregistrationbutton.tsx",
+      "source_file": "apps/web/components/admin/DeleteRegistrationButton.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "apps_web_app_tournament_components_playoffqualificationflow",
+      "label": "PlayoffQualificationFlow.tsx",
+      "_origin": "ast",
+      "community": 88,
+      "community_name": "TournamentBracket.tsx",
+      "file_type": "code",
+      "norm_label": "playoffqualificationflow.tsx",
+      "source_file": "apps/web/app/tournament/components/PlayoffQualificationFlow.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "apps_web_app_tournament_components_sixteamwildcardsection",
+      "label": "SixTeamWildcardSection.tsx",
+      "_origin": "ast",
+      "community": 88,
+      "community_name": "TournamentBracket.tsx",
+      "file_type": "code",
+      "norm_label": "sixteamwildcardsection.tsx",
+      "source_file": "apps/web/app/tournament/components/SixTeamWildcardSection.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "apps_web_components_tournamentbracket",
+      "label": "TournamentBracket.tsx",
+      "_origin": "ast",
+      "community": 88,
+      "community_name": "TournamentBracket.tsx",
+      "file_type": "code",
+      "norm_label": "tournamentbracket.tsx",
+      "source_file": "apps/web/components/TournamentBracket.tsx",
+      "source_location": "L1"
     },
     {
       "id": "apps_web_tests_stadium_monitor_realtime_test",
@@ -21806,7 +21806,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L1119",
+      "source_location": "L1148",
       "weight": 1.0
     },
     {
@@ -21818,7 +21818,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L1152",
+      "source_location": "L1181",
       "weight": 1.0
     },
     {
@@ -21830,7 +21830,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L1393",
+      "source_location": "L1422",
       "weight": 1.0
     },
     {
@@ -21842,7 +21842,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L1399",
+      "source_location": "L1428",
       "weight": 1.0
     },
     {
@@ -21854,7 +21854,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L1572",
+      "source_location": "L1601",
       "weight": 1.0
     },
     {
@@ -21866,7 +21866,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L1603",
+      "source_location": "L1632",
       "weight": 1.0
     },
     {
@@ -21890,7 +21890,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L1029",
+      "source_location": "L1058",
       "weight": 1.0
     },
     {
@@ -21902,7 +21902,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L1049",
+      "source_location": "L1078",
       "weight": 1.0
     },
     {
@@ -21914,7 +21914,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L1060",
+      "source_location": "L1089",
       "weight": 1.0
     },
     {
@@ -21926,11 +21926,11 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L1070",
+      "source_location": "L1099",
       "weight": 1.0
     },
     {
-      "source": "apps_web_lib_tournament_tournament_service_generategroupstagefixtures",
+      "source": "apps_web_lib_tournament_tournament_service_configuretournamentstages",
       "target": "apps_web_lib_tournament_tournament_formats_getformatconfig",
       "relation": "calls",
       "_origin": "ast",
@@ -21938,19 +21938,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L934",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_web_lib_tournament_tournament_service_generategroupstagefixtures",
-      "target": "apps_web_lib_tournament_tournament_service_configuretournamentstages",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L944",
+      "source_location": "L779",
       "weight": 1.0
     },
     {
@@ -21962,7 +21950,31 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L996",
+      "source_location": "L1025",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_tournament_tournament_service_generategroupstagefixtures",
+      "target": "apps_web_lib_tournament_tournament_formats_getformatconfig",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/web/lib/tournament/tournament-service.ts",
+      "source_location": "L963",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_tournament_tournament_service_generategroupstagefixtures",
+      "target": "apps_web_lib_tournament_tournament_service_configuretournamentstages",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/web/lib/tournament/tournament-service.ts",
+      "source_location": "L973",
       "weight": 1.0
     },
     {
@@ -22058,7 +22070,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L1741",
+      "source_location": "L1770",
       "weight": 1.0
     },
     {
@@ -39054,7 +39066,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L1024",
+      "source_location": "L1053",
       "weight": 1.0
     },
     {
@@ -39065,7 +39077,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L1087",
+      "source_location": "L1116",
       "weight": 1.0
     },
     {
@@ -39087,7 +39099,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L1360",
+      "source_location": "L1389",
       "weight": 1.0
     },
     {
@@ -39114,17 +39126,6 @@
     },
     {
       "source": "apps_web_lib_tournament_tournament_service",
-      "target": "apps_web_lib_tournament_tournament_service_advance8teamtournament",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L1536",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_web_lib_tournament_tournament_service",
       "target": "apps_web_lib_tournament_tournament_service_gettournamentoverview",
       "relation": "contains",
       "_origin": "ast",
@@ -39132,6 +39133,17 @@
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/tournament/tournament-service.ts",
       "source_location": "L156",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_tournament_tournament_service",
+      "target": "apps_web_lib_tournament_tournament_service_advance8teamtournament",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/lib/tournament/tournament-service.ts",
+      "source_location": "L1565",
       "weight": 1.0
     },
     {
@@ -39153,7 +39165,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L1740",
+      "source_location": "L1769",
       "weight": 1.0
     },
     {
@@ -39208,18 +39220,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L817",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_web_lib_tournament_tournament_service",
-      "target": "apps_web_lib_tournament_tournament_service_generategroupstagefixtures",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L902",
+      "source_location": "L846",
       "weight": 1.0
     },
     {
@@ -39231,6 +39232,17 @@
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/tournament/tournament-service.ts",
       "source_location": "L91",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_tournament_tournament_service",
+      "target": "apps_web_lib_tournament_tournament_service_generategroupstagefixtures",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/lib/tournament/tournament-service.ts",
+      "source_location": "L931",
       "weight": 1.0
     },
     {
@@ -45882,5 +45894,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "4d0129ac8abd1d45759789b9c6edfe48e85b55b7"
+  "built_at_commit": "5aa73f16c33f8e6bd73242b71e683c9634b67e57"
 }
