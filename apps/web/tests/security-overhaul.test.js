@@ -56,7 +56,7 @@ function verifyPasswordTest(input, stored) {
   }
 }
 
-const rawPassword = 'super-secure-production-admin-pass-2026!';
+const rawPassword = 'test-mock-admin-pass-2026!';
 const salt = crypto.randomBytes(16).toString('hex');
 const hashed = crypto.scryptSync(rawPassword, salt, 32).toString('hex');
 const scryptFormat = `$scrypt$${salt}$${hashed}`;

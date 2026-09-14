@@ -5,7 +5,7 @@ async function runRlsAdversarialGate() {
   console.log(' 3. ADVERSARIAL POSTGREST & RLS CATALOG GATE');
   console.log('======================================================\n');
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://gogtqabihqcoxozanklp.supabase.co';
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder-project.supabase.co';
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || '';
 
   const tables = [

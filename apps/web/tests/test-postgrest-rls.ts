@@ -3,7 +3,7 @@ import assert from 'assert';
 async function testPostgrestRls() {
   console.log('=== VERIFYING POSTGREST RLS RESTRICTIONS WITH ANON KEY ===');
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://gogtqabihqcoxozanklp.supabase.co';
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder-project.supabase.co';
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   if (!anonKey) {

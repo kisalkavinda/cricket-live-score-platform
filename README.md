@@ -255,7 +255,7 @@ GOOGLE_SHEETS_CLIENT_EMAIL=""
 GOOGLE_SHEETS_PRIVATE_KEY=""
 
 # Admin Authentication (Stealth Access)
-ADMIN_ENTRY_PATH="management-cpl-2026"
+ADMIN_ENTRY_PATH="your-custom-admin-secret-path"
 ADMIN_PASSWORD="your-strong-password"
 ADMIN_SESSION_SECRET="your-cryptographic-secret-string"
 ```
