@@ -17,7 +17,7 @@ export const tournamentConfig = {
   maxTeams: null,
   teamsRegistered: null,
 
-  contactPhones: ["+94 75 086 9776", "+94 75 360 2181"],
+  contactPhones: [],
   captainsWhatsappGroupUrl: "https://chat.whatsapp.com/BbdQ3ZlmjH0G6inbsFXhOb",
 
   // Official Match Rules & Tournament Information

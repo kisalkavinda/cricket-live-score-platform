@@ -222,9 +222,9 @@
     "semantic_hash": ""
   },
   "apps/web/components/Footer.tsx": {
-    "mtime": 1788764714.9647963,
-    "seen": 1788872679.3773665,
-    "ast_hash": "46adf12c6d2bcdab22092b9789733e01",
+    "mtime": 1789382937.3523235,
+    "seen": 1789382968.5133462,
+    "ast_hash": "5819f175f18a93d7d815477fe5bb0c8f",
     "semantic_hash": ""
   },
   "apps/web/components/Hero.tsx": {
@@ -378,9 +378,9 @@
     "semantic_hash": ""
   },
   "apps/web/config/tournament.ts": {
-    "mtime": 1788764714.9689825,
-    "seen": 1788872679.3808844,
-    "ast_hash": "09133002a37a826d27e73ff40f2555dc",
+    "mtime": 1789382898.8305414,
+    "seen": 1789382968.5164735,
+    "ast_hash": "04768803e1934c03803a8a8831620d85",
     "semantic_hash": ""
   },
   "apps/web/eslint.config.mjs": {
@@ -666,8 +666,8 @@
     "semantic_hash": ""
   },
   "apps/web/tests/security-overhaul.test.js": {
-    "mtime": 1789382438.522128,
-    "seen": 1789382547.0169282,
+    "mtime": 1789382711.5646284,
+    "seen": 1789382968.5243094,
     "ast_hash": "1fbadea5fe7b1ef09f38b3a03adb58f2",
     "semantic_hash": ""
   },
@@ -696,8 +696,8 @@
     "semantic_hash": ""
   },
   "scripts/manual-cookie-replay-test.js": {
-    "mtime": 1789382397.9135652,
-    "seen": 1789382547.0189533,
+    "mtime": 1789382711.5705023,
+    "seen": 1789382968.527905,
     "ast_hash": "c6f98b178d967b3551cda03835d4931a",
     "semantic_hash": ""
   },
@@ -852,14 +852,14 @@
     "semantic_hash": ""
   },
   "apps/web/tests/security-regression-suite.test.ts": {
-    "mtime": 1789382404.6506338,
-    "seen": 1789382547.016932,
+    "mtime": 1789382711.5657134,
+    "seen": 1789382968.5243127,
     "ast_hash": "a53cd8e4951b148a61add27d68e6c2b4",
     "semantic_hash": ""
   },
   "apps/web/tests/test-postgrest-rls.ts": {
-    "mtime": 1789382418.9493265,
-    "seen": 1789382547.0174296,
+    "mtime": 1789382711.5673716,
+    "seen": 1789382968.5252278,
     "ast_hash": "4c71584fa0c318ff1e7534b00bf0c1de",
     "semantic_hash": ""
   },
@@ -912,8 +912,8 @@
     "semantic_hash": ""
   },
   "apps/web/tests/test-adversarial-rls.ts": {
-    "mtime": 1789382412.0185122,
-    "seen": 1789382547.0171354,
+    "mtime": 1789382711.566276,
+    "seen": 1789382968.5247052,
     "ast_hash": "d04ce1195016d4c959e86d09f19fa08a",
     "semantic_hash": ""
   },
@@ -1218,8 +1218,8 @@
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1789382431.2130668,
-    "seen": 1789382547.020176,
+    "mtime": 1789382711.5635338,
+    "seen": 1789382968.5286124,
     "ast_hash": "c3fe90c5c82ad797c069a9078d7bbdca",
     "semantic_hash": ""
   }
