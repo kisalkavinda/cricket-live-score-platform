@@ -14,7 +14,7 @@ async function runCookieReplayTest() {
   console.log(' LIVE ADMIN SESSION REVOCATION & COOKIE REPLAY TEST');
   console.log('============================================================\n');
 
-  const secret = process.env.ADMIN_SESSION_SECRET || 'e98c772b14c34ff80b49f99e31d4bb60a89d71c432d667c482ef1372b6ef943e';
+  const secret = process.env.ADMIN_SESSION_SECRET || 'test-dummy-session-secret-for-cookie-replay-testing';
   
   // 1. Create a legitimate signed admin session token
   const timestamp = Date.now();
