@@ -157,49 +157,51 @@ export default function Footer() {
           </div>
 
           {/* Official Inquiries */}
-          <div>
-            <span
-              style={{
-                fontFamily: 'var(--font-body)',
-                fontSize: '0.75rem',
-                fontWeight: 700,
-                letterSpacing: '0.14em',
-                textTransform: 'uppercase',
-                color: 'var(--color-accent-bright)',
-                display: 'block',
-                marginBottom: 'var(--space-md)',
-              }}
-            >
-              Helpline & Inquiries
-            </span>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              {tournamentConfig.contactPhones?.map((phone, idx) => (
-                <a
-                  key={idx}
-                  href={`tel:${phone.replace(/\s+/g, '')}`}
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    color: 'rgba(255, 255, 255, 0.9)',
-                    textDecoration: 'none',
-                    fontFamily: 'var(--font-data)',
-                    fontSize: '0.92rem',
-                    fontWeight: 700,
-                    letterSpacing: '0.02em',
-                  }}
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent-bright)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
-                  </svg>
-                  <span>{phone}</span>
-                </a>
-              ))}
-              <span style={{ fontSize: '0.75rem', color: 'var(--color-ink-subtle)', marginTop: '2px' }}>
-                Available for team coordination & captain inquiries
+          {Boolean(tournamentConfig.contactPhones?.length) && (
+            <div>
+              <span
+                style={{
+                  fontFamily: 'var(--font-body)',
+                  fontSize: '0.75rem',
+                  fontWeight: 700,
+                  letterSpacing: '0.14em',
+                  textTransform: 'uppercase',
+                  color: 'var(--color-accent-bright)',
+                  display: 'block',
+                  marginBottom: 'var(--space-md)',
+                }}
+              >
+                Helpline & Inquiries
               </span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                {tournamentConfig.contactPhones.map((phone, idx) => (
+                  <a
+                    key={idx}
+                    href={`tel:${phone.replace(/\s+/g, '')}`}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      color: 'rgba(255, 255, 255, 0.9)',
+                      textDecoration: 'none',
+                      fontFamily: 'var(--font-data)',
+                      fontSize: '0.92rem',
+                      fontWeight: 700,
+                      letterSpacing: '0.02em',
+                    }}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent-bright)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+                    </svg>
+                    <span>{phone}</span>
+                  </a>
+                ))}
+                <span style={{ fontSize: '0.75rem', color: 'var(--color-ink-subtle)', marginTop: '2px' }}>
+                  Available for team coordination & captain inquiries
+                </span>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Captains Notice */}
           <div>
