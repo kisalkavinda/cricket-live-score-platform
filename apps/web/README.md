@@ -1,36 +1,36 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🏏 Computing Premier League — Web Application
 
-## Getting Started
+This directory contains the primary **Next.js 16** full-stack application for the **Computing Premier League (CPL)** cricket tournament platform.
 
-First, run the development server:
+For full architectural documentation, feature overviews, live deployment links, and setup guides, please refer to the root [README.md](../../README.md).
+
+---
+
+## 🌐 Live Production
+- **Live URL:** [https://computing-premier-league.vercel.app/](https://computing-premier-league.vercel.app/)
+
+---
+
+## 🚀 Quick Start for `apps/web`
 
 ```bash
+# Run from repository root
+npm run dev --workspace=web
+
+# Or from apps/web
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) to view the application.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 📦 Key Directory Map
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `app/` — Next.js App Router pages (Home, Tournament Hub, Draw Ceremony, Scorecard, Stadium Display, Stealth Admin)
+- `components/` — Reusable presentation and interaction components
+- `lib/scoring/` — Real-time scoring state, ball-by-ball actions, and validation
+- `lib/offline/` — IndexedDB local cache and background sync engine
+- `lib/tournament/` — NRR calculation, bracket generator, and stage progression
+- `lib/auth/` — Stealth admin authentication, rate limiting, and cryptographic session cookies
+- `config/` — Tournament configuration and CPL ruleset
