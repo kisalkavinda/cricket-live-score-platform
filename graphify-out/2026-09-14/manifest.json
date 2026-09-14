@@ -372,8 +372,8 @@
     "semantic_hash": "86ee0408066c88c00d58cf95dbf5d865"
   },
   "apps/web/components/scoring/ScoringConsole.tsx": {
-    "mtime": 1789294733.7426486,
-    "seen": 1789381363.5645573,
+    "mtime": 1789294472.0356305,
+    "seen": 1789294618.673989,
     "ast_hash": "0cad9f4523810ac6a202edcae91d9819",
     "semantic_hash": ""
   },
@@ -546,10 +546,10 @@
     "semantic_hash": "c24761f2f025888410db45036ea2eb70"
   },
   "package.json": {
-    "mtime": 1789374427.730648,
-    "seen": 1789381363.603369,
-    "ast_hash": "3c5b958a21b0652a917c2713102fc1ca",
-    "semantic_hash": ""
+    "mtime": 1786804673.2739887,
+    "seen": 1788034975.2229693,
+    "ast_hash": "38ef1f97c1b807d119d784ba72cb76b6",
+    "semantic_hash": "38ef1f97c1b807d119d784ba72cb76b6"
   },
   "packages/database/index.ts": {
     "mtime": 1789022195.1042793,
@@ -594,9 +594,9 @@
     "semantic_hash": ""
   },
   "apps/web/README.md": {
-    "mtime": 1789381315.8966684,
-    "seen": 1789381363.6101635,
-    "ast_hash": "b5628e4e682902613849c279e5c0816e",
+    "mtime": 1786217044.9934902,
+    "seen": 1788035584.7320962,
+    "ast_hash": "f15aaa42d5d299d091b1171097ea56ad",
     "semantic_hash": ""
   },
   "docs/cricket-platform-build-guide.md": {
@@ -1215,12 +1215,6 @@
     "mtime": 1789276143.5057573,
     "seen": 1789277034.8890758,
     "ast_hash": "e87a81754418a365b909bb61f3100043",
-    "semantic_hash": ""
-  },
-  "README.md": {
-    "mtime": 1789381301.34762,
-    "seen": 1789381363.6092172,
-    "ast_hash": "168c85c599076d2ce51f5dc613c3cc28",
     "semantic_hash": ""
   }
 }

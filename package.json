@@ -6,7 +6,6 @@
     "packages/*"
   ],
   "scripts": {
-
     "postinstall": "prisma generate --schema=packages/database/prisma/schema.prisma",
     "build": "npm run build --workspace=web",
     "dev": "npm run dev --workspace=web"
@@ -14,6 +13,8 @@
   "dependencies": {
     "@lottiefiles/dotlottie-react": "^0.19.13",
     "pg": "^8.23.0"
+  },
+  "devDependencies": {
+    "puppeteer-core": "^25.10.0"
   }
 }
-

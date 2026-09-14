@@ -20,6 +20,14 @@ skills-lock.json
 # Scratch / test scripts
 test-pg.js
 test-pooler.js
+scratch/
+**/scratch/
+linkedin-screenshots/
+scratch_*.py
+scratch_*.js
+update_*.py
+update_*.js
+test_*.js
 
 # Google Service Account keys and credentials (never commit)
 service-account*.json
