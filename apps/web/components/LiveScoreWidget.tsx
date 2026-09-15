@@ -54,10 +54,8 @@ export default function LiveScoreWidget() {
     }
     inFlightRef.current = true;
     try {
-      const res = await fetch(`/api/matches/live?_t=${Date.now()}`, {
-        cache: 'no-store',
-        headers: { 'Cache-Control': 'no-cache', Pragma: 'no-cache' },
-      });
+      const url = force ? '/api/matches/live?fresh=1' : '/api/matches/live';
+      const res = await fetch(url);
       if (!res.ok) return;
       const data = await res.json();
       if (data.success && data.matches && data.matches.length > 0) {
@@ -92,14 +90,13 @@ export default function LiveScoreWidget() {
   }, []);
 
   // 2. Fetch tournament stats (All Matches, Top Batters, Top Bowlers, MVP)
-  const fetchTournamentStats = useCallback(async () => {
-    if (inFlightStatsRef.current) return;
+  const fetchTournamentStats = useCallback(async (force = false) => {
+    if (inFlightStatsRef.current && !force) return;
     inFlightStatsRef.current = true;
     setStatsLoading(true);
     try {
-      const res = await fetch(`/api/tournament/stats?_t=${Date.now()}`, {
-        cache: 'no-store',
-      });
+      const url = force ? '/api/tournament/stats?fresh=1' : '/api/tournament/stats';
+      const res = await fetch(url);
       if (!res.ok) return;
       const data = await res.json();
       if (data.success) {
@@ -156,8 +153,6 @@ export default function LiveScoreWidget() {
 
         setLastUpdated(new Date().toLocaleTimeString());
       }
-      // Authoritative re-sync in background to ensure all nested relations are current
-      fetchLiveMatches(true);
     };
 
     // Global live matches channel
@@ -167,21 +162,32 @@ export default function LiveScoreWidget() {
       .on('broadcast', { event: 'score_update' }, handleBroadcastUpdate)
       .subscribe((status: any) => {
         if (status === 'SUBSCRIBED') {
-          fetchLiveMatches(true);
+          fetchLiveMatches(false);
         }
       });
 
-    // 4. Reliable 4s safety sync fallback
+    // 4. Safe sync fallback (8s) - paused when tab is inactive/hidden
     const interval = setInterval(() => {
+      if (typeof document !== 'undefined' && document.hidden) return;
       fetchLiveMatches();
       if (navTabRef.current !== 'LIVE') fetchTournamentStats();
-    }, 4000);
+    }, 8000);
+
+    // Immediate re-sync when tab becomes visible again
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        fetchLiveMatches(false);
+        if (navTabRef.current !== 'LIVE') fetchTournamentStats(false);
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
       try {
         supabase.removeChannel(liveChannel);
       } catch (e) {}
       clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [fetchLiveMatches, fetchTournamentStats, matches]);
 

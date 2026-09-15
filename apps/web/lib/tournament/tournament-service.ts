@@ -209,13 +209,7 @@ export async function getTournamentOverview(tournamentId?: string): Promise<Tour
         teamA: true,
         teamB: true,
         winnerTeam: true,
-        innings: {
-          include: {
-            ballEvents: {
-              select: { isLegal: true, extraType: true },
-            },
-          },
-        },
+        innings: true,
       },
       orderBy: { createdAt: 'asc' },
     }),

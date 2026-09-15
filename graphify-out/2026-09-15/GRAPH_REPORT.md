@@ -1,7 +1,7 @@
-# Graph Report - cricket-platform  (2026-09-15)
+# Graph Report - cricket-platform  (2026-09-14)
 
 ## Corpus Check
-- 198 files · ~259,754 words
+- 198 files · ~259,514 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -10,7 +10,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `cb340e11`
+- Built from commit: `0d0b649a`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 

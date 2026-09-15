@@ -2256,7 +2256,7 @@
       "file_type": "code",
       "norm_label": "fullscorecardpage()",
       "source_file": "apps/web/app/scorecard/page.tsx",
-      "source_location": "L2234"
+      "source_location": "L2231"
     },
     {
       "id": "apps_web_components_eventdetails_eventdetails",
@@ -5268,7 +5268,7 @@
       "file_type": "code",
       "norm_label": "advance6teamtournament()",
       "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L1110"
+      "source_location": "L1116"
     },
     {
       "id": "apps_web_lib_tournament_tournament_service_advance7teamtournament",
@@ -5280,7 +5280,7 @@
       "file_type": "code",
       "norm_label": "advance7teamtournament()",
       "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L1383"
+      "source_location": "L1389"
     },
     {
       "id": "apps_web_lib_tournament_tournament_service_advance8teamtournament",
@@ -5292,7 +5292,7 @@
       "file_type": "code",
       "norm_label": "advance8teamtournament()",
       "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L1559"
+      "source_location": "L1565"
     },
     {
       "id": "apps_web_lib_tournament_tournament_service_assignteamstogroups",
@@ -5304,7 +5304,7 @@
       "file_type": "code",
       "norm_label": "assignteamstogroups()",
       "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L589"
+      "source_location": "L595"
     },
     {
       "id": "apps_web_lib_tournament_tournament_service_checkandadvancetournament",
@@ -5316,7 +5316,7 @@
       "file_type": "code",
       "norm_label": "checkandadvancetournament()",
       "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L1047"
+      "source_location": "L1053"
     },
     {
       "id": "apps_web_lib_tournament_tournament_service_configuretournamentstages",
@@ -5328,7 +5328,7 @@
       "file_type": "code",
       "norm_label": "configuretournamentstages()",
       "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L744"
+      "source_location": "L750"
     },
     {
       "id": "apps_web_lib_tournament_tournament_service_creatematchrecord",
@@ -5352,7 +5352,7 @@
       "file_type": "code",
       "norm_label": "generategroupstagefixtures()",
       "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L925"
+      "source_location": "L931"
     },
     {
       "id": "apps_web_lib_tournament_tournament_service_gettournamentoverview",
@@ -5400,7 +5400,7 @@
       "file_type": "code",
       "norm_label": "recalculatetournamentstandings()",
       "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L1763"
+      "source_location": "L1769"
     },
     {
       "id": "apps_web_lib_tournament_tournament_service_resettournamentfixtures",
@@ -5412,7 +5412,7 @@
       "file_type": "code",
       "norm_label": "resettournamentfixtures()",
       "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L840"
+      "source_location": "L846"
     },
     {
       "id": "apps_web_lib_tournament_tournament_service_unassignallteams",
@@ -5424,7 +5424,7 @@
       "file_type": "code",
       "norm_label": "unassignallteams()",
       "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L679"
+      "source_location": "L685"
     },
     {
       "id": "apps_web_lib_tournament_tournament_service_updateteamsqualification",
@@ -5448,7 +5448,7 @@
       "file_type": "code",
       "norm_label": "updatetournamentformat()",
       "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L712"
+      "source_location": "L718"
     },
     {
       "id": "apps_web_tests_cpl_6team_tournament_simulation_test_run6teamsimulation",
@@ -15707,7 +15707,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/app/api/matches/[id]/scorecard/route.ts",
-      "source_location": "L34",
+      "source_location": "L24",
       "weight": 1.0
     },
     {
@@ -15719,7 +15719,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/app/api/matches/[id]/scorecard/route.ts",
-      "source_location": "L36",
+      "source_location": "L26",
       "weight": 1.0
     },
     {
@@ -15755,7 +15755,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/app/api/matches/live/route.ts",
-      "source_location": "L50",
+      "source_location": "L38",
       "weight": 1.0
     },
     {
@@ -15827,7 +15827,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/app/api/tournament/stats/route.ts",
-      "source_location": "L58",
+      "source_location": "L54",
       "weight": 1.0
     },
     {
@@ -15839,7 +15839,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/app/display/GroundDisplayClient.tsx",
-      "source_location": "L1611",
+      "source_location": "L1617",
       "weight": 1.0
     },
     {
@@ -15851,7 +15851,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/app/display/GroundDisplayClient.tsx",
-      "source_location": "L229",
+      "source_location": "L236",
       "weight": 1.0
     },
     {
@@ -15863,7 +15863,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/app/display/GroundDisplayClient.tsx",
-      "source_location": "L481",
+      "source_location": "L487",
       "weight": 1.0
     },
     {
@@ -15947,7 +15947,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/app/scorecard/page.tsx",
-      "source_location": "L106",
+      "source_location": "L103",
       "weight": 1.0
     },
     {
@@ -15959,7 +15959,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/app/scorecard/page.tsx",
-      "source_location": "L183",
+      "source_location": "L180",
       "weight": 1.0
     },
     {
@@ -17447,7 +17447,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/components/LiveScoreWidget.tsx",
-      "source_location": "L126",
+      "source_location": "L129",
       "weight": 1.0
     },
     {
@@ -17459,7 +17459,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/components/LiveScoreWidget.tsx",
-      "source_location": "L1904",
+      "source_location": "L1898",
       "weight": 1.0
     },
     {
@@ -17471,7 +17471,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/components/LiveScoreWidget.tsx",
-      "source_location": "L2017",
+      "source_location": "L2011",
       "weight": 1.0
     },
     {
@@ -17483,7 +17483,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/components/LiveScoreWidget.tsx",
-      "source_location": "L62",
+      "source_location": "L64",
       "weight": 1.0
     },
     {
@@ -22199,7 +22199,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L1142",
+      "source_location": "L1148",
       "weight": 1.0
     },
     {
@@ -22211,24 +22211,12 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L1175",
+      "source_location": "L1181",
       "weight": 1.0
     },
     {
       "source": "apps_web_lib_tournament_tournament_service_advance7teamtournament",
       "target": "apps_web_lib_tournament_tournament_service_updateteamsqualification",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L1416",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_web_lib_tournament_tournament_service_advance7teamtournament",
-      "target": "apps_web_lib_tournament_tournament_service_creatematchrecord",
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -22239,6 +22227,18 @@
       "weight": 1.0
     },
     {
+      "source": "apps_web_lib_tournament_tournament_service_advance7teamtournament",
+      "target": "apps_web_lib_tournament_tournament_service_creatematchrecord",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/web/lib/tournament/tournament-service.ts",
+      "source_location": "L1428",
+      "weight": 1.0
+    },
+    {
       "source": "apps_web_lib_tournament_tournament_service_advance8teamtournament",
       "target": "apps_web_lib_tournament_tournament_service_updateteamsqualification",
       "relation": "calls",
@@ -22247,7 +22247,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L1595",
+      "source_location": "L1601",
       "weight": 1.0
     },
     {
@@ -22259,7 +22259,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L1626",
+      "source_location": "L1632",
       "weight": 1.0
     },
     {
@@ -22271,7 +22271,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L602",
+      "source_location": "L608",
       "weight": 1.0
     },
     {
@@ -22283,7 +22283,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L1052",
+      "source_location": "L1058",
       "weight": 1.0
     },
     {
@@ -22295,7 +22295,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L1072",
+      "source_location": "L1078",
       "weight": 1.0
     },
     {
@@ -22307,7 +22307,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L1083",
+      "source_location": "L1089",
       "weight": 1.0
     },
     {
@@ -22319,7 +22319,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L1093",
+      "source_location": "L1099",
       "weight": 1.0
     },
     {
@@ -22331,7 +22331,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L773",
+      "source_location": "L779",
       "weight": 1.0
     },
     {
@@ -22343,7 +22343,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L1019",
+      "source_location": "L1025",
       "weight": 1.0
     },
     {
@@ -22355,7 +22355,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L957",
+      "source_location": "L963",
       "weight": 1.0
     },
     {
@@ -22367,7 +22367,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L967",
+      "source_location": "L973",
       "weight": 1.0
     },
     {
@@ -22403,7 +22403,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L228",
+      "source_location": "L234",
       "weight": 1.0
     },
     {
@@ -22415,7 +22415,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L265",
+      "source_location": "L271",
       "weight": 1.0
     },
     {
@@ -22427,7 +22427,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L276",
+      "source_location": "L282",
       "weight": 1.0
     },
     {
@@ -22439,7 +22439,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L279",
+      "source_location": "L285",
       "weight": 1.0
     },
     {
@@ -22451,7 +22451,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L311",
+      "source_location": "L317",
       "weight": 1.0
     },
     {
@@ -22463,7 +22463,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L1764",
+      "source_location": "L1770",
       "weight": 1.0
     },
     {
@@ -34906,7 +34906,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/app/scorecard/page.tsx",
-      "source_location": "L2234",
+      "source_location": "L2231",
       "weight": 1.0
     },
     {
@@ -39471,7 +39471,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L1047",
+      "source_location": "L1053",
       "weight": 1.0
     },
     {
@@ -39482,7 +39482,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L1110",
+      "source_location": "L1116",
       "weight": 1.0
     },
     {
@@ -39504,7 +39504,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L1383",
+      "source_location": "L1389",
       "weight": 1.0
     },
     {
@@ -39531,17 +39531,6 @@
     },
     {
       "source": "apps_web_lib_tournament_tournament_service",
-      "target": "apps_web_lib_tournament_tournament_service_advance8teamtournament",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L1559",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_web_lib_tournament_tournament_service",
       "target": "apps_web_lib_tournament_tournament_service_gettournamentoverview",
       "relation": "contains",
       "_origin": "ast",
@@ -39549,6 +39538,17 @@
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/tournament/tournament-service.ts",
       "source_location": "L156",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_tournament_tournament_service",
+      "target": "apps_web_lib_tournament_tournament_service_advance8teamtournament",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/lib/tournament/tournament-service.ts",
+      "source_location": "L1565",
       "weight": 1.0
     },
     {
@@ -39570,7 +39570,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L1763",
+      "source_location": "L1769",
       "weight": 1.0
     },
     {
@@ -39581,7 +39581,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L589",
+      "source_location": "L595",
       "weight": 1.0
     },
     {
@@ -39592,7 +39592,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L679",
+      "source_location": "L685",
       "weight": 1.0
     },
     {
@@ -39603,7 +39603,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L712",
+      "source_location": "L718",
       "weight": 1.0
     },
     {
@@ -39614,7 +39614,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L744",
+      "source_location": "L750",
       "weight": 1.0
     },
     {
@@ -39625,7 +39625,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L840",
+      "source_location": "L846",
       "weight": 1.0
     },
     {
@@ -39647,7 +39647,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/tournament/tournament-service.ts",
-      "source_location": "L925",
+      "source_location": "L931",
       "weight": 1.0
     },
     {
@@ -46651,5 +46651,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "cb340e119639d13a035447c06f9075322487a4ff"
+  "built_at_commit": "0d0b649a981c66c57bfabf815124a9130850f403"
 }

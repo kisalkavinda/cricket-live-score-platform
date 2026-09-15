@@ -174,7 +174,7 @@ export default function Footer() {
                 Helpline & Inquiries
               </span>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                {tournamentConfig.contactPhones.map((phone, idx) => (
+                {(tournamentConfig.contactPhones as string[]).map((phone: string, idx: number) => (
                   <a
                     key={idx}
                     href={`tel:${phone.replace(/\s+/g, '')}`}

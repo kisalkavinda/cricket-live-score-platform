@@ -37,13 +37,17 @@ export async function GET(request?: Request) {
       } catch {}
     }
 
+    const cacheHeaders = isFreshRequested
+      ? { 'Cache-Control': 'no-cache, no-store' }
+      : { 'Cache-Control': 'public, s-maxage=3, stale-while-revalidate=10' };
+
     if (!isFreshRequested && statsCache && statsCache.expiresAt > now) {
       return NextResponse.json(
         { success: true, ...statsCache.data },
         {
           headers: {
             'X-Cache': 'HIT',
-            'Cache-Control': 'no-cache, no-store',
+            ...cacheHeaders,
           },
         }
       );
@@ -63,7 +67,7 @@ export async function GET(request?: Request) {
       {
         headers: {
           'X-Cache': 'MISS',
-          'Cache-Control': 'no-cache, no-store',
+          ...cacheHeaders,
         },
       }
     );

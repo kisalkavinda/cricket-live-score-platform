@@ -22,11 +22,13 @@ export default function TournamentHubClient({ initialOverview }: Props) {
   const [lastRefreshed, setLastRefreshed] = useState<string>('');
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
 
-  // Poll for tournament state refresh every 10 seconds to keep live scores & bracket synced
-  const refreshTournamentData = useCallback(async () => {
+  // Poll for tournament state refresh every 20 seconds to keep live scores & bracket synced
+  const refreshTournamentData = useCallback(async (force = false) => {
+    if (!force && typeof document !== 'undefined' && document.hidden) return;
     setIsRefreshing(true);
     try {
-      const res = await fetch(`/api/tournament/stats?_t=${Date.now()}`, { cache: 'no-store' });
+      const url = force ? '/api/tournament/stats?fresh=1' : '/api/tournament/stats';
+      const res = await fetch(url);
       if (!res.ok) return;
       const data = await res.json();
       if (data.success && data.overview) {
@@ -42,8 +44,19 @@ export default function TournamentHubClient({ initialOverview }: Props) {
 
   useEffect(() => {
     setLastRefreshed(new Date().toLocaleTimeString());
-    const interval = setInterval(refreshTournamentData, 10000);
-    return () => clearInterval(interval);
+    const interval = setInterval(() => refreshTournamentData(false), 20000);
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        refreshTournamentData(false);
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, [refreshTournamentData]);
 
   // Initializing Screen (if overview not yet available)
@@ -97,7 +110,7 @@ export default function TournamentHubClient({ initialOverview }: Props) {
           </p>
 
           <button
-            onClick={refreshTournamentData}
+            onClick={() => refreshTournamentData(true)}
             style={{
               padding: '10px 24px',
               borderRadius: '9999px',
@@ -209,7 +222,7 @@ export default function TournamentHubClient({ initialOverview }: Props) {
         liveMatch={liveMatch}
         lastRefreshed={lastRefreshed}
         isRefreshing={isRefreshing}
-        onRefresh={refreshTournamentData}
+        onRefresh={() => refreshTournamentData(true)}
         crownedChampion={crownedChampion}
         tournamentFormat={overview.normalizedFormat || overview.tournamentFormat}
       />

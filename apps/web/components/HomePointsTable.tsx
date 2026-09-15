@@ -35,9 +35,11 @@ export default function HomePointsTable() {
   const [overview, setOverview] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
-  const fetchStandings = useCallback(async () => {
+  const fetchStandings = useCallback(async (force = false) => {
+    if (!force && typeof document !== 'undefined' && document.hidden) return;
     try {
-      const res = await fetch(`/api/tournament/stats?_t=${Date.now()}`, { cache: 'no-store' });
+      const url = force ? '/api/tournament/stats?fresh=1' : '/api/tournament/stats';
+      const res = await fetch(url);
       if (!res.ok) return;
       const data = await res.json();
       if (data.success && data.overview) {
@@ -51,9 +53,21 @@ export default function HomePointsTable() {
   }, []);
 
   useEffect(() => {
-    fetchStandings();
-    const interval = setInterval(fetchStandings, 15000);
-    return () => clearInterval(interval);
+    fetchStandings(true);
+    // 30s interval, pauses when tab is hidden
+    const interval = setInterval(() => fetchStandings(false), 30000);
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        fetchStandings(false);
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, [fetchStandings]);
 
   const groupData = activeGroup === 'A' ? overview?.groups?.groupA : overview?.groups?.groupB;
