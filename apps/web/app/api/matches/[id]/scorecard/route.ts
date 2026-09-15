@@ -21,6 +21,16 @@ export async function GET(
       return NextResponse.json({ success: false, error: 'Invalid match ID' }, { status: 400 });
     }
 
+    let isFreshRequested = false;
+    try {
+      const url = new URL(request.url);
+      isFreshRequested = url.searchParams.get('fresh') === '1';
+    } catch {}
+
+    const cacheHeaders = isFreshRequested
+      ? { 'Cache-Control': 'no-cache, no-store' }
+      : { 'Cache-Control': 'public, s-maxage=2, stale-while-revalidate=5' };
+
     const { data: cleanMatch, isHit } = await getCoalescedMatchScorecard(
       id,
       (cleanId) => getMatchDetail(cleanId),
@@ -36,7 +46,7 @@ export async function GET(
       {
         headers: {
           'X-Cache': isHit ? 'HIT' : 'MISS',
-          'Cache-Control': 'no-cache, no-store',
+          ...cacheHeaders,
         },
       }
     );

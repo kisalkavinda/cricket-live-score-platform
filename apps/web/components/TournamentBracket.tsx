@@ -10,9 +10,11 @@ export default function TournamentBracket() {
   const [overview, setOverview] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
-  const fetchTournamentData = useCallback(async () => {
+  const fetchTournamentData = useCallback(async (force = false) => {
+    if (!force && typeof document !== 'undefined' && document.hidden) return;
     try {
-      const res = await fetch(`/api/tournament/stats?_t=${Date.now()}`, { cache: 'no-store' });
+      const url = force ? '/api/tournament/stats?fresh=1' : '/api/tournament/stats';
+      const res = await fetch(url);
       if (!res.ok) return;
       const data = await res.json();
       if (data.success && data.overview) {
@@ -26,9 +28,21 @@ export default function TournamentBracket() {
   }, []);
 
   useEffect(() => {
-    fetchTournamentData();
-    const interval = setInterval(fetchTournamentData, 15000);
-    return () => clearInterval(interval);
+    fetchTournamentData(true);
+    // 30s interval, pauses when tab is hidden
+    const interval = setInterval(() => fetchTournamentData(false), 30000);
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        fetchTournamentData(false);
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, [fetchTournamentData]);
 
   const tournamentFormat = overview?.normalizedFormat || overview?.tournamentFormat || '8_TEAM';

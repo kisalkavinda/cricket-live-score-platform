@@ -14,20 +14,32 @@ async function fetchFreshLiveMatches() {
   );
 
   const validPayloads = payloads.filter(Boolean);
-  liveMatchesCache = { data: validPayloads, expiresAt: Date.now() + 1000 };
+  liveMatchesCache = { data: validPayloads, expiresAt: Date.now() + 2500 };
   return validPayloads;
 }
 
-export async function GET() {
+export async function GET(request?: Request) {
   try {
     const now = Date.now();
-    if (liveMatchesCache && liveMatchesCache.expiresAt > now) {
+    let isFreshRequested = false;
+    if (request) {
+      try {
+        const url = new URL(request.url);
+        isFreshRequested = url.searchParams.get('fresh') === '1';
+      } catch {}
+    }
+
+    const cacheHeaders = isFreshRequested
+      ? { 'Cache-Control': 'no-cache, no-store' }
+      : { 'Cache-Control': 'public, s-maxage=2, stale-while-revalidate=5' };
+
+    if (!isFreshRequested && liveMatchesCache && liveMatchesCache.expiresAt > now) {
       return NextResponse.json(
         { success: true, matches: liveMatchesCache.data },
         {
           headers: {
             'X-Cache': 'HIT',
-            'Cache-Control': 'no-cache, no-store',
+            ...cacheHeaders,
           },
         }
       );
@@ -47,7 +59,7 @@ export async function GET() {
       {
         headers: {
           'X-Cache': 'MISS',
-          'Cache-Control': 'no-cache, no-store',
+          ...cacheHeaders,
         },
       }
     );

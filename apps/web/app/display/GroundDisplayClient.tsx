@@ -80,14 +80,12 @@ export default function GroundDisplayClient({
   }, []);
 
   // 1. Fetch live matches payload
-  const fetchLiveMatches = useCallback(async () => {
+  const fetchLiveMatches = useCallback(async (forceFresh = false) => {
     if (inFlightMatchesRef.current) return;
     inFlightMatchesRef.current = true;
     try {
-      const res = await fetch(`/api/matches/live?_t=${Date.now()}&fresh=1`, {
-        cache: 'no-store',
-        headers: { 'Cache-Control': 'no-cache, no-store' },
-      });
+      const url = forceFresh ? `/api/matches/live?_t=${Date.now()}&fresh=1` : '/api/matches/live';
+      const res = await fetch(url);
       if (!res.ok) return;
       const data = await res.json();
       if (data.success && data.matches && data.matches.length > 0) {
@@ -118,10 +116,8 @@ export default function GroundDisplayClient({
     inFlightScorecardRef.current = true;
     const reqSeq = ++scorecardReqSeqRef.current;
     try {
-      const res = await fetch(`/api/matches/${matchId}/scorecard?_t=${Date.now()}`, {
-        cache: 'no-store',
-        headers: { 'Cache-Control': 'no-cache, no-store' },
-      });
+      const url = force ? `/api/matches/${matchId}/scorecard?fresh=1` : `/api/matches/${matchId}/scorecard`;
+      const res = await fetch(url);
       if (!res.ok) return;
       const data = await res.json();
       if (reqSeq === scorecardReqSeqRef.current && data.success && data.match) {
@@ -145,11 +141,8 @@ export default function GroundDisplayClient({
     inFlightStatsRef.current = true;
     const reqSeq = ++statsReqSeqRef.current;
     try {
-      const url = `/api/tournament/stats?_t=${Date.now()}${forceFresh ? '&fresh=1' : ''}`;
-      const res = await fetch(url, {
-        cache: 'no-store',
-        headers: { 'Cache-Control': 'no-cache, no-store' },
-      });
+      const url = forceFresh ? '/api/tournament/stats?fresh=1' : '/api/tournament/stats';
+      const res = await fetch(url);
       if (!res.ok) return;
       const data = await res.json();
       if (reqSeq === statsReqSeqRef.current && data.success) {
@@ -302,6 +295,7 @@ export default function GroundDisplayClient({
     const intervalMs = isLive ? 1500 : 3500;
 
     const interval = setInterval(() => {
+      if (typeof document !== 'undefined' && document.hidden) return;
       fetchLiveMatches();
       fetchTournamentStats();
       if (activeMatchIdRef.current) {

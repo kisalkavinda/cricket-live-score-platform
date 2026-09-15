@@ -32,12 +32,9 @@ function ScorecardContent() {
     if (manual) setIsRefreshing(true);
 
     try {
-      const cacheBust = `_t=${Date.now()}`;
+      const queryParam = manual ? '?fresh=1' : '';
       if (requestedMatchId) {
-        const res = await fetch(`/api/matches/${requestedMatchId}/scorecard?${cacheBust}`, {
-          cache: 'no-store',
-          headers: { 'Cache-Control': 'no-cache', Pragma: 'no-cache' },
-        });
+        const res = await fetch(`/api/matches/${requestedMatchId}/scorecard${queryParam}`);
         if (!res.ok) return;
         const data = await res.json();
         if (data.success && data.match) {
@@ -49,18 +46,12 @@ function ScorecardContent() {
           setLastLivePing(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
         }
       } else {
-        const res = await fetch(`/api/matches/live?${cacheBust}`, {
-          cache: 'no-store',
-          headers: { 'Cache-Control': 'no-cache', Pragma: 'no-cache' },
-        });
+        const res = await fetch(`/api/matches/live${queryParam}`);
         if (!res.ok) return;
         const data = await res.json();
         if (data.success && data.matches && data.matches.length > 0) {
           const firstMatchId = data.matches[0].matchId;
-          const matchRes = await fetch(`/api/matches/${firstMatchId}/scorecard?${cacheBust}`, {
-            cache: 'no-store',
-            headers: { 'Cache-Control': 'no-cache', Pragma: 'no-cache' },
-          });
+          const matchRes = await fetch(`/api/matches/${firstMatchId}/scorecard${queryParam}`);
           if (!matchRes.ok) return;
           const matchData = await matchRes.json();
           if (matchData.success && matchData.match) {
@@ -86,11 +77,23 @@ function ScorecardContent() {
 
   useEffect(() => {
     fetchScorecard(false, true);
-    // Reliable fallback polling (5s) in case WebSocket drops
+    // Reliable fallback polling (8s) - paused when tab is hidden
     const interval = setInterval(() => {
+      if (typeof document !== 'undefined' && document.hidden) return;
       fetchScorecard(false, false);
-    }, 5000);
-    return () => clearInterval(interval);
+    }, 8000);
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        fetchScorecard(false, false);
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, [fetchScorecard]);
 
   // Realtime Supabase Broadcast Subscription
@@ -104,8 +107,8 @@ function ScorecardContent() {
       matchChannel = supabase.channel(`match:${activeMatchId}`);
       matchChannel
         .on('broadcast', { event: 'score_update' }, () => {
-          // Fast refresh score data WITHOUT overriding viewer's currently selected tab
-          fetchScorecard(false, true);
+          // Refresh score data via Edge CDN cache
+          fetchScorecard(false, false);
         })
         .subscribe();
     } catch (err) {
